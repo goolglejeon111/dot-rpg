@@ -4,6 +4,7 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import * as SH from '../pixel-art/shore.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(HERE, '../../public/assets/maps/village.json');
@@ -11,6 +12,7 @@ const OUT = resolve(HERE, '../../public/assets/maps/village.json');
 const W = 60, H = 40, TS = 32;
 // terrain.png 타일 번호 (tools/pixel-art/outputs.mjs 순서와 같아야 함)
 const T = { grass1: 0, grass2: 1, flower: 2, dirt: 3, stone: 4, water1: 5, water2: 6, wallTop: 7, wallFront: 8, bush: 9, fence: 10 };
+const SHORE0 = 11; // 물가 둑 타일 시작 번호
 const COLLIDES = [T.water1, T.water2, T.wallTop, T.wallFront, T.bush, T.fence];
 
 function rng(seed) {
@@ -39,10 +41,26 @@ for (let y = 15; y <= 20; y++) { gset(12, y, T.dirt); gset(13, y, T.dirt); }
 for (let y = 14; y <= 20; y++) { gset(46, y, T.dirt); gset(47, y, T.dirt); }
 
 // 연못
-const pond = { cx: 45.5, cy: 30.5, rx: 6.5, ry: 4.2 };
-for (let y = 24; y <= 36; y++) for (let x = 36; x <= 55; x++) {
-  const nx = (x + 0.5 - pond.cx) / pond.rx, ny = (y + 0.5 - pond.cy) / pond.ry;
-  if (nx * nx + ny * ny <= 1) gset(x, y, T.water1);
+// 줄마다 [y, 왼쪽 x, 오른쪽 x]. 한 칸씩만 들쭉날쭉해야 둑이 둥글게 이어진다
+const pondRows = [[26, 42, 48], [27, 41, 50], [28, 40, 51], [29, 39, 52], [30, 39, 52], [31, 39, 53], [32, 40, 52], [33, 41, 51], [34, 43, 49]];
+for (const [y, x0, x1] of pondRows) for (let x = x0; x <= x1; x++) gset(x, y, T.water1);
+
+// 물가 둑: 물 칸마다 이웃한 땅 방향을 보고 둑 타일을 고른다
+const shore = Array.from({ length: H }, () => Array(W).fill(-1));
+const isWater = (x, y) => x < 0 || y < 0 || x >= W || y >= H || ground[y][x] === T.water1;
+for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+  if (!isWater(x, y)) continue;
+  let m = 0;
+  if (!isWater(x, y - 1)) m |= SH.N;
+  if (!isWater(x + 1, y)) m |= SH.E;
+  if (!isWater(x, y + 1)) m |= SH.S;
+  if (!isWater(x - 1, y)) m |= SH.W;
+  if (!isWater(x + 1, y - 1)) m |= SH.NE;
+  if (!isWater(x + 1, y + 1)) m |= SH.SE;
+  if (!isWater(x - 1, y + 1)) m |= SH.SW;
+  if (!isWater(x - 1, y - 1)) m |= SH.NW;
+  m = SH.normalizeShore(m);
+  if (m) shore[y][x] = SHORE0 + SH.SHORE_MASKS.indexOf(m);
 }
 
 // 바깥 돌벽: 위쪽은 윗면+앞면, 나머지는 윗면
@@ -112,15 +130,16 @@ const tileLayer = (id, name, grid) => ({
 const map = {
   type: 'map', version: '1.10', tiledversion: '1.11.0', orientation: 'orthogonal', renderorder: 'right-down',
   width: W, height: H, tilewidth: TS, tileheight: TS, infinite: false,
-  nextlayerid: 4, nextobjectid: nextId,
+  nextlayerid: 5, nextobjectid: nextId,
   layers: [
     tileLayer(1, 'ground', ground),
+    tileLayer(4, 'shore', shore),
     tileLayer(2, 'walls', walls),
     { id: 3, name: 'objects', type: 'objectgroup', draworder: 'topdown', opacity: 1, visible: true, x: 0, y: 0, objects },
   ],
   tilesets: [{
-    firstgid: 1, name: 'terrain', image: '../tilesets/terrain.png', imagewidth: 192, imageheight: 64,
-    tilewidth: TS, tileheight: TS, tilecount: 12, columns: 6, margin: 0, spacing: 0,
+    firstgid: 1, name: 'terrain', image: '../tilesets/terrain.png', imagewidth: 256, imageheight: 256,
+    tilewidth: TS, tileheight: TS, tilecount: 64, columns: 8, margin: 0, spacing: 0,
     tiles: COLLIDES.map((id) => ({ id, properties: [{ name: 'collides', type: 'bool', value: true }] })),
   }],
 };

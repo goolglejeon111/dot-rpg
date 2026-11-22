@@ -1,6 +1,7 @@
 // 어떤 그림(art/*.txt의 [이름])을 어떤 PNG로 만들지 정하는 곳.
 // 프레임 = 그림 이름, 또는 여러 그림을 겹친 { layers: [...] }
 // layer 옵션: x, y(위치), flipX(좌우 반전), remap(색 바꾸기 { 원래글자: 새글자 })
+import { SHORE_MASKS, shoreName } from './shore.mjs';
 
 // ---- 캐릭터: 몸(35줄) 아래에 다리(10줄)를 깔아 32x40 한 칸을 만든다 ----
 const LEGS_Y = 30;
@@ -40,11 +41,13 @@ export const OUTPUTS = [
   {
     file: 'public/assets/tilesets/terrain.png',
     cell: [32, 32],
-    columns: 6,
-    // 순서 = 타일 번호(0부터). 바꾸면 tools/map/make-village.mjs 와 src/game/tiles.ts 도 맞출 것
+    columns: 8,
+    // 순서 = 타일 번호(0부터). 바꾸면 tools/map/make-village.mjs 도 맞출 것
+    // 11번부터는 물가 둑 타일 (shore.mjs 순서)
     frames: [
       'grass1', 'grass2', 'grass_flower', 'dirt', 'stone_floor', 'water1',
       'water2', 'wall_top', 'wall_front', 'bush', 'fence',
+      ...SHORE_MASKS.map(shoreName),
     ],
   },
   {

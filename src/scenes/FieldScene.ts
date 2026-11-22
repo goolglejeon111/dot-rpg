@@ -58,6 +58,7 @@ export class FieldScene extends Phaser.Scene {
     const map = this.make.tilemap({ key: 'village' });
     const tileset = map.addTilesetImage('terrain', 'terrain')!;
     const ground = map.createLayer('ground', tileset)!.setDepth(-3);
+    map.createLayer('shore', tileset)?.setDepth(-2.5); // 물가 둑 (물 위에 겹침)
     const walls = map.createLayer('walls', tileset)!.setDepth(-2);
     ground.setCollisionByProperty({ collides: true });
     walls.setCollisionByProperty({ collides: true });
@@ -201,7 +202,8 @@ export class FieldScene extends Phaser.Scene {
     this.nearNpc = best;
     this.talkIcon.setVisible(!!best);
     if (!best) return;
-    this.talkIcon.setPosition(best.sprite.x + 10, best.sprite.y - 44 - (Math.floor(this.time.now / 400) % 2));
+    // 이름표(발밑에서 41~51px 위) 바로 위에 띄운다
+    this.talkIcon.setPosition(best.sprite.x, best.sprite.y - 53 - (Math.floor(this.time.now / 400) % 2));
 
     const k = this.keys;
     if (Phaser.Input.Keyboard.JustDown(k.space) || Phaser.Input.Keyboard.JustDown(k.z)) this.talk(best);

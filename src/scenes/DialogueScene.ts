@@ -53,7 +53,7 @@ interface Portrait {
 
 export class DialogueScene extends Phaser.Scene {
   private dialogue!: DialogueData;
-  private returnTo = 'TestMap';
+  private returnTo = 'Field';
   private index = 0;
   private idIndex = new Map<string, number>();
 

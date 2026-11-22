@@ -1,6 +1,9 @@
 {
   "tileSize": 16,
   "start": { "x": 2, "y": 2 },
+  "triggers": [
+    { "x": 10, "y": 7, "dialogue": "prologue_awakening" }
+  ],
   "tiles": [
     "####################",
     "#..................#",

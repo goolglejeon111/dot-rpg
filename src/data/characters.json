@@ -1,0 +1,16 @@
+{
+  "characters": [
+    { "id": "leon", "name": "레온", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "serena", "name": "세레나", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "elysia", "name": "엘리시아", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "karg", "name": "카르크", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "adrian", "name": "아드리안", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "galia", "name": "갈리아", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "aldric", "name": "알드릭 황제", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "ignatius", "name": "이그나티우스", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "marcion", "name": "마르키온", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "herman", "name": "헤르만 공작", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "cassius", "name": "카시우스", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "imperial_guard", "name": "근위병", "expressions": ["normal", "smile", "angry", "sad", "surprised"] }
+  ]
+}

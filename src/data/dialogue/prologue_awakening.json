@@ -1,0 +1,37 @@
+{
+  "id": "prologue_awakening",
+  "title": "프롤로그 장면 4~5: 깨어남, 선택",
+  "nodes": [
+    { "text": "……차가운 대리석의 감촉. 정신이 돌아온다." },
+    { "speaker": "leon", "expression": "surprised", "position": "left", "text": "여긴…… 침소 앞? 나는 분명 그 침입자를……" },
+    { "speaker": "leon", "expression": "sad", "position": "left", "text": "폐하……! 폐하!" },
+    { "text": "침상 위의 황제는 이미 숨이 없었다." },
+    { "speaker": "leon", "expression": "angry", "position": "left", "text": "스승님은? 황녀 전하는 어디에 계신 거지……" },
+    { "text": "멀리서 종이 울린다. 수많은 발소리가 회랑을 타고 다가온다." },
+    { "speaker": "imperial_guard", "expression": "angry", "position": "right", "text": "거기 멈춰라! 폐하의 침소 앞에 검을 든 자가 있다!" },
+    { "speaker": "leon", "expression": "surprised", "position": "left", "text": "아니다, 나는 침입자를 쫓아서……" },
+    { "speaker": "imperial_guard", "expression": "angry", "position": "right", "text": "근위기사 레온. 폐하 시해의 죄로 너를 체포한다!" },
+    { "speaker": "leon", "expression": "normal", "position": "left", "text": "(포위됐다. 등 뒤에는 높은 창문뿐……)" },
+    {
+      "id": "choice_escape",
+      "choices": [
+        { "text": "싸운다", "next": "fight", "flags": { "prologue_choice": "fight" } },
+        { "text": "투항한다", "next": "surrender", "flags": { "prologue_choice": "surrender" } },
+        { "text": "창문으로 뛰어내린다", "next": "window", "flags": { "prologue_choice": "window", "prologue_escaped": true } }
+      ]
+    },
+
+    { "id": "fight", "speaker": "leon", "expression": "angry", "position": "left", "text": "비켜라! 나는 범인이 아니다!" },
+    { "speaker": "imperial_guard", "expression": "angry", "position": "right", "text": "반역자가 검을 뽑았다! 전원, 쳐라!" },
+    { "ending": "prologue_dead" },
+
+    { "id": "surrender", "speaker": "leon", "expression": "sad", "position": "left", "text": "……검을 내려놓겠다. 재판에서 진실을 밝히겠다." },
+    { "speaker": "imperial_guard", "expression": "normal", "position": "right", "text": "재판? 섭정 각하께서 그런 걸 허락하실 것 같나." },
+    { "ending": "prologue_bad" },
+
+    { "id": "window", "speaker": "leon", "expression": "normal", "position": "left", "text": "(스승님이라면…… 여기서 붙잡히지 않는다.)" },
+    { "speaker": "imperial_guard", "expression": "surprised", "position": "right", "text": "저, 저놈이 창문으로!" },
+    { "text": "레온은 유리창을 깨고 어둠 속으로 몸을 던졌다." },
+    { "chapter": "act1" }
+  ]
+}

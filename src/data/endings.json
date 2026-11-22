@@ -1,0 +1,23 @@
+{
+  "endings": {
+    "prologue_dead": {
+      "type": "dead",
+      "title": "데드엔딩",
+      "subtitle": "포위",
+      "text": "근위병들의 창이 사방에서 레온을 꿰뚫었다.\n진실은 그와 함께 회랑에 묻혔다."
+    },
+    "prologue_bad": {
+      "type": "bad",
+      "title": "배드엔딩",
+      "subtitle": "재판 없는 처형",
+      "text": "재판은 열리지 않았다.\n레온은 다음 날 새벽, 반역자로 처형되었다."
+    }
+  },
+  "chapters": {
+    "act1": {
+      "title": "1막: 쫓기는 자",
+      "subtitle": "아우렐 평야",
+      "text": "(임시 화면) 여기서 1막이 시작됩니다."
+    }
+  }
+}

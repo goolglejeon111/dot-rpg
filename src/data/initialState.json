@@ -1,0 +1,18 @@
+{
+  "affection": {
+    "serena": 0,
+    "elysia_leon": 0,
+    "elysia_karg": 0,
+    "karg": 0,
+    "adrian": 0
+  },
+  "flags": {
+    "galia_alive": false,
+    "adrian_spared": false,
+    "adrian_joined": false,
+    "elysia_stayed": false,
+    "elysia_alive": true,
+    "wolf_tribe_joined": false,
+    "prologue_escaped": false
+  }
+}

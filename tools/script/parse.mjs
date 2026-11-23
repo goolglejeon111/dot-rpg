@@ -26,6 +26,7 @@ export function parseScript(md, cfg) {
   let choice = null;
   let stopped = false;
   const endingCount = {};
+  const usedRewrites = new Set();
 
   const flushMono = () => {
     if (mono && mono.length) scene.nodes.push({ monologue: mono });
@@ -125,7 +126,10 @@ export function parseScript(md, cfg) {
     const m = LINE_RE.exec(line);
     if (m) {
       inMono = false;
-      const [, name, expr, text] = m;
+      const [, name, expr, original] = m;
+      const rw = (cfg.rewrites ?? []).find((r) => r.name === name && r.from === original);
+      if (rw) usedRewrites.add(rw);
+      const text = rw ? rw.to : original;
       const id = cfg.names[name];
       push(id ? { speaker: id, expression: EXPRESSIONS[expr], text } : { name, expression: EXPRESSIONS[expr], text });
       continue;
@@ -137,6 +141,9 @@ export function parseScript(md, cfg) {
     warnings.push(`처리하지 못한 줄: ${line}`);
   }
   flushMono();
+  for (const r of cfg.rewrites ?? []) {
+    if (!usedRewrites.has(r)) warnings.push(`바꿔 쓸 대사를 대본에서 찾지 못함: ${r.name} / ${r.from}`);
+  }
 
   // 나중에 넣을 요소(전투, 장소 변경)를 표시한다
   for (const ins of cfg.inserts ?? []) {

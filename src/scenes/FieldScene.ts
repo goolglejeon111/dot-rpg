@@ -207,7 +207,6 @@ export class FieldScene extends Phaser.Scene {
   private separateTags() {
     const pt = this.playerTag;
     for (const n of this.npcs) {
-      if (!n.dialogue) continue; // 대화가 없는 인물은 말 걸기 표시를 띄우지 않음
       const { x, y } = n.sprite;
       n.tag.setPosition(Math.round(x), Math.round(y - TAG_GAP));
       const h = n.tag.displayHeight;
@@ -224,6 +223,7 @@ export class FieldScene extends Phaser.Scene {
     let best: Npc | null = null;
     let bestD = TALK_RANGE;
     for (const n of this.npcs) {
+      if (!n.dialogue) continue; // 대화가 없는 인물은 말 걸기 표시를 띄우지 않음
       const d = Phaser.Math.Distance.Between(p.x, p.y, n.sprite.x, n.sprite.y);
       if (d < bestD) {
         bestD = d;

@@ -306,13 +306,13 @@ export class StoryScene extends Phaser.Scene {
     });
   }
 
-  /** 장소 이름: 왼쪽 위에 계속 표시, 바뀔 때 가운데에 잠깐 크게 */
+  /** 장소 이름: 왼쪽 위에 계속 표시, 바뀔 때 가운데 위쪽에 잠깐 크게 */
   private setPlace(place: string, announce: boolean) {
     this.place = place;
     this.placeLabel.setText(place ? `◆ ${place}` : '');
     if (!place || !announce) return;
     const t = this.add
-      .text(W / 2, H / 2 - 60, place, { fontFamily: FONT, fontSize: '40px', color: '#f3e7c4' })
+      .text(W / 2, Math.round(H * 0.2), place, { fontFamily: FONT, fontSize: '40px', color: '#f3e7c4' })
       .setOrigin(0.5)
       .setDepth(7)
       .setAlpha(0)

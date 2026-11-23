@@ -8,14 +8,8 @@ gameState.load();
 
 const WIDTH = 960;
 const HEIGHT = 720;
-/**
- * 창 크기에 맞는 배율. 창이 충분히 크면 정수 배율(픽셀이 고르게 커짐),
- * 960x720보다 작은 창이면 잘리지 않도록 그 비율만큼 줄인다.
- */
-const fitZoom = () => {
-  const z = Math.min(window.innerWidth / WIDTH, window.innerHeight / HEIGHT);
-  return z >= 1 ? Math.floor(z) : z;
-};
+/** 창 크기에 맞는 정수 배율 (픽셀이 고르지 않게 늘어나는 것을 막음) */
+const fitZoom = () => Math.max(1, Math.floor(Math.min(window.innerWidth / WIDTH, window.innerHeight / HEIGHT)));
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,

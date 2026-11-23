@@ -6,8 +6,17 @@ import { TitleScene } from './scenes/TitleScene';
 
 const WIDTH = 960;
 const HEIGHT = 720;
-/** 창 크기에 맞는 정수 배율 (픽셀이 고르지 않게 늘어나는 것을 막음) */
-const fitZoom = () => Math.max(1, Math.floor(Math.min(window.innerWidth / WIDTH, window.innerHeight / HEIGHT)));
+/** 터치 기기(휴대폰·태블릿)인지 */
+const isTouch = window.matchMedia('(pointer: coarse)').matches;
+/**
+ * 창 크기에 맞는 배율. 보통은 정수 배율(최소 1배)로 픽셀이 고르게 보이게 한다.
+ * 단, 터치 기기에서 화면이 게임보다 작으면 화면 전체가 보이도록 비율대로 줄인다.
+ */
+const fitZoom = () => {
+  const fit = Math.min(window.innerWidth / WIDTH, window.innerHeight / HEIGHT);
+  if (isTouch && fit < 1) return fit;
+  return Math.max(1, Math.floor(fit));
+};
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,

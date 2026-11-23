@@ -1,0 +1,863 @@
+import Phaser from 'phaser';
+import { characters, stories } from '../game/data';
+import { gameState, type StateData } from '../game/GameState';
+import { makeBodyPlaceholder, PORTRAIT_H } from '../game/placeholders';
+import { save } from '../game/save';
+import { FONT, GOLD, hex, makeButton, type Button } from '../game/ui';
+import type {
+  ChoiceOption,
+  Expression,
+  LineNode,
+  Side,
+  StoryData,
+  StoryNode,
+  StorySceneData,
+} from '../game/types';
+
+/** Story 장면을 열 때 넘기는 값 */
+export interface StoryStartData {
+  story: string;
+  /** 시작할 장면 ID (없으면 첫 장면) */
+  scene?: string;
+  /** 이야기를 다 본 저장에서 이어하기: 막 전환 화면부터 */
+  finished?: boolean;
+  /** 필드에서 열었을 때 돌아갈 장면 키 (없으면 끝나고 타이틀로) */
+  returnTo?: string;
+}
+
+const W = 960;
+const H = 720;
+const BOX = { x: 40, y: 540, w: 880, h: 160 };
+const PORTRAIT_HEIGHT = 700; // 화면에 보이는 스탠딩 높이 (하단 기준)
+const SIDE_X: Record<Side, number> = { left: 255, right: 705 };
+const DIM_SPEAK = 0x5c5c5c; // 듣는 사람
+const DIM_MONO = 0x9a9a9a; // 독백 중 (살짝)
+const SKIP_DELAY = 45;
+
+const bodyKey = (id: string) => `${id}_body`;
+const faceKey = (id: string, e: Expression) => `${id}_face_${e}`;
+
+/** 파일이 실제 이미지인지 확인 (없는 파일이면 개발 서버가 HTML을 돌려줄 수 있음) */
+const existsCache = new Map<string, Promise<boolean>>();
+function imageExists(url: string): Promise<boolean> {
+  let p = existsCache.get(url);
+  if (!p) {
+    p = fetch(url, { method: 'HEAD' })
+      .then((r) => r.ok && (r.headers.get('content-type') ?? '').startsWith('image/'))
+      .catch(() => false);
+    existsCache.set(url, p);
+  }
+  return p;
+}
+
+interface Portrait {
+  container: Phaser.GameObjects.Container;
+  body: Phaser.GameObjects.Image;
+  face: Phaser.GameObjects.Image;
+  charId: string | null;
+  expr: Expression;
+}
+
+type Mode = 'busy' | 'typing' | 'waiting' | 'choice' | 'end';
+
+/** 마지막으로 화면에 보인 글 (선택지로 돌아갈 때 다시 그린다) */
+type LastShown =
+  | { kind: 'line'; node: LineNode }
+  | { kind: 'mono'; lines: string[] }
+  | null;
+
+interface ChoicePoint {
+  scene: number;
+  node: number;
+  state: StateData;
+  stage: Record<Side, { id: string; expr: Expression } | null>;
+  shown: LastShown;
+  place: string;
+}
+
+/** 대본을 재생하는 대화 장면 (스탠딩 + 대사창 + 독백 + 선택지 + 엔딩) */
+export class StoryScene extends Phaser.Scene {
+  private story!: StoryData;
+  private start!: StoryStartData;
+  private sceneIdx = 0;
+  private nodeIdx = 0;
+  private monoIdx = 0;
+  private mode: Mode = 'busy';
+
+  private full = '';
+  private shown = 0;
+  private typeTimer?: Phaser.Time.TimerEvent;
+  private waitTimer?: Phaser.Time.TimerEvent;
+  private auto = false;
+  private skip = false;
+  private lastShown: LastShown = null;
+  private lastChoice: ChoicePoint | null = null;
+  private place = '';
+  private entered = false;
+  private backlog: { name?: string; text: string }[] = [];
+
+  private bg!: Phaser.GameObjects.Rectangle;
+  private placeLabel!: Phaser.GameObjects.Text;
+  private portraits!: Record<Side, Portrait>;
+  private box!: Phaser.GameObjects.Container;
+  private nameBox!: Phaser.GameObjects.Container;
+  private nameText!: Phaser.GameObjects.Text;
+  private lineText!: Phaser.GameObjects.Text;
+  private nextMark!: Phaser.GameObjects.Text;
+  private mono!: Phaser.GameObjects.Container;
+  private monoText!: Phaser.GameObjects.Text;
+  private monoMark!: Phaser.GameObjects.Text;
+  private choiceButtons: Button[] = [];
+  private activeChoices: ChoiceOption[] = [];
+  private autoBtn!: Button;
+  private skipBtn!: Button;
+  private overlay?: Phaser.GameObjects.Container;
+  private logView?: { root: Phaser.GameObjects.Container; text: Phaser.GameObjects.Text; top: number; min: number };
+
+  constructor() {
+    super('Story');
+  }
+
+  init(data: StoryStartData) {
+    this.start = data;
+    this.mode = 'busy';
+    this.auto = false;
+    this.skip = false;
+    this.lastShown = null;
+    this.lastChoice = null;
+    this.backlog = [];
+    this.entered = false;
+    this.choiceButtons = [];
+    this.activeChoices = [];
+    this.overlay = undefined;
+    this.logView = undefined;
+  }
+
+  create() {
+    const story = stories[this.start.story];
+    if (!story) {
+      console.error(`[story] 이야기를 찾을 수 없습니다: ${this.start.story}`);
+      this.leave();
+      return;
+    }
+    this.story = story;
+    this.cameras.main.setBackgroundColor('#000000');
+    void this.loadPortraits().then(() => this.build());
+  }
+
+  // ---------- 준비 ----------
+
+  /** 이 이야기에 나오는 인물의 몸·얼굴 그림 중 실제로 있는 파일만 불러온다 */
+  private async loadPortraits() {
+    const ids = new Set<string>();
+    for (const s of this.story.scenes) for (const n of s.nodes) if ('speaker' in n && n.speaker) ids.add(n.speaker);
+    const wanted: { key: string; url: string }[] = [];
+    for (const id of ids) {
+      const c = characters[id];
+      if (!c) {
+        console.warn(`[story] characters.json에 없는 인물 id: ${id}`);
+        continue;
+      }
+      wanted.push({ key: bodyKey(id), url: `assets/portraits/${id}_body.png` });
+      // 기본 표정은 몸 그림에 들어 있으므로 normal 얼굴은 불러오지 않는다
+      for (const e of c.expressions) {
+        if (e !== 'normal') wanted.push({ key: faceKey(id, e), url: `assets/portraits/${id}_face_${e}.png` });
+      }
+    }
+    const todo = wanted.filter((w) => !this.textures.exists(w.key));
+    const found = await Promise.all(todo.map((w) => imageExists(w.url)));
+    const toLoad = todo.filter((_, i) => found[i]);
+    // 몸 그림도 없으면 회색 실루엣
+    for (const id of ids) {
+      if (characters[id] && !this.textures.exists(bodyKey(id)) && !toLoad.some((w) => w.key === bodyKey(id))) {
+        makeBodyPlaceholder(this, bodyKey(id), id);
+      }
+    }
+    if (toLoad.length === 0) return;
+    await new Promise<void>((resolve) => {
+      for (const w of toLoad) this.load.image(w.key, w.url);
+      this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+        // 스탠딩은 고해상도 그림이라 줄일 때 부드럽게 (게임 전체는 도트용 pixelArt 설정)
+        for (const w of toLoad) this.textures.get(w.key).setFilter(Phaser.Textures.FilterMode.LINEAR);
+        resolve();
+      });
+      this.load.start();
+    });
+  }
+
+  private build() {
+    this.bg = this.add.rectangle(0, 0, W, H, 0x101018).setOrigin(0);
+    this.placeLabel = this.add
+      .text(24, 20, '', { fontFamily: FONT, fontSize: '20px', color: '#cdb88a' })
+      .setDepth(9)
+      .setShadow(0, 2, '#000000', 4);
+
+    this.portraits = { left: this.makePortrait('left'), right: this.makePortrait('right') };
+
+    // 대사창
+    const g = this.add.graphics();
+    g.fillStyle(0x12121c, 0.94);
+    g.fillRoundedRect(BOX.x, BOX.y, BOX.w, BOX.h, 12);
+    g.lineStyle(3, GOLD, 1);
+    g.strokeRoundedRect(BOX.x, BOX.y, BOX.w, BOX.h, 12);
+    this.lineText = this.add.text(BOX.x + 32, BOX.y + 30, '', {
+      fontFamily: FONT,
+      fontSize: '25px',
+      color: '#ffffff',
+      lineSpacing: 10,
+      wordWrap: { width: BOX.w - 64, useAdvancedWrap: true },
+    });
+    this.nextMark = this.add
+      .text(BOX.x + BOX.w - 34, BOX.y + BOX.h - 28, '▼', { fontFamily: FONT, fontSize: '20px', color: '#cdb88a' })
+      .setOrigin(0.5)
+      .setVisible(false);
+    this.tweens.add({ targets: this.nextMark, y: '+=6', duration: 400, yoyo: true, repeat: -1 });
+    this.box = this.add.container(0, 0, [g, this.lineText, this.nextMark]).setDepth(5).setVisible(false);
+
+    const plate = this.add.graphics();
+    plate.fillStyle(0x2a2440, 1);
+    plate.fillRoundedRect(0, 0, 200, 44, 8);
+    plate.lineStyle(2, GOLD, 1);
+    plate.strokeRoundedRect(0, 0, 200, 44, 8);
+    this.nameText = this.add
+      .text(100, 22, '', { fontFamily: FONT, fontSize: '23px', color: '#f3e7c4', fontStyle: 'bold' })
+      .setOrigin(0.5);
+    this.nameBox = this.add.container(BOX.x + 24, BOX.y - 30, [plate, this.nameText]).setDepth(6).setVisible(false);
+
+    // 독백: 화면 전체를 살짝 덮고 가운데에 문장
+    const veil = this.add.rectangle(0, 0, W, H, 0x000000, 0.5).setOrigin(0);
+    this.monoText = this.add.text(150, 150, '', {
+      fontFamily: FONT,
+      fontSize: '26px',
+      color: '#f2f2f2',
+      lineSpacing: 18,
+      wordWrap: { width: W - 300, useAdvancedWrap: true },
+    }).setShadow(0, 2, '#000000', 6);
+    this.monoMark = this.add
+      .text(W - 150, H - 110, '▼', { fontFamily: FONT, fontSize: '20px', color: '#cdb88a' })
+      .setOrigin(0.5)
+      .setVisible(false);
+    this.tweens.add({ targets: this.monoMark, y: '+=6', duration: 400, yoyo: true, repeat: -1 });
+    this.mono = this.add.container(0, 0, [veil, this.monoText, this.monoMark]).setDepth(6).setVisible(false);
+
+    // 오른쪽 위 메뉴
+    const small = { w: 92, h: 36, fontSize: 17, depth: 9 };
+    makeButton(this, W - 392, 30, '로그 (L)', () => this.openLog(), small);
+    this.autoBtn = makeButton(this, W - 294, 30, '자동 (A)', () => this.toggleAuto(), small);
+    this.skipBtn = makeButton(this, W - 196, 30, '스킵 (S)', () => this.toggleSkip(), small);
+    makeButton(this, W - 72, 30, '타이틀로', () => this.leave(), { ...small, w: 112 });
+
+    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+      if (p.rightButtonDown()) return;
+      this.onPress();
+    });
+    this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => {
+      if (this.logView) this.scrollLog(dy);
+      else if (dy < 0) this.openLog();
+    });
+    this.input.keyboard!.on('keydown', (ev: KeyboardEvent) => this.onKey(ev));
+
+    if (this.start.finished) {
+      this.showChapter(Object.keys(this.story.chapters)[0] ?? '');
+      return;
+    }
+    const first = this.start.scene ? this.story.scenes.findIndex((s) => s.id === this.start.scene) : 0;
+    if (first < 0) console.warn(`[story] 없는 장면 id: ${this.start.scene} → 처음부터`);
+    this.enterScene(Math.max(0, first));
+  }
+
+  // ---------- 장면 ----------
+
+  private get scene_(): StorySceneData {
+    return this.story.scenes[this.sceneIdx];
+  }
+
+  private enterScene(i: number) {
+    const sc = this.story.scenes[i];
+    if (!sc) {
+      console.warn('[story] 다음 장면이 없습니다. 타이틀로 돌아갑니다');
+      return this.leave();
+    }
+    this.mode = 'busy';
+    this.clearText();
+    const fast = this.skip;
+    const first = !this.entered;
+    this.entered = true;
+    this.sceneIdx = i;
+    this.nodeIdx = 0;
+    save.setCheckpoint({ story: this.story.id, scene: sc.id, ...gameState.snapshot() });
+
+    // 이전 장면 인물은 퇴장
+    const swap = () => {
+      for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
+      this.bg.setFillStyle(hex(sc.color));
+      this.setPlace(sc.place, !fast);
+    };
+    if (first || fast) {
+      swap();
+      this.time.delayedCall(fast ? 80 : 500, () => this.runNode());
+      return;
+    }
+    this.cameras.main.fadeOut(260, 0, 0, 0);
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      swap();
+      this.cameras.main.fadeIn(320, 0, 0, 0);
+      this.time.delayedCall(sc.place ? 900 : 400, () => this.runNode());
+    });
+  }
+
+  /** 장소 이름: 왼쪽 위에 계속 표시, 바뀔 때 가운데에 잠깐 크게 */
+  private setPlace(place: string, announce: boolean) {
+    this.place = place;
+    this.placeLabel.setText(place ? `◆ ${place}` : '');
+    if (!place || !announce) return;
+    const t = this.add
+      .text(W / 2, H / 2 - 60, place, { fontFamily: FONT, fontSize: '40px', color: '#f3e7c4' })
+      .setOrigin(0.5)
+      .setDepth(7)
+      .setAlpha(0)
+      .setShadow(0, 3, '#000000', 8);
+    this.tweens.chain({
+      targets: t,
+      tweens: [
+        { alpha: 1, duration: 300 },
+        { alpha: 1, duration: 700 },
+        { alpha: 0, duration: 500, onComplete: () => t.destroy() },
+      ],
+    });
+  }
+
+  private runNode() {
+    const sc = this.scene_;
+    const node: StoryNode | undefined = sc.nodes[this.nodeIdx];
+    this.monoIdx = 0;
+    if (!node) {
+      // 장면 끝: 다음 장면으로 (선택지로만 들어가는 장면은 건너뛴다)
+      let next = this.sceneIdx + 1;
+      while (this.story.scenes[next]?.branch) next++;
+      return this.enterScene(next);
+    }
+    if ('text' in node) {
+      gameState.applyEffects(node);
+      this.showLine(node);
+    } else if ('monologue' in node) {
+      this.showMonoLine();
+    } else if ('choices' in node) {
+      this.showChoices(node.choices);
+    } else if ('battle' in node) {
+      console.info(`[story] 전투 자리(${node.battle}): ${node.note ?? ''} — 지금은 건너뜁니다`);
+      this.nextNode();
+    } else if ('place' in node) {
+      this.setPlace(node.place, !this.skip);
+      this.nextNode();
+    } else if ('ending' in node) {
+      gameState.applyEffects(node);
+      this.showEnding(node.ending);
+    } else if ('chapter' in node) {
+      gameState.applyEffects(node);
+      this.showChapter(node.chapter);
+    }
+  }
+
+  private nextNode() {
+    this.nodeIdx++;
+    this.runNode();
+  }
+
+  // ---------- 진행 입력 ----------
+
+  private onPress() {
+    if (this.logView) return this.closeLog();
+    if (this.overlay) return;
+    if (this.skip) this.toggleSkip(false);
+    this.advance();
+  }
+
+  private advance() {
+    if (this.mode === 'typing') {
+      this.completeTyping();
+    } else if (this.mode === 'waiting') {
+      this.waitTimer?.remove();
+      const node = this.scene_.nodes[this.nodeIdx];
+      if ('monologue' in node && this.monoIdx < node.monologue.length - 1) {
+        this.monoIdx++;
+        this.showMonoLine();
+      } else {
+        this.nextNode();
+      }
+    }
+  }
+
+  private onKey(ev: KeyboardEvent) {
+    const k = ev.key.toLowerCase();
+    if (this.logView) {
+      if (k === 'escape' || k === 'l') this.closeLog();
+      else if (ev.key === 'ArrowUp') this.scrollLog(-60);
+      else if (ev.key === 'ArrowDown') this.scrollLog(60);
+      return;
+    }
+    if (ev.code === 'Space' || ev.code === 'Enter' || k === 'z') {
+      ev.preventDefault();
+      if (!this.overlay && this.mode !== 'choice') this.onPress();
+      return;
+    }
+    if (this.overlay) return;
+    if (k === 'l') this.openLog();
+    else if (k === 'a') this.toggleAuto();
+    else if (k === 's' || ev.key === 'Control') this.toggleSkip();
+    else if (this.mode === 'choice') {
+      const n = Number(ev.key);
+      if (n >= 1 && n <= this.activeChoices.length) this.pickChoice(n - 1);
+    }
+  }
+
+  private toggleAuto(on = !this.auto) {
+    this.auto = on;
+    this.autoBtn.setOn(on);
+    if (on && this.mode === 'waiting') this.scheduleNext();
+    if (!on) this.waitTimer?.remove();
+  }
+
+  private toggleSkip(on = !this.skip) {
+    this.skip = on;
+    this.skipBtn.setOn(on);
+    if (on && (this.mode === 'typing' || this.mode === 'waiting')) {
+      if (this.isCurrentRead()) this.advance();
+      else this.toggleSkip(false);
+    }
+  }
+
+  // ---------- 글 표시 (대사, 독백 공통) ----------
+
+  private readKey() {
+    return `${this.story.id}:${this.scene_.id}:${this.nodeIdx}:${this.monoIdx}`;
+  }
+
+  private isCurrentRead() {
+    return save.isRead(this.readKey());
+  }
+
+  /** target 글자를 한 글자씩. 건너뛰기 중이고 읽은 글이면 바로 */
+  private typeText(text: string, render: (s: string) => void) {
+    this.full = text;
+    this.shown = 0;
+    this.typeTimer?.remove();
+    this.waitTimer?.remove();
+    this.mode = 'typing';
+    this.render = render;
+    const read = this.isCurrentRead();
+    if (this.skip && !read) this.toggleSkip(false);
+    const delay = save.settings.textDelay;
+    if ((this.skip && read) || delay <= 0) return this.completeTyping();
+    render('');
+    const chars = Array.from(text);
+    this.typeTimer = this.time.addEvent({
+      delay,
+      loop: true,
+      callback: () => {
+        this.shown++;
+        render(chars.slice(0, this.shown).join(''));
+        if (this.shown >= chars.length) this.completeTyping();
+      },
+    });
+  }
+
+  private render: (s: string) => void = () => {};
+
+  private completeTyping() {
+    this.typeTimer?.remove();
+    this.typeTimer = undefined;
+    this.render(this.full);
+    this.mode = 'waiting';
+    save.markRead(this.readKey());
+    const inMono = this.mono.visible;
+    this.nextMark.setVisible(!inMono);
+    this.monoMark.setVisible(inMono);
+    this.scheduleNext();
+  }
+
+  /** 자동 진행·건너뛰기 */
+  private scheduleNext() {
+    this.waitTimer?.remove();
+    if (this.mode !== 'waiting' || this.overlay || this.logView) return;
+    let delay = -1;
+    if (this.skip) delay = SKIP_DELAY;
+    else if (this.auto) delay = save.settings.autoDelay + Array.from(this.full).length * 25;
+    if (delay < 0) return;
+    this.waitTimer = this.time.delayedCall(delay, () => {
+      if (this.mode === 'waiting' && !this.overlay && !this.logView) this.advance();
+    });
+  }
+
+  private clearText() {
+    this.typeTimer?.remove();
+    this.waitTimer?.remove();
+    for (const o of [this.box, this.nameBox, this.mono]) o.setVisible(false).setAlpha(1);
+    this.monoText.setText('');
+    this.lineText.setText('');
+  }
+
+  private showLine(node: LineNode, instant = false) {
+    this.mono.setVisible(false);
+    this.box.setVisible(true);
+    this.nextMark.setVisible(false);
+    const c = node.speaker ? characters[node.speaker] : undefined;
+    const name = c?.name ?? node.name ?? '';
+    if (c) {
+      const side = node.position ?? (c.id === 'leon' ? 'left' : 'right');
+      this.setPortrait(side, c.id, node.expression ?? 'normal');
+      this.highlight(side);
+    } else {
+      this.highlight(null, DIM_SPEAK);
+    }
+    this.nameText.setText(name);
+    this.nameBox.setVisible(!!name);
+    this.lastShown = { kind: 'line', node };
+    if (instant) {
+      this.lineText.setText(node.text);
+      return;
+    }
+    this.backlog.push({ name, text: node.text });
+    this.typeText(node.text, (s) => this.lineText.setText(s));
+  }
+
+  private showMonoLine(instantLines?: string[]) {
+    const node = this.scene_.nodes[this.nodeIdx] as { monologue: string[] };
+    this.box.setVisible(false);
+    this.nameBox.setVisible(false);
+    this.mono.setVisible(true);
+    this.monoMark.setVisible(false);
+    this.highlight(null, DIM_MONO);
+    if (instantLines) {
+      this.monoText.setText(instantLines.join('\n'));
+      return;
+    }
+    const before = node.monologue.slice(0, this.monoIdx);
+    const line = node.monologue[this.monoIdx];
+    this.lastShown = { kind: 'mono', lines: [...before, line] };
+    this.backlog.push({ text: line });
+    const head = before.length ? `${before.join('\n')}\n` : '';
+    this.typeText(line, (s) => this.monoText.setText(head + s));
+  }
+
+  // ---------- 스탠딩 ----------
+
+  private makePortrait(side: Side): Portrait {
+    const body = this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1);
+    const face = this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1);
+    const container = this.add.container(SIDE_X[side], H, [body, face]).setVisible(false).setDepth(2);
+    return { container, body, face, charId: null, expr: 'normal' };
+  }
+
+  private setPortrait(side: Side, id: string, expr: Expression, instant = false) {
+    const p = this.portraits[side];
+    const otherSide: Side = side === 'left' ? 'right' : 'left';
+    if (this.portraits[otherSide].charId === id) this.hidePortrait(otherSide, true);
+    // normal이거나 얼굴 그림이 없으면 몸(기본 표정)만
+    const fk = faceKey(id, expr);
+    const hasFace = expr !== 'normal' && this.textures.exists(fk);
+    p.body.setTexture(bodyKey(id));
+    if (hasFace) p.face.setTexture(fk);
+    p.face.setVisible(hasFace);
+    // 몸과 얼굴은 같은 크기(1024x1344)라서 같은 비율·같은 위치로 겹친다
+    const scale = PORTRAIT_HEIGHT / (p.body.height || PORTRAIT_H);
+    p.body.setScale(scale);
+    p.face.setScale(scale);
+    if (p.charId !== id) {
+      // 등장
+      this.tweens.killTweensOf(p.container);
+      p.container.setVisible(true);
+      if (instant || this.skip) p.container.setAlpha(1).setY(H);
+      else {
+        p.container.setAlpha(0).setY(H + 16);
+        this.tweens.add({ targets: p.container, alpha: 1, y: H, duration: 220, ease: 'Quad.easeOut' });
+      }
+    }
+    p.charId = id;
+    p.expr = expr;
+  }
+
+  private hidePortrait(side: Side, instant = false) {
+    const p = this.portraits[side];
+    if (!p.charId) return;
+    p.charId = null;
+    this.tweens.killTweensOf(p.container);
+    if (instant) p.container.setVisible(false);
+    else this.tweens.add({ targets: p.container, alpha: 0, duration: 200, onComplete: () => p.container.setVisible(false) });
+  }
+
+  /** 말하는 쪽은 밝게, 나머지는 어둡게. speaking이 null이면 모두 dim 색으로 */
+  private highlight(speaking: Side | null, dim = DIM_SPEAK) {
+    for (const side of ['left', 'right'] as Side[]) {
+      const p = this.portraits[side];
+      if (side === speaking) {
+        p.body.clearTint();
+        p.face.clearTint();
+        p.container.setDepth(3);
+      } else {
+        p.body.setTint(dim);
+        p.face.setTint(dim);
+        p.container.setDepth(2);
+      }
+    }
+  }
+
+  // ---------- 선택지 ----------
+
+  private showChoices(options: ChoiceOption[]) {
+    this.activeChoices = options.filter((o) => gameState.check(o.condition));
+    if (this.activeChoices.length === 0) {
+      console.warn('[story] 표시할 선택지가 없습니다. 다음으로 넘어갑니다');
+      return this.nextNode();
+    }
+    if (this.skip) this.toggleSkip(false);
+    this.waitTimer?.remove();
+    this.mode = 'choice';
+    this.nextMark.setVisible(false);
+    this.monoMark.setVisible(false);
+    this.lastChoice = {
+      scene: this.sceneIdx,
+      node: this.nodeIdx,
+      state: gameState.snapshot(),
+      stage: {
+        left: this.portraits.left.charId ? { id: this.portraits.left.charId, expr: this.portraits.left.expr } : null,
+        right: this.portraits.right.charId ? { id: this.portraits.right.charId, expr: this.portraits.right.expr } : null,
+      },
+      shown: this.lastShown,
+      place: this.place,
+    };
+
+    const bh = 54;
+    const gap = 12;
+    const n = this.activeChoices.length;
+    const top = BOX.y - 56 - (n * bh + (n - 1) * gap);
+    this.activeChoices.forEach((opt, i) => {
+      const b = makeButton(this, W / 2, top + i * (bh + gap) + bh / 2, `${i + 1}. ${opt.text}`, () => this.pickChoice(i), {
+        w: 560,
+        h: bh,
+        fontSize: 24,
+        depth: 8,
+      });
+      this.choiceButtons.push(b);
+    });
+  }
+
+  private pickChoice(i: number) {
+    if (this.mode !== 'choice') return;
+    const opt = this.activeChoices[i];
+    this.choiceButtons.forEach((b) => b.destroy());
+    this.choiceButtons = [];
+    this.activeChoices = [];
+    this.backlog.push({ text: `▶ ${opt.text}` });
+    gameState.applyEffects(opt);
+    const target = opt.next ? this.story.scenes.findIndex((s) => s.id === opt.next) : -1;
+    if (opt.next && target < 0) console.error(`[story] 없는 장면 id: ${opt.next}`);
+    if (target >= 0) this.enterScene(target);
+    else this.nextNode();
+  }
+
+  /**
+   * 이어하기로 갈래 장면부터 시작해서 선택 기록이 없을 때:
+   * 이 장면으로 오는 선택지를 찾아 그 직전 화면(인물, 마지막 글)을 데이터에서 다시 만든다
+   */
+  private findChoicePoint(): ChoicePoint | null {
+    const target = this.scene_.id;
+    for (let si = 0; si < this.story.scenes.length; si++) {
+      const sc = this.story.scenes[si];
+      const ni = sc.nodes.findIndex((n) => 'choices' in n && n.choices.some((c) => c.next === target));
+      if (ni < 0) continue;
+      const stage: ChoicePoint['stage'] = { left: null, right: null };
+      let shown: LastShown = null;
+      let place = sc.place;
+      for (const n of sc.nodes.slice(0, ni)) {
+        if ('text' in n) {
+          shown = { kind: 'line', node: n };
+          const c = n.speaker ? characters[n.speaker] : undefined;
+          if (c) {
+            const side: Side = n.position ?? (c.id === 'leon' ? 'left' : 'right');
+            const other: Side = side === 'left' ? 'right' : 'left';
+            if (stage[other]?.id === c.id) stage[other] = null;
+            stage[side] = { id: c.id, expr: n.expression ?? 'normal' };
+          }
+        } else if ('monologue' in n) shown = { kind: 'mono', lines: n.monologue };
+        else if ('place' in n) place = n.place;
+      }
+      const state = gameState.snapshot();
+      const opt = (sc.nodes[ni] as { choices: ChoiceOption[] }).choices.find((c) => c.next === target);
+      for (const k of Object.keys(opt?.flags ?? {})) delete state.flags[k];
+      return { scene: si, node: ni, state, stage, shown, place };
+    }
+    return null;
+  }
+
+  /** 엔딩 화면에서 "선택지로 돌아가기": 선택 직전 화면과 상태로 되돌린다 */
+  private backToChoice() {
+    const cp = this.lastChoice;
+    if (!cp) return this.leave();
+    this.closeOverlay();
+    gameState.restore(cp.state);
+    this.cameras.main.fadeIn(300, 0, 0, 0);
+    this.sceneIdx = cp.scene;
+    this.nodeIdx = cp.node;
+    const sc = this.scene_;
+    save.setCheckpoint({ story: this.story.id, scene: sc.id, ...gameState.snapshot() });
+    this.bg.setFillStyle(hex(sc.color));
+    this.setPlace(cp.place, false);
+    this.clearText();
+    for (const side of ['left', 'right'] as Side[]) {
+      const s = cp.stage[side];
+      if (s) this.setPortrait(side, s.id, s.expr, true);
+      else this.hidePortrait(side, true);
+    }
+    if (cp.shown?.kind === 'line') this.showLine(cp.shown.node, true);
+    else if (cp.shown?.kind === 'mono') this.showMonoLine(cp.shown.lines);
+    const node = sc.nodes[cp.node];
+    if ('choices' in node) this.showChoices(node.choices);
+  }
+
+  // ---------- 엔딩, 막 전환 ----------
+
+  private showEnding(id: string) {
+    this.mode = 'end';
+    this.toggleAuto(false);
+    this.toggleSkip(false);
+    const def = this.story.endings[id];
+    if (!def) console.error(`[story] 없는 엔딩 id: ${id}`);
+    save.markEnding(id);
+    this.lastChoice ??= this.findChoicePoint();
+    // 이어하기는 엔딩 갈래를 다시 보지 않도록 선택지가 있던 장면부터
+    if (this.lastChoice) {
+      const sc = this.story.scenes[this.lastChoice.scene];
+      save.setCheckpoint({ story: this.story.id, scene: sc.id, ...this.lastChoice.state });
+    }
+
+    const shade = this.add.rectangle(0, 0, W, H, 0x2a0000, 1).setOrigin(0).setAlpha(0);
+    const label = this.add
+      .text(W / 2, H / 2 - 110, def?.label ?? 'END', { fontFamily: FONT, fontSize: '30px', color: '#e04848', fontStyle: 'bold' })
+      .setOrigin(0.5);
+    const title = this.add
+      .text(W / 2, H / 2 - 40, def?.title ?? id, { fontFamily: FONT, fontSize: '54px', color: '#f4dede', fontStyle: 'bold' })
+      .setOrigin(0.5)
+      .setShadow(0, 4, '#000000', 10);
+    const back = makeButton(this, W / 2, H / 2 + 90, '선택지로 돌아가기', () => this.backToChoice(), {
+      w: 320, h: 54, fontSize: 22, fill: [0x2a0c0c, 0x5a1a1a], stroke: 0xc05050, depth: 31,
+    });
+    const toTitle = makeButton(this, W / 2, H / 2 + 158, '타이틀로', () => this.leave(), {
+      w: 320, h: 54, fontSize: 22, fill: [0x2a0c0c, 0x5a1a1a], stroke: 0xc05050, depth: 31,
+    });
+    back.setEnabled(!!this.lastChoice);
+    const texts = [label, title, back, toTitle];
+    texts.forEach((t) => t.setAlpha(0));
+    this.overlay = this.add.container(0, 0, [shade, ...texts]).setDepth(30);
+    this.tweens.add({ targets: [this.box, this.nameBox, this.mono], alpha: 0, duration: 500 });
+    this.tweens.add({ targets: shade, alpha: 0.92, duration: 900 });
+    this.tweens.add({ targets: texts, alpha: 1, duration: 700, delay: 700 });
+  }
+
+  private showChapter(id: string) {
+    this.mode = 'end';
+    this.toggleAuto(false);
+    this.toggleSkip(false);
+    const def = this.story.chapters[id];
+    const cp = save.checkpoint;
+    save.setCheckpoint({
+      story: this.story.id,
+      scene: cp?.story === this.story.id ? cp.scene : this.story.scenes[0].id,
+      finished: true,
+      ...gameState.snapshot(),
+    });
+    const black = this.add.rectangle(0, 0, W, H, 0x000000, 1).setOrigin(0).setAlpha(0);
+    const done = this.add
+      .text(W / 2, H / 2 - 90, def?.finished ?? '', { fontFamily: FONT, fontSize: '24px', color: '#9a9a9a' })
+      .setOrigin(0.5);
+    const title = this.add
+      .text(W / 2, H / 2 - 30, def?.title ?? '다음 이야기로 이어집니다', { fontFamily: FONT, fontSize: '46px', color: '#e0c27a', fontStyle: 'bold' })
+      .setOrigin(0.5);
+    const note = this.add
+      .text(W / 2, H / 2 + 30, '(임시 화면)', { fontFamily: FONT, fontSize: '18px', color: '#777777' })
+      .setOrigin(0.5);
+    const hint = this.add
+      .text(W / 2, H - 80, '클릭하면 타이틀로 돌아갑니다', { fontFamily: FONT, fontSize: '18px', color: '#888888' })
+      .setOrigin(0.5);
+    const texts = [done, title, note, hint];
+    texts.forEach((t) => t.setAlpha(0));
+    this.overlay = this.add.container(0, 0, [black, ...texts]).setDepth(30);
+    this.tweens.add({ targets: black, alpha: 1, duration: 900 });
+    this.tweens.add({ targets: texts, alpha: 1, duration: 700, delay: 800 });
+    this.time.delayedCall(1300, () => {
+      black.setInteractive();
+      black.once('pointerdown', () => this.leave());
+      this.input.keyboard!.once('keydown', () => this.leave());
+    });
+  }
+
+  private closeOverlay() {
+    this.overlay?.destroy();
+    this.overlay = undefined;
+  }
+
+  // ---------- 백로그 ----------
+
+  private openLog() {
+    if (this.logView || this.overlay || this.backlog.length === 0) return;
+    this.waitTimer?.remove();
+    const top = 90;
+    const bottom = H - 70;
+    const shade = this.add.rectangle(0, 0, W, H, 0x05050a, 0.94).setOrigin(0).setInteractive();
+    shade.on('pointerdown', (_p: unknown, _x: number, _y: number, e: Phaser.Types.Input.EventData) => {
+      e.stopPropagation();
+      this.closeLog();
+    });
+    const head = this.add.text(W / 2, 44, '지난 대사', { fontFamily: FONT, fontSize: '26px', color: '#e0c27a' }).setOrigin(0.5);
+    const help = this.add
+      .text(W / 2, H - 34, '휠·방향키로 넘기기 / 클릭·Esc로 닫기', { fontFamily: FONT, fontSize: '16px', color: '#888888' })
+      .setOrigin(0.5);
+    const body = this.backlog
+      .map((e) => (e.name ? `【${e.name}】\n${e.text}` : e.text))
+      .join('\n\n');
+    const text = this.add.text(110, 0, body, {
+      fontFamily: FONT,
+      fontSize: '22px',
+      color: '#e8e8e8',
+      lineSpacing: 8,
+      wordWrap: { width: W - 220, useAdvancedWrap: true },
+    });
+    const maskShape = this.make.graphics({}, false).fillRect(0, top, W, bottom - top);
+    text.setMask(maskShape.createGeometryMask());
+    // 맨 아래(가장 최근)부터 보이게
+    const min = Math.min(top, bottom - text.height);
+    text.setY(min);
+    const root = this.add.container(0, 0, [shade, head, help, text]).setDepth(20);
+    this.logView = { root, text, top, min };
+  }
+
+  private scrollLog(dy: number) {
+    const v = this.logView;
+    if (!v) return;
+    v.text.setY(Phaser.Math.Clamp(v.text.y - dy, v.min, v.top));
+  }
+
+  private closeLog() {
+    this.logView?.root.destroy();
+    this.logView = undefined;
+    this.scheduleNext();
+  }
+
+  // ---------- 끝내기 ----------
+
+  private leave() {
+    this.mode = 'end';
+    this.typeTimer?.remove();
+    this.waitTimer?.remove();
+    this.cameras.main.fadeOut(300, 0, 0, 0);
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      const back = this.start.returnTo;
+      if (back) {
+        this.scene.resume(back);
+        this.scene.stop();
+      } else {
+        this.scene.start('Title');
+      }
+    });
+  }
+}

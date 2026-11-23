@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import type { Expression } from './types';
 
 export const PORTRAIT_W = 300;
 export const PORTRAIT_H = 520;
@@ -26,59 +25,6 @@ export function makeBodyPlaceholder(scene: Phaser.Scene, key: string, id: string
   g.lineStyle(3, 0x4a4a4a, 1);
   g.strokeCircle(HEAD_X, HEAD_Y, 66);
   g.strokeRoundedRect(HEAD_X - 120, HEAD_Y + 90, 240, PORTRAIT_H - HEAD_Y - 90, 60);
-  g.generateTexture(key, PORTRAIT_W, PORTRAIT_H);
-  g.destroy();
-}
-
-/** 표정 임시 그림 (몸과 같은 크기, 투명 배경) */
-export function makeFacePlaceholder(scene: Phaser.Scene, key: string, expr: Expression) {
-  const g = scene.make.graphics({}, false);
-  const ink = 0x2b2b2b;
-  const ex = 24; // 눈 간격
-  const ey = HEAD_Y - 6;
-  const my = HEAD_Y + 30;
-  g.lineStyle(5, ink, 1);
-  g.fillStyle(ink, 1);
-
-  const brows = (tilt: number) => {
-    g.lineBetween(HEAD_X - ex - 14, ey - 22 - tilt, HEAD_X - ex + 12, ey - 22 + tilt);
-    g.lineBetween(HEAD_X + ex - 12, ey - 22 + tilt, HEAD_X + ex + 14, ey - 22 - tilt);
-  };
-  const arc = (x: number, y: number, r: number, from: number, to: number) => {
-    g.beginPath();
-    g.arc(x, y, r, Phaser.Math.DegToRad(from), Phaser.Math.DegToRad(to));
-    g.strokePath();
-  };
-
-  switch (expr) {
-    case 'normal':
-      g.fillCircle(HEAD_X - ex, ey, 6);
-      g.fillCircle(HEAD_X + ex, ey, 6);
-      g.lineBetween(HEAD_X - 14, my, HEAD_X + 14, my);
-      break;
-    case 'smile':
-      arc(HEAD_X - ex, ey + 4, 9, 200, 340);
-      arc(HEAD_X + ex, ey + 4, 9, 200, 340);
-      arc(HEAD_X, my - 12, 18, 30, 150);
-      break;
-    case 'angry':
-      brows(7);
-      g.fillCircle(HEAD_X - ex, ey, 6);
-      g.fillCircle(HEAD_X + ex, ey, 6);
-      arc(HEAD_X, my + 14, 16, 220, 320);
-      break;
-    case 'sad':
-      brows(-7);
-      g.fillCircle(HEAD_X - ex, ey + 2, 5);
-      g.fillCircle(HEAD_X + ex, ey + 2, 5);
-      arc(HEAD_X, my + 14, 14, 215, 325);
-      break;
-    case 'surprised':
-      g.strokeCircle(HEAD_X - ex, ey, 10);
-      g.strokeCircle(HEAD_X + ex, ey, 10);
-      g.strokeCircle(HEAD_X, my + 4, 9);
-      break;
-  }
   g.generateTexture(key, PORTRAIT_W, PORTRAIT_H);
   g.destroy();
 }

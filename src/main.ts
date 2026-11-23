@@ -1,10 +1,8 @@
 import Phaser from 'phaser';
 import { gameState } from './game/GameState';
 import { FieldScene } from './scenes/FieldScene';
-import { DialogueScene } from './scenes/DialogueScene';
-import { TitleCardScene } from './scenes/TitleCardScene';
-
-gameState.load();
+import { StoryScene } from './scenes/StoryScene';
+import { TitleScene } from './scenes/TitleScene';
 
 const WIDTH = 960;
 const HEIGHT = 720;
@@ -25,7 +23,8 @@ const game = new Phaser.Game({
     zoom: fitZoom(),
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [FieldScene, DialogueScene, TitleCardScene],
+  // 첫 장면 = 타이틀. 필드(FieldScene)는 1막에서 이어 붙일 예정
+  scene: [TitleScene, StoryScene, FieldScene],
 });
 
 window.addEventListener('resize', () => game.scale.setZoom(fitZoom()));

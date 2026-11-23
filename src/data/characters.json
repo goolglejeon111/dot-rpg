@@ -11,6 +11,9 @@
     { "id": "marcion", "name": "마르키온", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
     { "id": "herman", "name": "헤르만 공작", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
     { "id": "cassius", "name": "카시우스", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "bram", "name": "브람", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "oswald", "name": "오스발트", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "marcion_hooded", "name": "침입자", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
     { "id": "imperial_guard", "name": "근위병", "expressions": ["normal", "smile", "angry", "sad", "surprised"] }
   ]
 }

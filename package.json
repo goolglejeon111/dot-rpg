@@ -8,7 +8,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "art": "node tools/pixel-art/build.mjs",
-    "map": "node tools/map/make-village.mjs"
+    "map": "node tools/map/make-village.mjs",
+    "script": "node tools/script/convert.mjs",
+    "script:check": "node tools/script/check.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

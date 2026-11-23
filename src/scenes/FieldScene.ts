@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { characters } from '../game/data';
-import type { DialogueSceneData } from './DialogueScene';
+import type { StoryStartData } from './StoryScene';
 
 /** 화면 배율: 32px 타일을 2배로 보여 준다 (960x720 화면에 월드 480x360) */
 const ZOOM = 2;
@@ -240,9 +240,9 @@ export class FieldScene extends Phaser.Scene {
     this.stand();
     this.talkIcon.setVisible(false);
 
-    const data: DialogueSceneData = { dialogueId: npc.dialogue, returnTo: this.scene.key };
+    const data: StoryStartData = { story: npc.dialogue, returnTo: this.scene.key };
     this.scene.pause();
-    this.scene.launch('Dialogue', data);
+    this.scene.launch('Story', data);
   }
 
   private nameTag(x: number, y: number, name: string) {

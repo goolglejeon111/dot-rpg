@@ -24,16 +24,13 @@ function walkRow(body, legs, extra = {}) {
   ];
 }
 
-// 근위병: 레온 그림을 색만 바꿔 씀 (머리 → 은색 투구, 남색 → 붉은 제복)
-const GUARD_REMAP = {
-  j: 'l', h: 'm', H: 'M', J: 'L',
-  b: 'x', n: 'X', N: 'Z', B: 'Z',
-};
+// 근위병: 몸통은 따로 그림(art/guard.txt), 다리는 레온 다리를 은색 정강이받이로 색만 바꿔 씀
+const GUARD_LEGS = { K: 'M', k: 'L' };
 const guardStand = (body, legs, flipX = false) => ({
   flipX,
   layers: [
-    { art: `${legs}_stand`, y: LEGS_Y, remap: GUARD_REMAP },
-    { art: body, y: 0, remap: GUARD_REMAP },
+    { art: `${legs}_stand`, y: LEGS_Y, remap: GUARD_LEGS },
+    { art: body, y: 0 },
   ],
 });
 
@@ -66,10 +63,10 @@ export const OUTPUTS = [
     cell: [32, 40],
     columns: 4, // 아래, 왼쪽, 오른쪽, 위
     frames: [
-      guardStand('leon_body_down', 'leon_legs_front'),
-      guardStand('leon_body_right', 'leon_legs_side', true),
-      guardStand('leon_body_right', 'leon_legs_side'),
-      guardStand('leon_body_up', 'leon_legs_front'),
+      guardStand('guard_body_down', 'leon_legs_front'),
+      guardStand('guard_body_right', 'leon_legs_side', true),
+      guardStand('guard_body_right', 'leon_legs_side'),
+      guardStand('guard_body_up', 'leon_legs_front'),
     ],
   },
   {

@@ -23,7 +23,10 @@ interface Npc {
   sprite: Phaser.GameObjects.Sprite;
   dialogue: string;
   facing: Dir;
+  tag: Phaser.GameObjects.Text;
 }
+
+const TAG_GAP = 41; // 발밑에서 이름표 아래까지
 
 /** 마을 필드: 8방향 이동, 발밑 충돌, y 깊이 정렬, NPC에게 말 걸기 */
 export class FieldScene extends Phaser.Scene {
@@ -99,9 +102,9 @@ export class FieldScene extends Phaser.Scene {
         const key = (prop('sprite') as string) ?? 'guard';
         const sprite = this.add.sprite(x, y, key, DIRS.indexOf(facing)).setOrigin(0.5, 1).setDepth(y);
         this.add.image(x, y + 1, 'shadow').setOrigin(0.5, 1).setDepth(-1);
-        this.nameTag(x, y, characters[prop('character') as string]?.name ?? o.name ?? '');
+        const tag = this.nameTag(x, y, characters[prop('character') as string]?.name ?? o.name ?? '');
         addFoot(x, y, 14, 8);
-        this.npcs.push({ sprite, dialogue: prop('dialogue') as string, facing });
+        this.npcs.push({ sprite, dialogue: prop('dialogue') as string, facing, tag });
       } else if (PROPS[o.type]) {
         const p = PROPS[o.type];
         if (p.shadow) this.add.image(x, y + 2, p.shadow).setOrigin(0.5, 1).setDepth(-1);
@@ -185,7 +188,23 @@ export class FieldScene extends Phaser.Scene {
     const { x, y } = this.player;
     this.player.setDepth(y);
     this.playerShadow.setPosition(x, y + 1);
-    this.playerTag.setPosition(Math.round(x), Math.round(y - 41));
+    this.playerTag.setPosition(Math.round(x), Math.round(y - TAG_GAP));
+    this.separateTags();
+  }
+
+  /** 이름표끼리 겹치면 뒤쪽(위쪽)에 선 캐릭터의 이름표를 앞 이름표 위로 올린다 */
+  private separateTags() {
+    const pt = this.playerTag;
+    for (const n of this.npcs) {
+      const { x, y } = n.sprite;
+      n.tag.setPosition(Math.round(x), Math.round(y - TAG_GAP));
+      const h = n.tag.displayHeight;
+      const overlapX = Math.abs(n.tag.x - pt.x) < (n.tag.displayWidth + pt.displayWidth) / 2 + 2;
+      const overlapY = Math.abs(n.tag.y - pt.y) < h;
+      if (!overlapX || !overlapY) continue;
+      if (n.sprite.y <= this.player.y) n.tag.y = pt.y - h;
+      else pt.y = n.tag.y - h;
+    }
   }
 
   private updateTalk() {
@@ -202,8 +221,9 @@ export class FieldScene extends Phaser.Scene {
     this.nearNpc = best;
     this.talkIcon.setVisible(!!best);
     if (!best) return;
-    // 이름표(발밑에서 41~51px 위) 바로 위에 띄운다
-    this.talkIcon.setPosition(best.sprite.x, best.sprite.y - 53 - (Math.floor(this.time.now / 400) % 2));
+    // 그 NPC 이름표 바로 위에 띄운다
+    const top = Math.min(best.tag.y, this.playerTag.y) - best.tag.displayHeight;
+    this.talkIcon.setPosition(best.sprite.x, top - 1 - (Math.floor(this.time.now / 400) % 2));
 
     const k = this.keys;
     if (Phaser.Input.Keyboard.JustDown(k.space) || Phaser.Input.Keyboard.JustDown(k.z)) this.talk(best);

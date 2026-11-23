@@ -32,7 +32,6 @@ const PORTRAIT_HEIGHT = 700; // 화면에 보이는 스탠딩 높이 (하단 기
 const SIDE_X: Record<Side, number> = { left: 255, right: 705 };
 const DIM_SPEAK = 0x5c5c5c; // 듣는 사람
 const DIM_MONO = 0x9a9a9a; // 독백 중 (살짝)
-const SKIP_DELAY = 45;
 
 const bodyKey = (id: string) => `${id}_body`;
 const faceKey = (id: string, e: Expression) => `${id}_face_${e}`;
@@ -89,7 +88,6 @@ export class StoryScene extends Phaser.Scene {
   private typeTimer?: Phaser.Time.TimerEvent;
   private waitTimer?: Phaser.Time.TimerEvent;
   private auto = false;
-  private skip = false;
   private lastShown: LastShown = null;
   private lastChoice: ChoicePoint | null = null;
   private place = '';
@@ -122,7 +120,6 @@ export class StoryScene extends Phaser.Scene {
     this.start = data;
     this.mode = 'busy';
     this.auto = false;
-    this.skip = false;
     this.lastShown = null;
     this.lastChoice = null;
     this.backlog = [];
@@ -244,7 +241,7 @@ export class StoryScene extends Phaser.Scene {
     const small = { w: 92, h: 36, fontSize: 17, depth: 9 };
     makeButton(this, W - 392, 30, '로그 (L)', () => this.openLog(), small);
     this.autoBtn = makeButton(this, W - 294, 30, '자동 (A)', () => this.toggleAuto(), small);
-    this.skipBtn = makeButton(this, W - 196, 30, '스킵 (S)', () => this.toggleSkip(), small);
+    this.skipBtn = makeButton(this, W - 196, 30, '스킵 (S)', () => this.skipToNextPlace(), small);
     makeButton(this, W - 72, 30, '타이틀로', () => this.leave(), { ...small, w: 112 });
 
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
@@ -280,7 +277,6 @@ export class StoryScene extends Phaser.Scene {
     }
     this.mode = 'busy';
     this.clearText();
-    const fast = this.skip;
     const first = !this.entered;
     this.entered = true;
     this.sceneIdx = i;
@@ -291,11 +287,11 @@ export class StoryScene extends Phaser.Scene {
     const swap = () => {
       for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
       this.bg.setFillStyle(hex(sc.color));
-      this.setPlace(sc.place, !fast);
+      this.setPlace(sc.place, true);
     };
-    if (first || fast) {
+    if (first) {
       swap();
-      this.time.delayedCall(fast ? 80 : 500, () => this.runNode());
+      this.time.delayedCall(500, () => this.runNode());
       return;
     }
     this.cameras.main.fadeOut(260, 0, 0, 0);
@@ -348,7 +344,7 @@ export class StoryScene extends Phaser.Scene {
       console.info(`[story] 전투 자리(${node.battle}): ${node.note ?? ''} — 지금은 건너뜁니다`);
       this.nextNode();
     } else if ('place' in node) {
-      this.setPlace(node.place, !this.skip);
+      this.setPlace(node.place, true);
       this.nextNode();
     } else if ('ending' in node) {
       gameState.applyEffects(node);
@@ -369,7 +365,6 @@ export class StoryScene extends Phaser.Scene {
   private onPress() {
     if (this.logView) return this.closeLog();
     if (this.overlay) return;
-    if (this.skip) this.toggleSkip(false);
     this.advance();
   }
 
@@ -404,7 +399,7 @@ export class StoryScene extends Phaser.Scene {
     if (this.overlay) return;
     if (k === 'l') this.openLog();
     else if (k === 'a') this.toggleAuto();
-    else if (k === 's' || ev.key === 'Control') this.toggleSkip();
+    else if ((k === 's' || ev.key === 'Control') && !ev.repeat) this.skipToNextPlace(); // 누르고 있어도 한 번만
     else if (this.mode === 'choice') {
       const n = Number(ev.key);
       if (n >= 1 && n <= this.activeChoices.length) this.pickChoice(n - 1);
@@ -418,13 +413,25 @@ export class StoryScene extends Phaser.Scene {
     if (!on) this.waitTimer?.remove();
   }
 
-  private toggleSkip(on = !this.skip) {
-    this.skip = on;
-    this.skipBtn.setOn(on);
-    if (on && (this.mode === 'typing' || this.mode === 'waiting')) {
-      if (this.isCurrentRead()) this.advance();
-      else this.toggleSkip(false);
+  /**
+   * 스킵: 다음에 장소가 바뀌는 곳(다음 장면, 또는 장면 안의 장소 변경) 바로 뒤로 건너뛴다.
+   * 선택지·엔딩·막 끝은 건너뛰지 않고 그 앞에서 멈춘다. 건너뛴 대사의 효과(플래그 등)는 적용한다.
+   */
+  private skipToNextPlace() {
+    if (this.overlay || this.logView) return;
+    if (this.mode !== 'typing' && this.mode !== 'waiting') return;
+    const nodes = this.scene_.nodes;
+    let i = this.nodeIdx + 1;
+    for (; i < nodes.length; i++) {
+      const n = nodes[i];
+      if ('place' in n || 'choices' in n || 'ending' in n || 'chapter' in n) break;
+      if ('text' in n) gameState.applyEffects(n);
     }
+    this.toggleAuto(false);
+    this.clearText();
+    for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
+    this.nodeIdx = i;
+    this.runNode(); // 장면 끝까지 갔으면 runNode가 다음 장면으로 넘어간다
   }
 
   // ---------- 글 표시 (대사, 독백 공통) ----------
@@ -433,11 +440,7 @@ export class StoryScene extends Phaser.Scene {
     return `${this.story.id}:${this.scene_.id}:${this.nodeIdx}:${this.monoIdx}`;
   }
 
-  private isCurrentRead() {
-    return save.isRead(this.readKey());
-  }
-
-  /** target 글자를 한 글자씩. 건너뛰기 중이고 읽은 글이면 바로 */
+  /** target 글자를 한 글자씩 */
   private typeText(text: string, render: (s: string) => void) {
     this.full = text;
     this.shown = 0;
@@ -445,10 +448,8 @@ export class StoryScene extends Phaser.Scene {
     this.waitTimer?.remove();
     this.mode = 'typing';
     this.render = render;
-    const read = this.isCurrentRead();
-    if (this.skip && !read) this.toggleSkip(false);
     const delay = save.settings.textDelay;
-    if ((this.skip && read) || delay <= 0) return this.completeTyping();
+    if (delay <= 0) return this.completeTyping();
     render('');
     const chars = Array.from(text);
     this.typeTimer = this.time.addEvent({
@@ -476,14 +477,11 @@ export class StoryScene extends Phaser.Scene {
     this.scheduleNext();
   }
 
-  /** 자동 진행·건너뛰기 */
+  /** 자동 진행 */
   private scheduleNext() {
     this.waitTimer?.remove();
-    if (this.mode !== 'waiting' || this.overlay || this.logView) return;
-    let delay = -1;
-    if (this.skip) delay = SKIP_DELAY;
-    else if (this.auto) delay = save.settings.autoDelay + Array.from(this.full).length * 25;
-    if (delay < 0) return;
+    if (this.mode !== 'waiting' || this.overlay || this.logView || !this.auto) return;
+    const delay = save.settings.autoDelay + Array.from(this.full).length * 25;
     this.waitTimer = this.time.delayedCall(delay, () => {
       if (this.mode === 'waiting' && !this.overlay && !this.logView) this.advance();
     });
@@ -567,7 +565,7 @@ export class StoryScene extends Phaser.Scene {
       // 등장
       this.tweens.killTweensOf(p.container);
       p.container.setVisible(true);
-      if (instant || this.skip) p.container.setAlpha(1).setY(H);
+      if (instant) p.container.setAlpha(1).setY(H);
       else {
         p.container.setAlpha(0).setY(H + 16);
         this.tweens.add({ targets: p.container, alpha: 1, y: H, duration: 220, ease: 'Quad.easeOut' });
@@ -610,7 +608,6 @@ export class StoryScene extends Phaser.Scene {
       console.warn('[story] 표시할 선택지가 없습니다. 다음으로 넘어갑니다');
       return this.nextNode();
     }
-    if (this.skip) this.toggleSkip(false);
     this.waitTimer?.remove();
     this.mode = 'choice';
     this.nextMark.setVisible(false);
@@ -720,7 +717,6 @@ export class StoryScene extends Phaser.Scene {
   private showEnding(id: string) {
     this.mode = 'end';
     this.toggleAuto(false);
-    this.toggleSkip(false);
     const def = this.story.endings[id];
     if (!def) console.error(`[story] 없는 엔딩 id: ${id}`);
     save.markEnding(id);
@@ -757,7 +753,6 @@ export class StoryScene extends Phaser.Scene {
   private showChapter(id: string) {
     this.mode = 'end';
     this.toggleAuto(false);
-    this.toggleSkip(false);
     const def = this.story.chapters[id];
     const cp = save.checkpoint;
     save.setCheckpoint({

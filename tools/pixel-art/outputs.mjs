@@ -2,16 +2,17 @@
 // 프레임 = 그림 이름, 또는 여러 그림을 겹친 { layers: [...] }
 // layer 옵션: x, y(위치), flipX(좌우 반전), remap(색 바꾸기 { 원래글자: 새글자 })
 import { SHORE_MASKS, shoreName } from './shore.mjs';
+import { CHARS } from './gen-characters.mjs';
 
 // ---- 캐릭터: 몸(35줄) 아래에 다리(10줄)를 깔아 32x40 한 칸을 만든다 ----
 const LEGS_Y = 30;
 
-/** 서기, 걷기1~4. 걷기1·3(다리 벌림)에서 몸이 1픽셀 내려가 출렁인다 */
-function walkRow(body, legs, extra = {}) {
+/** 서기, 걷기1~4. 걷기1·3(다리 벌림)에서 몸이 1픽셀 내려가 출렁인다. remap: 다리 색 바꾸기 */
+function walkRow(body, legs, extra = {}, remap) {
   const f = (legArt, bodyY) => ({
     ...extra,
     layers: [
-      { art: legArt, y: LEGS_Y },
+      { art: legArt, y: LEGS_Y, remap },
       { art: body, y: bodyY },
     ],
   });
@@ -24,15 +25,55 @@ function walkRow(body, legs, extra = {}) {
   ];
 }
 
-// 근위병: 몸통은 따로 그림(art/guard.txt), 다리는 레온 다리를 은색 정강이받이로 색만 바꿔 씀
-const GUARD_LEGS = { K: 'M', k: 'L' };
-const guardStand = (body, legs, flipX = false) => ({
+/** 서 있기 한 칸 */
+const stand = (body, legs, remap, flipX = false) => ({
   flipX,
   layers: [
-    { art: `${legs}_stand`, y: LEGS_Y, remap: GUARD_LEGS },
+    { art: `${legs}_stand`, y: LEGS_Y, remap },
     { art: body, y: 0 },
   ],
 });
+
+/** 인물 시트. 파티원: 5열(서기, 걷기1~4) x 4행 / NPC·모브: 4열(아래, 왼쪽, 오른쪽, 위) */
+function characterSheet(c) {
+  const b = (v) => `${c.id}_body_${v}`;
+  const remap = Object.keys(c.legs ?? {}).length ? c.legs : undefined;
+  if (c.kind === 'party') {
+    return {
+      file: `public/assets/sprites/${c.id}.png`,
+      cell: [32, 40],
+      columns: 5,
+      frames: [
+        ...walkRow(b('down'), 'leon_legs_front', {}, remap),
+        ...walkRow(b('right'), 'leon_legs_side', { flipX: true }, remap),
+        ...walkRow(b('right'), 'leon_legs_side', {}, remap),
+        ...walkRow(b('up'), 'leon_legs_front', {}, remap),
+      ],
+    };
+  }
+  return {
+    file: `public/assets/sprites/${c.id}.png`,
+    cell: [32, 40],
+    columns: 4,
+    frames: [
+      stand(b('down'), 'leon_legs_front', remap),
+      stand(b('right'), 'leon_legs_side', remap, true),
+      stand(b('right'), 'leon_legs_side', remap),
+      stand(b('up'), 'leon_legs_front', remap),
+    ],
+  };
+}
+
+// 확인용 한 장: 인물마다 한 줄씩 (아래, 왼쪽, 오른쪽, 위), 발밑 그림자 포함
+const LEON = { id: 'leon', legs: {} };
+const ALL = [LEON, ...CHARS];
+const withShadow = (f) => ({ ...f, layers: [{ art: 'shadow', x: 6, y: 34 }, ...f.layers] });
+const leonStand = (v, legs, flipX) => stand(`leon_body_${v}`, legs, undefined, flipX);
+const PREVIEW_FRAMES = ALL.flatMap((c) =>
+  c === LEON
+    ? [leonStand('down', 'leon_legs_front'), leonStand('right', 'leon_legs_side', true), leonStand('right', 'leon_legs_side'), leonStand('up', 'leon_legs_front')]
+    : characterSheet({ ...c, kind: 'npc' }).frames,
+).map(withShadow);
 
 export const OUTPUTS = [
   {
@@ -58,16 +99,15 @@ export const OUTPUTS = [
       ...walkRow('leon_body_up', 'leon_legs_front'),
     ],
   },
+  ...CHARS.map(characterSheet),
+  // 확인용: 모든 인물을 한 장에 (4방향씩 가로로 두 묶음), 풀밭 배경, 3배 확대
   {
-    file: 'public/assets/sprites/guard.png',
+    file: 'tools/pixel-art/preview.png',
     cell: [32, 40],
-    columns: 4, // 아래, 왼쪽, 오른쪽, 위
-    frames: [
-      guardStand('guard_body_down', 'leon_legs_front'),
-      guardStand('guard_body_right', 'leon_legs_side', true),
-      guardStand('guard_body_right', 'leon_legs_side'),
-      guardStand('guard_body_up', 'leon_legs_front'),
-    ],
+    columns: 8,
+    frames: PREVIEW_FRAMES,
+    background: 'g',
+    scale: 3,
   },
   {
     file: 'public/assets/sprites/tree.png',

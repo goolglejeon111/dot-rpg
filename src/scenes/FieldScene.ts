@@ -11,6 +11,16 @@ type Dir = 'down' | 'left' | 'right' | 'up';
 const DIRS: Dir[] = ['down', 'left', 'right', 'up']; // 스프라이트 시트 행 순서
 const WATER = [6, 7]; // terrain 타일 번호 + 1 (Tiled는 1부터 셈)
 
+/** 인물 스프라이트 시트 (32x40). 파티원은 5열 걷기, 나머지는 4열 서기(아래, 왼쪽, 오른쪽, 위) */
+const PARTY = ['leon', 'serena', 'elysia', 'karg', 'adrian', 'galia'];
+const CHARACTER_SPRITES = [
+  ...PARTY,
+  'bram', 'oswald', 'marcion_hooded', 'marcion', 'ignatius', 'herman', 'cassius',
+  'mob_royal_knight', 'mob_paladin', 'mob_gnosis', 'mob_citizen',
+];
+/** 서 있는 프레임 번호 */
+const standFrame = (key: string, dir: Dir) => DIRS.indexOf(dir) * (PARTY.includes(key) ? 5 : 1);
+
 /** 오브젝트 종류별 그림과 발밑 충돌 상자 (발밑 가운데 기준, 픽셀) */
 const PROPS: Record<string, { key: string; foot: [number, number] | null; shadow?: string; dy?: number }> = {
   tree: { key: 'tree', foot: [14, 8], shadow: 'shadow_large', dy: 4 },
@@ -46,8 +56,9 @@ export class FieldScene extends Phaser.Scene {
   preload() {
     this.load.tilemapTiledJSON('village', 'assets/maps/village.json');
     this.load.image('terrain', 'assets/tilesets/terrain.png');
-    this.load.spritesheet('leon', 'assets/sprites/leon.png', { frameWidth: 32, frameHeight: 40 });
-    this.load.spritesheet('guard', 'assets/sprites/guard.png', { frameWidth: 32, frameHeight: 40 });
+    for (const id of CHARACTER_SPRITES) {
+      this.load.spritesheet(id, `assets/sprites/${id}.png`, { frameWidth: 32, frameHeight: 40 });
+    }
     for (const k of ['tree', 'house', 'crate', 'sign', 'shadow', 'shadow_large', 'talk_icon']) {
       this.load.image(k, `assets/sprites/${k}.png`);
     }
@@ -99,8 +110,8 @@ export class FieldScene extends Phaser.Scene {
         spawn = { x, y };
       } else if (o.type === 'npc') {
         const facing = (prop('facing') as Dir) ?? 'down';
-        const key = (prop('sprite') as string) ?? 'guard';
-        const sprite = this.add.sprite(x, y, key, DIRS.indexOf(facing)).setOrigin(0.5, 1).setDepth(y);
+        const key = (prop('sprite') as string) ?? 'mob_citizen';
+        const sprite = this.add.sprite(x, y, key, standFrame(key, facing)).setOrigin(0.5, 1).setDepth(y);
         this.add.image(x, y + 1, 'shadow').setOrigin(0.5, 1).setDepth(-1);
         const tag = this.nameTag(x, y, characters[prop('character') as string]?.name ?? o.name ?? '');
         addFoot(x, y, 14, 8);
@@ -196,6 +207,7 @@ export class FieldScene extends Phaser.Scene {
   private separateTags() {
     const pt = this.playerTag;
     for (const n of this.npcs) {
+      if (!n.dialogue) continue; // 대화가 없는 인물은 말 걸기 표시를 띄우지 않음
       const { x, y } = n.sprite;
       n.tag.setPosition(Math.round(x), Math.round(y - TAG_GAP));
       const h = n.tag.displayHeight;
@@ -235,7 +247,7 @@ export class FieldScene extends Phaser.Scene {
     const dy = this.player.y - npc.sprite.y;
     const toPlayer: Dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : dy < 0 ? 'up' : 'down';
     const opposite: Record<Dir, Dir> = { left: 'right', right: 'left', up: 'down', down: 'up' };
-    npc.sprite.setFrame(DIRS.indexOf(toPlayer));
+    npc.sprite.setFrame(standFrame(npc.sprite.texture.key, toPlayer));
     this.facing = opposite[toPlayer];
     this.stand();
     this.talkIcon.setVisible(false);

@@ -110,13 +110,29 @@ function build(art, out) {
   const frames = out.frames.map(normalize);
   const cols = out.columns ?? frames.length;
   const rowsN = Math.ceil(frames.length / cols);
-  const img = blank(cw * cols, ch * rowsN);
+  let img = blank(cw * cols, ch * rowsN);
+  // background: 전체를 칠할 팔레트 글자 (확인용 이미지)
+  if (out.background) {
+    const [r, g, b] = palette[out.background];
+    for (let i = 0; i < img.w * img.h; i++) img.px.set([r, g, b, 255], i * 4);
+  }
   frames.forEach((f, i) => {
     if (!f) return;
     const ox = (i % cols) * cw;
     const oy = Math.floor(i / cols) * ch;
     for (const layer of f.layers) drawLayer(img, art, { ...layer, flipX: layer.flipX ?? f.flipX }, ox, oy);
   });
+  // scale: 정수 배 확대 (확인용 이미지)
+  if (out.scale > 1) {
+    const s = out.scale;
+    const big = blank(img.w * s, img.h * s);
+    for (let y = 0; y < big.h; y++)
+      for (let x = 0; x < big.w; x++) {
+        const si = (Math.floor(y / s) * img.w + Math.floor(x / s)) * 4;
+        big.px.set(img.px.subarray(si, si + 4), (y * big.w + x) * 4);
+      }
+    img = big;
+  }
   const path = join(ROOT, out.file);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, encodePNG(img.w, img.h, img.px));

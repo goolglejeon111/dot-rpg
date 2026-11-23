@@ -90,7 +90,11 @@ const obj = (type, tx, ty, props = {}, name = '') => {
   });
 };
 obj('spawn', 30, 24, {}, 'leon');
-obj('npc', 33, 20, { sprite: 'guard', character: 'imperial_guard', dialogue: 'prologue_awakening', facing: 'left' }, 'guard');
+// 크기와 구분 확인용: 광장에 파티원, 동쪽 길에 NPC, 서쪽 길에 모브
+const npc = (id, x, y, facing = 'down', name = '') => obj('npc', x, y, { sprite: id, character: id, facing }, name || id);
+[['serena', 27], ['elysia', 28.5], ['karg', 30], ['adrian', 31.5], ['galia', 33]].forEach(([id, x]) => npc(id, x, 20));
+[['bram', 36], ['oswald', 38], ['ignatius', 40], ['herman', 42], ['cassius', 44], ['marcion_hooded', 46], ['marcion', 48]].forEach(([id, x]) => npc(id, x, 22.5));
+[['mob_royal_knight', '근위기사', 24], ['mob_paladin', '성기사단 병사', 21.5], ['mob_gnosis', '그노시스회 하수인', 19], ['mob_citizen', '황도 시민', 16.5]].forEach(([id, name, x]) => npc(id, x, 22.5, 'down', name));
 obj('house', 30, 9);
 obj('house', 13, 15);
 obj('house', 47, 14);

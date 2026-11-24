@@ -5,7 +5,7 @@ import fighters from '../data/battle/fighters.json';
 import levels from '../data/battle/levels.json';
 import { gameState } from '../game/GameState';
 import { fxInfo, makeBattleAnims, preloadBattle } from './assets';
-import { EXP_REWARD, gainExp, gainOnce, isUnlocked, levelOf, statsOf, unlockLevel, type LevelUp, type Unlock } from './progress';
+import { EXP_REWARD, gainExp, gainOnce, isUnlocked, levelOf, partyIds, statsOf, type LevelUp, type Unlock } from './progress';
 import { MAPS, findObj, footOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf } from '../explore/mapData';
 import type { ExploreScene } from '../explore/ExploreScene';
 
@@ -521,7 +521,9 @@ export class BattleScene extends Phaser.Scene {
     const d = (fighters.party as Record<string, FighterDef>)[id];
     if (!d) return null;
     const st = statsOf(id)!;
-    const f = new Fighter(id, id, 'party', d);
+    // 대본의 costume으로 바뀐 겉모습 (그림이 없으면 기본)
+    const c = gameState.progress.costume[id];
+    const f = new Fighter(id, c && this.textures.exists(c) && this.textures.exists(`bt_${c}`) ? c : id, 'party', d);
     Object.assign(f, { hp: st.hp, maxHp: st.hp, atk: st.atk, defense: st.def, speed: d.speed, stamina: d.stamina ?? 100, maxStamina: d.stamina ?? 100 });
     f.facing = 'right';
     f.aimX = 1;
@@ -813,7 +815,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private lockedToast(what: Unlock, label: string) {
-    this.notices.push({ kind: 'toast', text: `🔒 ${label}은(는) ${unlockLevel(what)}레벨에 해금됩니다`, what });
+    this.notices.push({ kind: 'toast', text: `🔒 ${label}은(는) 아직 열리지 않았습니다`, what });
   }
 
   private tryEvade(f: Fighter) {
@@ -1111,8 +1113,12 @@ export class BattleScene extends Phaser.Scene {
 
   /** 경험치: 파티 전원이 같은 양. 레벨이 오르면 체력·공격력·방어력이 오르고 알림 */
   grantExp(amount: number) {
-    const ids = this.party.map((p) => p.id);
-    this.showLevelUps(gainExp(ids, amount));
+    this.showLevelUps(gainExp(this.expIds(), amount));
+  }
+
+  /** 경험치를 받는 인물: 저장의 파티 전원 (이 전투에 나온 인물 포함) */
+  private expIds() {
+    return [...new Set([...partyIds(), ...this.party.map((p) => p.id)])];
   }
 
   private showLevelUps(ups: LevelUp[]) {
@@ -1128,11 +1134,6 @@ export class BattleScene extends Phaser.Scene {
         this.fx('level_up', f.x, f.y + 2, { origin: [0.5, 1], depth: f.y + 3 });
       }
       this.notices.push({ kind: 'levelup', text: `${f?.def.name ?? u.id} Lv ${u.to}` });
-      for (const un of u.unlocked) {
-        if (f) this.time.delayedCall(700, () => this.fx('unlock', f.x, f.y - BODY, { depth: f.y + 4 }));
-        this.notices.push({ kind: 'unlock', text: `${un.name} 해금`, what: un.what });
-        this.notices.push({ kind: 'guide', text: un.guide, ms: 7000 });
-      }
     }
   }
 
@@ -1606,7 +1607,7 @@ export class BattleScene extends Phaser.Scene {
     if (outcome === 'win') this.notices.push({ kind: 'word', text: 'victory' });
     const bex = EXP_REWARD.battle(this.start.battle);
     if (outcome !== 'wipe' && bex && !this.cutscene) {
-      this.showLevelUps(gainOnce(`battle:${this.start.battle}`, this.party.map((p) => p.id), bex));
+      this.showLevelUps(gainOnce(`battle:${this.start.battle}`, this.expIds(), bex));
     }
     if (outcome === 'damage') this.cameras.main.flash(500, 255, 255, 255);
     const wait = outcome === 'done' ? 200 : 1500;

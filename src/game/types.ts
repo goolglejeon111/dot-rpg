@@ -40,6 +40,8 @@ export interface MonologueNode {
 
 export interface ChoiceOption extends Effects {
   text: string;
+  /** 고르면 파티 전원이 받는 경험치 (처음 한 번) */
+  exp?: number;
   /** 이동할 장면 ID */
   next?: string;
   condition?: Condition;
@@ -82,6 +84,27 @@ export interface PlaceNode {
   place: string;
 }
 
+/** 조작 해금 (회피, 스킬, 궁극기, 합동 기술). 화면 가운데 알림 뒤 다음으로 */
+export interface UnlockNode {
+  unlock: 'evade' | 'skill' | 'ult' | 'combo';
+}
+
+/** 파티 합류 */
+export interface JoinNode {
+  join: string;
+}
+
+/** 도트 겉모습 바꾸기 (필드·전투). costume = 그림 이름 (예: leon_hood). who 없으면 레온 */
+export interface CostumeNode {
+  costume: string;
+  who?: string;
+}
+
+/** 화면 가운데 아이템 그림 확대 (null이면 닫기) */
+export interface ItemNode {
+  item: string | null;
+}
+
 export interface EndingNode extends Effects {
   ending: string;
 }
@@ -99,6 +122,10 @@ export type StoryNode =
   | StageNode
   | HpZeroNode
   | PlaceNode
+  | UnlockNode
+  | JoinNode
+  | CostumeNode
+  | ItemNode
   | EndingNode
   | ChapterNode;
 

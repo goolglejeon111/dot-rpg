@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { BattleResult, BattleStart } from '../battle/BattleScene';
 import { STAGE, type ExploreScene, type ExploreStart, type MapHost, type StageDef } from '../explore/ExploreScene';
-import { clearStory } from '../battle/progress';
+import { clearStory, gainOnce, joinParty, maxLevel, partyIds, unlock, unlockInfo, type Unlock } from '../battle/progress';
 import { characters, stories } from '../game/data';
 import { gameState, type StateData } from '../game/GameState';
 import { makeBodyPlaceholder, PORTRAIT_H } from '../game/placeholders';
@@ -39,6 +39,7 @@ const DIM_SPEAK = 0x5c5c5c; // 듣는 사람
 const DIM_MONO = 0x9a9a9a; // 독백 중 (살짝)
 
 const bodyKey = (id: string) => `${id}_body`;
+const itemKey = (id: string) => `item_${id}`;
 const faceKey = (id: string, e: Expression) => `${id}_face_${e}`;
 
 /** 파일이 실제 이미지인지 확인 (없는 파일이면 개발 서버가 HTML을 돌려줄 수 있음) */
@@ -115,6 +116,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   private logBtn!: Button;
   /** 대사창을 내리고 무대만 보여 주는 중 (버튼도 숨김) */
   private staging = false;
+  /** 화면 가운데 확대한 아이템 그림 */
+  private itemView?: Phaser.GameObjects.Container;
   private autoBtn!: Button;
   private skipBtn!: Button;
   private overlay?: Phaser.GameObjects.Container;
@@ -145,6 +148,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.logView = undefined;
     this.mapState = 'off';
     this.looking = null;
+    this.itemView = undefined;
   }
 
   create() {
@@ -179,7 +183,9 @@ export class StoryScene extends Phaser.Scene implements MapHost {
         if (e !== 'normal') wanted.push({ key: faceKey(id, e), url: `assets/portraits/${id}_face_${e}.png` });
       }
     }
-    const todo = wanted.filter((w) => !this.textures.exists(w.key));
+    // 확대해서 보여 줄 아이템 그림 (없으면 보여 주지 않음)
+    for (const s of this.story.scenes) for (const n of s.nodes) if ('item' in n && n.item) wanted.push({ key: itemKey(n.item), url: `assets/items/${n.item}.png` });
+    const todo = wanted.filter((w, i) => !this.textures.exists(w.key) && wanted.findIndex((x) => x.key === w.key) === i);
     const found = await Promise.all(todo.map((w) => imageExists(w.url)));
     const toLoad = todo.filter((_, i) => found[i]);
     // 몸 그림도 없으면 회색 실루엣
@@ -193,7 +199,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       for (const w of toLoad) this.load.image(w.key, w.url);
       this.load.once(Phaser.Loader.Events.COMPLETE, () => {
         // 스탠딩은 고해상도 그림이라 줄일 때 부드럽게 (게임 전체는 도트용 pixelArt 설정)
-        for (const w of toLoad) this.textures.get(w.key).setFilter(Phaser.Textures.FilterMode.LINEAR);
+        for (const w of toLoad) if (!w.key.startsWith('item_')) this.textures.get(w.key).setFilter(Phaser.Textures.FilterMode.LINEAR);
         resolve();
       });
       this.load.start();
@@ -549,6 +555,17 @@ export class StoryScene extends Phaser.Scene implements MapHost {
           this.time.delayedCall(550, () => this.nextNode());
         });
       });
+    } else if ('unlock' in node) {
+      this.showUnlock(node.unlock);
+    } else if ('join' in node) {
+      joinParty(node.join);
+      this.nextNode();
+    } else if ('costume' in node) {
+      this.setCostume(node.who ?? 'leon', node.costume);
+      this.nextNode();
+    } else if ('item' in node) {
+      this.showItem(node.item);
+      this.nextNode();
     } else if ('ending' in node) {
       gameState.applyEffects(node);
       this.showEnding(node.ending);
@@ -719,7 +736,12 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       if ('place' in n || 'choices' in n || 'ending' in n || 'chapter' in n || 'battle' in n || 'hpZero' in n || 'explore' in n) break; // 전투·이동 맵은 건너뛰지 않음
       if ('text' in n) gameState.applyEffects(n);
       if ('stage' in n) passed.push(n.stage);
+      // 건너뛰어도 효과는 남는다 (아이템 확대는 닫힌 채로)
+      if ('unlock' in n) unlock(n.unlock);
+      if ('join' in n) joinParty(n.join);
+      if ('costume' in n) this.setCostume(n.who ?? 'leon', n.costume);
     }
+    this.showItem(null);
     // 건너뛴 무대 변화는 바로 적용
     const defs = passed.map((id) => STAGE.stages[id]).filter(Boolean);
     if (defs.length) this.withMap((m) => defs.forEach((d) => m.applyStage(d, { reset: !!d.map, instant: true })));
@@ -943,6 +965,12 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.activeChoices = [];
     this.backlog.push({ text: `▶ ${opt.text}` });
     gameState.applyEffects(opt);
+    if (opt.exp) {
+      const key = `choice:${this.story.id}:${opt.next ?? opt.text}`;
+      const first = !gameState.progress.once.includes(key);
+      const ups = gainOnce(key, partyIds(), opt.exp);
+      if (first) this.flash(`경험치 +${opt.exp}${ups.length ? '   레벨 업!' : ''}`);
+    }
     const target = opt.next ? this.story.scenes.findIndex((s) => s.id === opt.next) : -1;
     if (opt.next && target < 0) console.error(`[story] 없는 장면 id: ${opt.next}`);
     if (target >= 0) this.enterScene(target);
@@ -1009,6 +1037,69 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     if ('choices' in node) this.showChoices(node.choices);
   }
 
+  // ---------- 조작 해금, 겉모습, 아이템 ----------
+
+  /** 조작 해금: 화면 가운데 "스킬 해금: 오러 찌르기 (E)" 2초 뒤 다음으로 */
+  private showUnlock(what: Unlock) {
+    const fresh = unlock(what);
+    if (!fresh) return this.nextNode();
+    this.mode = 'busy';
+    this.toggleAuto(false);
+    this.clearText();
+    for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side);
+    this.staging = true;
+    const info = unlockInfo(what);
+    const glow = this.add.rectangle(W / 2, H / 2, W, 110, 0x000000, 0.7).setDepth(27);
+    const t = this.add
+      .text(W / 2, H / 2, info.banner, { fontFamily: FONT, fontSize: '38px', color: '#ffe9a8', fontStyle: 'bold' })
+      .setOrigin(0.5)
+      .setShadow(0, 3, '#000000', 8)
+      .setDepth(27);
+    const both = [glow, t];
+    both.forEach((o) => o.setAlpha(0));
+    this.tweens.add({ targets: both, alpha: 1, duration: 250 });
+    this.tweens.add({ targets: t, scale: { from: 1.25, to: 1 }, duration: 300, ease: 'Back.out' });
+    this.time.delayedCall(2000, () => {
+      this.tweens.add({
+        targets: both, alpha: 0, duration: 300,
+        onComplete: () => {
+          both.forEach((o) => o.destroy());
+          this.staging = false;
+          this.nextNode();
+        },
+      });
+    });
+  }
+
+  /** 도트 겉모습 바꾸기 (저장에 남고, 맵·전투 그림이 따른다) */
+  private setCostume(who: string, sprite: string) {
+    gameState.progress.costume[who] = sprite;
+    if (this.mapState === 'on') (this.scene.get('Explore') as ExploreScene).setCostume(who, sprite);
+  }
+
+  /** 아이템 그림을 대사창 위 가운데에 크게 (null = 닫기). 그림 파일이 없으면 보여 주지 않음 */
+  private showItem(id: string | null) {
+    const old = this.itemView;
+    this.itemView = undefined;
+    if (old) this.tweens.add({ targets: old, alpha: 0, duration: 250, onComplete: () => old.destroy() });
+    if (!id || !this.textures.exists(itemKey(id))) return;
+    const img = this.add.image(0, 0, itemKey(id));
+    const k = Math.min(300 / img.width, 300 / img.height);
+    img.setScale(Math.max(1, Math.floor(k)) || k);
+    const back = this.add.rectangle(0, 0, img.displayWidth + 36, img.displayHeight + 36, 0x0c0a14, 0.88).setStrokeStyle(3, GOLD);
+    this.itemView = this.add.container(W / 2, (BOX.y - 20) / 2 + 20, [back, img]).setDepth(7).setAlpha(0);
+    this.tweens.add({ targets: this.itemView, alpha: 1, duration: 300 });
+  }
+
+  /** 화면 위쪽에 잠깐 뜨는 글 (경험치 등) */
+  private flash(text: string) {
+    const t = this.add
+      .text(W / 2, 110, text, { fontFamily: FONT, fontSize: '22px', color: '#ffe9a8', backgroundColor: '#000000aa', padding: { x: 14, y: 8 } })
+      .setOrigin(0.5)
+      .setDepth(26);
+    this.tweens.add({ targets: t, alpha: 0, delay: 1800, duration: 500, onComplete: () => t.destroy() });
+  }
+
   // ---------- 엔딩, 막 전환 ----------
 
   private showEnding(id: string) {
@@ -1047,11 +1138,18 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.tweens.add({ targets: texts, alpha: 1, duration: 700, delay: 700 });
   }
 
+  /**
+   * 막 끝: "1막 끝" 화면 → 최대 레벨 해금 알림 → 다음 막(chapters의 id와 같은 이야기)을 처음부터.
+   * 다음 이야기가 없으면 "다음 이야기는 준비 중입니다" 뒤 타이틀로
+   */
   private showChapter(id: string) {
     this.mode = 'end';
     this.toggleAuto(false);
+    this.showItem(null);
     const def = this.story.chapters[id];
+    const before = maxLevel();
     clearStory(this.story.id); // 다음 구간이 열려 최대 레벨이 오른다
+    const after = maxLevel();
     const cp = save.checkpoint;
     save.setCheckpoint({
       story: this.story.id,
@@ -1059,26 +1157,66 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       finished: true,
       ...gameState.snapshot(),
     });
+    const next = stories[id] ? id : null;
     const black = this.add.rectangle(0, 0, W, H, 0x000000, 1).setOrigin(0).setAlpha(0);
     const done = this.add
-      .text(W / 2, H / 2 - 90, def?.finished ?? '', { fontFamily: FONT, fontSize: '24px', color: '#9a9a9a' })
+      .text(W / 2, H / 2 - 60, def?.finished ?? '', { fontFamily: FONT, fontSize: '40px', color: '#e0c27a', fontStyle: 'bold' })
       .setOrigin(0.5);
     const title = this.add
-      .text(W / 2, H / 2 - 30, def?.title ?? '다음 이야기로 이어집니다', { fontFamily: FONT, fontSize: '46px', color: '#e0c27a', fontStyle: 'bold' })
+      .text(W / 2, H / 2 + 10, def?.title ?? '', { fontFamily: FONT, fontSize: '24px', color: '#9a9a9a' })
       .setOrigin(0.5);
-    const note = this.add
-      .text(W / 2, H / 2 + 30, '(임시 화면)', { fontFamily: FONT, fontSize: '18px', color: '#777777' })
-      .setOrigin(0.5);
+    const level = this.add
+      .text(W / 2, H / 2 + 90, after > before ? `최대 레벨 ${after} 해금` : '', { fontFamily: FONT, fontSize: '30px', color: '#ffe9a8', fontStyle: 'bold' })
+      .setOrigin(0.5)
+      .setShadow(0, 3, '#000000', 8);
     const hint = this.add
-      .text(W / 2, H - 80, '클릭하면 타이틀로 돌아갑니다', { fontFamily: FONT, fontSize: '18px', color: '#888888' })
+      .text(W / 2, H - 80, '', { fontFamily: FONT, fontSize: '18px', color: '#888888' })
       .setOrigin(0.5);
-    const texts = [done, title, note, hint];
-    texts.forEach((t) => t.setAlpha(0));
-    this.overlay = this.add.container(0, 0, [black, ...texts]).setDepth(30);
+    [done, title, level, hint].forEach((t) => t.setAlpha(0));
+    this.overlay = this.add.container(0, 0, [black, done, title, level, hint]).setDepth(30);
+    this.tweens.add({ targets: [this.box, this.nameBox, this.mono], alpha: 0, duration: 500 });
     this.tweens.add({ targets: black, alpha: 1, duration: 900 });
-    this.tweens.add({ targets: texts, alpha: 1, duration: 700, delay: 800 });
-    this.time.delayedCall(1300, () => {
+    this.tweens.add({ targets: [done, title], alpha: 1, duration: 700, delay: 800 });
+    // 막 끝 화면 2초 → 최대 레벨 알림 (겹치지 않게 차례로)
+    const lvAt = 800 + 2000;
+    if (level.text) {
+      this.tweens.add({ targets: level, alpha: 1, duration: 400, delay: lvAt });
+      this.tweens.add({ targets: level, scale: { from: 1.3, to: 1 }, duration: 400, delay: lvAt, ease: 'Back.out' });
+    }
+    const ready = lvAt + (level.text ? 1200 : 0);
+    this.time.delayedCall(ready, () => {
+      hint.setText(next ? '클릭하면 다음 이야기로' : '클릭하면 계속');
+      this.tweens.add({ targets: hint, alpha: 1, duration: 400 });
+      const go = () => {
+        this.input.keyboard!.off('keydown', go);
+        black.off('pointerdown', go);
+        if (next) return this.goNextStory(next);
+        this.showComingSoon();
+      };
       black.setInteractive();
+      black.once('pointerdown', go);
+      this.input.keyboard!.once('keydown', go);
+    });
+  }
+
+  /** 다음 막을 처음부터 (상태는 그대로 이어감) */
+  private goNextStory(id: string) {
+    this.curtainIn(400, () => {
+      this.hideMap();
+      this.scene.start('Story', { story: id, returnTo: this.start.returnTo } satisfies StoryStartData);
+    });
+  }
+
+  private showComingSoon() {
+    this.closeOverlay();
+    const black = this.add.rectangle(0, 0, W, H, 0x000000, 1).setOrigin(0).setInteractive();
+    const t = this.add
+      .text(W / 2, H / 2, '다음 이야기는 준비 중입니다', { fontFamily: FONT, fontSize: '34px', color: '#cfcfcf' })
+      .setOrigin(0.5)
+      .setAlpha(0);
+    this.overlay = this.add.container(0, 0, [black, t]).setDepth(30);
+    this.tweens.add({ targets: t, alpha: 1, duration: 600 });
+    this.time.delayedCall(900, () => {
       black.once('pointerdown', () => this.leave());
       this.input.keyboard!.once('keydown', () => this.leave());
     });

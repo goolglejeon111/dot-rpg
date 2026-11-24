@@ -1,4 +1,6 @@
 import initialState from '../data/initialState.json';
+import levels from '../data/battle/levels.json';
+import expTable from '../data/exp.json';
 import type { Condition, Effects, FlagValue } from './types';
 
 /** 성장 기록: 인물별 경험치, 깬 구간(최대 레벨), 처음 한 번만 주는 경험치를 받은 곳 */
@@ -8,6 +10,12 @@ export interface Progress {
   stage: string;
   /** 경험치를 이미 받은 조사·이벤트 ID */
   once: string[];
+  /** 지금 파티 (대본의 join으로 늘어남) */
+  party: string[];
+  /** 열린 조작 (대본의 unlock으로 열림. move는 처음부터) */
+  unlocks: string[];
+  /** 인물별 도트 겉모습 (대본의 costume. 없으면 기본 그림) */
+  costume: Record<string, string>;
 }
 
 export interface StateData {
@@ -16,7 +24,17 @@ export interface StateData {
   progress: Progress;
 }
 
-const freshProgress = (): Progress => ({ exp: {}, stage: 'start', once: [] });
+export const freshProgress = (): Progress => ({ exp: {}, stage: 'start', once: [], party: ['leon'], unlocks: ['move'], costume: {} });
+
+/** 예전 저장(조작이 레벨로 열리던 때)의 열린 조작: 그때 레온의 레벨로 열려 있던 것 */
+function legacyUnlocks(p: Partial<Progress>): string[] {
+  const exp = p.exp?.leon ?? 0;
+  const table: number[] = expTable.levels;
+  let l = 1;
+  while (l < table.length && exp >= table[l]) l++;
+  l = Math.min(l, (expTable.maxLevel as Record<string, number>)[p.stage ?? 'start'] ?? l);
+  return levels.unlocks.filter((u) => u.level <= l).map((u) => u.what);
+}
 
 function fresh(): StateData {
   return {
@@ -97,6 +115,12 @@ class GameState {
       flags: { ...base.flags, ...(s.flags ?? {}) },
       progress: { ...base.progress, ...(s.progress ?? {}) },
     };
+    // 예전 저장에 없던 값
+    const p = this.data.progress;
+    if (s.progress && !s.progress.unlocks) p.unlocks = legacyUnlocks(s.progress);
+    if (!Array.isArray(p.party) || !p.party.length) p.party = ['leon'];
+    if (!p.unlocks.includes('move')) p.unlocks.unshift('move');
+    p.costume ??= {};
   }
 
   reset() {

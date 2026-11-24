@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { EXP_REWARD, gainExp, levelOf } from '../battle/progress';
 import { allEndings, FIRST_STORY, stories } from '../game/data';
-import { gameState } from '../game/GameState';
+import { freshProgress, gameState } from '../game/GameState';
 import { AUTO_SPEEDS, save, TEXT_SPEEDS } from '../game/save';
 import { FONT, makeButton, type Button } from '../game/ui';
 import type { StoryStartData } from './StoryScene';
@@ -73,6 +73,11 @@ export class TitleScene extends Phaser.Scene {
     const cp = save.checkpoint;
     if (!cp) return;
     gameState.restore(cp);
+    // 이 막을 다 봤고 다음 막 이야기가 있으면 그 막 처음부터
+    if (cp.finished) {
+      const next = Object.keys(stories[cp.story]?.chapters ?? {})[0];
+      if (next && stories[next]) return this.go({ story: next });
+    }
     this.go({ story: cp.story, scene: cp.scene, node: cp.node, finished: cp.finished });
   }
 
@@ -140,9 +145,9 @@ export class TitleScene extends Phaser.Scene {
     if (first) {
       save.claimReward(id, (cp) => {
         if (!exp) return;
-        cp.progress ??= { exp: {}, stage: 'start', once: [] };
-        // 최신 저장의 파티(경험치 기록이 있는 인물, 없으면 레온)가 같은 양을 받는다
-        const ids = Object.keys(cp.progress.exp).length ? Object.keys(cp.progress.exp) : ['leon'];
+        cp.progress ??= freshProgress();
+        // 최신 저장의 파티가 같은 양을 받는다 (예전 저장에 파티가 없으면 레온)
+        const ids = cp.progress.party?.length ? cp.progress.party : ['leon'];
         const ups = gainExp(ids, exp, cp.progress);
         note = `경험치 +${exp} (최신 저장에 반영)` + (ups.length ? `  ·  레온 Lv ${levelOf('leon', cp.progress)}` : '');
       });

@@ -44,14 +44,43 @@ export function levelProgress(id: string) {
   return Math.max(0, Math.min(1, (expOf(id) - a) / (b - a)));
 }
 
-export const unlockLevel = (what: Unlock) => levels.unlocks.find((u) => u.what === what)?.level ?? 1;
-export const isUnlocked = (id: string, what: Unlock) => levelOf(id) >= unlockLevel(what);
+/** 조작은 대본의 unlock 지점에서 열린다 (파티 전원 공통). id는 예전 호출과 맞추려고 남겨 둠 */
+export const isUnlocked = (_id: string, what: Unlock, p: Progress = gameState.progress) => what === 'move' || p.unlocks.includes(what);
+
+const UNLOCK_KEY: Record<Unlock, string> = { move: '', evade: 'Shift', skill: 'E', ult: 'Q', combo: 'R' };
+
+/** 해금 알림 글. 레온의 기술 이름이 있으면 함께 ("스킬 해금: 오러 찌르기 (E)") */
+export function unlockInfo(what: Unlock) {
+  const u = levels.unlocks.find((x) => x.what === what);
+  const leon = (fighters.party as Record<string, Record<string, { name?: string }>>).leon;
+  const move = what === 'evade' || what === 'skill' || what === 'ult' ? leon?.[what]?.name : undefined;
+  const name = u?.name ?? what;
+  const key = UNLOCK_KEY[what];
+  return { name, guide: u?.guide ?? '', banner: `${name} 해금${move ? `: ${move}` : ''}${key ? ` (${key})` : ''}` };
+}
+
+/** 조작을 연다. 처음 열면 true */
+export function unlock(what: Unlock, p: Progress = gameState.progress) {
+  if (isUnlocked('leon', what, p)) return false;
+  p.unlocks.push(what);
+  return true;
+}
+
+/** 파티 합류. 경험치는 레온과 같은 값으로 맞춰 같은 레벨로 들어온다 */
+export function joinParty(id: string, p: Progress = gameState.progress) {
+  if (p.party.includes(id)) return false;
+  p.party.push(id);
+  p.exp[id] = Math.max(expOf(id, p), expOf('leon', p));
+  return true;
+}
+
+/** 지금 파티 (조사, 전투 이벤트, 선택지 경험치를 받는 인물) */
+export const partyIds = (p: Progress = gameState.progress) => (p.party?.length ? [...p.party] : ['leon']);
 
 export interface LevelUp {
   id: string;
   from: number;
   to: number;
-  unlocked: { what: Unlock; name: string; guide: string }[];
 }
 
 /** 경험치를 준다. ids = 받는 인물 (파티 전원 같은 양). 레벨이 오르면 그 내용을 돌려준다 */
@@ -62,13 +91,10 @@ export function gainExp(ids: string[], amount: number, p: Progress = gameState.p
     const from = levelOf(id, p);
     p.exp[id] = expOf(id, p) + amount;
     const to = levelOf(id, p);
-    if (to > from) ups.push({ id, from, to, unlocked: unlocksBetween(from, to) });
+    if (to > from) ups.push({ id, from, to });
   }
   return ups;
 }
-
-const unlocksBetween = (from: number, to: number) =>
-  levels.unlocks.filter((u) => u.level > from && u.level <= to) as LevelUp['unlocked'];
 
 /** 처음 한 번만 주는 경험치 (조사, 의뢰, 단련, 전투 이벤트). 이미 받았으면 [] */
 export function gainOnce(key: string, ids: string[], amount: number): LevelUp[] {

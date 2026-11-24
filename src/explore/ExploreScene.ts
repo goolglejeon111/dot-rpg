@@ -3,7 +3,7 @@ import looksData from '../data/explore/looks.json';
 import stageData from '../data/explore/stage.json';
 import battlesData from '../data/battle/battles.json';
 import { makeBattleAnims, preloadBattle } from '../battle/assets';
-import { EXP_REWARD, gainOnce, isCapped, levelOf, levelProgress } from '../battle/progress';
+import { EXP_REWARD, gainOnce, isCapped, levelOf, levelProgress, partyIds } from '../battle/progress';
 import { gameState } from '../game/GameState';
 import {
   FLAMES, MAPS, PROPS, TS, findObj, footOf, layerOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf, solidGrid,
@@ -428,7 +428,7 @@ export class ExploreScene extends Phaser.Scene {
     if (!a) {
       const start = at ?? this.point(spec.walk);
       if (!start) return console.warn(`[map] 처음 나오는 인물은 자리(at)가 필요합니다: ${id}`);
-      const key = spec.sprite ?? id;
+      const key = spec.sprite ?? this.costumeOf(id);
       const shadow = this.world(this.add.ellipse(start.x, start.y, 16, 6, 0x0a0810, 0.4).setDepth(-13));
       const spr = this.lightUp(this.world(this.add.sprite(start.x, start.y, key, 0).setOrigin(0.5, 1)));
       a = { id, key, spr, shadow, facing: 'down', down: false, walking: false };
@@ -475,6 +475,22 @@ export class ExploreScene extends Phaser.Scene {
     const row = DIRS.indexOf(a.facing);
     if (a.down && this.textures.exists(`bt_${a.key}`)) a.spr.setTexture(`bt_${a.key}`, row * 12 + 11).setOrigin(0.5, 0.86);
     else a.spr.setTexture(a.key, row * 5).setOrigin(0.5, 1);
+  }
+
+  /** 인물의 지금 도트 그림 (대본의 costume. 그림이 없으면 기본) */
+  private costumeOf(id: string) {
+    const c = gameState.progress.costume[id];
+    return c && this.textures.exists(c) ? c : id;
+  }
+
+  /** 겉모습 바꾸기: 맵에 서 있는 인물의 그림을 바로 바꾼다 */
+  setCostume(id: string, sprite: string) {
+    const a = this.actors.get(id);
+    if (!a || !this.textures.exists(sprite)) return;
+    a.key = sprite;
+    a.walking = false;
+    this.tweens.killTweensOf(a.spr);
+    this.pose(a);
   }
 
   private removeActor(id: string) {
@@ -660,7 +676,7 @@ export class ExploreScene extends Phaser.Scene {
       my /= l;
     }
     a.facing = Math.abs(mx) > Math.abs(my) ? (mx > 0 ? 'right' : 'left') : my > 0 ? 'down' : 'up';
-    a.spr.play(`leon-walk-${a.facing}`, true);
+    a.spr.play(`${a.key}-walk-${a.facing}`, true);
     const step = SPEED * (dt / 1000);
     const { x: ox, y: oy } = a.spr;
     let x = ox;
@@ -765,7 +781,7 @@ export class ExploreScene extends Phaser.Scene {
 
   private lookDone(l: Lookable) {
     const amount = EXP_REWARD.look(l.id);
-    const ups = gainOnce(`look:${l.id}`, ['leon'], amount);
+    const ups = gainOnce(`look:${l.id}`, partyIds(), amount).filter((u) => u.id === 'leon');
     if (LOOKS[l.id]?.pickup) {
       this.named.get(l.id)?.setVisible(false);
       const item = LOOKS[l.id].name.replace(/ 줍기$/, '');

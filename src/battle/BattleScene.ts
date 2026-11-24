@@ -220,6 +220,8 @@ const FX_ORIGIN: Record<string, [number, number]> = {
   adrian_bash: [4, 24], adrian_charge: [4, 16], adrian_sever: [18, 32], light_bolt: [23, 8], karg_dash: [44, 12],
 };
 const BODY = 18; // 발밑에서 몸 가운데까지
+/** 궁극기 마지막 일격 때 느려지는 배율 (0.3 = 약 3배 느리게) */
+const FINISH_SLOW = 0.3;
 const JUMP_V = 150;
 const GRAVITY = 620;
 
@@ -258,6 +260,8 @@ export class BattleScene extends Phaser.Scene {
   ended = false;
   frozen = false;
   timeScale = 1;
+  /** 마지막 일격 때 장면 전체를 느리게 하는 배율 (setSlow) */
+  slowK = 1;
   reviving: { target: Fighter; t: number } | null = null;
   reviveBar?: { frame: Phaser.GameObjects.Image; fill: Phaser.GameObjects.Image };
   bounds = { x0: 12, x1: 436, y0: 50, y1: 282 };
@@ -302,6 +306,9 @@ export class BattleScene extends Phaser.Scene {
     this.ended = false;
     this.frozen = false;
     this.timeScale = 1;
+    this.slowK = 1;
+    this.time.timeScale = 1;
+    this.tweens.timeScale = 1;
     this.reviving = null;
     this.notices = [];
     this.wheelOpen = false;
@@ -1504,7 +1511,8 @@ export class BattleScene extends Phaser.Scene {
     this.fx('unlock', l.x, l.y - BODY, { depth: l.y + 5 });
     this.cameras.main.flash(250, 255, 255, 255);
     this.time.delayedCall(1100, () => {
-      // 달려들며 내려친다
+      // 달려들며 내려친다 — 이때부터 벤 직후까지 시간이 느려진다(궁극기 동작을 보여 주려고)
+      this.setSlow(FINISH_SLOW);
       const dx = e.x - l.x;
       const dy = e.y - l.y;
       const dl = Math.hypot(dx, dy) || 1;
@@ -1515,8 +1523,9 @@ export class BattleScene extends Phaser.Scene {
       l.combo = 2;
       l.stateT = 0;
       this.tweens.add({ targets: l, x: e.x - (dx / dl) * 20, y: e.y - (dy / dl) * 6, duration: 170, ease: 'Quad.out' });
+      this.time.delayedCall(220, strike);
     });
-    this.time.delayedCall(1320, () => {
+    const strike = () => {
       l.stateT = 9999;
       this.fx(l.def.ult?.fx ?? 'hit_heavy', e.x, e.y - BODY, { depth: e.y + 10 });
       this.fx('hit_heavy', e.x, e.y - BODY, { depth: e.y + 11 });
@@ -1528,11 +1537,26 @@ export class BattleScene extends Phaser.Scene {
       e.sprite.setTexture(`bt_${e.spriteKey}`, DIRS.indexOf(e.facing) * 12 + 10);
       e.hpBar?.frame.setVisible(false);
       e.hpBar?.fill.setVisible(false);
-    });
-    this.time.delayedCall(2300, () => {
-      l.state = 'idle';
-      this.finish('finisher');
-    });
+      // 벤 순간을 조금 더 느리게 보여 준 뒤 원래 빠르기로
+      this.time.delayedCall(260, () => {
+        this.setSlow(1);
+        this.time.delayedCall(900, () => {
+          l.state = 'idle';
+          this.finish('finisher');
+        });
+      });
+    };
+  }
+
+  /** 장면 전체 빠르기 (시간·트윈·이펙트 애니메이션). 1이면 원래대로 */
+  private setSlow(k: number) {
+    this.time.timeScale = k;
+    this.tweens.timeScale = k;
+    for (const o of this.children.list) {
+      const s = o as Phaser.GameObjects.Sprite;
+      if (s.anims) s.anims.timeScale = k;
+    }
+    this.slowK = k;
   }
 
   private checkOutcome() {
@@ -1731,6 +1755,7 @@ export class BattleScene extends Phaser.Scene {
   ) {
     const info = fxInfo(key);
     const s = this.add.sprite(Math.round(x), Math.round(y), `fx_${key}`, 0);
+    s.anims.timeScale = this.slowK;
     const org = FX_ORIGIN[key];
     if (o.origin) s.setOrigin(o.origin[0], o.origin[1]);
     else if (org && info) s.setOrigin(org[0] / info.w, org[1] / info.h);

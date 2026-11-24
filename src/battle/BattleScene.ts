@@ -222,7 +222,9 @@ const FX_ORIGIN: Record<string, [number, number]> = {
 const BODY = 18; // 발밑에서 몸 가운데까지
 /** 궁극기 마지막 일격 때 느려지는 배율 (0.3 = 약 3배 느리게) */
 const FINISH_SLOW = 0.3;
-const JUMP_V = 150;
+const JUMP_V = 140;
+/** 점프 중 이동 빠르기 배율 (점프 거리를 정함) */
+const AIR_SPEED = 0.7;
 const GRAVITY = 620;
 
 const dirOf = (x: number, y: number): Dir => (Math.abs(x) > Math.abs(y) ? (x < 0 ? 'left' : 'right') : y < 0 ? 'up' : 'down');
@@ -782,17 +784,16 @@ export class BattleScene extends Phaser.Scene {
 
     if (press.attack) this.requestAttack(f);
 
+    // 점프 중에는 땅보다 느리게 움직인다 (점프 거리)
+    const sp = f.speed * (f.z > 0 ? AIR_SPEED : 1) * (dt / 1000);
     if (f.state === 'idle' || f.state === 'move') {
       if (len > 0.1) {
         f.state = 'move';
         f.facing = dirOf(mx, my);
         [f.aimX, f.aimY] = dirVec(f.facing); // 공격·기술은 바라보는 쪽(정면)으로
-        this.moveBy(f, mx * f.speed * (dt / 1000), my * f.speed * (dt / 1000));
+        this.moveBy(f, mx * sp, my * sp);
       } else f.state = 'idle';
-    } else if (f.airborne || f.vz !== 0) {
-      // 점프 중에도 움직일 수 있음
-    }
-    if (f.z > 0 && len > 0.1 && f.state !== 'attack') this.moveBy(f, mx * f.speed * (dt / 1000), my * f.speed * (dt / 1000));
+    } else if (f.z > 0 && len > 0.1 && f.state !== 'attack') this.moveBy(f, mx * sp, my * sp);
   }
 
   /** 개발용 단축키: F6 적 전멸, F7 브람 쓰러뜨리기, F8 시간 끝, F9 파티 전멸 */

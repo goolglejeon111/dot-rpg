@@ -221,9 +221,9 @@
     },
     "chamber": {
       "map": "bedchamber",
-      "looks": ["scripture"],
+      "looks": ["scripture", "open_window"],
       "goal": "goal_door",
-      "hint": "침소 문 쪽으로 가면 이야기가 이어집니다",
+      "hint": "문 쪽으로 가면 이야기가 이어집니다",
       "after": "bed_turn"
     }
   }

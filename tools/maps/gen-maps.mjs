@@ -299,6 +299,7 @@ const MAPS = {};
   const win = cx(4);
   objects.push(wallItem('window_open', win, 96), wallItem('curtain', win - 27, 96), wallItem('curtain', win + 27, 96));
   objects.push({ type: 'snow', name: 'window', x: win - 13, y: 44, w: 28, h: 40, mode: 'blow' });
+  objects.push(look('open_window', win, 116, 70));
   objects.push({ type: 'light', name: 'moon', x: win, y: 140, color: '#8fb0ff', radius: 130, intensity: 0.9 });
   objects.push({ type: 'prop', name: 'bed', x: 11 * TS, y: 150, solid: '62,44' });
   objects.push(wallItem('portrait', cx(16), 82), wallItem('banner', cx(7) + 8, 84), wallItem('banner', cx(14) + 8, 84));

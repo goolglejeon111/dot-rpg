@@ -11,7 +11,7 @@
  "tilewidth": 32,
  "tileheight": 32,
  "nextlayerid": 5,
- "nextobjectid": 28,
+ "nextobjectid": 29,
  "properties": [
   {
    "name": "place",
@@ -1209,6 +1209,25 @@
     },
     {
      "id": 5,
+     "name": "open_window",
+     "type": "look",
+     "rotation": 0,
+     "visible": true,
+     "x": 144,
+     "y": 116,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "iconY",
+       "type": "int",
+       "value": 70
+      }
+     ]
+    },
+    {
+     "id": 6,
      "name": "moon",
      "type": "light",
      "rotation": 0,
@@ -1237,7 +1256,7 @@
      ]
     },
     {
-     "id": 6,
+     "id": 7,
      "name": "bed",
      "type": "prop",
      "rotation": 0,
@@ -1255,7 +1274,7 @@
      ]
     },
     {
-     "id": 7,
+     "id": 8,
      "name": "portrait",
      "type": "prop",
      "rotation": 0,
@@ -1273,7 +1292,7 @@
      ]
     },
     {
-     "id": 8,
+     "id": 9,
      "name": "banner",
      "type": "prop",
      "rotation": 0,
@@ -1291,7 +1310,7 @@
      ]
     },
     {
-     "id": 9,
+     "id": 10,
      "name": "banner",
      "type": "prop",
      "rotation": 0,
@@ -1309,7 +1328,7 @@
      ]
     },
     {
-     "id": 10,
+     "id": 11,
      "name": "candle",
      "type": "prop",
      "rotation": 0,
@@ -1327,7 +1346,7 @@
      ]
     },
     {
-     "id": 11,
+     "id": 12,
      "name": "candle",
      "type": "prop",
      "rotation": 0,
@@ -1345,7 +1364,7 @@
      ]
     },
     {
-     "id": 12,
+     "id": 13,
      "name": "candle",
      "type": "prop",
      "rotation": 0,
@@ -1363,7 +1382,7 @@
      ]
     },
     {
-     "id": 13,
+     "id": 14,
      "name": "candle",
      "type": "prop",
      "rotation": 0,
@@ -1381,7 +1400,7 @@
      ]
     },
     {
-     "id": 14,
+     "id": 15,
      "name": "table",
      "type": "prop",
      "rotation": 0,
@@ -1399,7 +1418,7 @@
      ]
     },
     {
-     "id": 15,
+     "id": 16,
      "name": "scripture",
      "type": "look",
      "rotation": 0,
@@ -1418,7 +1437,7 @@
      ]
     },
     {
-     "id": 16,
+     "id": 17,
      "name": "torch",
      "type": "prop",
      "rotation": 0,
@@ -1436,7 +1455,7 @@
      ]
     },
     {
-     "id": 17,
+     "id": 18,
      "name": "torch",
      "type": "prop",
      "rotation": 0,
@@ -1454,7 +1473,7 @@
      ]
     },
     {
-     "id": 18,
+     "id": 19,
      "name": "wake_leon",
      "type": "spawn",
      "rotation": 0,
@@ -1473,7 +1492,7 @@
      ]
     },
     {
-     "id": 19,
+     "id": 20,
      "name": "leon_bed",
      "type": "spawn",
      "rotation": 0,
@@ -1492,7 +1511,7 @@
      ]
     },
     {
-     "id": 20,
+     "id": 21,
      "name": "door_leon",
      "type": "spawn",
      "rotation": 0,
@@ -1511,7 +1530,7 @@
      ]
     },
     {
-     "id": 21,
+     "id": 22,
      "name": "stand_leon",
      "type": "spawn",
      "rotation": 0,
@@ -1530,7 +1549,7 @@
      ]
     },
     {
-     "id": 22,
+     "id": 23,
      "name": "door_bram",
      "type": "spawn",
      "rotation": 0,
@@ -1549,7 +1568,7 @@
      ]
     },
     {
-     "id": 23,
+     "id": 24,
      "name": "door_oswald",
      "type": "spawn",
      "rotation": 0,
@@ -1568,7 +1587,7 @@
      ]
     },
     {
-     "id": 24,
+     "id": 25,
      "name": "knight1",
      "type": "spawn",
      "rotation": 0,
@@ -1587,7 +1606,7 @@
      ]
     },
     {
-     "id": 25,
+     "id": 26,
      "name": "knight2",
      "type": "spawn",
      "rotation": 0,
@@ -1606,7 +1625,7 @@
      ]
     },
     {
-     "id": 26,
+     "id": 27,
      "name": "knight3",
      "type": "spawn",
      "rotation": 0,
@@ -1625,7 +1644,7 @@
      ]
     },
     {
-     "id": 27,
+     "id": 28,
      "name": "goal_door",
      "type": "goal",
      "rotation": 0,

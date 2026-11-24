@@ -702,6 +702,11 @@ const BATTLE_CHARS = [
   { id: 'mob_gnosis', weapon: 'darkdagger', prep: true },
   { id: 'marcion_hooded', cast: { ramp: ['l', 'w', 'a'], out: 'W', hand: { down: [27, 27], right: [23, 24], up: [5, 27] } } },
   { id: 'mob_royal_knight', lunge: true }, // 몸에 창이 그려져 있어 몸을 내밀어 찌름
+  { id: 'leon_hood', weapon: 'sword' }, // 1막 두건 망토
+  { id: 'imperial_spear', lunge: true }, // 1막 적: 무기가 몸에 그려져 있음
+  { id: 'imperial_archer', lunge: true },
+  { id: 'pursuit_sword', lunge: true },
+  { id: 'pursuit_shield', lunge: true },
 ];
 
 const VIEWS = ['down', 'left', 'right', 'up'];

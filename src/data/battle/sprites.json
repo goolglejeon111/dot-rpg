@@ -1032,6 +1032,36 @@
       "w": 48,
       "h": 48,
       "columns": 12
+    },
+    "leon_hood": {
+      "file": "assets/battle/chars/leon_hood.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "imperial_spear": {
+      "file": "assets/battle/chars/imperial_spear.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "imperial_archer": {
+      "file": "assets/battle/chars/imperial_archer.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "pursuit_sword": {
+      "file": "assets/battle/chars/pursuit_sword.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "pursuit_shield": {
+      "file": "assets/battle/chars/pursuit_shield.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
     }
   }
 }

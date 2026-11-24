@@ -3,7 +3,7 @@
 // 주의: 다시 실행하면 art/characters.txt를 덮어쓴다. 손으로 고친 격자는 따로 복사해 둘 것.
 //
 // 몸통 32x35 (머리 1~17줄, 몸 18~34줄). 다리는 레온 다리(leon.txt)를 색만 바꿔 30줄부터 깐다.
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -25,6 +25,8 @@ const R = {
   green: ['q', 'g', 'G', 'Q'],
   sky: ['w', 'a', 'A', 'W'],
   brown: ['j', 'h', 'H', 'J'],
+  // 회청색 (추격 기사 갑옷)
+  slate: ['t', 'A', 'W', 'B'],
 };
 
 // 윤곽선: 각 글자를 그 색 묶음의 가장 어두운 색으로
@@ -737,6 +739,44 @@ const PROPS = {
     g.rect(sx - 1, 1, sx + 2, 2, (x) => (x <= sx ? 'l' : 'M'));
     g.rect(sx, 3, sx + 1, 3, 'M');
   },
+  /** 활과 화살통 (제국 궁병) */
+  bow(g, c, v, front) {
+    if (v === 'up') {
+      if (!front) return;
+      g.rect(20, 17, 22, 27, (x) => (x === 20 ? 'o' : 'O')); // 화살통
+      g.rect(20, 15, 22, 16, 'v');
+      return;
+    }
+    if (!front) {
+      if (v !== 'right') g.rect(7, 16, 8, 24, (x) => (x === 7 ? 'o' : 'O'));
+      return;
+    }
+    const x0 = v === 'right' ? 22 : 26;
+    for (let y = 12; y <= 32; y++) {
+      const bend = Math.round(2.6 * Math.sin(((y - 12) / 20) * Math.PI));
+      g.set(x0 + bend, y, y < 15 || y > 29 ? 'O' : 'o');
+    }
+    for (let y = 13; y <= 31; y++) g.set(x0, y, 'V');
+  },
+  /** 회청색 연 모양 방패 (추격 기사 방패병) */
+  kiteShield(g, c, v, front) {
+    const S = R.slate;
+    if (v === 'up') {
+      if (!front) return;
+      g.trap(18, 31, 9, 22, 13, 18, (x, y, t) => (t < 0.1 || t > 0.9 ? S[3] : S[2]));
+      return;
+    }
+    if (v === 'right') {
+      if (!front) return;
+      g.trap(17, 33, 19, 25, 21, 23, (x, y, t) => (t < 0.15 || t > 0.85 ? S[3] : t < 0.5 ? S[0] : S[1]));
+      g.rect(21, 22, 23, 22, 'm');
+      return;
+    }
+    if (!front) return;
+    g.trap(17, 33, 19, 29, 23, 25, (x, y, t) => (t < 0.12 || t > 0.88 ? S[3] : t < 0.45 ? S[0] : S[1]));
+    g.rect(23, 19, 25, 30, 'm');
+    g.rect(20, 23, 28, 24, 'm');
+  },
   /** 짧은 칼 (하수인) */
   dagger(g, c, v, front) {
     if (v === 'up' || !front) return;
@@ -965,6 +1005,36 @@ export const CHARS = [
     decor: ['eyePendant'],
     props: ['dagger'],
   },
+  // ---- 1막 적 (서기) ----
+  {
+    id: 'imperial_spear', kind: 'mob', name: '제국 창병', legs: { K: 'O', k: 'P', L: 'C', M: 'D' }, // 붉은 겉옷 + 은 투구 + 창
+    helmet: { plume: R.red }, gloves: 'o',
+    outfit: { ramp: R.red, lower: 'tunic', collar: 'O', belt: ['o', 'O'], cuff: 'O' },
+    decor: ['chestplate'],
+    props: ['spear'],
+  },
+  {
+    id: 'imperial_archer', kind: 'mob', name: '제국 궁병', legs: { K: 'O', k: 'P', L: 'C', M: 'D' }, // 가죽 옷 + 붉은 띠 + 활
+    helmet: {}, gloves: 'o',
+    outfit: { ramp: R.leather, lower: 'tunic', collar: 'X', belt: ['x', 'X'], cuff: 'X' },
+    props: ['bow'],
+  },
+  {
+    id: 'pursuit_sword', kind: 'mob', name: '추격 기사', legs: { K: 'A', k: 'W', L: 'L', M: 'M' }, // 회청색 갑옷과 망토 + 검
+    helmet: { plume: R.slate }, gloves: 'M',
+    cape: R.slate,
+    outfit: { ramp: R.slate, lower: 'tunic', collar: 'm', belt: ['k', 'm'], cuff: 'm' },
+    decor: ['chestplate', 'pauldrons'],
+    props: ['sword'],
+  },
+  {
+    id: 'pursuit_shield', kind: 'mob', name: '추격 기사 방패병', legs: { K: 'A', k: 'W', L: 'L', M: 'M' }, // 회청색 갑옷 + 큰 방패
+    helmet: { plume: R.slate }, gloves: 'M',
+    cape: R.slate,
+    outfit: { ramp: R.slate, lower: 'tunic', collar: 'm', belt: ['k', 'm'], cuff: 'm' },
+    decor: ['chestplate', 'pauldrons'],
+    props: ['kiteShield'],
+  },
   {
     id: 'mob_citizen', kind: 'mob', name: '황도 시민', legs: { K: 'C', k: 'C', L: 'D', M: 'd' }, // 초록 웃옷, 갈색 머리, 바구니
     hair: { ramp: ['p', 'o', 'O', 'P'], style: 'short' },
@@ -1053,11 +1123,62 @@ Object.assign(DECOR, {
 });
 
 // =====================================================================
+// 레온 두건 망토 변형
+// =====================================================================
+function leonArt(name) {
+  const rows = [];
+  let on = false;
+  for (const raw of readFileSync(join(HERE, 'art', 'leon.txt'), 'utf8').split(/\r?\n/)) {
+    const line = raw.trimEnd();
+    if (line === `[${name}]`) on = true;
+    else if (on && (line === '' || line.startsWith('['))) break;
+    else if (on && !line.startsWith('#')) rows.push(line);
+  }
+  return rows.map((r) => [...r]);
+}
+
+/** 머리카락 → 두건 천, 남색 옷 → 갈색 망토. 두건은 머리 둘레로 한 칸 크게, 어깨까지 늘어뜨림 */
+export function leonHood(v) {
+  const d = leonArt(`leon_body_${v}`);
+  const H = d.length;
+  const W = d[0].length;
+  const HAIR = { j: 'p', h: 'o', H: 'O', J: 'P' };
+  const CLOTH = { b: 'p', n: 'o', N: 'O', B: 'P' };
+  // 머리 영역 (얼굴 아래 줄까지)
+  const headRows = v === 'up' ? 18 : 17;
+  const src = d.map((r) => [...r]);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const ch = src[y][x];
+      if (y < headRows && HAIR[ch]) d[y][x] = HAIR[ch];
+      else if (y >= 17 && CLOTH[ch]) d[y][x] = CLOTH[ch];
+    }
+  // 두건 둘레를 한 칸 넓힘 (머리 영역의 바깥 빈칸 → 윤곽)
+  const cur = d.map((r) => [...r]);
+  for (let y = 0; y < headRows; y++)
+    for (let x = 0; x < W; x++) {
+      if (cur[y][x] !== '.') continue;
+      const near = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => 'pPoO'.includes(cur[y + dy]?.[x + dx] ?? '.'));
+      if (near) d[y][x] = 'P';
+    }
+  // 어깨로 늘어진 두건 자락 (양옆 몇 줄)
+  if (v !== 'up') {
+    const sides = v === 'right' ? [[9, 11]] : [[7, 9], [22, 24]];
+    for (const [x0, x1] of sides)
+      for (let y = 12; y <= 16; y++)
+        for (let x = x0; x <= x1; x++) if (d[y][x] === '.' || 'JhHj'.includes(d[y][x])) d[y][x] = x === x0 || x === x1 ? 'P' : 'O';
+  }
+  return d.map((r) => r.join('')).join('\n');
+}
+
+// =====================================================================
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
 const out = ['# 인물 도트 (tools/pixel-art/gen-characters.mjs가 만든 파일. 다시 실행하면 덮어씀)', '# 몸통 32x35. 다리는 leon.txt의 다리를 인물별로 색만 바꿔 씀 (outputs.mjs)', ''];
 for (const c of CHARS) {
   for (const v of ['down', 'up', 'right']) out.push(`[${c.id}_body_${v}]`, draw(c, v).text(), '');
 }
+// 레온 갈색 두건 망토 (1막): leon.txt의 몸 그림에 두건을 씌우고 남색 제복을 갈색 망토로
+for (const v of ['down', 'up', 'right']) out.push(`[leon_hood_body_${v}]`, leonHood(v), '');
 writeFileSync(join(HERE, 'art', 'characters.txt'), out.join('\n'));
 console.log(`인물 ${CHARS.length}명 → art/characters.txt`);
 }

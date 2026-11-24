@@ -19,6 +19,8 @@ export interface StoryStartData {
   story: string;
   /** 시작할 장면 ID (없으면 첫 장면) */
   scene?: string;
+  /** 그 장면 안에서 시작할 대사 번호 (이어하기) */
+  node?: number;
   /** 이야기를 다 본 저장에서 이어하기: 막 전환 화면부터 */
   finished?: boolean;
   /** 필드에서 열었을 때 돌아갈 장면 키 (없으면 끝나고 타이틀로) */
@@ -260,7 +262,7 @@ export class StoryScene extends Phaser.Scene {
     }
     const first = this.start.scene ? this.story.scenes.findIndex((s) => s.id === this.start.scene) : 0;
     if (first < 0) console.warn(`[story] 없는 장면 id: ${this.start.scene} → 처음부터`);
-    if (this.start.scene) this.enterScene(Math.max(0, first));
+    if (this.start.scene) this.enterScene(Math.max(0, first), first < 0 ? 0 : this.start.node ?? 0);
     else {
       // 챕터 화면 도중에 새로고침해도 이어하기가 남도록 먼저 저장
       save.setCheckpoint({ story: this.story.id, scene: this.story.scenes[0].id, ...gameState.snapshot() });
@@ -309,7 +311,8 @@ export class StoryScene extends Phaser.Scene {
     return this.story.scenes[this.sceneIdx];
   }
 
-  private enterScene(i: number) {
+  /** @param startNode 이어하기: 장면 안에서 시작할 대사 번호 */
+  private enterScene(i: number, startNode = 0) {
     const sc = this.story.scenes[i];
     if (!sc) {
       console.warn('[story] 다음 장면이 없습니다. 타이틀로 돌아갑니다');
@@ -320,14 +323,16 @@ export class StoryScene extends Phaser.Scene {
     const first = !this.entered;
     this.entered = true;
     this.sceneIdx = i;
-    this.nodeIdx = 0;
-    save.setCheckpoint({ story: this.story.id, scene: sc.id, ...gameState.snapshot() });
+    this.nodeIdx = Math.min(startNode, sc.nodes.length);
+    this.saveHere();
 
     // 이전 장면 인물은 퇴장
     const swap = () => {
       for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
       this.bg.setFillStyle(hex(sc.color));
-      this.setPlace(sc.place);
+      // 장면 중간부터 시작하면 그 앞에서 바뀐 장소를 따른다
+      const moved = sc.nodes.slice(0, this.nodeIdx).filter((n) => 'place' in n).pop();
+      this.setPlace(moved && 'place' in moved ? moved.place : sc.place);
     };
     if (first) {
       swap();
@@ -348,10 +353,21 @@ export class StoryScene extends Phaser.Scene {
     this.placeLabel.setText(place ? `◆ ${place}` : '');
   }
 
+  /** 이어하기 지점: 지금 장면과 대사 번호. 대사의 효과가 붙기 전에 저장한다 */
+  private saveHere() {
+    save.setCheckpoint({
+      story: this.story.id,
+      scene: this.scene_.id,
+      ...(this.nodeIdx ? { node: this.nodeIdx } : {}),
+      ...gameState.snapshot(),
+    });
+  }
+
   private runNode() {
     const sc = this.scene_;
     const node: StoryNode | undefined = sc.nodes[this.nodeIdx];
     this.monoIdx = 0;
+    if (node && ('text' in node || 'monologue' in node || 'choices' in node)) this.saveHere();
     if (!node) {
       // 장면 끝: 다음 장면으로 (선택지로만 들어가는 장면은 건너뛴다)
       let next = this.sceneIdx + 1;
@@ -722,7 +738,7 @@ export class StoryScene extends Phaser.Scene {
     this.sceneIdx = cp.scene;
     this.nodeIdx = cp.node;
     const sc = this.scene_;
-    save.setCheckpoint({ story: this.story.id, scene: sc.id, ...gameState.snapshot() });
+    this.saveHere();
     this.bg.setFillStyle(hex(sc.color));
     this.setPlace(cp.place);
     this.clearText();
@@ -746,10 +762,10 @@ export class StoryScene extends Phaser.Scene {
     if (!def) console.error(`[story] 없는 엔딩 id: ${id}`);
     save.markEnding(id);
     this.lastChoice ??= this.findChoicePoint();
-    // 이어하기는 엔딩 갈래를 다시 보지 않도록 선택지가 있던 장면부터
+    // 이어하기는 엔딩 갈래를 다시 보지 않도록 선택지가 있던 곳부터
     if (this.lastChoice) {
       const sc = this.story.scenes[this.lastChoice.scene];
-      save.setCheckpoint({ story: this.story.id, scene: sc.id, ...this.lastChoice.state });
+      save.setCheckpoint({ story: this.story.id, scene: sc.id, node: this.lastChoice.node, ...this.lastChoice.state });
     }
 
     const shade = this.add.rectangle(0, 0, W, H, 0x2a0000, 1).setOrigin(0).setAlpha(0);

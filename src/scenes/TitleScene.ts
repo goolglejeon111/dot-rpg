@@ -70,7 +70,7 @@ export class TitleScene extends Phaser.Scene {
     const cp = save.checkpoint;
     if (!cp) return;
     gameState.restore(cp);
-    this.go({ story: cp.story, scene: cp.scene, finished: cp.finished });
+    this.go({ story: cp.story, scene: cp.scene, node: cp.node, finished: cp.finished });
   }
 
   // ---------- 작은 창 (엔딩 목록, 설정) ----------

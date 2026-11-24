@@ -16,6 +16,8 @@ export interface Settings {
 export interface Checkpoint {
   story: string;
   scene: string;
+  /** 장면 안의 대사 번호 (없으면 장면 처음) */
+  node?: number;
   /** 이야기를 끝까지 봤으면 true (이어하기 → 다음 막 안내 화면) */
   finished?: boolean;
   affection: Record<string, number>;

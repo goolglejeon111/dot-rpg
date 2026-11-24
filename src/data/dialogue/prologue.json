@@ -100,6 +100,7 @@
         {"speaker":"leon","expression":"angry","text":"정체를 밝혀라."},
         {"speaker":"marcion_hooded","expression":"normal","text":"알 필요 없다."},
         {"monologue":["대화는 거기서 끝났다."]},
+        {"unlock":"evade"},
         {"battle":"침입자"},
         {"stage":"corr_after"},
         {"monologue":["발을 내디딘다.","검 끝에 오러를 싣는다.","수련으로 쌓아 올린 생명이, 칼날 위에서 희게 타오른다."]},
@@ -115,7 +116,6 @@
         {"monologue":["어깨를 꿰뚫린다.","비명조차 나오지 않는다."]},
         {"stage":"corr_fall"},
         {"monologue":["세계가 하얗게 지워진다."]},
-        {"speaker":"marcion_hooded","expression":"normal","text":"죽이지는 않는다. 오늘 밤의 피는, 네가 짊어져야 하니까."},
         {"stage":"corr_door"},
         {"monologue":["마지막으로 본 것은.","한쪽 팔을 잃은 채 침소의 문을 여는, 그 사내의 등이었다."]}
       ]
@@ -145,7 +145,7 @@
         {"monologue":["지금 이 가슴을 채우는 것은, 원망이 아니었다."]},
         {"monologue":["지키겠다고 맹세했다.","그리고 지키지 못했다."]},
         {"monologue":["그것만이, 피처럼 선명했다."]},
-        {"monologue":["손에 무언가가 쥐어져 있다.","내 검.","쓰러질 때 분명 놓쳤던 검이, 다시 내 손에 쥐어져 있었다.","칼날이 끝까지 붉게 젖어 있었다."]},
+        {"monologue":["손에 무언가가 쥐어져 있다.","내 검.","칼날이 끝까지 붉게 젖어 있었다."]},
         {"monologue":["어깨의 상처가 욱신거린다.","피는 멎었는데, 갈라진 살 사이로 희미한 빛이 새어 나온다."]},
         {"explore":"chamber"},
         {"monologue":["회랑 너머에서, 발소리가 몰려온다."]}

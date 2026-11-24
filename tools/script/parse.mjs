@@ -27,6 +27,7 @@ export function parseScript(md, cfg) {
   let stopped = false;
   const endingCount = {};
   const usedRewrites = new Set();
+  const choiceAt = []; // { node, scene } 선택지가 나온 장면 순번
 
   const flushMono = () => {
     if (mono && mono.length) scene.nodes.push({ monologue: mono });
@@ -82,14 +83,9 @@ export function parseScript(md, cfg) {
       }
       const opt = /^(\d+)\. (.+)$/.exec(body);
       if (choice && opt) {
-        const n = Number(opt[1]);
-        const target = cfg.scenes.find((s) => s.choice === n);
-        if (!target) warnings.push(`선택지 ${n}번이 갈 장면이 설정에 없음`);
-        choice.choices.push({
-          text: opt[2],
-          next: target?.id,
-          flags: { [`${cfg.id}_choice`]: target?.id ?? String(n) },
-        });
+        // 갈 장면은 다 읽은 뒤 정한다 (이 선택지 블록 바로 뒤의 "### ▶ N." 장면)
+        choice.choices.push({ text: opt[2], _n: Number(opt[1]) });
+        choiceAt.push({ node: choice, scene: story.scenes.length - 1 });
         continue;
       }
       // > 엔딩 후일담(보상): ... → 바로 앞 엔딩의 후일담 (엔딩 목록의 보상 화면)
@@ -150,6 +146,27 @@ export function parseScript(md, cfg) {
   flushMono();
   for (const r of cfg.rewrites ?? []) {
     if (!usedRewrites.has(r)) warnings.push(`바꿔 쓸 대사를 대본에서 찾지 못함: ${r.name} / ${r.from}`);
+  }
+
+  // 선택지 번호 N → 그 선택지가 있는 장면 바로 뒤에 이어지는 갈래 장면들 가운데 "▶ N."으로 시작하는 장면
+  const choiceNodes = [...new Set(choiceAt.map((c) => c.node))];
+  for (const node of choiceNodes) {
+    const at = choiceAt.find((c) => c.node === node).scene;
+    const branches = [];
+    for (let k = at + 1; k < story.scenes.length && story.scenes[k].branch; k++) branches.push(story.scenes[k]);
+    const flagKey = choiceNodes.length > 1 ? `${cfg.id}_${story.scenes[at].id}_choice` : `${cfg.id}_choice`;
+    node.choices = node.choices.map(({ _n: n, text }) => {
+      const target = branches.find((b) => b.title.startsWith(`▶ ${n}.`));
+      if (!target) warnings.push(`선택지 ${n}번이 갈 장면이 없음: ${story.scenes[at].title}`);
+      const fx = cfg.scenes.find((s) => s.id === target?.id)?.effects ?? {};
+      return {
+        text,
+        next: target?.id,
+        flags: { [flagKey]: target?.id ?? String(n) },
+        ...(fx.affection ? { affection: fx.affection } : {}),
+        ...(fx.exp ? { exp: fx.exp } : {}),
+      };
+    });
   }
 
   // 게임에서만 줄이거나 빼는 독백 덩어리 (from = 대본의 독백 덩어리 전체, to = 바꿀 줄들. 빈 배열이면 뺌)

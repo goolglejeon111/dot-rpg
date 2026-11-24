@@ -7,7 +7,8 @@ export const STORIES = [
     stopAt: '이 대본에 숨겨 둔 복선', // 이 제목부터는 메모라서 읽지 않음
     // 대본의 이름 → 인물 ID (여기 없는 이름은 스탠딩 없이 이름표만)
     names: { 레온: 'leon', 브람: 'bram', 오스발트: 'oswald', 침입자: 'marcion_hooded' },
-    // match: 장면 제목의 앞부분, place: 임시 장소 이름, color: 임시 배경색, choice: 몇 번 선택지로 오는 장면인지
+    // match: 장면 제목의 앞부분, place: 임시 장소 이름, color: 임시 배경색
+    // 선택지 N번은 그 선택지 바로 뒤에 이어지는 "### ▶ N." 장면으로 간다. effects: 그 장면을 고를 때 호감도(affection)·경험치(exp)
     scenes: [
       { match: '여는 독백', id: 'opening', place: '', color: '#08080c' },
       { match: '장면 1.', id: 'scene1', place: "황궁 동쪽 회랑", color: '#141a2a' },
@@ -15,9 +16,9 @@ export const STORIES = [
       { match: '장면 3.', id: 'scene3', place: "침소로 가는 회랑", color: '#1c1218' },
       { match: '장면 4.', id: 'scene4', place: '침소로 가는 회랑', color: '#220e10' },
       { match: '장면 5.', id: 'scene5', place: '침소 앞', color: '#1e1014' },
-      { match: '▶ 1.', id: 'choice_draw', choice: 1, place: '침소 앞', color: '#260808' },
-      { match: '▶ 2.', id: 'choice_surrender', choice: 2, place: '침소 앞', color: '#16161a' },
-      { match: '▶ 3.', id: 'choice_window', choice: 3, place: '침소 앞', color: '#0c1420' },
+      { match: '▶ 1.', id: 'choice_draw', place: '침소 앞', color: '#260808' },
+      { match: '▶ 2.', id: 'choice_surrender', place: '침소 앞', color: '#16161a' },
+      { match: '▶ 3.', id: 'choice_window', place: '침소 앞', color: '#0c1420' },
     ],
     // 대사/독백 앞에 끼워 넣을 것. before = 그 대사나 독백 덩어리의 첫 줄
     inserts: [
@@ -32,6 +33,7 @@ export const STORIES = [
       { scene: 'scene2', before: '나는 달렸다.', node: { stage: 'hall_run' } },
       { scene: 'scene3', before: '그 끝에서, 그림자가 멈춰 섰다.', node: { explore: 'corridor' } },
       { scene: 'scene3', before: '그 끝에서, 그림자가 멈춰 섰다.', node: { stage: 'corr_face' } },
+      { scene: 'scene3', before: '발을 내디딘다.', node: { unlock: 'evade' } },
       { scene: 'scene3', before: '발을 내디딘다.', node: { battle: '침입자' } },
       { scene: 'scene3', before: '발을 내디딘다.', node: { stage: 'corr_after' } },
       { scene: 'scene3', before: '세계가 하얗게 지워진다.', node: { stage: 'corr_fall' } },
@@ -94,5 +96,56 @@ export const STORIES = [
       prologue_bad: { hint: '침소 앞에서, 조사를 믿고 검을 내려놓는다면.' },
     },
     next: { id: 'act1', title: '1막으로 이어집니다' },
+  },
+  {
+    id: 'act1',
+    source: 'docs/대본/1막.md',
+    output: 'src/data/dialogue/act1.json',
+    stopAt: '이 막에 숨겨 둔 복선',
+    names: { 레온: 'leon', 엘리시아: 'elysia' },
+    scenes: [
+      { match: '장면 1.', id: 'scene1', place: '지하 수로', color: '#080a0c' },
+      { match: '장면 2.', id: 'scene2', place: '룬이 떠 있는 수로', color: '#120c1c' },
+      { match: '▶ 1. 먼저 검을 내린다', id: 's2_lower', place: '룬이 떠 있는 수로', color: '#120c1c', effects: { affection: { elysia_leon: 1 } } },
+      { match: '▶ 2. 검을 겨눈 채 묻는다', id: 's2_aim', place: '룬이 떠 있는 수로', color: '#120c1c' },
+      { match: '장면 3.', id: 'scene3', place: '룬이 떠 있는 수로', color: '#120c1c' },
+      { match: '▶ 2. 거절하고 혼자 간다', id: 's3_refuse', place: '수로 깊은 곳', color: '#08080c' },
+      { match: '▶ 1. 받아들인다', id: 's3_accept', place: '룬이 떠 있는 수로', color: '#120c1c' },
+      { match: '장면 4.', id: 'scene4', place: '수로 깊은 곳', color: '#0a0a12' },
+      { match: '장면 4-1.', id: 'scene4_1', place: '저수조', color: '#0a0c12' },
+      { match: '장면 5.', id: 'scene5', place: '황도 외곽 빈민가', color: '#141c28' },
+      { match: '장면 6.', id: 'scene6', place: '아우렐 강 다리 검문소', color: '#1c1c20' },
+      { match: '▶ 1. 정면으로 뚫는다', id: 's6_charge', place: '아우렐 강 다리 검문소', color: '#1c1c20' },
+      { match: '▶ 2. 엘리시아의 마법에 맡긴다', id: 's6_disguise', place: '아우렐 강 다리 검문소', color: '#1c1c20', effects: { affection: { elysia_leon: 1 }, exp: 60 } },
+      { match: '장면 6-1.', id: 'scene6_1', place: '강둑', color: '#2a160c' },
+      { match: '장면 7.', id: 'scene7', place: '강둑', color: '#0c1018' },
+    ],
+    inserts: [
+      { scene: 'scene1', before: '물속에서, 무언가가 꿈틀거렸다.', node: { explore: 'a1_sewer_walk' } },
+      { scene: 'scene1', before: '쥐들이 흩어졌다.', node: { unlock: 'skill' } },
+      { scene: 'scene1', before: '쥐들이 흩어졌다.', node: { battle: '수로 쥐 떼' } },
+      { scene: 'scene3', before: '놈들 우두머리가 떨어뜨린 거야. 이 문양, 본 적 있어?', node: { item: 'pendant' } },
+      { scene: 'scene3', before: '그녀는 펜던트를 오래 들여다보다가, 돌려주었다.', node: { item: null } },
+      { scene: 'scene4', before: '수로는 깊어질수록 넓어졌다.', node: { join: 'elysia' } },
+      { scene: 'scene4', before: '수로는 깊어질수록 넓어졌다.', node: { explore: 'a1_rune_room' } },
+      { scene: 'scene4', before: '수로는 깊어질수록 넓어졌다.', node: { explore: 'a1_sewer_deep' } },
+      { scene: 'scene4', before: '괴물이 검은 물속으로 가라앉았다.', node: { unlock: 'ult' } },
+      { scene: 'scene4', before: '괴물이 검은 물속으로 가라앉았다.', node: { battle: '수로의 괴물' } },
+      { scene: 'scene4_1', before: '수로의 끝은, 빈민가의 하수구였다.', node: { explore: 'a1_cistern_exit' } },
+      { scene: 'scene5', before: '새벽이었다.', node: { explore: 'a1_hideout' } },
+      { scene: 'scene5', before: '새벽이었다.', node: { costume: 'leon_hood' } },
+      { scene: 'scene5', before: '「황제 시해 및 황녀 납치.', node: { item: 'wanted_poster' } },
+      { scene: 'scene5', before: '황녀.', node: { item: null } },
+      { scene: 'scene6', before: '아우렐 강의 다리.', node: { explore: 'a1_slum' } },
+      { scene: 'scene6', before: '두 가지 방법이 있어요.', node: { explore: 'a1_checkpoint' } },
+      { scene: 's6_charge', before: '다리를 건넜을 때, 등 뒤에서 호각 소리가 길게 울렸다.', node: { battle: '검문소 병사' } },
+      { scene: 'scene6_1', before: '그녀의 룬이 기사들의 발목을 붙잡았다.', node: { unlock: 'combo' } },
+      { scene: 'scene6_1', before: '그녀의 룬이 기사들의 발목을 붙잡았다.', node: { battle: '추격 기사' } },
+      { scene: 'scene7', before: '강가의 갈대밭에서, 버려진 작은 배를 찾았다.', node: { explore: 'a1_reeds' } },
+    ],
+    endingExtras: {
+      act1_bad: { hint: '혼자서는 갈 수 없는 길도 있다.' },
+    },
+    next: { id: 'act2', title: '2막으로 이어집니다' },
   },
 ];

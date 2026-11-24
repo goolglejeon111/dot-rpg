@@ -1,0 +1,216 @@
+{
+  "_설명": "대사를 맵 위에서 보여 줄 때의 무대. scenes = 장면에 들어갈 때의 무대(인물을 모두 새로 세움), places = 장소 변경 줄에서 바뀌는 맵(map이 null이면 맵 없이 검은 화면), stages = 대본 중간의 무대 변화(tools/script/stories.mjs의 inserts에서 { stage: 이름 }으로 끼움), segments = 레온을 직접 움직이는 이동 구간({ explore: 이름 }).",
+  "_인물": "actors의 값: at = 맵의 spawn 이름 또는 [x, y], facing = down/left/right/up, pose = down(쓰러짐)/stand, walk = 걸어갈 곳(spawn 이름 또는 [x, y]), sprite = 그림 ID(없으면 인물 ID). null이면 퇴장. focus = 카메라가 볼 인물 ID·spawn 이름·[x, y]",
+
+  "scenes": {
+    "opening": null,
+    "scene1": "hall_open",
+    "scene2": "hall_s2",
+    "scene3": "corr_open",
+    "scene4": "bed_wake",
+    "scene5": "bed_guards",
+    "choice_draw": "bed_choice",
+    "choice_surrender": "bed_choice",
+    "choice_window": "bed_choice"
+  },
+  "places": {
+    "해자": { "map": "moat", "stage": "moat_fall" },
+    "지하 감옥": { "map": null },
+    "광장": { "map": null },
+    "지하 수로": { "map": null }
+  },
+
+  "stages": {
+    "hall_open": {
+      "map": "east_hall",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_start", "facing": "right" },
+        "bram": { "at": "bram_wait", "facing": "left" }
+      }
+    },
+    "hall_talk": {
+      "focus": "leon",
+      "actors": { "leon": { "walk": "talk_leon", "facing": "right" } }
+    },
+    "hall_s2": {
+      "map": "east_hall",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "talk_leon", "facing": "right" },
+        "bram": { "at": "hall_bram", "facing": "left" }
+      }
+    },
+    "hall_s2_ready": {
+      "focus": [1290, 230],
+      "actors": { "leon": { "walk": "hall_leon", "facing": "right" } }
+    },
+    "hall_ambush": {
+      "focus": [1290, 230],
+      "actors": {
+        "leon": { "facing": "left" },
+        "bram": { "facing": "left" },
+        "g1": { "sprite": "mob_gnosis", "at": [1150, 184], "facing": "right" },
+        "g2": { "sprite": "mob_gnosis", "at": [1160, 312], "facing": "right" },
+        "g3": { "sprite": "mob_gnosis", "at": [1440, 316], "facing": "left" }
+      }
+    },
+    "hall_after": {
+      "focus": [1290, 230],
+      "actors": {
+        "leon": { "at": "hall_leon", "facing": "right" },
+        "bram": { "at": "hall_bram", "facing": "left" },
+        "g1": { "sprite": "mob_gnosis", "at": [1380, 314], "facing": "up" },
+        "g2": { "sprite": "mob_gnosis", "at": [1470, 270], "facing": "left" },
+        "g3": null
+      }
+    },
+    "hall_shadow": {
+      "focus": [1650, 200],
+      "actors": { "shadow": { "sprite": "marcion_hooded", "at": [1560, 176], "walk": [1900, 176], "facing": "right" } }
+    },
+    "hall_run": {
+      "focus": "leon",
+      "actors": { "shadow": null, "leon": { "walk": [1880, 176], "facing": "right" } }
+    },
+
+    "corr_open": {
+      "map": "chamber_corridor",
+      "focus": "leon",
+      "actors": { "leon": { "at": "leon_start", "facing": "right" } }
+    },
+    "corr_face": {
+      "focus": [1110, 160],
+      "actors": {
+        "leon": { "walk": [1060, 156], "facing": "right" },
+        "intruder": { "sprite": "marcion_hooded", "at": [1184, 132], "walk": [1180, 156], "facing": "left" }
+      }
+    },
+    "corr_after": {
+      "focus": [1110, 160],
+      "actors": {
+        "leon": { "at": [1060, 156], "facing": "right" },
+        "intruder": { "sprite": "marcion_hooded", "at": [1180, 156], "facing": "left" }
+      }
+    },
+    "corr_fall": {
+      "actors": { "leon": { "pose": "down", "facing": "right" } }
+    },
+    "corr_door": {
+      "focus": [1150, 150],
+      "actors": { "intruder": { "sprite": "marcion_hooded", "walk": "intruder_door", "facing": "up" } }
+    },
+
+    "bed_wake": {
+      "map": "bedchamber",
+      "focus": [352, 300],
+      "blood": false,
+      "actors": { "leon": { "at": "wake_leon", "pose": "down", "facing": "up" } }
+    },
+    "bed_up": {
+      "actors": { "leon": { "pose": "stand", "facing": "up" } }
+    },
+    "bed_blood": {
+      "focus": [352, 210],
+      "blood": true
+    },
+    "bed_rush": {
+      "focus": [352, 210],
+      "actors": { "leon": { "walk": "leon_bed", "facing": "left" } }
+    },
+    "bed_turn": {
+      "focus": [352, 300],
+      "actors": { "leon": { "facing": "down" } }
+    },
+    "bed_guards": {
+      "map": "bedchamber",
+      "focus": [352, 300],
+      "blood": true,
+      "actors": {
+        "leon": { "at": "stand_leon", "facing": "down" },
+        "bram": { "at": [352, 470], "walk": [400, 316], "facing": "up" }
+      }
+    },
+    "bed_oswald": {
+      "actors": {
+        "oswald": { "at": [352, 480], "walk": "door_oswald", "facing": "up" },
+        "k1": { "sprite": "mob_royal_knight", "at": [330, 500], "walk": "knight1", "facing": "up" },
+        "k2": { "sprite": "mob_royal_knight", "at": [370, 500], "walk": "knight2", "facing": "up" },
+        "k3": { "sprite": "mob_royal_knight", "at": [352, 510], "walk": "knight3", "facing": "up" }
+      }
+    },
+    "bed_choice": {
+      "map": "bedchamber",
+      "focus": [352, 300],
+      "blood": true,
+      "actors": {
+        "leon": { "at": "stand_leon", "facing": "down" },
+        "bram": { "at": [400, 316], "facing": "up" },
+        "oswald": { "at": "door_oswald", "facing": "up" },
+        "k1": { "sprite": "mob_royal_knight", "at": "knight1", "facing": "up" },
+        "k2": { "sprite": "mob_royal_knight", "at": "knight2", "facing": "up" },
+        "k3": { "sprite": "mob_royal_knight", "at": "knight3", "facing": "up" }
+      }
+    },
+    "bed_dead": {
+      "actors": { "leon": { "at": [380, 210], "pose": "down", "facing": "left" } }
+    },
+    "bed_window": {
+      "focus": [180, 200],
+      "actors": { "leon": { "walk": [144, 118], "facing": "up" } }
+    },
+    "bed_gone": {
+      "actors": {
+        "leon": null,
+        "bram": { "walk": [150, 126], "facing": "up" }
+      }
+    },
+
+    "moat_fall": {
+      "map": "moat",
+      "focus": "moat_view"
+    },
+    "moat_chase": {
+      "focus": [560, 380],
+      "actors": {
+        "k1": { "sprite": "mob_royal_knight", "at": [-20, 470], "walk": "knight1", "facing": "up" },
+        "k2": { "sprite": "mob_royal_knight", "at": [-60, 482], "walk": "knight2", "facing": "up" },
+        "k3": { "sprite": "mob_royal_knight", "at": [1060, 470], "walk": "knight3", "facing": "up" }
+      }
+    },
+    "moat_grate": {
+      "focus": [784, 300]
+    }
+  },
+
+  "segments": {
+    "hall_patrol": {
+      "map": "east_hall",
+      "looks": ["portrait", "honor", "prayer", "petition", "sanctum"],
+      "goal": "goal_bram",
+      "hint": "순찰을 돌며 둘러본 뒤, 회랑 가운데의 브람에게 가면 이야기가 이어집니다",
+      "tutorial": true,
+      "after": "hall_talk"
+    },
+    "hall_window": {
+      "map": "east_hall",
+      "looks": ["portrait", "honor", "prayer", "petition", "sanctum", "window"],
+      "goal": "goal_hall",
+      "hint": "넓은 홀에서 기다리는 브람에게 가면 이야기가 이어집니다",
+      "after": "hall_s2_ready"
+    },
+    "corridor": {
+      "map": "chamber_corridor",
+      "looks": ["guard"],
+      "goal": "goal_ante",
+      "hint": "회랑 끝, 침소 앞으로"
+    },
+    "chamber": {
+      "map": "bedchamber",
+      "looks": ["scripture"],
+      "goal": "goal_door",
+      "hint": "침소 문 쪽으로 가면 이야기가 이어집니다",
+      "after": "bed_turn"
+    }
+  }
+}

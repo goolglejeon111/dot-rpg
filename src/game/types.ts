@@ -55,7 +55,7 @@ export interface BattleNode {
   note?: string;
 }
 
-/** 이동 맵: 레온을 움직여 맵을 지나간다 (물건 살펴보기, 경험치). explore = src/data/explore/maps.json의 맵 이름 */
+/** 이동 구간: 레온을 움직여 맵을 지나간다 (물건 살펴보기, 경험치). explore = src/data/explore/stage.json의 segments 이름 */
 export interface ExploreNode {
   explore: string;
 }
@@ -72,7 +72,12 @@ export interface HpZeroNode {
   count?: number;
 }
 
-/** 장면 도중 장소 이름 바꾸기 */
+/** 맵 위 무대 바꾸기 (인물 위치, 카메라, 피 웅덩이). stage = src/data/explore/stage.json의 stages 이름 */
+export interface StageNode {
+  stage: string;
+}
+
+/** 장면 도중 장소 이름 바꾸기 (stage.json의 places에 있으면 맵도 바뀐다) */
 export interface PlaceNode {
   place: string;
 }
@@ -91,6 +96,7 @@ export type StoryNode =
   | ChoiceNode
   | BattleNode
   | ExploreNode
+  | StageNode
   | HpZeroNode
   | PlaceNode
   | EndingNode

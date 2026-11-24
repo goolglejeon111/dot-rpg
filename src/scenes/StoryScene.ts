@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { BattleResult, BattleStart } from '../battle/BattleScene';
-import type { ExploreStart } from '../explore/ExploreScene';
+import { STAGE, type ExploreScene, type ExploreStart, type MapHost, type StageDef } from '../explore/ExploreScene';
 import { clearStory } from '../battle/progress';
 import { characters, stories } from '../game/data';
 import { gameState, type StateData } from '../game/GameState';
@@ -62,7 +62,7 @@ interface Portrait {
   expr: Expression;
 }
 
-type Mode = 'busy' | 'typing' | 'waiting' | 'choice' | 'end';
+type Mode = 'busy' | 'typing' | 'waiting' | 'choice' | 'end' | 'explore';
 
 /** 마지막으로 화면에 보인 글 (선택지로 돌아갈 때 다시 그린다) */
 type LastShown =
@@ -80,7 +80,7 @@ interface ChoicePoint {
 }
 
 /** 대본을 재생하는 대화 장면 (스탠딩 + 대사창 + 독백 + 선택지 + 엔딩) */
-export class StoryScene extends Phaser.Scene {
+export class StoryScene extends Phaser.Scene implements MapHost {
   private story!: StoryData;
   private start!: StoryStartData;
   private sceneIdx = 0;
@@ -116,6 +116,12 @@ export class StoryScene extends Phaser.Scene {
   private skipBtn!: Button;
   private overlay?: Phaser.GameObjects.Container;
   private logView?: { root: Phaser.GameObjects.Container; text: Phaser.GameObjects.Text; top: number; min: number };
+  /** 장면 전환용 검은 막 (카메라 페이드는 아래층 맵을 덮지 못해서 막을 쓴다) */
+  private curtain!: Phaser.GameObjects.Rectangle;
+  /** 아래층 맵 화면(Explore) 상태 */
+  private mapState: 'off' | 'loading' | 'on' = 'off';
+  /** 물건 살펴보기 독백 */
+  private looking: { pages: string[][]; page: number; line: number; done: () => void } | null = null;
 
   constructor() {
     super('Story');
@@ -133,6 +139,8 @@ export class StoryScene extends Phaser.Scene {
     this.activeChoices = [];
     this.overlay = undefined;
     this.logView = undefined;
+    this.mapState = 'off';
+    this.looking = null;
   }
 
   create() {
@@ -144,6 +152,7 @@ export class StoryScene extends Phaser.Scene {
     }
     this.story = story;
     this.cameras.main.setBackgroundColor('#000000');
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.hideMap());
     void this.loadPortraits().then(() => this.build());
   }
 
@@ -188,7 +197,10 @@ export class StoryScene extends Phaser.Scene {
   }
 
   private build() {
+    // 아래층 맵이 보이도록 카메라 배경은 투명. 맵이 없을 때는 bg 사각형이 배경
+    this.cameras.main.setBackgroundColor('rgba(0,0,0,0)');
     this.bg = this.add.rectangle(0, 0, W, H, 0x101018).setOrigin(0);
+    this.curtain = this.add.rectangle(0, 0, W, H, 0x000000, 1).setOrigin(0).setDepth(28).setAlpha(0).setVisible(false);
     this.placeLabel = this.add
       .text(24, 20, '', { fontFamily: FONT, fontSize: '20px', color: '#cdb88a' })
       .setDepth(9)
@@ -329,25 +341,140 @@ export class StoryScene extends Phaser.Scene {
     this.nodeIdx = Math.min(startNode, sc.nodes.length);
     this.saveHere();
 
-    // 이전 장면 인물은 퇴장
+    // 이전 장면 인물은 퇴장, 맵과 무대는 이 장면(중간부터면 그 지점)에 맞춘다
     const swap = () => {
       for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
       this.bg.setFillStyle(hex(sc.color));
       // 장면 중간부터 시작하면 그 앞에서 바뀐 장소를 따른다
       const moved = sc.nodes.slice(0, this.nodeIdx).filter((n) => 'place' in n).pop();
       this.setPlace(moved && 'place' in moved ? moved.place : sc.place);
+      this.applyMap(this.mapSteps(i, this.nodeIdx), true, () => {
+        this.curtainOut(first ? 500 : 320);
+        this.time.delayedCall(first ? 500 : 400, () => this.runNode());
+      });
     };
     if (first) {
+      this.curtain.setVisible(true).setAlpha(1);
       swap();
-      this.time.delayedCall(500, () => this.runNode());
       return;
     }
-    this.cameras.main.fadeOut(260, 0, 0, 0);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-      swap();
-      this.cameras.main.fadeIn(320, 0, 0, 0);
-      this.time.delayedCall(400, () => this.runNode());
+    this.curtainIn(260, swap);
+  }
+
+  // ---------- 맵 (아래층 Explore 장면) ----------
+
+  /** 검은 막 내리기 / 걷기 */
+  private curtainIn(ms: number, then: () => void) {
+    this.tweens.killTweensOf(this.curtain);
+    this.curtain.setVisible(true);
+    this.tweens.add({ targets: this.curtain, alpha: 1, duration: ms, onComplete: then });
+  }
+  private curtainOut(ms: number) {
+    this.tweens.killTweensOf(this.curtain);
+    this.tweens.add({ targets: this.curtain, alpha: 0, duration: ms, onComplete: () => this.curtain.setVisible(false) });
+  }
+
+  /**
+   * 장면 i의 대사 node 직전까지의 무대 변화 목록 (이어하기·장면 전환에서 맵을 다시 만든다)
+   * null = 맵 없음. map이 있는 무대에서 인물을 새로 세운다
+   */
+  private mapSteps(i: number, node: number): (StageDef | null)[] {
+    const sc = this.story.scenes[i];
+    const first = STAGE.scenes[sc.id];
+    const steps: (StageDef | null)[] = [first ? STAGE.stages[first] ?? null : null];
+    for (const n of sc.nodes.slice(0, node)) {
+      if ('stage' in n) steps.push(STAGE.stages[n.stage] ?? {});
+      else if ('place' in n && STAGE.places[n.place]) steps.push(this.placeStage(n.place));
+      else if ('explore' in n) {
+        const after = STAGE.segments[n.explore]?.after;
+        if (after) steps.push(STAGE.stages[after] ?? {});
+      }
+    }
+    return steps;
+  }
+
+  private placeStage(place: string): StageDef | null {
+    const p = STAGE.places[place];
+    if (!p?.map) return null;
+    return p.stage ? { ...STAGE.stages[p.stage], map: p.map } : { map: p.map };
+  }
+
+  /** 무대 변화 목록을 맵에 적용 (마지막으로 맵이 정해진 곳부터) */
+  private applyMap(steps: (StageDef | null)[], instant: boolean, done: () => void) {
+    let from = -1;
+    steps.forEach((s, k) => {
+      if (s === null || s.map) from = k;
     });
+    if (from < 0 || steps[from] === null) {
+      this.hideMap();
+      return done();
+    }
+    this.withMap((m) => {
+      for (const d of steps.slice(from)) m.applyStage(d!, { reset: !!d!.map, instant });
+      done();
+    });
+  }
+
+  /** 맵 화면을 띄우고(없으면) fn 실행 */
+  private withMap(fn: (m: ExploreScene) => void) {
+    const m = this.scene.get('Explore') as ExploreScene;
+    this.bg.setVisible(false);
+    if (this.mapState === 'on' && m.ready) return fn(m);
+    m.events.once('mapready', () => {
+      this.mapState = 'on';
+      fn(m);
+    });
+    if (this.mapState === 'off') {
+      this.mapState = 'loading';
+      this.scene.launch('Explore', { host: this } satisfies ExploreStart);
+      this.scene.sendToBack('Explore');
+    }
+  }
+
+  private hideMap() {
+    if (this.mapState !== 'off') this.scene.stop('Explore');
+    this.mapState = 'off';
+    this.bg?.setVisible(true);
+  }
+
+  /** 물건 살펴보기: 레온의 독백을 화면(page)별로, 한 줄씩 (대본 독백과 같은 방식) */
+  playMonologue(pages: string[][], done: () => void) {
+    this.looking = { pages: pages.filter((p) => p.length), page: 0, line: 0, done };
+    if (!this.looking.pages.length) return this.endLook();
+    this.showLookLine();
+  }
+
+  private showLookLine() {
+    const L = this.looking!;
+    const page = L.pages[L.page];
+    const before = page.slice(0, L.line);
+    const line = page[L.line];
+    this.box.setVisible(false);
+    this.nameBox.setVisible(false);
+    this.mono.setVisible(true).setAlpha(1);
+    this.monoMark.setVisible(false);
+    this.backlog.push({ text: line });
+    const head = before.length ? `${before.join('\n')}\n` : '';
+    this.typeText(line, (s) => this.monoText.setText(head + s));
+  }
+
+  private lookNext() {
+    const L = this.looking!;
+    L.line++;
+    if (L.line >= L.pages[L.page].length) {
+      L.page++;
+      L.line = 0;
+      if (L.page >= L.pages.length) return this.endLook();
+    }
+    this.showLookLine();
+  }
+
+  private endLook() {
+    const done = this.looking?.done;
+    this.looking = null;
+    this.clearText();
+    this.mode = 'explore';
+    done?.();
   }
 
   /** 장소 이름: 왼쪽 위에 계속 표시 */
@@ -391,9 +518,24 @@ export class StoryScene extends Phaser.Scene {
       this.startExplore(node.explore);
     } else if ('hpZero' in node) {
       this.startBattle({ battle: 'hpZero', hpZero: { who: node.hpZero, by: node.by ?? 'mob_royal_knight', count: node.count ?? 3 } });
+    } else if ('stage' in node) {
+      const d = STAGE.stages[node.stage];
+      if (d) this.withMap((m) => m.applyStage(d, { reset: !!d.map }));
+      else console.warn(`[story] stage.json에 없는 무대: ${node.stage}`);
+      this.nextNode();
     } else if ('place' in node) {
       this.setPlace(node.place);
-      this.nextNode();
+      if (!STAGE.places[node.place]) return this.nextNode();
+      // 맵이 바뀌는 장소: 검은 막을 내렸다 올린다
+      this.mode = 'busy';
+      this.curtainIn(450, () => {
+        this.clearText();
+        for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
+        this.applyMap([this.placeStage(node.place)], true, () => {
+          this.curtainOut(600);
+          this.time.delayedCall(550, () => this.nextNode());
+        });
+      });
     } else if ('ending' in node) {
       gameState.applyEffects(node);
       this.showEnding(node.ending);
@@ -409,33 +551,30 @@ export class StoryScene extends Phaser.Scene {
   private startBattle(b: Omit<BattleStart, 'onEnd'>) {
     this.mode = 'busy';
     this.toggleAuto(false);
-    this.cameras.main.fadeOut(350, 0, 0, 0);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+    this.curtainIn(350, () => {
       this.clearText();
       for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
+      if (this.mapState !== 'off') this.scene.sleep('Explore');
       this.scene.launch('Battle', { ...b, onEnd: (r: BattleResult) => this.afterBattle(r) } satisfies BattleStart);
       this.scene.sleep();
     });
   }
 
-  /** 대사창을 닫고 이동 맵으로. goal에 닿으면 다음 대사로 */
-  private startExplore(map: string) {
-    this.mode = 'busy';
+  /** 대사창을 닫고 레온을 직접 움직이는 이동 구간으로. 도착점에 닿으면 다음 대사로 */
+  private startExplore(seg: string) {
     this.toggleAuto(false);
-    this.cameras.main.fadeOut(350, 0, 0, 0);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-      this.clearText();
-      for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
-      this.scene.launch('Explore', {
-        map,
-        onEnd: () => {
-          this.scene.wake();
-          this.cameras.main.fadeIn(400, 0, 0, 0);
-          this.time.delayedCall(350, () => this.nextNode());
-        },
-      } satisfies ExploreStart);
-      this.scene.sleep();
-    });
+    this.clearText();
+    for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
+    this.mode = 'explore';
+    const def = STAGE.segments[seg];
+    this.withMap((m) =>
+      m.play(seg, () => {
+        this.mode = 'busy';
+        const after = def?.after && STAGE.stages[def.after];
+        if (after) m.applyStage(after);
+        this.time.delayedCall(300, () => this.nextNode());
+      }),
+    );
   }
 
   private afterBattle(r: BattleResult) {
@@ -449,7 +588,8 @@ export class StoryScene extends Phaser.Scene {
       return this.scene.start('Story', { story: cp.story, scene: cp.scene, node: cp.node, returnTo: this.start.returnTo } satisfies StoryStartData);
     }
     if (a === 'gameover-title') return this.scene.start('Title');
-    this.cameras.main.fadeIn(400, 0, 0, 0);
+    if (this.mapState !== 'off') this.scene.wake('Explore');
+    this.curtainOut(400);
     this.time.delayedCall(350, () => {
       if (a.next) {
         const target = this.story.scenes.findIndex((s) => s.id === a.next);
@@ -471,10 +611,16 @@ export class StoryScene extends Phaser.Scene {
   private onPress() {
     if (this.logView) return this.closeLog();
     if (this.overlay) return;
+    if (this.mode === 'explore') return; // 이동 중 (살펴보기 독백이면 mode가 typing/waiting)
     this.advance();
   }
 
   private advance() {
+    if (this.looking) {
+      if (this.mode === 'typing') this.completeTyping();
+      else if (this.mode === 'waiting') this.lookNext();
+      return;
+    }
     if (this.mode === 'typing') {
       this.completeTyping();
     } else if (this.mode === 'waiting') {
@@ -495,6 +641,14 @@ export class StoryScene extends Phaser.Scene {
       if (k === 'escape' || k === 'l') this.closeLog();
       else if (ev.key === 'ArrowUp') this.scrollLog(-60);
       else if (ev.key === 'ArrowDown') this.scrollLog(60);
+      return;
+    }
+    // 이동 중에는 이동 키(WASD)가 겹치므로 대화 단축키를 쓰지 않는다. 살펴보기 독백은 F·스페이스 등으로 넘김
+    if (this.mode === 'explore' || this.looking) {
+      if (this.looking && !this.overlay && (ev.code === 'Space' || ev.code === 'Enter' || k === 'z' || k === 'f')) {
+        ev.preventDefault();
+        this.onPress();
+      }
       return;
     }
     if (ev.code === 'Space' || ev.code === 'Enter' || k === 'z') {
@@ -524,15 +678,20 @@ export class StoryScene extends Phaser.Scene {
    * 선택지·엔딩·막 끝·전투는 건너뛰지 않고 그 앞에서 멈춘다. 건너뛴 대사의 효과(플래그 등)는 적용한다.
    */
   private skipToNextPlace() {
-    if (this.overlay || this.logView) return;
+    if (this.overlay || this.logView || this.looking) return;
     if (this.mode !== 'typing' && this.mode !== 'waiting') return;
+    const passed: string[] = [];
     const nodes = this.scene_.nodes;
     let i = this.nodeIdx + 1;
     for (; i < nodes.length; i++) {
       const n = nodes[i];
       if ('place' in n || 'choices' in n || 'ending' in n || 'chapter' in n || 'battle' in n || 'hpZero' in n || 'explore' in n) break; // 전투·이동 맵은 건너뛰지 않음
       if ('text' in n) gameState.applyEffects(n);
+      if ('stage' in n) passed.push(n.stage);
     }
+    // 건너뛴 무대 변화는 바로 적용
+    const defs = passed.map((id) => STAGE.stages[id]).filter(Boolean);
+    if (defs.length) this.withMap((m) => defs.forEach((d) => m.applyStage(d, { reset: !!d.map, instant: true })));
     this.toggleAuto(false);
     this.clearText();
     for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
@@ -576,7 +735,7 @@ export class StoryScene extends Phaser.Scene {
     this.typeTimer = undefined;
     this.render(this.full);
     this.mode = 'waiting';
-    save.markRead(this.readKey());
+    if (!this.looking) save.markRead(this.readKey());
     const inMono = this.mono.visible;
     this.nextMark.setVisible(!inMono);
     this.monoMark.setVisible(inMono);
@@ -586,7 +745,7 @@ export class StoryScene extends Phaser.Scene {
   /** 자동 진행 */
   private scheduleNext() {
     this.waitTimer?.remove();
-    if (this.mode !== 'waiting' || this.overlay || this.logView || !this.auto) return;
+    if (this.mode !== 'waiting' || this.overlay || this.logView || !this.auto || this.looking) return;
     const delay = save.settings.autoDelay + Array.from(this.full).length * 25;
     this.waitTimer = this.time.delayedCall(delay, () => {
       if (this.mode === 'waiting' && !this.overlay && !this.logView) this.advance();
@@ -799,9 +958,10 @@ export class StoryScene extends Phaser.Scene {
     if (!cp) return this.leave();
     this.closeOverlay();
     gameState.restore(cp.state);
-    this.cameras.main.fadeIn(300, 0, 0, 0);
     this.sceneIdx = cp.scene;
     this.nodeIdx = cp.node;
+    this.curtain.setVisible(true).setAlpha(1);
+    this.applyMap(this.mapSteps(cp.scene, cp.node), true, () => this.curtainOut(300));
     const sc = this.scene_;
     this.saveHere();
     this.bg.setFillStyle(hex(sc.color));
@@ -901,7 +1061,7 @@ export class StoryScene extends Phaser.Scene {
   // ---------- 백로그 ----------
 
   private openLog() {
-    if (this.logView || this.overlay || this.backlog.length === 0) return;
+    if (this.logView || this.overlay || this.backlog.length === 0 || this.mode === 'explore' || this.looking) return;
     this.waitTimer?.remove();
     const top = 90;
     const bottom = H - 70;
@@ -982,8 +1142,7 @@ export class StoryScene extends Phaser.Scene {
     this.mode = 'end';
     this.typeTimer?.remove();
     this.waitTimer?.remove();
-    this.cameras.main.fadeOut(300, 0, 0, 0);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+    this.curtainIn(300, () => {
       const back = this.start.returnTo;
       if (back) {
         this.scene.resume(back);

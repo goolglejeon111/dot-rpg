@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { gainExp, levelOf } from '../battle/progress';
+import { EXP_REWARD, gainExp, levelOf } from '../battle/progress';
 import { allEndings, FIRST_STORY, stories } from '../game/data';
 import { gameState } from '../game/GameState';
 import { AUTO_SPEEDS, save, TEXT_SPEEDS } from '../game/save';
@@ -134,7 +134,7 @@ export class TitleScene extends Phaser.Scene {
   private openReward(id: string) {
     const e = allEndings().find((x) => x.id === id);
     if (!e) return;
-    const exp = e.type === 'dead' || e.type === 'bad' ? e.exp ?? 0 : 0;
+    const exp = e.type === 'dead' || e.type === 'bad' ? EXP_REWARD.ending(id) : 0;
     let note = '';
     const first = !save.hasReward(id);
     if (first) {
@@ -183,8 +183,9 @@ export class TitleScene extends Phaser.Scene {
     };
     const rows: [string, () => void][] = [
       ['갈래 전투 시험 장면', () => start({ story: 'dev_test' })],
-      ['장면 1 이동 맵 (이동 튜토리얼)', () => start({ story: FIRST_STORY, scene: 'scene1', node: at('scene1', (n) => 'explore' in n) })],
-      ['장면 3 이동 맵 (침소 회랑)', () => start({ story: FIRST_STORY, scene: 'scene3', node: at('scene3', (n) => 'explore' in n) })],
+      ['장면 1 회랑 순찰 (이동 튜토리얼)', () => start({ story: FIRST_STORY, scene: 'scene1', node: at('scene1', (n) => 'explore' in n) })],
+      ['장면 3 침소 회랑 · 장면 4 침소', () => start({ story: FIRST_STORY, scene: 'scene3', node: at('scene3', (n) => 'explore' in n) })],
+      ['해자 (창으로 뛰어내린 뒤)', () => start({ story: FIRST_STORY, scene: 'choice_window', node: at('choice_window', (n) => 'place' in n) })],
       ['장면 2 전투 (하수인들)', () => start({ story: FIRST_STORY, scene: 'scene2', node: at('scene2', (n) => 'battle' in n) })],
       ['장면 3 전투 (침입자)', () => start({ story: FIRST_STORY, scene: 'scene3', node: at('scene3', (n) => 'battle' in n) })],
       ['검을 뽑는다 (체력 0 연출)', () => start({ story: FIRST_STORY, scene: 'choice_draw', node: at('choice_draw', (n) => 'hpZero' in n, 2) })],
@@ -194,7 +195,7 @@ export class TitleScene extends Phaser.Scene {
       })],
     ];
     this.openPanel('개발 시험', (add) => {
-      rows.forEach(([label, fn], i) => add(makeButton(this, W / 2, 186 + i * 50, label, fn, { w: 420, h: 42, fontSize: 18, depth: 0 })));
+      rows.forEach(([label, fn], i) => add(makeButton(this, W / 2, 180 + i * 46, label, fn, { w: 420, h: 42, fontSize: 18, depth: 0 })));
       add(
         this.add
           .text(W / 2, 548, '전투 중: F6 적 전멸 · F7 브람 쓰러뜨리기 · F8 시간 끝 · F9 파티 전멸', { fontFamily: FONT, fontSize: '15px', color: '#888888' })

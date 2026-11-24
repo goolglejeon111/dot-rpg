@@ -1,4 +1,5 @@
 import levels from '../data/battle/levels.json';
+import expTable from '../data/exp.json';
 import fighters from '../data/battle/fighters.json';
 import { gameState, type Progress } from '../game/GameState';
 
@@ -10,8 +11,16 @@ import { gameState, type Progress } from '../game/GameState';
 export type Unlock = 'move' | 'evade' | 'skill' | 'ult' | 'combo';
 
 export const PARTY_IDS = Object.keys(fighters.party);
-const EXP: number[] = levels.exp;
-const MAX: Record<string, number> = levels.maxLevel;
+const EXP: number[] = expTable.levels;
+const MAX: Record<string, number> = expTable.maxLevel;
+
+/** 경험치 수치 (src/data/exp.json 한 곳에서 고친다) */
+export const EXP_REWARD = {
+  enemy: (id: string) => (expTable.enemies as Record<string, number>)[id] ?? 0,
+  battle: (name: string) => (expTable.battles as Record<string, number>)[name] ?? 0,
+  look: (id: string) => (expTable.looks as Record<string, number>)[id] ?? expTable.looks.default,
+  ending: (id: string) => (expTable.endings as Record<string, number>)[id] ?? 0,
+};
 
 export const maxLevel = (p: Progress = gameState.progress) => MAX[p.stage] ?? MAX.start;
 export const expOf = (id: string, p: Progress = gameState.progress) => p.exp[id] ?? 0;

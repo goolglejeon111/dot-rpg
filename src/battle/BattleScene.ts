@@ -5,7 +5,8 @@ import fighters from '../data/battle/fighters.json';
 import levels from '../data/battle/levels.json';
 import { gameState } from '../game/GameState';
 import { fxInfo, makeBattleAnims, preloadBattle } from './assets';
-import { gainExp, gainOnce, isUnlocked, levelOf, statsOf, unlockLevel, type LevelUp, type Unlock } from './progress';
+import { EXP_REWARD, gainExp, gainOnce, isUnlocked, levelOf, statsOf, unlockLevel, type LevelUp, type Unlock } from './progress';
+import { MAPS, findObj, footOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf } from '../explore/mapData';
 
 // =====================================================================
 // 종류
@@ -86,7 +87,6 @@ interface EnemyDef {
   atk: number;
   def: number;
   speed: number;
-  exp: number;
   boss?: boolean;
   ai: 'rusher' | 'caster';
   attack?: { range: number; windup: number; recover: number; cooldown: number; mult: number; fx: string };
@@ -110,7 +110,8 @@ interface TutStep {
 
 interface BattleDef {
   title?: string;
-  arena: { w: number; h: number; floor: string; tint: string };
+  /** map: 맵 파일(src/data/maps) 이름. 그 맵의 arena 구역을 전투장 바닥으로 쓴다 */
+  arena: { w: number; h: number; floor: string; tint: string; map?: string };
   party?: string[];
   start?: Record<string, number[]>;
   allies?: { id: string; x: number; y: number }[];
@@ -118,7 +119,6 @@ interface BattleDef {
   outcomes?: Record<string, OutcomeAction>;
   damage?: number;
   timeLimit?: number;
-  exp?: number;
   guide?: string;
   tutorial?: TutStep[];
   /** 마지막 일격: 보스 체력이 at 이하가 되면 궁극기를 잠시 열어 자동으로 쓰고 체력을 0으로 (대본 연출용) */
@@ -308,6 +308,25 @@ export class BattleScene extends Phaser.Scene {
 
   preload() {
     preloadBattle(this);
+    if (this.bdef?.arena.map) preloadMapArt(this);
+  }
+
+  /** 프롤로그 도트 맵의 arena 구역을 그대로 전투장으로 (벽에 걸린 물건 포함, 밤빛으로 어둡게) */
+  private drawMapArena(id: string, tint: number) {
+    const md = MAPS[id];
+    const ar = md && findObj(md, 'arena');
+    if (!ar) return console.error(`[battle] 맵 ${id}에 arena 구역이 없습니다`);
+    makeMapAnims(this);
+    const { tm, ts } = makeTilemap(this, id);
+    for (const name of ['floor', 'walls']) tm.createLayer(name, ts, -ar.x, -ar.y)?.setDepth(-10);
+    for (const o of objectsOf(md)) {
+      if (o.type !== 'prop' || !propOf(o, 'wall')) continue;
+      const f = footOf(o);
+      if (f.x < ar.x - 40 || f.x > ar.x + ar.width + 40 || f.y < ar.y - 120 || f.y > ar.y + ar.height) continue;
+      makePropSprite(this, o, -ar.x, -ar.y).setDepth(-9.5);
+    }
+    // 밤빛: 색을 곱해 어둡게
+    this.add.rectangle(-80, -80, ar.width + 160, ar.height + 160, tint).setOrigin(0).setBlendMode(Phaser.BlendModes.MULTIPLY).setDepth(-9);
   }
 
   create() {
@@ -320,9 +339,12 @@ export class BattleScene extends Phaser.Scene {
 
     // 전투장: 돌바닥 + 위쪽 벽 (terrain 타일)
     const t = Phaser.Display.Color.HexStringToColor(tint).color;
-    this.add.tileSprite(0, 0, w, h, 'terrain_tiles', 4).setOrigin(0).setTint(t).setDepth(-10);
-    this.add.tileSprite(0, -32, w, 32, 'terrain_tiles', 7).setOrigin(0).setTint(t).setDepth(-9);
-    this.add.tileSprite(0, 0, w, 40, 'terrain_tiles', 8).setOrigin(0).setTint(t).setDepth(-9);
+    if (this.bdef.arena.map) this.drawMapArena(this.bdef.arena.map, t);
+    else {
+      this.add.tileSprite(0, 0, w, h, 'terrain_tiles', 4).setOrigin(0).setTint(t).setDepth(-10);
+      this.add.tileSprite(0, -32, w, 32, 'terrain_tiles', 7).setOrigin(0).setTint(t).setDepth(-9);
+      this.add.tileSprite(0, 0, w, 40, 'terrain_tiles', 8).setOrigin(0).setTint(t).setDepth(-9);
+    }
     this.add.rectangle(0, h, w, 6, 0x000000, 0.6).setOrigin(0).setDepth(-9);
 
     if (this.start.hpZero) this.setupHpZero();
@@ -970,7 +992,8 @@ export class BattleScene extends Phaser.Scene {
     e.signal?.destroy();
     e.area?.warn.destroy();
     this.clearExtra(e);
-    if (e.enemy?.exp && !this.cutscene) this.grantExp(e.enemy.exp);
+    const ex = e.enemy ? EXP_REWARD.enemy(e.id) : 0;
+    if (ex && !this.cutscene) this.grantExp(ex);
   }
 
   /** 경험치: 파티 전원이 같은 양. 레벨이 오르면 체력·공격력·방어력이 오르고 알림 */
@@ -1440,8 +1463,9 @@ export class BattleScene extends Phaser.Scene {
     action ??= { continue: true };
     const done = action;
     // 전투 이벤트 경험치 (처음 한 번)
-    if (outcome !== 'wipe' && this.bdef.exp && !this.cutscene) {
-      this.showLevelUps(gainOnce(`battle:${this.start.battle}`, this.party.map((p) => p.id), this.bdef.exp));
+    const bex = EXP_REWARD.battle(this.start.battle);
+    if (outcome !== 'wipe' && bex && !this.cutscene) {
+      this.showLevelUps(gainOnce(`battle:${this.start.battle}`, this.party.map((p) => p.id), bex));
     }
     if (outcome === 'win') this.notices.push({ kind: 'word', text: 'victory' });
     if (outcome === 'damage') this.cameras.main.flash(500, 255, 255, 255);

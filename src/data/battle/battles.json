@@ -3,26 +3,24 @@
   "_결과": "outcomes: 결과별 다음 행동. win(적 전멸) / fall:인물ID(그 인물이 쓰러짐) / timeout(제한 시간) / wipe(파티 전멸) / damage(적에게 준 피해가 damage 이상). 값: {\"continue\": true} 다음 대사, {\"next\": 장면ID}, {\"ending\": 엔딩ID}. wipe가 없으면 게임 오버, win이 없으면 다음 대사",
   "하수인들": {
     "title": "회랑의 그림자",
-    "arena": { "w": 448, "h": 288, "floor": "corridor", "tint": "#9a86b8" },
+    "arena": { "w": 448, "h": 288, "floor": "corridor", "tint": "#9a9ec8", "map": "east_hall" },
     "party": ["leon"],
     "start": { "leon": [200, 170] },
     "allies": [{ "id": "bram", "x": 250, "y": 175 }],
     "waves": [
       [{ "enemy": "gnosis", "x": 380, "y": 120 }, { "enemy": "gnosis", "x": 400, "y": 200 }, { "enemy": "gnosis", "x": 60, "y": 150 }],
       [{ "enemy": "gnosis", "x": 40, "y": 110 }, { "enemy": "gnosis", "x": 410, "y": 230 }],
-      [{ "enemy": "gnosis", "x": 230, "y": 60 }, { "enemy": "gnosis", "x": 60, "y": 240 }]
+      [{ "enemy": "gnosis", "x": 230, "y": 60 }]
     ],
-    "exp": 30,
     "guide": "WASD 이동 · 왼쪽 클릭 공격 · Space 점프"
   },
   "침입자": {
     "title": "침입자",
-    "arena": { "w": 448, "h": 288, "floor": "corridor", "tint": "#b8869a" },
+    "arena": { "w": 448, "h": 288, "floor": "corridor", "tint": "#8a8cb4", "map": "chamber_corridor" },
     "party": ["leon"],
     "start": { "leon": [120, 170] },
     "waves": [[{ "enemy": "marcion_hooded", "x": 330, "y": 150 }]],
     "outcomes": { "finisher": { "continue": true }, "wipe": { "continue": true } },
-    "exp": 60,
     "guide": "바닥이 붉어지면 막을 수 없습니다. 범위 밖으로 피하거나 공격해서 시전을 끊으세요",
     "_튜토리얼": "goal: hit 베기, block 막기, parry 튕겨 내기, dodge 붉은 범위 피하기, free 자유. count 만큼 하면 다음 단계",
     "tutorial": [
@@ -53,7 +51,6 @@
       "timeout": { "next": "test_timeout" },
       "wipe": { "ending": "test_dead" }
     },
-    "exp": 0,
     "guide": "이기기 / 브람 쓰러짐 / 60초 / 전멸 → 각각 다른 장면 (F6 적 전멸, F7 브람 쓰러뜨리기, F8 시간 끝, F9 파티 전멸)"
   },
   "_cutscene": "체력 0 연출 전투장 (대본의 {\"hpZero\": ...})",

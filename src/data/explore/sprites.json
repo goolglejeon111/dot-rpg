@@ -1,7 +1,9 @@
 {
+  "_설명": "tools/pixel-art/gen-palace.mjs가 만든 파일 (직접 고치지 말 것). tiles.names 순서 = 타일 번호",
   "tiles": {
     "file": "assets/explore/palace_tiles.png",
     "size": 32,
+    "columns": 8,
     "names": [
       "floor",
       "floor2",
@@ -9,60 +11,210 @@
       "carpet_mid",
       "carpet_bot",
       "wall_top",
-      "wall_front",
-      "wall_window"
-    ]
+      "wall_up",
+      "wall_low",
+      "window_up",
+      "window_low",
+      "stone",
+      "stone2",
+      "wood",
+      "blood1",
+      "blood2",
+      "blood3",
+      "castle_top",
+      "castle_wall",
+      "castle_moss",
+      "castle_base",
+      "water",
+      "water2",
+      "quay",
+      "cobble"
+    ],
+    "solid": [
+      "wall_top",
+      "wall_up",
+      "wall_low",
+      "window_up",
+      "window_low",
+      "castle_top",
+      "castle_wall",
+      "castle_moss",
+      "castle_base",
+      "water",
+      "water2"
+    ],
+    "notes": {
+      "floor": "대리석 바닥",
+      "floor2": "대리석 바닥 (결이 다른 것)",
+      "carpet_top": "붉은 카펫 위 가장자리",
+      "carpet_mid": "붉은 카펫 가운데",
+      "carpet_bot": "붉은 카펫 아래 가장자리",
+      "wall_top": "벽 윗면",
+      "wall_up": "벽 앞면 위 (돌)",
+      "wall_low": "벽 앞면 아래 (나무 징두리판)",
+      "window_up": "큰 창문 위 (아치)",
+      "window_low": "큰 창문 아래 (창턱)",
+      "stone": "어두운 판석 바닥",
+      "stone2": "어두운 판석 바닥 (다른 무늬)",
+      "wood": "침소 나무 마루",
+      "blood1": "피 웅덩이 1 (blood 레이어)",
+      "blood2": "피 웅덩이 2 (blood 레이어)",
+      "blood3": "피 방울 (blood 레이어)",
+      "castle_top": "성벽 꼭대기 (흉벽)",
+      "castle_wall": "높은 성벽",
+      "castle_moss": "이끼 낀 성벽",
+      "castle_base": "물에 잠긴 성벽 밑동",
+      "water": "해자 물",
+      "water2": "해자 물 (다른 물결)",
+      "quay": "둑 가장자리 (물 아래쪽)",
+      "cobble": "둑 자갈길"
+    }
   },
   "props": {
-    "portrait": {
-      "file": "assets/explore/portrait.png",
-      "w": 26,
-      "h": 30,
-      "frames": 1
-    },
-    "banner": {
-      "file": "assets/explore/banner.png",
-      "w": 16,
-      "h": 44,
-      "frames": 1
+    "pillar": {
+      "file": "assets/explore/pillar.png",
+      "w": 32,
+      "h": 96,
+      "frames": 1,
+      "note": "대리석 기둥"
     },
     "torch": {
       "file": "assets/explore/torch.png",
       "w": 12,
       "h": 22,
-      "frames": 3,
-      "rate": 6
+      "frames": 2,
+      "rate": 5,
+      "note": "벽 횃불 (2프레임)"
     },
-    "armor": {
-      "file": "assets/explore/armor.png",
-      "w": 22,
-      "h": 40,
-      "frames": 1
-    },
-    "vase": {
-      "file": "assets/explore/vase.png",
+    "banner": {
+      "file": "assets/explore/banner.png",
       "w": 16,
-      "h": 28,
-      "frames": 1
+      "h": 44,
+      "frames": 1,
+      "note": "남색 깃발"
+    },
+    "portrait": {
+      "file": "assets/explore/portrait.png",
+      "w": 30,
+      "h": 38,
+      "frames": 1,
+      "note": "시황제의 초상화"
+    },
+    "board": {
+      "file": "assets/explore/board.png",
+      "w": 30,
+      "h": 30,
+      "frames": 1,
+      "note": "게시판 (아르덴 사절의 청원서)"
+    },
+    "honor": {
+      "file": "assets/explore/honor.png",
+      "w": 50,
+      "h": 36,
+      "frames": 1,
+      "note": "근위기사단 명예의 벽"
+    },
+    "prayer": {
+      "file": "assets/explore/prayer.png",
+      "w": 20,
+      "h": 36,
+      "frames": 2,
+      "rate": 4,
+      "note": "루멘 신성국의 은제 기도대 (2프레임)"
+    },
+    "sanctum": {
+      "file": "assets/explore/sanctum.png",
+      "w": 40,
+      "h": 60,
+      "frames": 1,
+      "note": "지하 성소의 문 (문틈 빛)"
+    },
+    "door_gold": {
+      "file": "assets/explore/door_gold.png",
+      "w": 44,
+      "h": 62,
+      "frames": 1,
+      "note": "금장식 침소 문 (문틈 흰빛)"
+    },
+    "bed": {
+      "file": "assets/explore/bed.png",
+      "w": 64,
+      "h": 66,
+      "frames": 1,
+      "note": "황제의 큰 침대"
+    },
+    "curtain": {
+      "file": "assets/explore/curtain.png",
+      "w": 18,
+      "h": 66,
+      "frames": 1,
+      "note": "짙은 붉은 커튼"
+    },
+    "candle": {
+      "file": "assets/explore/candle.png",
+      "w": 12,
+      "h": 32,
+      "frames": 2,
+      "rate": 4,
+      "note": "촛대 (2프레임)"
+    },
+    "window_open": {
+      "file": "assets/explore/window_open.png",
+      "w": 36,
+      "h": 64,
+      "frames": 1,
+      "note": "눈이 들이치는 열린 창"
     },
     "table": {
       "file": "assets/explore/table.png",
       "w": 32,
       "h": 28,
-      "frames": 1
+      "frames": 1,
+      "note": "경전이 펼쳐진 탁자"
     },
-    "door": {
-      "file": "assets/explore/door.png",
-      "w": 32,
-      "h": 48,
-      "frames": 1
+    "belltower": {
+      "file": "assets/explore/belltower.png",
+      "w": 56,
+      "h": 140,
+      "frames": 1,
+      "note": "멀리 보이는 종탑"
+    },
+    "grate": {
+      "file": "assets/explore/grate.png",
+      "w": 36,
+      "h": 34,
+      "frames": 1,
+      "note": "지하 수로로 이어지는 부서진 쇠창살"
+    },
+    "torchpost": {
+      "file": "assets/explore/torchpost.png",
+      "w": 12,
+      "h": 40,
+      "frames": 2,
+      "rate": 5,
+      "note": "둑의 횃불 기둥 (2프레임)"
+    },
+    "armor": {
+      "file": "assets/explore/armor.png",
+      "w": 22,
+      "h": 40,
+      "frames": 1,
+      "note": "의례용 갑옷 (장식)"
+    },
+    "vase": {
+      "file": "assets/explore/vase.png",
+      "w": 16,
+      "h": 28,
+      "frames": 1,
+      "note": "꽃병 (장식)"
     },
     "look": {
       "file": "assets/explore/look.png",
       "w": 9,
       "h": 9,
       "frames": 2,
-      "rate": 3
+      "rate": 3,
+      "note": "조사 표시"
     }
   }
 }

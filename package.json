@@ -11,6 +11,7 @@
     "art:battle": "node tools/pixel-art/gen-battle.mjs && node tools/pixel-art/build.mjs",
     "art:palace": "node tools/pixel-art/gen-palace.mjs && node tools/pixel-art/build.mjs",
     "map": "node tools/map/make-village.mjs",
+    "maps": "node tools/maps/gen-maps.mjs",
     "script": "node tools/script/convert.mjs",
     "script:check": "node tools/script/check.mjs"
   },

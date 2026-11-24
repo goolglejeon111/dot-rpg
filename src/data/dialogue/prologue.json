@@ -3,8 +3,8 @@
   "title": "프롤로그: 시해의 밤",
   "source": "docs/대본/프롤로그.md",
   "endings": {
-    "prologue_dead": {"type":"dead","label":"DEAD END","title":"침소 앞의 반역자","hint":"침소 앞에서, 칼끝들을 향해 검을 뽑는다면.","exp":80,"epilogue":""},
-    "prologue_bad": {"type":"bad","label":"BAD END","title":"재판 없는 정의","hint":"침소 앞에서, 조사를 믿고 검을 내려놓는다면.","exp":80,"epilogue":""}
+    "prologue_dead": {"type":"dead","label":"DEAD END","title":"침소 앞의 반역자","hint":"침소 앞에서, 칼끝들을 향해 검을 뽑는다면.","epilogue":""},
+    "prologue_bad": {"type":"bad","label":"BAD END","title":"재판 없는 정의","hint":"침소 앞에서, 조사를 믿고 검을 내려놓는다면.","epilogue":""}
   },
   "chapters": {
     "act1": {"title":"1막으로 이어집니다","finished":"프롤로그 끝"}
@@ -24,10 +24,10 @@
       ]
     },
     {
-      "id": "scene1", "title": "장면 1. 황궁의 밤", "place": "황궁 회랑", "color": "#141a2a",
+      "id": "scene1", "title": "장면 1. 황궁의 밤", "place": "황궁 동쪽 회랑", "color": "#141a2a",
       "nodes": [
         {"monologue":["제국력 312년, 황도 아에테리움.","자정을 앞둔 황궁은, 숨소리 하나 없이 고요했다."]},
-        {"explore":"palace_hall"},
+        {"explore":"hall_patrol"},
         {"speaker":"bram","expression":"normal","text":"또 너냐, 아르덴 촌놈."},
         {"speaker":"leon","expression":"normal","text":"오늘 밤은 너랑 같이 돌라는 명령이야."},
         {"speaker":"bram","expression":"angry","text":"알아. 그것도 침소 쪽 회랑을. 거긴 원래 단장님이 직접 맡으시는 자리야."},
@@ -58,19 +58,23 @@
       ]
     },
     {
-      "id": "scene2", "title": "장면 2. 그림자", "place": "황궁 회랑", "color": "#1a1424",
+      "id": "scene2", "title": "장면 2. 그림자", "place": "황궁 동쪽 회랑", "color": "#1a1424",
       "nodes": [
+        {"explore":"hall_window"},
         {"monologue":["회랑의 횃불이 한꺼번에 흔들렸다."]},
         {"monologue":["바람은 불지 않았다."]},
         {"speaker":"bram","expression":"surprised","text":"레온, 뒤!"},
+        {"stage":"hall_ambush"},
         {"monologue":["검은 옷.","하나, 둘, 셋.","벽의 그림자에서 배어 나오듯, 사내들이 회랑을 메웠다."]},
         {"speaker":"bram","expression":"angry","text":"침입자다! 이 새끼들, 어디로 들어온 거야!"},
         {"battle":"하수인들"},
+        {"stage":"hall_after"},
         {"monologue":["칼이 부딪친다.","불꽃이 튄다."]},
         {"monologue":["베어 넘긴 사내 하나가, 쓰러지기 직전에 웃었다."]},
         {"monologue":["하얀 빛."]},
         {"monologue":["사내의 몸이 안쪽에서 터져 나갔다.","피도, 살도, 칼 한 자루도 남지 않았다.","빛이 걷힌 자리에는, 그을음 하나 없는 바닥뿐이었다."]},
         {"speaker":"bram","expression":"surprised","text":"뭐야, 이건…!"},
+        {"stage":"hall_shadow"},
         {"monologue":["회랑 끝.","무리에서 혼자 떨어져, 안쪽으로 달려가는 그림자가 있었다."]},
         {"monologue":["저쪽은.","폐하의 침소다."]},
         {"speaker":"leon","expression":"angry","text":"브람, 저놈이 우두머리야. 침소로 가자!"},
@@ -79,15 +83,17 @@
         {"speaker":"bram","expression":"smile","text":"날 뭘로 보는 거야, 촌놈. 여긴 내가 맡는다. 어서 가!"},
         {"monologue":["뒤를 돌아보지 않았다.","돌아볼 필요가 없었다."]},
         {"monologue":["입은 험해도, 저 녀석의 검은 한 번도 등을 보인 적이 없으니까."]},
+        {"stage":"hall_run"},
         {"monologue":["나는 달렸다.","원망하는 황제의 침소를 향해."]}
       ]
     },
     {
-      "id": "scene3", "title": "장면 3. 황궁 깊은 곳", "place": "침소로 이어지는 회랑", "color": "#1c1218",
+      "id": "scene3", "title": "장면 3. 황궁 깊은 곳", "place": "침소로 가는 회랑", "color": "#1c1218",
       "nodes": [
         {"monologue":["침소로 이어지는 마지막 회랑."]},
         {"monologue":["경비병들이 쓰러져 있었다.","넷. 전부 목이 꺾인 채로.","칼을 뽑은 흔적조차 없었다."]},
-        {"explore":"chamber_corridor"},
+        {"explore":"corridor"},
+        {"stage":"corr_face"},
         {"monologue":["그 끝에서, 그림자가 멈춰 섰다."]},
         {"speaker":"leon","expression":"angry","text":"거기까지다. 황실 근위기사 레온이다. 무기를 버려라."},
         {"speaker":"marcion_hooded","expression":"normal","text":"…근위기사라. 이 밤에 길을 막는 게 고작 어린 기사 하나인가."},
@@ -95,6 +101,7 @@
         {"speaker":"marcion_hooded","expression":"normal","text":"알 필요 없다."},
         {"monologue":["대화는 거기서 끝났다."]},
         {"battle":"침입자"},
+        {"stage":"corr_after"},
         {"monologue":["발을 내디딘다.","검 끝에 오러를 싣는다.","수련으로 쌓아 올린 생명이, 칼날 위에서 희게 타오른다."]},
         {"monologue":["닿았다."]},
         {"monologue":["칼날이 사내의 어깨를 파고들어, 그대로 빠져나간다."]},
@@ -106,7 +113,9 @@
         {"monologue":["남은 손바닥에서, 빛이 터졌다."]},
         {"monologue":["그것은 오러가 아니었다.","마법도 아니었다.","내가 아는 어떤 힘과도 닮지 않은, 하얗고, 차가운 것."]},
         {"monologue":["어깨를 꿰뚫린다.","비명조차 나오지 않는다."]},
+        {"stage":"corr_fall"},
         {"monologue":["세계가 하얗게 지워진다."]},
+        {"stage":"corr_door"},
         {"monologue":["마지막으로 본 것은.","한쪽 팔을 잃은 채 침소의 문을 여는, 그 사내의 등이었다."]}
       ]
     },
@@ -116,11 +125,14 @@
         {"monologue":["차갑다."]},
         {"monologue":["뺨에 닿는 돌바닥이, 얼음처럼 차갑다."]},
         {"monologue":["눈을 뜬다.","침소의 문이 열려 있다."]},
+        {"stage":"bed_up"},
         {"speaker":"leon","expression":"surprised","text":"폐하…?"},
         {"monologue":["대답은 없었다."]},
         {"monologue":["침상 위의 그 사람은, 더 이상 움직이지 않는다."]},
+        {"stage":"bed_blood"},
         {"monologue":["붉었다."]},
         {"monologue":["흰 침구가, 바닥이, 침상에서 늘어진 손끝이.","갈라진 목에서 쏟아진 피가 아직 멎지 않고, 침상 가장자리를 타고 뚝, 뚝, 바닥으로 떨어지고 있었다."]},
+        {"stage":"bed_rush"},
         {"speaker":"leon","expression":"surprised","text":"폐하! 폐하, 정신 차리십시오…!"},
         {"monologue":["알고 있었다.","흔들어도 소용없다는 것을.","이만큼의 피를 쏟고, 살아 있을 사람은 없다는 것을."]},
         {"speaker":"leon","expression":"sad","text":"…아니야. 이럴 리가 없어."},
@@ -134,6 +146,7 @@
         {"monologue":["그것이 누구의 피인지.","이 방에 들어오는 사람은, 아무도 묻지 않을 것이다."]},
         {"monologue":["다른 손 안에는, 쓰러지면서도 놓지 않았던 펜던트가 있었다."]},
         {"monologue":["어깨의 상처가 욱신거린다.","피는 멎었는데, 갈라진 살 사이로 희미한 빛이 새어 나온다."]},
+        {"explore":"chamber"},
         {"monologue":["회랑 너머에서, 발소리가 몰려온다."]}
       ]
     },
@@ -144,15 +157,16 @@
         {"monologue":["브람의 목소리가 끊겼다.","그의 시선이 침소 안을 향한다.","얼굴에서 핏기가 빠져나간다."]},
         {"speaker":"bram","expression":"surprised","text":"폐하가… 레온, 이게 어떻게 된 거야."},
         {"speaker":"leon","expression":"normal","text":"놈들 우두머리를 쫓았어. 여기서 싸우다가…."},
+        {"stage":"bed_oswald"},
         {"monologue":["그 뒤로 근위기사들이 쏟아져 들어왔다.","선두에 선 것은, 근위기사단 부단장이었다."]},
         {"speaker":"oswald","expression":"surprised","text":"이게… 무슨…."},
-        {"speaker":"oswald","expression":"angry","text":"레온 경. 설명해라. 지금 당장."},
+        {"speaker":"oswald","expression":"angry","text":"레온 경. 설명하게. 지금 당장."},
         {"speaker":"leon","expression":"normal","text":"침입자가 있었습니다. 다수가 회랑에 들이닥쳤고, 저는 그 우두머리를…."},
-        {"speaker":"oswald","expression":"angry","text":"침입자? 어디 있다는 건가! 회랑에는 죽은 경비병들뿐이다!"},
+        {"speaker":"oswald","expression":"angry","text":"침입자? 어디 있다는 건가! 회랑에는 죽은 경비병들뿐이네!"},
         {"speaker":"bram","expression":"angry","text":"부단장님, 저도 봤습니다! 놈들이 쓰러질 때마다 빛이 돼서 터져 버려서…."},
-        {"speaker":"oswald","expression":"angry","text":"브람 경, 자네가 저 평민을 감싸 주는 건 알고 있다. 하지만 지금은 입 다물어라."},
-        {"speaker":"oswald","expression":"angry","text":"경비병들은 칼도 뽑지 못하고 죽었다. 폐하의 피는 아직 흐르고 있다. 그리고 레온 경, 자네의 검은 피투성이다."},
-        {"speaker":"oswald","expression":"angry","text":"이 자리에 서 있는 건, 자네 하나뿐이다."},
+        {"speaker":"oswald","expression":"angry","text":"브람 경, 자네가 저 평민을 감싸 주는 건 알고 있네. 하지만 지금은 입 다물게."},
+        {"speaker":"oswald","expression":"angry","text":"경비병들은 칼도 뽑지 못하고 죽었네. 폐하의 피는 아직 흐르고 있고. 그리고 레온 경, 자네의 검은 피투성이일세."},
+        {"speaker":"oswald","expression":"angry","text":"이 자리에 서 있는 건, 자네 하나뿐이란 말일세."},
         {"monologue":["아무도 움직이지 않았다.","수십 개의 칼끝이, 나를 향해 있었다."]},
         {"speaker":"bram","expression":"sad","text":"…레온. 네가 한 건 아니지?"},
         {"monologue":["대답할 수 있는 말이, 없었다."]},
@@ -162,7 +176,7 @@
     {
       "id": "choice_draw", "title": "▶ 1. 검을 뽑는다", "place": "침소 앞", "color": "#260808", "branch": true,
       "nodes": [
-        {"speaker":"leon","expression":"angry","text":"비켜. 진짜 범인을 쫓아야 해."},
+        {"speaker":"leon","expression":"angry","text":"비키십시오. 진짜 범인을 쫓아야 합니다."},
         {"speaker":"oswald","expression":"angry","text":"…결국 그런 거였나. 베어라."},
         {"monologue":["오러를 끌어올린다."]},
         {"monologue":["그러나."]},
@@ -170,6 +184,7 @@
         {"hpZero":"leon","by":"mob_royal_knight","count":4},
         {"monologue":["첫 번째 칼날이 옆구리를 갈랐다.","두 번째가 허벅지를 꿰뚫었다.","무릎이 꺾인다. 바닥에 짚은 손등 위로, 세 번째 칼날이 내리꽂혔다."]},
         {"monologue":["마구 찔렸다."]},
+        {"stage":"bed_dead"},
         {"monologue":["몇 번째인지 세는 것을 그만두었을 때, 나는 폐하의 피 위에 엎드려 있었다.","내 피와 폐하의 피가 섞여, 어느 쪽이 어느 쪽인지 알 수 없었다."]},
         {"speaker":"bram","expression":"sad","text":"…레온."},
         {"monologue":["멀리서 브람의 목소리가 들린다.","대답하려고 했다.","목구멍으로 넘어오는 것은, 피뿐이었다."]},
@@ -182,7 +197,7 @@
       "id": "choice_surrender", "title": "▶ 2. 검을 내려놓는다", "place": "침소 앞", "color": "#16161a", "branch": true,
       "nodes": [
         {"speaker":"leon","expression":"sad","text":"…저는 하지 않았습니다. 조사하시면 알게 될 겁니다."},
-        {"speaker":"oswald","expression":"normal","text":"그 말은 심문관 앞에서 해라."},
+        {"speaker":"oswald","expression":"normal","text":"그 말은 심문관 앞에서 하게."},
         {"monologue":["검이 바닥에 떨어지는 소리가, 이상할 만큼 크게 울렸다."]},
         {"monologue":["조사는 없었다."]},
         {"place":"지하 감옥"},
@@ -204,7 +219,9 @@
       "nodes": [
         {"speaker":"leon","expression":"normal","text":"…미안해, 브람. 지금은 잡혀 줄 수 없어."},
         {"speaker":"oswald","expression":"angry","text":"잡아라!"},
+        {"stage":"bed_window"},
         {"monologue":["깨진 창틀을 박찬다.","몸이 허공에 뜬다."]},
+        {"stage":"bed_gone"},
         {"monologue":["브람의 손이 창틀에 닿은 것은.","내가 어둠 속으로 사라진 뒤였다."]},
         {"speaker":"bram","expression":"sad","text":"…바보 같은 놈."},
         {"place":"해자"},
@@ -216,6 +233,7 @@
         {"monologue":["수면 위로 고개를 내밀었다."]},
         {"monologue":["종소리."]},
         {"monologue":["황궁의 첨탑에서, 종이 울리고 있었다.","한 번. 또 한 번. 멈추지 않고.","황제가 죽었을 때만 울린다는, 장례의 종이었다."]},
+        {"stage":"moat_chase"},
         {"monologue":["황도가 깨어난다.","창마다 불이 켜진다.","그리고 해자를 따라, 횃불이 줄지어 달려온다."]},
         {"name":"추격 기사","expression":"angry","text":"해자다! 해자로 떨어졌다!"},
         {"name":"추격 기사","expression":"angry","text":"물가를 막아라! 놈은 다쳤다, 멀리 못 간다!"},
@@ -224,6 +242,7 @@
         {"monologue":["어둠.","그런데 그 어둠 속에서, 내 어깨만이 빛나고 있었다."]},
         {"monologue":["들킨다.","이 빛이 있는 한, 어디로 숨어도."]},
         {"monologue":["손으로 상처를 짓누른다.","살이 타는 것 같은 통증. 그래도 누른다. 빛이 손가락 사이로 새어 나가지 않도록."]},
+        {"stage":"moat_grate"},
         {"monologue":["해자의 벽을 따라 헤엄친다.","돌벽 아래, 물이 빨려 들어가는 곳이 있었다.","녹슨 쇠창살. 황도의 오물이 흘러드는, 지하 수로의 입구."]},
         {"monologue":["창살 하나가, 부러져 있었다.","오래된 녹이 아니라, 방금 뜯겨 나간 단면이었다."]},
         {"name":"추격 기사","expression":"angry","text":"찾았나?!"},

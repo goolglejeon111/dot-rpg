@@ -287,7 +287,7 @@ export class StoryScene extends Phaser.Scene {
     const swap = () => {
       for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
       this.bg.setFillStyle(hex(sc.color));
-      this.setPlace(sc.place, true);
+      this.setPlace(sc.place);
     };
     if (first) {
       swap();
@@ -298,29 +298,14 @@ export class StoryScene extends Phaser.Scene {
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       swap();
       this.cameras.main.fadeIn(320, 0, 0, 0);
-      this.time.delayedCall(sc.place ? 900 : 400, () => this.runNode());
+      this.time.delayedCall(400, () => this.runNode());
     });
   }
 
-  /** 장소 이름: 왼쪽 위에 계속 표시, 바뀔 때 가운데 위쪽에 잠깐 크게 */
-  private setPlace(place: string, announce: boolean) {
+  /** 장소 이름: 왼쪽 위에 계속 표시 */
+  private setPlace(place: string) {
     this.place = place;
     this.placeLabel.setText(place ? `◆ ${place}` : '');
-    if (!place || !announce) return;
-    const t = this.add
-      .text(W / 2, Math.round(H * 0.2), place, { fontFamily: FONT, fontSize: '40px', color: '#f3e7c4' })
-      .setOrigin(0.5)
-      .setDepth(7)
-      .setAlpha(0)
-      .setShadow(0, 3, '#000000', 8);
-    this.tweens.chain({
-      targets: t,
-      tweens: [
-        { alpha: 1, duration: 300 },
-        { alpha: 1, duration: 700 },
-        { alpha: 0, duration: 500, onComplete: () => t.destroy() },
-      ],
-    });
   }
 
   private runNode() {
@@ -344,7 +329,7 @@ export class StoryScene extends Phaser.Scene {
       console.info(`[story] 전투 자리(${node.battle}): ${node.note ?? ''} — 지금은 건너뜁니다`);
       this.nextNode();
     } else if ('place' in node) {
-      this.setPlace(node.place, true);
+      this.setPlace(node.place);
       this.nextNode();
     } else if ('ending' in node) {
       gameState.applyEffects(node);
@@ -699,7 +684,7 @@ export class StoryScene extends Phaser.Scene {
     const sc = this.scene_;
     save.setCheckpoint({ story: this.story.id, scene: sc.id, ...gameState.snapshot() });
     this.bg.setFillStyle(hex(sc.color));
-    this.setPlace(cp.place, false);
+    this.setPlace(cp.place);
     this.clearText();
     for (const side of ['left', 'right'] as Side[]) {
       const s = cp.stage[side];

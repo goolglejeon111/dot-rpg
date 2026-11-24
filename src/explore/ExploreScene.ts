@@ -46,6 +46,8 @@ export interface StageDef {
   /** 처음엔 숨긴 물건(hidden prop)을 보이게(true)/숨기게(false). 이미 주운 것은 계속 숨김 */
   props?: Record<string, boolean>;
   actors?: Record<string, ActorSpec | null>;
+  /** 인물 그림이 위에서 떨어져 물에 빠지는 모습을 한 번 보여 준다 */
+  fall?: { sprite: string; from: Pt; to: Pt; ms?: number };
 }
 export interface SegmentDef {
   map: string;
@@ -373,6 +375,36 @@ export class ExploreScene extends Phaser.Scene {
       else this.placeActor(id, spec, instant);
     }
     this.focus(def.focus ?? (reset ? 'leon' : undefined), instant);
+    if (def.fall && !instant) this.playFall(def.fall);
+  }
+
+  /** 떨어져서 물에 풍덩: 점프 꼭대기 그림으로 떨어지고, 물보라와 물결을 남기고 사라진다 */
+  private playFall(f: NonNullable<StageDef['fall']>) {
+    const from = this.point(f.from);
+    const to = this.point(f.to);
+    if (!from || !to) return;
+    const frame = (4 + DIRS.indexOf('down')) * 5 + 2;
+    const spr = this.lightUp(this.world(this.add.sprite(from.x, from.y, f.sprite, frame).setOrigin(0.5, 1).setDepth(to.y + 50)));
+    this.tweens.add({
+      targets: spr, x: to.x, y: to.y, duration: f.ms ?? 900, ease: 'Quad.easeIn',
+      onComplete: () => {
+        spr.destroy();
+        this.cameras.main.shake(120, 0.003);
+        // 물결 고리
+        for (let i = 0; i < 3; i++) {
+          const ring = this.world(this.add.ellipse(to.x, to.y, 10, 4).setStrokeStyle(1, 0xcfe4ff, 0.9).setDepth(to.y - 1));
+          this.tweens.add({ targets: ring, scaleX: 5 + i * 2, scaleY: 5 + i * 2, alpha: 0, delay: i * 220, duration: 1100, onComplete: () => ring.destroy() });
+        }
+        // 물방울
+        for (let i = 0; i < 10; i++) {
+          const d = this.world(this.add.rectangle(to.x, to.y - 4, 2, 2, 0xe6f2ff).setDepth(to.y + 51));
+          const dx = (Math.random() - 0.5) * 50;
+          const up = 18 + Math.random() * 22;
+          this.tweens.add({ targets: d, x: to.x + dx, duration: 600 });
+          this.tweens.add({ targets: d, y: to.y - 4 - up, duration: 260, ease: 'Quad.easeOut', yoyo: true, onComplete: () => d.destroy() });
+        }
+      },
+    });
   }
 
   private focus(f: Pt | undefined, instant: boolean) {

@@ -92,6 +92,13 @@ export function parseScript(md, cfg) {
         });
         continue;
       }
+      // > 엔딩 후일담(보상): ... → 바로 앞 엔딩의 후일담 (엔딩 목록의 보상 화면)
+      const epi = /^엔딩 후일담(?:\(보상\))?:\s*(.+)$/.exec(body);
+      const lastEnding = Object.keys(story.endings).pop();
+      if (epi && lastEnding) {
+        story.endings[lastEnding].epilogue = epi[1];
+        continue;
+      }
       warnings.push(`알 수 없는 인용 줄: ${line}`);
       continue;
     }

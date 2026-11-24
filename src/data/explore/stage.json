@@ -173,6 +173,10 @@
       "map": "moat",
       "focus": "moat_view"
     },
+    "moat_dive": {
+      "wait": 2400,
+      "fall": { "sprite": "leon", "from": [560, 110], "to": [560, 350], "ms": 900 }
+    },
     "moat_chase": {
       "focus": [560, 380],
       "actors": {

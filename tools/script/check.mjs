@@ -21,6 +21,7 @@ for (const cfg of STORIES) {
       started = true;
     }
     if (!started || l === '' || l === '---' || l === '〔독백〕' || l === '> **[선택지]**') continue;
+    if (/^> 엔딩 후일담/.test(l)) continue; // 후일담은 엔딩 목록에서 보여 줌 (대사 아님)
     // stories.mjs의 rewrites(게임에서만 바꿔 쓰는 대사)는 바뀐 대사로 맞춰 본다
     const rw = (cfg.rewrites ?? []).find((r) => l.startsWith(`${r.name} (`) && l.endsWith(`): ${r.from}`));
     a.push((rw ? l.slice(0, l.length - rw.from.length) + rw.to : l).replace(/^> /, ''));

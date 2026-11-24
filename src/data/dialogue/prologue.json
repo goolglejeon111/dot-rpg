@@ -3,8 +3,8 @@
   "title": "프롤로그: 시해의 밤",
   "source": "docs/대본/프롤로그.md",
   "endings": {
-    "prologue_dead": {"type":"dead","label":"DEAD END","title":"침소 앞의 반역자","hint":"침소 앞에서, 칼끝들을 향해 검을 뽑는다면.","epilogue":""},
-    "prologue_bad": {"type":"bad","label":"BAD END","title":"재판 없는 정의","hint":"침소 앞에서, 조사를 믿고 검을 내려놓는다면.","epilogue":""}
+    "prologue_dead": {"type":"dead","label":"DEAD END","title":"침소 앞의 반역자","hint":"침소 앞에서, 칼끝들을 향해 검을 뽑는다면."},
+    "prologue_bad": {"type":"bad","label":"BAD END","title":"재판 없는 정의","epilogue":"마르키온의 시점. 시해범은 계획대로 처형되었고, 그날 밤의 진실을 아는 자는 남지 않았다. 계획에서 어긋난 것은 순례길에서 사라진 황녀 하나뿐이었다.","hint":"침소 앞에서, 조사를 믿고 검을 내려놓는다면."}
   },
   "chapters": {
     "act1": {"title":"1막으로 이어집니다","finished":"프롤로그 끝"}
@@ -115,6 +115,7 @@
         {"monologue":["어깨를 꿰뚫린다.","비명조차 나오지 않는다."]},
         {"stage":"corr_fall"},
         {"monologue":["세계가 하얗게 지워진다."]},
+        {"speaker":"marcion_hooded","expression":"normal","text":"죽이지는 않는다. 오늘 밤의 피는, 네가 짊어져야 하니까."},
         {"stage":"corr_door"},
         {"monologue":["마지막으로 본 것은.","한쪽 팔을 잃은 채 침소의 문을 여는, 그 사내의 등이었다."]}
       ]
@@ -144,6 +145,7 @@
         {"monologue":["지금 이 가슴을 채우는 것은, 원망이 아니었다."]},
         {"monologue":["지키겠다고 맹세했다.","그리고 지키지 못했다."]},
         {"monologue":["그것만이, 피처럼 선명했다."]},
+        {"monologue":["손에 무언가가 쥐어져 있다.","내 검.","쓰러질 때 분명 놓쳤던 검이, 다시 내 손에 쥐어져 있었다.","칼날이 끝까지 붉게 젖어 있었다."]},
         {"monologue":["어깨의 상처가 욱신거린다.","피는 멎었는데, 갈라진 살 사이로 희미한 빛이 새어 나온다."]},
         {"explore":"chamber"},
         {"monologue":["회랑 너머에서, 발소리가 몰려온다."]}
@@ -224,6 +226,7 @@
         {"monologue":["브람의 손이 창틀에 닿은 것은.","내가 어둠 속으로 사라진 뒤였다."]},
         {"speaker":"bram","expression":"sad","text":"…바보 같은 놈."},
         {"place":"해자"},
+        {"stage":"moat_dive"},
         {"monologue":["떨어진다."]},
         {"monologue":["삼 층 높이. 바람이 귀를 찢는다.","그 아래로 검게 입을 벌린 것은, 황궁을 두른 해자였다."]},
         {"monologue":["물이 몸을 삼킨다."]},

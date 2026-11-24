@@ -113,6 +113,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   private choiceButtons: Button[] = [];
   private activeChoices: ChoiceOption[] = [];
   private logBtn!: Button;
+  /** 대사창을 내리고 무대만 보여 주는 중 (버튼도 숨김) */
+  private staging = false;
   private autoBtn!: Button;
   private skipBtn!: Button;
   private overlay?: Phaser.GameObjects.Container;
@@ -131,6 +133,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   init(data: StoryStartData) {
     this.start = data;
     this.mode = 'busy';
+    this.staging = false;
     this.auto = false;
     this.lastShown = null;
     this.lastChoice = null;
@@ -528,7 +531,11 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       this.mode = 'busy';
       this.clearText();
       for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side);
-      this.time.delayedCall(d.wait, () => this.nextNode());
+      this.staging = true;
+      this.time.delayedCall(d.wait, () => {
+        this.staging = false;
+        this.nextNode();
+      });
     } else if ('place' in node) {
       this.setPlace(node.place);
       if (!STAGE.places[node.place]) return this.nextNode();
@@ -655,7 +662,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
 
   /** 로그·자동·스킵 버튼은 대화 중에만 (이동·살펴보기·엔딩 화면에서는 숨김) */
   update() {
-    const talk = this.mode !== 'explore' && this.mode !== 'end' && !this.looking;
+    const talk = this.mode !== 'explore' && this.mode !== 'end' && !this.looking && !this.staging;
     for (const b of [this.logBtn, this.autoBtn, this.skipBtn]) if (b && b.visible !== talk) b.setVisible(talk);
   }
 

@@ -645,7 +645,25 @@ export class BattleScene extends Phaser.Scene {
         }
       });
     };
-    this.time.delayedCall(900, strikeNext);
+    // 먼저 레온 바로 곁까지 걸어와 둘러싼 뒤 차례로 찌른다
+    let longest = 0;
+    attackers.forEach((e, i) => {
+      const a = (i / attackers.length) * Math.PI * 2 + Math.PI / 4;
+      const tx = f.x + Math.cos(a) * 26;
+      const ty = f.y + Math.sin(a) * 16;
+      const ms = Math.max(200, (Math.hypot(tx - e.x, ty - e.y) / 110) * 1000);
+      longest = Math.max(longest, ms);
+      e.state = 'move';
+      e.facing = dirOf(tx - e.x, ty - e.y);
+      this.tweens.add({
+        targets: e, x: tx, y: ty, duration: ms,
+        onComplete: () => {
+          e.state = 'idle';
+          e.facing = dirOf(f.x - e.x, f.y - e.y);
+        },
+      });
+    });
+    this.time.delayedCall(600 + longest, strikeNext);
   }
 
   // ---------------------------------------------------------------

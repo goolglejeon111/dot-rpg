@@ -369,42 +369,12 @@
     "a1_bridge_cross": {
       "focus": "leon",
       "actors": {
-        "sp1": {
-          "sprite": "imperial_spear",
-          "at": "sp1",
-          "facing": "left",
-          "pose": "down"
-        },
-        "sp2": {
-          "sprite": "imperial_spear",
-          "at": "sp2",
-          "facing": "left",
-          "pose": "down"
-        },
-        "sp3": {
-          "sprite": "imperial_spear",
-          "at": "sp3",
-          "facing": "left",
-          "pose": "down"
-        },
-        "sp4": {
-          "sprite": "imperial_spear",
-          "at": "sp4",
-          "facing": "left",
-          "pose": "down"
-        },
-        "ar1": {
-          "sprite": "imperial_archer",
-          "at": "ar1",
-          "facing": "left",
-          "pose": "down"
-        },
-        "ar2": {
-          "sprite": "imperial_archer",
-          "at": "ar2",
-          "facing": "left",
-          "pose": "down"
-        },
+        "sp1": { "sprite": "imperial_spear", "facing": "left", "pose": "down" },
+        "sp2": { "sprite": "imperial_spear", "facing": "left", "pose": "down" },
+        "sp3": { "sprite": "imperial_spear", "facing": "left", "pose": "down" },
+        "sp4": { "sprite": "imperial_spear", "facing": "left", "pose": "down" },
+        "ar1": { "sprite": "imperial_archer", "facing": "left", "pose": "down" },
+        "ar2": { "sprite": "imperial_archer", "facing": "left", "pose": "down" },
         "leon": { "walk": "leon_far", "facing": "right" },
         "elysia": { "walk": "elysia_far", "facing": "right" }
       }
@@ -444,36 +414,11 @@
     "a1_knights_down": {
       "focus": "leon",
       "actors": {
-        "k1": {
-          "sprite": "pursuit_sword",
-          "at": "k1",
-          "facing": "left",
-          "pose": "down"
-        },
-        "k2": {
-          "sprite": "pursuit_sword",
-          "at": "k2",
-          "facing": "left",
-          "pose": "down"
-        },
-        "k3": {
-          "sprite": "pursuit_sword",
-          "at": "k3",
-          "facing": "left",
-          "pose": "down"
-        },
-        "k4": {
-          "sprite": "pursuit_shield",
-          "at": "k4",
-          "facing": "left",
-          "pose": "down"
-        },
-        "k5": {
-          "sprite": "pursuit_shield",
-          "at": "k5",
-          "facing": "left",
-          "pose": "down"
-        }
+        "k1": { "sprite": "pursuit_sword", "facing": "left", "pose": "down" },
+        "k2": { "sprite": "pursuit_sword", "facing": "left", "pose": "down" },
+        "k3": { "sprite": "pursuit_sword", "facing": "left", "pose": "down" },
+        "k4": { "sprite": "pursuit_shield", "facing": "left", "pose": "down" },
+        "k5": { "sprite": "pursuit_shield", "facing": "left", "pose": "down" }
       }
     },
     "a1_reeds": {

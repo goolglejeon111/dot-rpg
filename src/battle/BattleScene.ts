@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import battles from '../data/battle/battles.json';
 import enemies from '../data/battle/enemies.json';
 import fighters from '../data/battle/fighters.json';
+import combos from '../data/battle/combos.json';
 import levels from '../data/battle/levels.json';
 import { gameState } from '../game/GameState';
 import { fxInfo, makeBattleAnims, preloadBattle } from './assets';
@@ -79,8 +80,16 @@ interface FighterDef {
   evade?: MoveDef;
   skill?: MoveDef;
   ult?: MoveDef;
-  gauge?: { name: string; fill: string; perHit: number; perParry?: number };
+  gauge?: { name: string; fill: string; perHit: number; perParry?: number; overload?: Overload };
   stamina?: number;
+}
+
+/** 엘리시아의 과부하: 마법을 쓸 때마다 오르고, 가득 찬 채로 쓰면 체력이 hpCost 비율만큼 깎인다 */
+interface Overload {
+  bolt: number;
+  blink: number;
+  skill: number;
+  hpCost: number;
 }
 
 interface EnemyDef {
@@ -91,11 +100,19 @@ interface EnemyDef {
   def: number;
   speed: number;
   boss?: boolean;
-  ai: 'rusher' | 'caster';
+  ai: 'rusher' | 'caster' | 'eel';
+  /** 쓰러지면 사라지지 않고 기절한 모습으로 남음 (제국 병사, 추격 기사) */
+  faint?: boolean;
+  /** 쓰러지면 물속으로 가라앉음 (수로의 괴물) */
+  sink?: boolean;
+  bite?: { range: number; windup: number; mult: number; cooldown: number };
+  tail?: { every: number; cast: number; radius: number; mult: number; breakDamage: number };
+  spray?: { cast: number; speed: number; mult: number; count: number };
+  dive?: { below: number; leech: number; maxMs: number };
   attack?: { range: number; windup: number; recover: number; cooldown: number; mult: number; fx: string };
   selfDestruct?: { below: number; signal: number; radius: number; mult: number; unblockable: boolean };
   keepAway?: number;
-  bolt?: { cast: number; speed: number; mult: number; cooldown: number; unblockable: boolean };
+  bolt?: { cast: number; speed: number; mult: number; cooldown: number; unblockable?: boolean; fx?: string; tint?: string };
   area?: { every: number; cast: number; radius: number; mult: number; breakDamage: number };
   blink?: { cooldown: number; distance: number };
   /** 시전 뒤 멈춰 서 있는 시간 (이때 때리기 쉽다) */
@@ -129,11 +146,25 @@ interface BattleDef {
   finisher?: { at: number; name: string };
   /** 파티가 쓰러지지 않음 (체력 1에서 멈춤) */
   noFall?: boolean;
+  /** 연계 게이지가 가득 찬 채로 시작 (합동 기술을 처음 배우는 전투) */
+  comboFull?: boolean;
+  /** 휴대폰에서 보여 줄 안내 (없으면 guide) */
+  guideTouch?: string;
+  /** 안내를 이 기술을 쓸 때까지 띄워 둔다 */
+  guideUntil?: 'skill';
 }
+
+/** 인물별 스킬·궁극기 동작 (없는 것은 "준비 중") */
+const MOVES: Record<string, Fighter['move']> = {
+  'leon:skill': 'thrust',
+  'leon:ult': 'oath',
+  'elysia:skill': 'rune',
+  'elysia:ult': 'overload',
+};
 
 type State =
   | 'idle' | 'move' | 'attack' | 'guard' | 'hurt' | 'fainted' | 'dead'
-  | 'prep' | 'cast' | 'kneel' | 'revive' | 'stagger';
+  | 'prep' | 'cast' | 'kneel' | 'revive' | 'stagger' | 'skill';
 
 /** 싸우는 인물 하나 */
 export class Fighter {
@@ -179,7 +210,7 @@ export class Fighter {
   invulnUntil = 0;
   // 적 AI
   aiCd = 0;
-  castKind: 'bolt' | 'area' | '' = '';
+  castKind: 'bolt' | 'area' | 'bite' | 'tail' | 'spray' | '' = '';
   castTaken = 0;
   attacks = 0;
   blinkCd = 0;
@@ -187,6 +218,22 @@ export class Fighter {
   stunUntil = 0;
   exploded = false;
   recoverUntil = 0;
+  // 스킬·궁극기
+  skillCd = 0;
+  move: '' | 'thrust' | 'oath' | 'rune' | 'overload' | 'combo' = '';
+  moveCol = 0;
+  moveHit = new Set<Fighter>();
+  /** 전투장 밖에 서 있던 맵 인물이 전투장 안으로 걸어 들어오는 중 */
+  walkUntil = 0;
+  // 수로의 괴물
+  dived = false;
+  diveDone = false;
+  diveUntil = 0;
+  poseCol = 0;
+  poseUntil = 0;
+
+  /** 어두운 곳에서 이 인물을 비추는 빛 (보스) */
+  light?: Phaser.GameObjects.Light;
 
   /** 맵 위에서 싸울 때, 이 인물이 맡은 맵 인물 ID (끝나면 그 자리로 돌려놓음) */
   actorId?: string;
@@ -204,7 +251,7 @@ export class Fighter {
   }
   /** 공격 대상이 될 수 있나 (기절·사망 제외) */
   get targetable() {
-    return this.state !== 'dead' && this.state !== 'fainted' && !(this.enemy?.selfDestruct && this.state === 'prep');
+    return this.state !== 'dead' && this.state !== 'fainted' && !this.dived && !(this.enemy?.selfDestruct && this.state === 'prep');
   }
   get airborne() {
     return this.z > 5;
@@ -228,6 +275,7 @@ const AIR_SPEED = 0.7;
 const GRAVITY = 620;
 
 const dirOf = (x: number, y: number): Dir => (Math.abs(x) > Math.abs(y) ? (x < 0 ? 'left' : 'right') : y < 0 ? 'up' : 'down');
+const TUT_SWAP = '1, 2: 캐릭터 교체. 조작하지 않는 동료는 스스로 싸웁니다';
 const dirVec = (d: Dir) => ({ down: [0, 1], left: [-1, 0], right: [1, 0], up: [0, -1] })[d];
 
 /** 휴대폰 버튼 등 HUD에서 들어오는 입력 */
@@ -251,7 +299,11 @@ export class BattleScene extends Phaser.Scene {
   all: Fighter[] = [];
   party: Fighter[] = [];
   controlled: Fighter | null = null;
-  projectiles: { s: Phaser.GameObjects.Sprite; x: number; y: number; vx: number; vy: number; dmg: number; owner: Fighter; unblockable: boolean }[] = [];
+  projectiles: { s: Phaser.GameObjects.Sprite; x: number; y: number; vx: number; vy: number; dmg: number; owner: Fighter; unblockable: boolean; tint?: number }[] = [];
+  /** 엘리시아의 룬 결계 */
+  runes: { x: number; y: number; r: number; until: number; next: number; owner: Fighter; s: Phaser.GameObjects.Sprite }[] = [];
+  /** 합동 기술 휠에서 가리킨 동료 (party 번호, 없으면 -1). HUD가 정한다 */
+  comboPick = -1;
   now = 0;
   elapsed = 0;
   waveIdx = 0;
@@ -269,7 +321,7 @@ export class BattleScene extends Phaser.Scene {
   bounds = { x0: 12, x1: 436, y0: 50, y1: 282 };
   vin: VirtualInput = { mx: 0, my: 0, attack: false, evade: false, jump: false, skill: false, ult: false, combo: false, interact: false, swap: 0 };
   /** HUD가 읽는 알림 (보여 준 뒤 비움) */
-  notices: { kind: 'toast' | 'guide' | 'levelup' | 'unlock' | 'word'; text: string; what?: Unlock; ms?: number }[] = [];
+  notices: { kind: 'toast' | 'guide' | 'guideOff' | 'levelup' | 'unlock' | 'word' | 'cutin'; text: string; what?: Unlock; ms?: number }[] = [];
   wheelOpen = false;
   /** 기절·게임 오버 규칙을 쓰는지 (체력 0 연출에서는 끔) */
   cutscene = false;
@@ -300,6 +352,8 @@ export class BattleScene extends Phaser.Scene {
     this.party = [];
     this.controlled = null;
     this.projectiles = [];
+    this.runes = [];
+    this.comboPick = -1;
     this.now = 0;
     this.elapsed = 0;
     this.waveIdx = 0;
@@ -452,8 +506,24 @@ export class BattleScene extends Phaser.Scene {
     });
 
     this.scene.launch('BattleHUD', { battle: this });
+    if (this.bdef.comboFull) this.comboGauge = 100;
+    const touch = window.matchMedia('(pointer: coarse)').matches || new URLSearchParams(location.search).has('touch');
+    const guide = (touch && this.bdef.guideTouch) || this.bdef.guide || '';
     if (this.bdef.tutorial?.length) this.tutShow();
-    else this.notices.push({ kind: 'guide', text: this.bdef.guide ?? '', ms: 6000 });
+    else this.notices.push({ kind: 'guide', text: guide, ms: this.bdef.guideUntil ? 600000 : 6000 });
+    // 동료와 처음 함께 싸울 때: 교체 안내 (전투 안내가 있으면 그 뒤에)
+    if (this.party.length >= 2 && !this.cutscene) {
+      if (guide && !this.bdef.guideUntil) this.time.delayedCall(6800, () => this.onceGuide('tut:swap', TUT_SWAP));
+      else if (!guide) this.onceGuide('tut:swap', TUT_SWAP);
+    }
+  }
+
+  /** 처음 한 번만 보여 주는 안내 (저장의 once에 기록) */
+  private onceGuide(key: string, text: string, ms = 6000) {
+    const once = gameState.progress.once;
+    if (once.includes(key) || this.ended) return;
+    once.push(key);
+    this.notices.push({ kind: 'guide', text, ms });
   }
 
   // ---- 튜토리얼 ----
@@ -579,8 +649,15 @@ export class BattleScene extends Phaser.Scene {
     f.x = x;
     f.y = y;
     f.shadow = this.add.sprite(x, y + 1, 'fx_jump_shadow', 0).setOrigin(0.5, 0.5);
-    f.sprite = this.add.sprite(x, y, f.spriteKey, DIRS.indexOf(f.facing) * 5).setOrigin(0.5, 1);
-    if (this.lit) f.sprite.setPipeline('Light2D');
+    // 걷기 그림이 없는 적(수로의 괴물)은 전투 그림으로
+    f.sprite = this.textures.exists(f.spriteKey)
+      ? this.add.sprite(x, y, f.spriteKey, DIRS.indexOf(f.facing) * 5).setOrigin(0.5, 1)
+      : this.add.sprite(x, y, `bt_${f.spriteKey}`, DIRS.indexOf(f.facing) * 12).setOrigin(0.5, 1);
+    if (this.lit) {
+      f.sprite.setPipeline('Light2D');
+      // 어두운 곳의 보스는 희미한 빛을 받아 보이게 (물빛)
+      if (f.enemy?.boss) f.light = this.lights.addLight(x, y - 44, 120, 0x7a9ac0, 1.1);
+    }
     if (f.team === 'enemy' && !f.enemy?.boss) {
       f.hpBar = {
         frame: this.add.image(x, y, 'ui_bar_enemy').setOrigin(0.5, 0).setVisible(false),
@@ -599,7 +676,19 @@ export class BattleScene extends Phaser.Scene {
       const at = s.actor ? this.actorAt(s.actor) : null;
       if (at) {
         const e = this.spawnEnemy(s.enemy, at.x, at.y, true);
-        if (e) this.takeActor(e, s.actor!, at.facing);
+        if (!e) return;
+        this.takeActor(e, s.actor!, at.facing);
+        // 전투장 밖에 서 있었으면 정해 둔 자리(없으면 가장자리)까지 걸어 들어온다
+        const b = this.bounds;
+        const out = at.x < b.x0 || at.x > b.x1 || at.y < b.y0 || at.y > b.y1;
+        if (out) {
+          const tx = Phaser.Math.Clamp(s.x ?? at.x, b.x0 + 8, b.x1 - 8);
+          const ty = Phaser.Math.Clamp(s.y ?? at.y, b.y0 + 8, b.y1 - 8);
+          const ms = Math.max(300, (Math.hypot(tx - at.x, ty - at.y) / Math.max(40, e.speed)) * 1000);
+          e.walkUntil = this.now + ms;
+          e.facing = dirOf(tx - at.x, ty - at.y);
+          this.tweens.add({ targets: e, x: tx, y: ty, duration: ms });
+        }
         return;
       }
       this.pendingSpawns++;
@@ -716,6 +805,7 @@ export class BattleScene extends Phaser.Scene {
     }
     for (const f of this.all) this.updateFighter(f, dt);
     this.updateProjectiles(dt);
+    this.updateRunes();
     this.separate();
     if (!this.cutscene && !this.ended) this.checkOutcome();
     this.updateCarry();
@@ -844,6 +934,7 @@ export class BattleScene extends Phaser.Scene {
     if (!isUnlocked(f.id, 'evade')) return this.lockedToast('evade', '회피');
     const ev = f.def.evade;
     if (!ev) return;
+    if (ev.type === 'blink') return this.blink(f);
     if (ev.type !== 'guard') return this.notices.push({ kind: 'toast', text: `${ev.name}: 아직 준비 중인 동작입니다` });
     if (this.now < f.guardCd || f.stamina < 10) return;
     if (f.state !== 'idle' && f.state !== 'move' && !(f.state === 'attack' && this.now >= f.chainUntil - f.def.attack!.chainWindow)) return;
@@ -874,12 +965,175 @@ export class BattleScene extends Phaser.Scene {
     f.sprite.play(`${f.spriteKey}-jump-${f.facing}`, true);
   }
 
+  /** 순간이동 (엘리시아): 바라보는 쪽으로 짧게. 잠깐 맞지 않음 */
+  private blink(f: Fighter) {
+    if (this.now < f.guardCd || f.airborne) return;
+    if (f.state !== 'idle' && f.state !== 'move' && f.state !== 'attack') return;
+    f.guardCd = this.now + (f.def.evade?.cooldown ?? 4000);
+    const [vx, vy] = dirVec(f.facing);
+    this.fx('elysia_blink', f.x, f.y - BODY, { depth: f.y + 2 });
+    // 조금씩 옮겨 벽에서 멈추게
+    for (let i = 0; i < 16; i++) this.moveBy(f, vx * 4, vy * 4);
+    this.fx('elysia_blink', f.x, f.y - BODY, { depth: f.y + 2 });
+    f.invulnUntil = this.now + 250;
+    f.state = 'idle';
+    f.combo = -1;
+    this.overloadUse(f, 'blink');
+  }
+
+  /** 과부하: 마법을 쓸 때마다 오르고, 가득 찬 채로 쓰면 체력이 깎인다 (1 아래로는 안 내려감) */
+  private overloadUse(f: Fighter, what: 'bolt' | 'blink' | 'skill') {
+    const o = f.def.gauge?.overload;
+    if (!o) return;
+    if (f.gauge < 100) return this.addGauge(f, o[what]);
+    const cost = Math.max(1, Math.round(f.maxHp * o.hpCost));
+    if (f.hp <= 1) return;
+    const n = Math.min(cost, f.hp - 1);
+    f.hp -= n;
+    this.damageNumber(f, n, true);
+  }
+
+  private canAct(f: Fighter) {
+    return (f.state === 'idle' || f.state === 'move') && !f.airborne;
+  }
+
   private tryMove(f: Fighter, which: 'skill' | 'ult') {
     const what: Unlock = which;
     const label = which === 'skill' ? '스킬' : '궁극기';
-    if (!isUnlocked(f.id, what)) return this.lockedToast(what, label);
+    const me = f === this.controlled;
+    if (!isUnlocked(f.id, what)) return me && this.lockedToast(what, label);
     const m = f.def[which];
-    this.notices.push({ kind: 'toast', text: `${m?.name ?? label}: 아직 준비 중인 기술입니다` });
+    const kind = MOVES[`${f.id}:${which}`];
+    if (!m || !kind) return me && this.notices.push({ kind: 'toast', text: `${m?.name ?? label}: 아직 준비 중인 기술입니다` });
+    if (!this.canAct(f)) return;
+    if (which === 'skill' && this.now < f.skillCd) {
+      return me && this.notices.push({ kind: 'toast', text: `${m.name}: ${Math.ceil((f.skillCd - this.now) / 1000)}초 뒤에 다시 쓸 수 있습니다` });
+    }
+    if (which === 'ult' && f.gauge < 100) {
+      return me && this.notices.push({ kind: 'toast', text: `${m.name}: ${f.def.gauge?.name ?? '게이지'}이(가) 가득 차야 쓸 수 있습니다` });
+    }
+    if (which === 'skill') {
+      f.skillCd = this.now + (m.cooldown ?? 8000);
+      if (me && this.bdef.guideUntil === 'skill') this.notices.push({ kind: 'guideOff', text: '' });
+    } else f.gauge = 0;
+    if (me) [f.aimX, f.aimY] = dirVec(f.facing);
+    f.state = 'skill';
+    f.move = kind;
+    f.stateT = 0;
+    f.hitDone = false;
+    f.combo = -1;
+    f.moveHit.clear();
+    if (kind === 'rune') this.overloadUse(f, 'skill');
+  }
+
+  private endMove(f: Fighter) {
+    f.move = '';
+    if (f.state === 'skill') f.state = 'idle';
+  }
+
+  /** 스킬·궁극기 진행 */
+  private updateMove(f: Fighter, dt: number) {
+    f.stateT += dt;
+    const t = f.stateT;
+    const ang = Math.atan2(f.aimY, f.aimX);
+    switch (f.move) {
+      case 'thrust': {
+        // 오러 찌르기: 앞으로 돌진하며 지나가는 적을 모두 찌름. 막기를 무너뜨림
+        const WIND = 80;
+        const DASH = 200;
+        if (t < WIND) return void (f.moveCol = 4);
+        if (!f.hitDone) {
+          f.hitDone = true;
+          this.fx('leon_thrust', f.x, f.y - BODY, { angle: ang, depth: f.y + (f.aimY < -0.5 ? -1 : 2), flipY: Math.cos(ang) < -0.01 });
+        }
+        f.moveCol = 5;
+        if (t < WIND + DASH) {
+          const sp = 330 * (dt / 1000);
+          this.moveBy(f, f.aimX * sp, f.aimY * sp);
+          for (const e of this.foesOf(f)) {
+            if (f.moveHit.has(e) || Math.hypot(e.x - f.x, e.y - f.y) > 22) continue;
+            f.moveHit.add(e);
+            this.damage(e, f, f.atk * 1.8, { heavy: true, unblockable: true, push: 10 });
+          }
+          return;
+        }
+        if (t > WIND + DASH + 220) this.endMove(f);
+        return;
+      }
+      case 'oath': {
+        // 맹세의 검: 오러를 모아 앞을 크게 내려침. 막을 수 없음
+        const WIND = 450;
+        if (t < WIND) return void (f.moveCol = t < 300 ? 8 : 4);
+        if (!f.hitDone) {
+          f.hitDone = true;
+          const px = f.x + f.aimX * 28;
+          const py = f.y + f.aimY * 18;
+          this.fx('leon_oath', px, py + 6, { origin: [0.5, 1], depth: py + 10 });
+          this.cameras.main.shake(260, 0.01);
+          this.cameras.main.flash(160, 255, 255, 255);
+          for (const e of this.foesOf(f)) {
+            if (Math.hypot(e.x - px, (e.y - py) / 0.6) <= 60) this.damage(e, f, f.atk * 4, { heavy: true, unblockable: true, area: true, push: 14, from: { x: px, y: py } });
+          }
+        }
+        f.moveCol = 5;
+        if (t > WIND + 420) this.endMove(f);
+        return;
+      }
+      case 'rune': {
+        // 룬 결계: 발밑에 룬을 그림
+        if (!f.hitDone) {
+          f.hitDone = true;
+          const s = this.fx('elysia_rune', f.x, f.y, { loop: true, depth: -5, scale: 1.1, alpha: 0.9 });
+          this.runes.push({ x: f.x, y: f.y, r: 52, until: this.now + 5000, next: this.now + 400, owner: f, s });
+        }
+        f.moveCol = t < 150 ? 8 : 9;
+        if (t > 350) this.endMove(f);
+        return;
+      }
+      case 'overload': {
+        // 마력 폭주: 주변 전체 큰 폭발. 쓴 뒤 잠깐 움직이지 못함
+        const WIND = 500;
+        if (t < WIND) return void (f.moveCol = Math.floor(t / 120) % 2 ? 9 : 8);
+        if (!f.hitDone) {
+          f.hitDone = true;
+          this.fx('elysia_overload', f.x, f.y - BODY, { depth: f.y + 10, scale: 1.6 });
+          this.cameras.main.shake(300, 0.012);
+          this.cameras.main.flash(200, 164, 124, 255);
+          for (const e of this.foesOf(f)) {
+            if (Math.hypot(e.x - f.x, (e.y - f.y) / 0.6) <= 110) this.damage(e, f, f.atk * 3.2, { heavy: true, unblockable: true, area: true, push: 16 });
+          }
+        }
+        f.moveCol = 10;
+        if (t > WIND + 1200) this.endMove(f);
+        return;
+      }
+      case 'combo':
+        // 합동 기술은 시간 예약으로 움직인다. 혹시 남으면 풀어 줌
+        if (t > 3000) this.endMove(f);
+        return;
+      default:
+        this.endMove(f);
+    }
+  }
+
+  /** 룬 결계: 안의 적은 느려지고 계속 피해 */
+  private updateRunes() {
+    for (const r of [...this.runes]) {
+      if (this.now >= r.until || this.ended) {
+        this.runes.splice(this.runes.indexOf(r), 1);
+        this.tweens.add({ targets: r.s, alpha: 0, duration: 300, onComplete: () => r.s.destroy() });
+        continue;
+      }
+      if (this.now < r.next) continue;
+      r.next += 500;
+      for (const e of this.foesOf(r.owner)) {
+        if (this.inRune(e, r)) this.damage(e, r.owner, r.owner.atk * 0.35, { tick: true, push: 0 });
+      }
+    }
+  }
+
+  private inRune(e: Fighter, r: { x: number; y: number; r: number }) {
+    return Math.hypot(e.x - r.x, (e.y - r.y) * 2) <= r.r;
   }
 
   private handleComboWheel(held: boolean) {
@@ -891,15 +1145,97 @@ export class BattleScene extends Phaser.Scene {
         return;
       }
       this.wheelOpen = true;
+      this.comboPick = -1;
       this.timeScale = 0.3; // 시간이 느려짐
     } else if (!held && this.wheelOpen) {
       this.wheelOpen = false;
       this.timeScale = 1;
-      this.notices.push({
-        kind: 'toast',
-        text: this.comboGauge < 100 ? '연계 게이지가 아직 차지 않았습니다' : '합동 기술: 아직 준비 중입니다',
-      });
+      const pick = this.party[this.comboPick];
+      this.comboPick = -1;
+      const toast = (text: string) => this.notices.push({ kind: 'toast', text });
+      if (this.comboGauge < 100) return toast('연계 게이지가 아직 차지 않았습니다');
+      if (!pick || pick === f) return toast('동료 얼굴을 가리킨 채 R을 떼세요');
+      const c = combos.combos.find((k) => k.pair.includes(f.id) && k.pair.includes(pick.id));
+      if (!c) return toast(`${pick.def.name}와(과)는 합동 기술이 없습니다`);
+      if (pick.state === 'fainted' || f.state === 'fainted') return toast(`${pick.def.name}은(는) 기절해 있습니다`);
+      if (c.name !== '룬의 검') return toast(`${c.name}: 아직 준비 중인 기술입니다`);
+      const leon = f.id === 'leon' ? f : pick;
+      const ely = f.id === 'leon' ? pick : f;
+      this.runeSword(leon, ely, f);
     }
+  }
+
+  /** 합동 기술 「룬의 검」: 엘리시아의 룬이 앞 일직선의 적을 묶고, 레온이 오러로 그 줄을 꿰뚫는다 */
+  private runeSword(leon: Fighter, ely: Fighter, by: Fighter) {
+    this.comboGauge = 0;
+    for (const p of [leon, ely]) {
+      if (p.state === 'guard') this.endGuard(p);
+      p.state = 'skill';
+      p.move = 'combo';
+      p.stateT = 0;
+      p.moveCol = 8;
+      p.z = 0;
+      p.vz = 0;
+    }
+    // 바라보는 방향: 조작하던 인물의 정면
+    const [ax, ay] = dirVec(by.facing);
+    leon.facing = by.facing;
+    leon.aimX = ax;
+    leon.aimY = ay;
+    ely.facing = dirOf(leon.x + ax * 80 - ely.x, leon.y + ay * 80 - ely.y);
+    const LEN = 210;
+    const inLine = (e: Fighter) => {
+      const dx = e.x - leon.x;
+      const dy = e.y - leon.y;
+      const along = dx * ax + dy * ay;
+      return along > -12 && along < LEN && Math.abs(-dx * ay + dy * ax) < 26;
+    };
+    const go = () => {
+      // 1) 룬으로 묶기
+      const marks: Phaser.GameObjects.Sprite[] = [];
+      for (let i = 0; i < 3; i++) {
+        const d = 40 + i * 70;
+        marks.push(this.fx('elysia_rune', leon.x + ax * d, leon.y + ay * d, { loop: true, depth: -5, scale: 0.8, alpha: 0.9 }));
+      }
+      for (const e of this.foesOf(leon).filter(inLine)) {
+        if (e.state === 'cast') this.endCast(e);
+        if (e.state === 'attack') e.combo = -1;
+        e.state = 'stagger';
+        e.stunUntil = this.now + 1500;
+      }
+      // 2) 레온이 줄을 따라 꿰뚫음
+      this.time.delayedCall(500, () => {
+        if (this.ended) return;
+        ely.moveCol = 9;
+        leon.moveCol = 5;
+        const sx = leon.x;
+        const sy = leon.y;
+        const targets = this.foesOf(leon).filter(inLine);
+        for (let i = 0; i < 40; i++) this.moveBy(leon, ax * 4, ay * 4);
+        const fl = Math.hypot(leon.x - sx, leon.y - sy);
+        const ang = Math.atan2(ay, ax);
+        this.fx('leon_thrust', sx, sy - BODY, { angle: ang, depth: sy + 3, flipY: Math.cos(ang) < -0.01, scale: Math.max(1, fl / 70) });
+        this.cameras.main.shake(240, 0.01);
+        this.cameras.main.flash(180, 220, 200, 255);
+        for (const e of targets) this.damage(e, leon, leon.atk * 3 + ely.atk, { unblockable: true, heavy: true, area: true, push: 12, from: { x: sx, y: sy } });
+        this.time.delayedCall(450, () => {
+          for (const m of marks) this.tweens.add({ targets: m, alpha: 0, duration: 300, onComplete: () => m.destroy() });
+          this.endMove(leon);
+          this.endMove(ely);
+        });
+      });
+    };
+    // 처음 쓸 때는 두 사람 얼굴이 잠깐 화면을 가로지른다
+    const once = gameState.progress.once;
+    if (!once.includes('cutin:룬의 검')) {
+      once.push('cutin:룬의 검');
+      this.frozen = true;
+      this.notices.push({ kind: 'cutin', text: `${leon.id},${ely.id},룬의 검` });
+      this.time.delayedCall(1100, () => {
+        this.frozen = false;
+        go();
+      });
+    } else go();
   }
 
   private trySwap(i: number) {
@@ -909,6 +1245,7 @@ export class BattleScene extends Phaser.Scene {
     if (this.swapCd > 0) return;
     this.controlled = target;
     this.swapCd = 800; // 교체 직후 짧은 대기 시간
+    if (target.def.gauge?.overload) this.onceGuide('tut:elysia', '엘리시아는 마법을 쓸수록 과부하가 찹니다. 가득 찬 채로 쓰면 체력이 깎이고, Q로 마력 폭주');
     this.fx('dust_land', target.x, target.y - 6, { depth: target.y - 1 });
   }
 
@@ -962,6 +1299,7 @@ export class BattleScene extends Phaser.Scene {
     }
     if (h.projectile) {
       // 마력탄 (엘리시아)
+      this.overloadUse(f, 'bolt');
       this.shoot(f, f.x + f.aimX * 10, f.y - BODY + f.aimY * 6, f.aimX * h.projectile, f.aimY * h.projectile, h.fx, Math.round(f.atk * h.mult), false);
       return;
     }
@@ -971,7 +1309,7 @@ export class BattleScene extends Phaser.Scene {
       const dx = t.x - f.x;
       const dy = t.y - f.y;
       const d = Math.hypot(dx, dy);
-      if (d > h.range + 8) continue;
+      if (d > h.range + 8 + (t.enemy?.ai === 'eel' ? 18 : 0)) continue;
       const da = Math.abs(Phaser.Math.Angle.Wrap(Math.atan2(dy, dx) - ang));
       if (d > 10 && da > Phaser.Math.DegToRad(h.arc / 2)) continue;
       hit = this.damage(t, f, f.atk * h.mult, { heavy: h.heavy, push: h.push ?? (h.heavy ? 10 : 4) }) || hit;
@@ -991,7 +1329,7 @@ export class BattleScene extends Phaser.Scene {
     t: Fighter,
     src: Fighter | null,
     amount: number,
-    o: { heavy?: boolean; push?: number; unblockable?: boolean; area?: boolean; from?: { x: number; y: number }; raw?: boolean } = {},
+    o: { heavy?: boolean; push?: number; unblockable?: boolean; area?: boolean; from?: { x: number; y: number }; raw?: boolean; tick?: boolean } = {},
   ): boolean {
     if (!t.targetable || this.ended) return false;
     if (this.now < t.invulnUntil && !o.raw) return false;
@@ -1058,7 +1396,16 @@ export class BattleScene extends Phaser.Scene {
     }
     t.hp -= dmg;
     this.damageNumber(t, dmg, t.team !== 'enemy');
-    this.fx(o.heavy ? 'hit_heavy' : 'hit', t.x + (Math.random() - 0.5) * 6, t.y - BODY - t.z + (Math.random() - 0.5) * 6, { depth: t.y + 5 });
+    this.fx(o.heavy ? 'hit_heavy' : 'hit', t.x + (Math.random() - 0.5) * 6, t.y - BODY - t.z + (Math.random() - 0.5) * 6, { depth: t.y + 5, scale: o.tick ? 0.6 : undefined });
+    // 룬 결계의 지속 피해는 게이지를 채우지 않고, 하던 동작도 끊지 않는다
+    if (o.tick) {
+      if (t.team === 'enemy') this.damageDealt += dmg;
+      if (t.hp <= 0) {
+        t.hp = 0;
+        if (t.team === 'enemy') this.kill(t, src);
+      }
+      return true;
+    }
     if (src && src.team !== 'enemy') {
       this.addGauge(src, src.def.gauge?.perHit ?? 6);
       this.comboGauge = Math.min(100, this.comboGauge + 3);
@@ -1076,7 +1423,7 @@ export class BattleScene extends Phaser.Scene {
       t.state = 'stagger';
       t.stunUntil = this.now + 450;
     }
-    if (t.state === 'cast' && t.castKind === 'area') t.castTaken += dmg;
+    if (t.state === 'cast' && (t.castKind === 'area' || t.castKind === 'tail')) t.castTaken += dmg;
 
     // 밀려남
     const push = o.push ?? 4;
@@ -1092,7 +1439,7 @@ export class BattleScene extends Phaser.Scene {
       if (t.team === 'enemy') this.kill(t, src);
       else if (t.team === 'party') this.faint(t);
       else this.allyFall(t);
-    } else if (t.state !== 'prep' && t.state !== 'cast' && !t.enemy?.boss) {
+    } else if (t.state !== 'prep' && t.state !== 'cast' && t.state !== 'skill' && !t.enemy?.boss) {
       // 맞으면 하던 것이 끊김
       if (t.state === 'guard') this.endGuard(t);
       t.state = 'hurt';
@@ -1104,7 +1451,12 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private addGauge(f: Fighter, n: number) {
+    const was = f.gauge;
     f.gauge = Math.min(100, f.gauge + n);
+    // 궁극기 게이지가 처음 가득 찼을 때 안내
+    if (was < 100 && f.gauge >= 100 && f === this.controlled && f.def.ult && isUnlocked(f.id, 'ult') && MOVES[`${f.id}:ult`]) {
+      this.onceGuide(`tut:ult:${f.id}`, `Q: 궁극기 「${f.def.ult.name}」`);
+    }
   }
 
   /** 적 쓰러뜨림 (그노시스 하수인은 자폭으로) */
@@ -1120,8 +1472,22 @@ export class BattleScene extends Phaser.Scene {
   private removeEnemy(e: Fighter, _by: Fighter | null) {
     if (e.state === 'dead') return;
     e.state = 'dead';
-    this.fx('gnosis_vanish', e.x, e.y - BODY, { depth: e.y + 1 });
-    e.sprite.destroy();
+    this.endCast(e);
+    const bt = `bt_${e.spriteKey}`;
+    if ((e.enemy?.faint || e.enemy?.sink) && this.textures.exists(bt)) {
+      // 사라지지 않고 쓰러진 모습으로 남음 (괴물은 물속으로 가라앉음)
+      e.sprite.stop().setTexture(bt, DIRS.indexOf(e.facing) * 12 + 11).setAlpha(1).clearTint().setDepth(e.y - 2);
+      e.shadow.setVisible(false);
+      this.fx('dust_land', e.x, e.y - 6, { depth: e.y - 1 });
+      if (e.enemy.sink) {
+        this.tweens.add({ targets: e.sprite, y: e.sprite.y + 26, alpha: 0, delay: 500, duration: 1400, onComplete: () => e.sprite.destroy() });
+        if (e.light) this.tweens.add({ targets: e.light, intensity: 0, delay: 500, duration: 1400 });
+        this.cameras.main.shake(400, 0.006);
+      }
+    } else {
+      this.fx('gnosis_vanish', e.x, e.y - BODY, { depth: e.y + 1 });
+      e.sprite.destroy();
+    }
     e.shadow.destroy();
     e.hpBar?.frame.destroy();
     e.hpBar?.fill.destroy();
@@ -1235,6 +1601,13 @@ export class BattleScene extends Phaser.Scene {
 
   private updateFighter(f: Fighter, dt: number) {
     if (!f.alive) return;
+    // 룬 결계 안의 적은 느려진다
+    if (f.team === 'enemy' && this.runes.some((r) => this.inRune(f, r))) dt *= 0.5;
+    // 전투장 안으로 걸어 들어오는 중
+    if (this.now < f.walkUntil) {
+      f.state = 'move';
+      return;
+    }
     // 점프
     if (f.z > 0 || f.vz !== 0) {
       f.vz -= GRAVITY * (dt / 1000);
@@ -1267,6 +1640,8 @@ export class BattleScene extends Phaser.Scene {
         return;
       case 'cast':
         return this.updateCast(f, dt);
+      case 'skill':
+        return this.updateMove(f, dt);
     }
     if (this.cutscene) return;
     if (f.team === 'enemy') this.enemyAI(f, dt);
@@ -1298,6 +1673,7 @@ export class BattleScene extends Phaser.Scene {
     f.aimX = dx / (d || 1);
     f.aimY = dy / (d || 1);
     f.facing = dirOf(dx, dy);
+    if (this.aiMove(f, d)) return;
     if (d > range) {
       f.state = 'move';
       this.moveBy(f, (dx / d) * f.speed * 0.9 * (dt / 1000), (dy / d) * f.speed * 0.9 * (dt / 1000));
@@ -1312,8 +1688,29 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
+  /** 동료 AI의 스킬·궁극기 (열려 있고 쓸 수 있을 때). 썼으면 true */
+  private aiMove(f: Fighter, d: number) {
+    if (f.team !== 'party' || f.airborne) return false;
+    const near = (r: number) => this.foesOf(f).filter((e) => Math.hypot(e.x - f.x, (e.y - f.y) / 0.6) <= r).length;
+    const ultOk = isUnlocked(f.id, 'ult') && f.gauge >= 100 && MOVES[`${f.id}:ult`];
+    const skillOk = isUnlocked(f.id, 'skill') && this.now >= f.skillCd && MOVES[`${f.id}:skill`];
+    const use = (w: 'skill' | 'ult') => {
+      this.tryMove(f, w);
+      return f.state === 'skill';
+    };
+    if (f.id === 'leon') {
+      if (ultOk && d < 46) return use('ult');
+      if (skillOk && d > 24 && d < 90 && Math.random() < 0.02) return use('skill');
+    } else if (f.id === 'elysia') {
+      if (ultOk && (near(100) >= 2 || this.enemiesBoss)) return use('ult');
+      if (skillOk && near(60) >= 1) return use('skill');
+    }
+    return false;
+  }
+
   private enemyAI(e: Fighter, dt: number) {
     const ed = e.enemy!;
+    if (ed.ai === 'eel') return this.eelAI(e, dt);
     const targets = this.all.filter((t) => t.targetable && t.team !== 'enemy');
     if (!targets.length) {
       e.state = 'idle';
@@ -1399,6 +1796,7 @@ export class BattleScene extends Phaser.Scene {
 
   private updateCast(e: Fighter, dt: number) {
     const ed = e.enemy!;
+    if (ed.ai === 'eel') return this.updateEelCast(e, dt);
     e.stateT += dt;
     const cast = e.castKind === 'area' ? ed.area!.cast : ed.bolt!.cast;
     // 범위 공격은 일정 피해를 받으면 끊긴다
@@ -1431,13 +1829,145 @@ export class BattleScene extends Phaser.Scene {
         const dx = t.x - e.x;
         const dy = t.y - e.y;
         const l = Math.hypot(dx, dy) || 1;
-        this.shoot(e, e.x + (dx / l) * 10, e.y - BODY, (dx / l) * ed.bolt!.speed, (dy / l) * ed.bolt!.speed, 'light_bolt', Math.round(e.atk * ed.bolt!.mult), ed.bolt!.unblockable);
+        const bo = ed.bolt!;
+        const tint = bo.tint ? Phaser.Display.Color.HexStringToColor(bo.tint).color : undefined;
+        this.shoot(e, e.x + (dx / l) * 10, e.y - BODY, (dx / l) * bo.speed, (dy / l) * bo.speed, bo.fx ?? 'light_bolt', Math.round(e.atk * bo.mult), !!bo.unblockable, tint);
       }
     }
     this.endCast(e);
     e.state = 'idle';
     e.aiCd = (ed.bolt?.cooldown ?? 1500) + Math.random() * 500;
     e.recoverUntil = this.now + (ed.recover ?? 0);
+  }
+
+  // ---- 수로의 괴물 ----
+
+  /** 물속에서 머리만 내민 채 움직이지 않는다. 물기 / 꼬리 쓸기 / 물 뿜기, 체력이 반 아래면 잠수 */
+  private eelAI(e: Fighter, dt: number) {
+    const ed = e.enemy!;
+    if (e.dived) {
+      const others = this.all.some((x) => x.alive && x.team === 'enemy' && x !== e);
+      if ((!others && this.pendingSpawns === 0) || this.now > e.diveUntil) this.eelSurface(e);
+      return;
+    }
+    if (ed.dive && !e.diveDone && e.hp <= e.maxHp * ed.dive.below) return this.eelDive(e);
+    const targets = this.all.filter((t) => t.targetable && t.team !== 'enemy');
+    e.state = 'idle';
+    if (!targets.length) return;
+    const t = targets.reduce((a, b) => (Math.hypot(a.x - e.x, a.y - e.y) < Math.hypot(b.x - e.x, b.y - e.y) ? a : b));
+    const dx = t.x - e.x;
+    const dy = t.y - e.y;
+    const d = Math.hypot(dx, dy) || 1;
+    e.facing = dx < 0 ? 'left' : 'right';
+    e.aimX = dx / d;
+    e.aimY = dy / d;
+    e.aiCd -= dt;
+    if (e.aiCd > 0) return;
+    e.attacks++;
+    const kind = ed.tail && e.attacks % ed.tail.every === 0 ? 'tail' : ed.bite && d <= ed.bite.range ? 'bite' : 'spray';
+    e.state = 'cast';
+    e.stateT = 0;
+    e.castKind = kind;
+    e.castTaken = 0;
+    if (kind === 'bite') {
+      e.glow = this.fx('warn_glow', e.x + e.aimX * 20, e.y - 40, { loop: true, depth: e.y + 3 });
+    } else if (kind === 'tail') {
+      const warn = this.fx('warn_area', e.x, e.y + 40, { loop: true, depth: -5 });
+      warn.setScale(ed.tail!.radius / 46).setAlpha(0.9);
+      e.area = { x: e.x, y: e.y + 40, r: ed.tail!.radius, warn };
+    }
+  }
+
+  private updateEelCast(e: Fighter, dt: number) {
+    const ed = e.enemy!;
+    e.stateT += dt;
+    const k = e.castKind;
+    // 꼬리 쓸기는 시전 중에 많이 맞으면 끊긴다
+    if (k === 'tail' && e.castTaken >= ed.tail!.breakDamage) {
+      this.word('break', e);
+      this.endCast(e);
+      e.state = 'stagger';
+      e.stunUntil = this.now + 1000;
+      e.aiCd = 1800;
+      return;
+    }
+    const cast = k === 'bite' ? ed.bite!.windup : k === 'tail' ? ed.tail!.cast : ed.spray!.cast;
+    if (e.stateT < cast) return;
+    const foes = this.all.filter((a) => a.targetable && a.team !== 'enemy');
+    if (k === 'bite') {
+      // 물기: 앞쪽 가까이 (막을 수 있음)
+      for (const t of foes) {
+        const dx = t.x - e.x;
+        const dy = t.y - e.y;
+        if (Math.hypot(dx, dy) > ed.bite!.range) continue;
+        if ((dx < 0) !== (e.facing === 'left') && Math.abs(dx) > 16) continue;
+        this.damage(t, e, e.atk * ed.bite!.mult, { heavy: true, push: 12 });
+      }
+      this.fx('hit_heavy', e.x + e.aimX * 30, e.y + 10, { depth: e.y + 20 });
+      this.eelPose(e, 2);
+    } else if (k === 'tail' && e.area) {
+      // 꼬리 쓸기: 넓은 범위, 막을 수 없음
+      const { x, y, r } = e.area;
+      this.cameras.main.shake(260, 0.008);
+      for (let i = 0; i < 5; i++) this.fx('dust_land', x + (i - 2) * r * 0.35, y + (i % 2 ? -10 : 14), { depth: y + 20, scale: 1.4 });
+      for (const t of foes) {
+        if (Math.hypot(t.x - x, (t.y - y) / 0.5) <= r) this.damage(t, e, e.atk * ed.tail!.mult, { area: true, unblockable: true, heavy: true, push: 16, from: { x, y } });
+      }
+      this.eelPose(e, 4);
+    } else {
+      // 물 뿜기: 가장 가까운 인물 쪽으로 물줄기 여럿
+      const t = foes.sort((a, b) => Math.hypot(a.x - e.x, a.y - e.y) - Math.hypot(b.x - e.x, b.y - e.y))[0];
+      if (t) {
+        const sp = ed.spray!;
+        const hx = e.x + (e.facing === 'left' ? -14 : 14);
+        const hy = e.y - 46;
+        const base = Math.atan2(t.y - BODY - hy, t.x - hx);
+        for (let i = 0; i < sp.count; i++) {
+          const a = base + (i - (sp.count - 1) / 2) * 0.22;
+          this.shoot(e, hx, hy, Math.cos(a) * sp.speed, Math.sin(a) * sp.speed, 'light_bolt', Math.round(e.atk * sp.mult), false, 0x80c8ff);
+        }
+      }
+      this.eelPose(e, 5);
+    }
+    this.endCast(e);
+    e.state = 'idle';
+    e.aiCd = (ed.bite?.cooldown ?? 1500) + Math.random() * 500;
+  }
+
+  /** 동작 직후의 모습을 잠깐 보여 준다 */
+  private eelPose(e: Fighter, col: number) {
+    e.poseCol = col;
+    e.poseUntil = this.now + 350;
+  }
+
+  private eelDive(e: Fighter) {
+    const dv = e.enemy!.dive!;
+    this.endCast(e);
+    e.diveDone = true;
+    e.dived = true;
+    e.state = 'idle';
+    e.diveUntil = this.now + dv.maxMs;
+    this.cameras.main.shake(300, 0.006);
+    this.fx('dust_land', e.x, e.y - 4, { depth: e.y + 5, scale: 2 });
+    this.notices.push({ kind: 'toast', text: '괴물이 물속으로 들어갔습니다. 거머리가 몰려옵니다!' });
+    const spots = [[110, 150], [340, 150], [150, 236], [300, 236]];
+    for (let i = 0; i < dv.leech; i++) {
+      const [x, y] = spots[i % spots.length];
+      this.pendingSpawns++;
+      this.time.delayedCall(500 + i * 250, () => {
+        this.pendingSpawns--;
+        if (!this.ended) this.spawnEnemy('sewer_leech', x, y);
+      });
+    }
+  }
+
+  private eelSurface(e: Fighter) {
+    e.dived = false;
+    e.aiCd = 900;
+    e.attacks = 0;
+    this.cameras.main.shake(300, 0.008);
+    this.fx('dust_land', e.x, e.y - 4, { depth: e.y + 5, scale: 2 });
+    this.notices.push({ kind: 'toast', text: '괴물이 다시 떠올랐습니다!' });
   }
 
   private endCast(e: Fighter) {
@@ -1450,9 +1980,10 @@ export class BattleScene extends Phaser.Scene {
 
   // ---- 날아가는 것 ----
 
-  private shoot(owner: Fighter, x: number, y: number, vx: number, vy: number, fx: string, dmg: number, unblockable: boolean) {
+  private shoot(owner: Fighter, x: number, y: number, vx: number, vy: number, fx: string, dmg: number, unblockable: boolean, tint?: number) {
     const s = this.fx(fx, x, y, { loop: true, angle: Math.atan2(vy, vx), depth: 9000 });
-    this.projectiles.push({ s, x, y, vx, vy, dmg, owner, unblockable });
+    if (tint !== undefined) s.setTint(tint);
+    this.projectiles.push({ s, x, y, vx, vy, dmg, owner, unblockable, tint });
   }
 
   private updateProjectiles(dt: number) {
@@ -1461,11 +1992,12 @@ export class BattleScene extends Phaser.Scene {
       p.y += p.vy * (dt / 1000);
       p.s.setPosition(p.x, p.y);
       const foes = this.foesOf(p.owner);
-      const hit = foes.find((t) => Math.abs(t.x - p.x) < 9 && Math.abs(t.y - BODY - p.y) < 14 && !t.airborne);
+      const hit = foes.find((t) => (t.enemy?.ai === 'eel' ? Math.abs(t.x - p.x) < 26 && t.y - p.y > -6 && t.y - p.y < 80 : Math.abs(t.x - p.x) < 9 && Math.abs(t.y - BODY - p.y) < 14) && !t.airborne);
       const out = p.x < 0 || p.y < 20 || p.x > this.bdef.arena.w || p.y > this.bdef.arena.h;
       if (hit) {
         this.damage(hit, p.owner, p.dmg, { unblockable: p.unblockable, push: 6, from: { x: p.x - p.vx * 0.05, y: p.y + BODY - p.vy * 0.05 } });
-        this.fx(p.owner.team === 'enemy' ? 'light_burst' : 'elysia_bolt_hit', p.x, p.y, { depth: 9000, scale: 0.5 });
+        const burst = this.fx(p.owner.team === 'enemy' ? 'light_burst' : 'elysia_bolt_hit', p.x, p.y, { depth: 9000, scale: 0.5 });
+        if (p.tint !== undefined) burst.setTint(p.tint);
       }
       if (hit || out) {
         p.s.destroy();
@@ -1661,6 +2193,7 @@ export class BattleScene extends Phaser.Scene {
         if (!f.actorId) continue;
         // 쓰러진 하수인은 사라진 채로, 아군과 보스(대본에서 계속 나옴)는 그 자리에 다시 세움
         if (f.team !== 'enemy' || f.alive || f.enemy?.boss) m.putActor(f.actorId, f.x + this.ox, f.y + this.oy, f.facing);
+        else if (f.enemy?.faint) m.putActor(f.actorId, f.x + this.ox, f.y + this.oy, f.facing, true);
       }
       this.leaving = false;
       this.scene.stop('BattleHUD');
@@ -1713,10 +2246,16 @@ export class BattleScene extends Phaser.Scene {
       if (s.texture.key !== bt) s.stop().setTexture(bt, row * 12 + col);
       else s.setFrame(row * 12 + col);
     };
+    const hasWalk = this.textures.exists(f.spriteKey);
     const walk = () => {
-      if (s.texture.key !== f.spriteKey) s.setTexture(f.spriteKey, row * 5);
+      if (hasWalk && s.texture.key !== f.spriteKey) s.setTexture(f.spriteKey, row * 5);
     };
+    if (f.enemy?.ai === 'eel') return this.renderEel(f, setBt);
+    if (!hasWalk && (f.state === 'idle' || f.state === 'move')) return setBt(0);
     switch (f.state) {
+      case 'skill':
+        setBt(f.moveCol);
+        break;
       case 'attack': {
         const h = f.def.attack!.hits[f.combo];
         if (!h) break;
@@ -1778,6 +2317,22 @@ export class BattleScene extends Phaser.Scene {
         .setCrop(0, 0, Math.max(0, Math.round((20 * f.hp) / f.maxHp)), 2)
         .setDepth(10001);
     }
+  }
+
+  /** 수로의 괴물 그림: 동작마다 정해 둔 열 */
+  private renderEel(f: Fighter, setBt: (col: number) => void) {
+    let col = 0;
+    if (f.dived) col = 10;
+    else if (f.state === 'cast') {
+      const k = f.castKind;
+      col = k === 'bite' ? 1 : k === 'tail' ? 3 : Math.floor(this.now / 150) % 2 ? 8 : 5;
+    } else if (f.state === 'stagger' || f.state === 'hurt') col = 7;
+    else if (this.now < f.poseUntil) col = f.poseCol;
+    setBt(col);
+    f.shadow.setVisible(false);
+    if (f.state === 'cast' && f.castKind === 'tail') f.sprite.setTint(Math.floor(this.now / 120) % 2 ? 0xff9a9a : 0xffffff);
+    else f.sprite.clearTint();
+    f.glow?.setPosition(f.x + f.aimX * 20, f.y - 40).setDepth(f.y + 3);
   }
 
   /** 이펙트 하나 재생 (반복이 아니면 끝나면 사라짐) */

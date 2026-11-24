@@ -19,5 +19,46 @@
     "name": "근위기사", "sprite": "mob_royal_knight", "hp": 150, "atk": 14, "def": 6, "speed": 60,
     "ai": "rusher",
     "attack": { "range": 30, "windup": 380, "recover": 600, "cooldown": 900, "mult": 1.0, "fx": "hit" }
+  },
+  "sewer_rat": {
+    "name": "수로 쥐", "sprite": "sewer_rat", "hp": 22, "atk": 6, "def": 0, "speed": 74,
+    "ai": "rusher",
+    "attack": { "range": 18, "windup": 320, "recover": 500, "cooldown": 800, "mult": 1.0, "fx": "hit" }
+  },
+  "sewer_leech": {
+    "name": "수로 거머리", "sprite": "sewer_leech", "hp": 30, "atk": 6, "def": 1, "speed": 40,
+    "ai": "rusher",
+    "attack": { "range": 16, "windup": 420, "recover": 600, "cooldown": 1000, "mult": 1.0, "fx": "hit" }
+  },
+  "_eel": "보스: 물속에 머리를 내민 채 움직이지 않음. bite 가까우면 물기(막을 수 있음), tail 넓은 꼬리 쓸기(피할 수 없음, 시전 중 breakDamage만큼 때리면 끊김), spray 물 뿜기(직선), dive 체력 이 비율 아래에서 물속으로 들어가 거머리를 내보내고 다 쓰러지면 올라옴",
+  "sewer_eel": {
+    "name": "수로의 괴물", "sprite": "sewer_eel", "hp": 520, "atk": 13, "def": 4, "speed": 0, "boss": true,
+    "ai": "eel", "sink": true,
+    "bite": { "range": 70, "windup": 650, "mult": 1.4, "cooldown": 1600 },
+    "tail": { "every": 3, "cast": 1500, "radius": 230, "mult": 1.1, "breakDamage": 45 },
+    "spray": { "cast": 800, "speed": 190, "mult": 0.9, "count": 3 },
+    "dive": { "below": 0.5, "leech": 4, "maxMs": 20000 }
+  },
+  "imperial_spear": {
+    "name": "제국 창병", "sprite": "imperial_spear", "hp": 64, "atk": 10, "def": 3, "speed": 54, "faint": true,
+    "ai": "rusher",
+    "attack": { "range": 34, "windup": 460, "recover": 650, "cooldown": 1000, "mult": 1.0, "fx": "hit" }
+  },
+  "imperial_archer": {
+    "name": "제국 궁병", "sprite": "imperial_archer", "hp": 44, "atk": 9, "def": 1, "speed": 48, "faint": true,
+    "ai": "caster",
+    "keepAway": 110,
+    "recover": 500,
+    "bolt": { "cast": 650, "speed": 210, "mult": 1.0, "cooldown": 1700, "fx": "light_bolt", "tint": "#d8b070" }
+  },
+  "pursuit_sword": {
+    "name": "추격 기사 (검)", "sprite": "pursuit_sword", "hp": 96, "atk": 13, "def": 5, "speed": 62, "faint": true,
+    "ai": "rusher",
+    "attack": { "range": 30, "windup": 380, "recover": 600, "cooldown": 900, "mult": 1.0, "fx": "hit" }
+  },
+  "pursuit_shield": {
+    "name": "추격 기사 (방패)", "sprite": "pursuit_shield", "hp": 130, "atk": 10, "def": 9, "speed": 46, "faint": true,
+    "ai": "rusher",
+    "attack": { "range": 26, "windup": 520, "recover": 700, "cooldown": 1200, "mult": 1.0, "fx": "hit" }
   }
 }

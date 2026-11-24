@@ -54,6 +54,67 @@
     },
     "guide": "이기기 / 브람 쓰러짐 / 60초 / 전멸 → 각각 다른 장면 (F6 적 전멸, F7 브람 쓰러뜨리기, F8 시간 끝, F9 파티 전멸)"
   },
+  "수로 쥐 떼": {
+    "title": "수로 쥐 떼",
+    "arena": { "w": 448, "h": 288, "floor": "sewer", "tint": "#6a6880", "map": "sewer_a" },
+    "party": ["leon"],
+    "start": { "leon": [176, 172] },
+    "waves": [
+      [{ "enemy": "sewer_rat", "x": 330, "y": 120 }, { "enemy": "sewer_rat", "x": 370, "y": 200 }, { "enemy": "sewer_rat", "x": 310, "y": 250 }],
+      [{ "enemy": "sewer_rat", "x": 50, "y": 110 }, { "enemy": "sewer_rat", "x": 70, "y": 240 }]
+    ],
+    "guide": "E: 앞으로 돌진하며 찌릅니다",
+    "guideUntil": "skill"
+  },
+  "수로 몹 1": {
+    "title": "수로 깊은 곳",
+    "arena": { "w": 448, "h": 288, "floor": "sewer", "tint": "#7a6aa8", "map": "sewer_b" },
+    "party": ["leon", "elysia"],
+    "start": { "leon": [150, 170], "elysia": [110, 196] },
+    "waves": [[{ "enemy": "sewer_rat", "x": 360, "y": 130 }, { "enemy": "sewer_rat", "x": 380, "y": 220 }]]
+  },
+  "수로 몹 2": {
+    "title": "수로 깊은 곳",
+    "arena": { "w": 448, "h": 288, "floor": "sewer", "tint": "#7a6aa8", "map": "sewer_b" },
+    "party": ["leon", "elysia"],
+    "start": { "leon": [150, 170], "elysia": [110, 196] },
+    "waves": [[{ "enemy": "sewer_leech", "x": 350, "y": 140 }, { "enemy": "sewer_leech", "x": 380, "y": 230 }, { "enemy": "sewer_rat", "x": 400, "y": 180 }]]
+  },
+  "수로 몹 3": {
+    "title": "수로 깊은 곳",
+    "arena": { "w": 448, "h": 288, "floor": "sewer", "tint": "#7a6aa8", "map": "sewer_b" },
+    "party": ["leon", "elysia"],
+    "start": { "leon": [150, 170], "elysia": [110, 196] },
+    "waves": [[{ "enemy": "sewer_rat", "x": 350, "y": 120 }, { "enemy": "sewer_leech", "x": 390, "y": 190 }, { "enemy": "sewer_rat", "x": 360, "y": 250 }]]
+  },
+  "수로의 괴물": {
+    "title": "수로의 괴물",
+    "arena": { "w": 448, "h": 288, "floor": "sewer", "tint": "#5a6a8a", "map": "sewer_cistern" },
+    "party": ["leon", "elysia"],
+    "start": { "leon": [176, 176], "elysia": [272, 176] },
+    "waves": [[{ "enemy": "sewer_eel", "x": 224, "y": 66 }]]
+  },
+  "검문소 병사": {
+    "title": "검문소 돌파",
+    "arena": { "w": 448, "h": 288, "floor": "bridge", "tint": "#ffffff", "map": "bridge_checkpoint" },
+    "party": ["leon", "elysia"],
+    "start": { "leon": [272, 144], "elysia": [240, 176] },
+    "waves": [
+      [{ "enemy": "imperial_spear", "actor": "sp1", "x": 400, "y": 112 }, { "enemy": "imperial_spear", "actor": "sp2", "x": 400, "y": 208 }, { "enemy": "imperial_spear", "actor": "sp3", "x": 432, "y": 80 }, { "enemy": "imperial_spear", "actor": "sp4", "x": 432, "y": 240 }],
+      [{ "enemy": "imperial_archer", "actor": "ar1", "x": 336, "y": 60 }, { "enemy": "imperial_archer", "actor": "ar2", "x": 336, "y": 270 }]
+    ],
+    "guide": "쓰러진 병사는 기절할 뿐입니다"
+  },
+  "추격 기사": {
+    "title": "추격 기사",
+    "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffb98a", "map": "riverbank" },
+    "party": ["leon", "elysia"],
+    "start": { "leon": [240, 112], "elysia": [272, 144] },
+    "waves": [[{ "enemy": "pursuit_sword", "actor": "k1", "x": 384, "y": 80 }, { "enemy": "pursuit_sword", "actor": "k2", "x": 414, "y": 130 }, { "enemy": "pursuit_sword", "actor": "k3", "x": 384, "y": 180 }, { "enemy": "pursuit_shield", "actor": "k4", "x": 434, "y": 100 }, { "enemy": "pursuit_shield", "actor": "k5", "x": 434, "y": 160 }]],
+    "comboFull": true,
+    "guide": "R을 누르고 있으면 시간이 느려집니다. 마우스로 동료를 가리키고 R을 떼면 합동 기술",
+    "guideTouch": "R 버튼을 누른 채 동료 쪽으로 밀었다 떼세요"
+  },
   "_cutscene": "체력 0 연출 전투장 (대본의 {\"hpZero\": ...})",
   "hpZero": {
     "arena": { "w": 448, "h": 288, "floor": "corridor", "tint": "#b88686" }

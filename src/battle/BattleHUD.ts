@@ -47,6 +47,10 @@ export class BattleHUD extends Phaser.Scene {
   private guideBox!: Phaser.GameObjects.Container;
   private guideText!: Phaser.GameObjects.Text;
   private wheel?: Phaser.GameObjects.Container;
+  /** 휠의 동료 칸: party 번호, 각도, 칸 그림 */
+  private wheelSlots: { i: number; a: number; ok: boolean; slot: Phaser.GameObjects.Image; face: Phaser.GameObjects.Image }[] = [];
+  /** 휴대폰: 합동 버튼을 누른 손가락과 누른 자리 */
+  private comboTouch?: { id: number; x: number; y: number };
   private gameOver = false;
   /** 큰 글자 알림 줄: 다음 알림을 띄울 수 있는 때, 마지막으로 잡힌 알림이 뜨는 때 */
   private bannerFreeAt = 0;
@@ -64,6 +68,8 @@ export class BattleHUD extends Phaser.Scene {
     this.icons = [];
     this.boss = undefined;
     this.wheel = undefined;
+    this.wheelSlots = [];
+    this.comboTouch = undefined;
     this.gameOver = false;
     this.stick = undefined;
   }
@@ -201,8 +207,9 @@ export class BattleHUD extends Phaser.Scene {
       const ic = this.makeIcon(what, icon, x, y, label, true);
       ic.slot.setInteractive(new Phaser.Geom.Circle(22, 22, 22), Phaser.Geom.Circle.Contains);
       const set = (v: boolean) => ((this.b.vin as unknown as Record<string, boolean>)[key] = v);
-      ic.slot.on('pointerdown', (_p: unknown, _x: number, _y: number, e: Phaser.Types.Input.EventData) => {
+      ic.slot.on('pointerdown', (p: Phaser.Input.Pointer, _x: number, _y: number, e: Phaser.Types.Input.EventData) => {
         e.stopPropagation();
+        if (key === 'combo') this.comboTouch = { id: p.id, x: p.x, y: p.y };
         set(true);
         ic.slot.setFrame(1);
         if (pulse) this.time.delayedCall(60, () => set(false));
@@ -212,7 +219,12 @@ export class BattleHUD extends Phaser.Scene {
         ic.slot.setFrame(0);
       };
       ic.slot.on('pointerup', up);
-      ic.slot.on('pointerout', up);
+      // 합동 버튼은 누른 채 동료 쪽으로 밀기 때문에, 버튼 밖으로 나가도 떼기 전까지 누른 것으로 본다
+      if (key === 'combo') {
+        this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
+          if (this.comboTouch?.id === p.id) up();
+        });
+      } else ic.slot.on('pointerout', up);
     };
     btn('attack', 'icon_attack', W - 80, H - 190, '공격', 'attack', true);
     btn('evade', 'icon_guard', W - 185, H - 140, '회피', 'evade');
@@ -295,6 +307,9 @@ export class BattleHUD extends Phaser.Scene {
           if (f.state === 'guard') ic.slot.setFrame(1);
           else if (!this.touch) ic.slot.setFrame(0);
         }
+        if (ic.what === 'skill' && !locked) cd = Math.max(0, (f.skillCd - b.now) / (f.def.skill?.cooldown ?? 1));
+        if (ic.what === 'ult' && !locked) cd = f.gauge >= 100 ? 0 : 1 - f.gauge / 100;
+        if (ic.what === 'combo' && !locked) cd = b.comboGauge >= 100 ? 0 : 1 - b.comboGauge / 100;
         ic.cd.clear();
         if (cd > 0) {
           const s = ic.size * S - 4;
@@ -323,7 +338,9 @@ export class BattleHUD extends Phaser.Scene {
     if (!b.wheelOpen && this.wheel) {
       this.wheel.destroy();
       this.wheel = undefined;
+      this.wheelSlots = [];
     }
+    if (this.wheel) this.pickInWheel();
 
     // 알림
     while (b.notices.length) {
@@ -340,6 +357,10 @@ export class BattleHUD extends Phaser.Scene {
       else if (n.kind === 'unlock') this.banner('ui_word_unlock', n.text, '#ffffff', n.what);
       else if (n.kind === 'word' && n.text === 'victory') this.banner('ui_word_victory', '', '#ffffff');
       else if (n.kind === 'word' && n.text === 'gameover') this.showGameOver();
+      else if (n.kind === 'guideOff') {
+        this.tweens.killTweensOf(this.guideBox);
+        this.tweens.add({ targets: this.guideBox, alpha: 0, duration: 400 });
+      } else if (n.kind === 'cutin') this.cutIn(n.text);
     }
   }
 
@@ -390,18 +411,68 @@ export class BattleHUD extends Phaser.Scene {
     if (!others.length) {
       c.add(this.add.text(0, 0, '함께 싸우는\n동료가 없습니다', { fontFamily: FONT, fontSize: '18px', color: '#dddddd', align: 'center' }).setOrigin(0.5));
     }
+    this.wheelSlots = [];
     others.forEach((p, i) => {
       const a = -Math.PI / 2 + (i * Math.PI * 2) / Math.max(3, others.length);
       const x = Math.cos(a) * 74;
       const y = Math.sin(a) * 74;
       const ok = has(p.id) && p.state !== 'fainted';
-      c.add(this.add.image(x, y, 'ui_wheel_slot', ok ? 0 : 1).setScale(S));
-      c.add(this.add.image(x, y, `ui_face_${p.id}`, ok ? 0 : 1).setScale(S));
+      const slot = this.add.image(x, y, 'ui_wheel_slot', ok ? 0 : 1).setScale(S);
+      const face = this.add.image(x, y, `ui_face_${p.id}`, ok ? 0 : 1).setScale(S);
+      c.add(slot);
+      c.add(face);
+      this.wheelSlots.push({ i: this.b.party.indexOf(p), a, ok, slot, face });
       const name = combos.combos.find((k) => k.pair.includes(f.id) && k.pair.includes(p.id))?.name ?? '조합 없음';
       c.add(this.add.text(x, y + 34, name, { fontFamily: FONT, fontSize: '14px', color: ok ? '#f3e7c4' : '#777777' }).setOrigin(0.5, 0));
     });
-    c.add(this.add.text(0, 140, 'R을 떼면 발동 (지금은 잠겨 있음)', { fontFamily: FONT, fontSize: '16px', color: '#cccccc' }).setOrigin(0.5));
+    const hint = this.touch ? '동료 쪽으로 밀었다 떼면 발동' : '마우스로 동료를 가리키고 R을 떼면 발동';
+    c.add(this.add.text(0, 140, hint, { fontFamily: FONT, fontSize: '16px', color: '#cccccc' }).setOrigin(0.5));
     this.wheel = c;
+  }
+
+  /** 휠에서 가리킨 동료: PC는 화면 가운데에서 마우스 쪽, 휴대폰은 누른 자리에서 민 쪽 */
+  private pickInWheel() {
+    let dx = 0;
+    let dy = 0;
+    let min = 40;
+    const t = this.comboTouch;
+    const tp = t ? this.input.manager.pointers.find((p) => p.id === t.id && p.isDown) : undefined;
+    if (t && tp) {
+      dx = tp.x - t.x;
+      dy = tp.y - t.y;
+      min = 24;
+    } else {
+      const p = this.input.activePointer;
+      dx = p.x - W / 2;
+      dy = p.y - H / 2;
+    }
+    let pick = -1;
+    if (Math.hypot(dx, dy) >= min && this.wheelSlots.length) {
+      const ang = Math.atan2(dy, dx);
+      const best = this.wheelSlots.reduce((a, b) => (Math.abs(Phaser.Math.Angle.Wrap(a.a - ang)) < Math.abs(Phaser.Math.Angle.Wrap(b.a - ang)) ? a : b));
+      pick = best.i;
+    }
+    this.b.comboPick = pick;
+    for (const s of this.wheelSlots) {
+      const on = s.i === pick;
+      s.slot.setScale(on ? S * 1.25 : S);
+      s.face.setScale(on ? S * 1.25 : S);
+    }
+  }
+
+  /** 합동 기술 첫 발동: 두 사람 얼굴이 화면을 가로지른다 (text = "id1,id2,기술 이름") */
+  private cutIn(text: string) {
+    const [a, b, name] = text.split(',');
+    const band = (id: string, y: number, from: number) => {
+      const bg = this.add.rectangle(0, y, W, 120, 0x000000, 0.75).setOrigin(0, 0.5).setDepth(35);
+      const face = this.add.image(W / 2 + from, y, `ui_face_${id}`, 0).setScale(S * 3).setDepth(36);
+      this.tweens.add({ targets: face, x: W / 2 + from * 0.15, duration: 260, ease: 'Quad.out' });
+      this.tweens.add({ targets: [bg, face], alpha: 0, delay: 900, duration: 200, onComplete: () => (bg.destroy(), face.destroy()) });
+    };
+    band(a, H / 2 - 80, -360);
+    band(b, H / 2 + 80, 360);
+    const t = this.add.text(W / 2, H / 2, name ?? '', { fontFamily: FONT, fontSize: '30px', color: '#f3e7c4', fontStyle: 'bold' }).setOrigin(0.5).setShadow(0, 2, '#000', 4).setDepth(37);
+    this.tweens.add({ targets: t, alpha: 0, delay: 900, duration: 200, onComplete: () => t.destroy() });
   }
 
   /** 파티 전멸: 데드엔딩처럼 화면이 붉게 어두워지고 GAME OVER */

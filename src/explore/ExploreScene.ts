@@ -695,12 +695,12 @@ export class ExploreScene extends Phaser.Scene {
   }
 
   /** 전투가 끝난 자리로 인물을 옮긴다 */
-  putActor(id: string, x: number, y: number, facing: string) {
+  putActor(id: string, x: number, y: number, facing: string, down = false) {
     const a = this.actors.get(id);
     if (!a) return;
     a.spr.setPosition(x, y).setVisible(true);
     a.facing = facing as Dir;
-    a.down = false;
+    a.down = down;
     this.pose(a);
   }
 

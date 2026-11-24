@@ -1,5 +1,6 @@
 {
   "_설명": "파티 인물과 NPC 아군의 전투 수치. 시간은 ms, 거리는 픽셀(월드 1배 기준). hp/atk/def는 1레벨 값, grow는 레벨마다 더하는 값",
+  "_과부하": "gauge.overload = 엘리시아의 과부하. 마력탄 bolt, 순간이동 blink, 룬 결계 skill을 쓸 때마다 그만큼 오름. 가득 찬 채로 쓰면 최대 체력의 hpCost 비율만큼 체력이 깎임(1 아래로는 안 내려감)",
   "_공격": "attack.hits = 연속 공격 한 타씩. mult 공격력 배율, range 사거리, arc 부채꼴 각도, windup 준비, active 맞는 순간, recover 회복, step 앞으로 내딛는 거리, fx 이펙트, cols 전투 동작 그림의 열 [준비, 휘두름]",
   "party": {
     "leon": {
@@ -35,7 +36,7 @@
     },
     "elysia": {
       "name": "엘리시아", "speed": 78, "hp": 90, "atk": 13, "def": 2, "grow": { "hp": 10, "atk": 3, "def": 1 },
-      "color": "purple", "gauge": { "name": "과부하", "fill": "purple", "perHit": 6 },
+      "color": "purple", "gauge": { "name": "과부하", "fill": "purple", "perHit": 6, "overload": { "bolt": 3, "blink": 8, "skill": 15, "hpCost": 0.03 } },
       "stamina": 100,
       "attack": {
         "chainWindow": 260,

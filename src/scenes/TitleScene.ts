@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { EXP_REWARD, gainExp, levelOf } from '../battle/progress';
+import { EXP_REWARD, gainExp, joinParty, levelOf, unlock, type Unlock } from '../battle/progress';
 import { allEndings, FIRST_STORY, stories } from '../game/data';
 import { freshProgress, gameState } from '../game/GameState';
 import { AUTO_SPEEDS, save, TEXT_SPEEDS } from '../game/save';
@@ -198,6 +198,7 @@ export class TitleScene extends Phaser.Scene {
         gameState.progress.stage = 'prologue';
         gameState.progress.exp.leon = 700;
       })],
+      ['1막 시험 ▶', () => this.showAct1Menu()],
     ];
     this.openPanel('개발 시험', (add) => {
       rows.forEach(([label, fn], i) => add(makeButton(this, W / 2, 180 + i * 46, label, fn, { w: 420, h: 42, fontSize: 18, depth: 0 })));
@@ -206,6 +207,62 @@ export class TitleScene extends Phaser.Scene {
           .text(W / 2, 548, '전투 중: F6 적 전멸 · F7 브람 쓰러뜨리기 · F8 시간 끝 · F9 파티 전멸', { fontFamily: FONT, fontSize: '15px', color: '#888888' })
           .setOrigin(0.5),
       );
+    });
+  }
+
+  /**
+   * 1막 시험: 장면, 전투, 이동 구간으로 바로 간다.
+   * 프롤로그를 깬 상태(레벨 5)에서, 그 지점까지 지나온 해금·합류·겉모습 노드를 미리 적용한다
+   */
+  private showAct1Menu() {
+    const act1 = stories.act1;
+    if (!act1) return;
+    const where = (pred: (n: object) => boolean) => {
+      for (const sc of act1.scenes) {
+        const i = sc.nodes.findIndex(pred);
+        if (i >= 0) return { scene: sc.id, node: i };
+      }
+      return { scene: act1.scenes[0].id, node: 0 };
+    };
+    const jump = (scene: string, node: number) => {
+      gameState.reset();
+      const p = gameState.progress;
+      p.stage = 'prologue';
+      p.exp.leon = 700;
+      unlock('evade');
+      // 그 지점 앞까지의 노드 (갈래 장면은 목적지일 때만)
+      for (const sc of act1.scenes) {
+        if (sc.branch && sc.id !== scene) continue;
+        const end = sc.id === scene ? node : sc.nodes.length;
+        for (const n of sc.nodes.slice(0, end) as unknown as Record<string, unknown>[]) {
+          if ('unlock' in n) unlock(n.unlock as Unlock);
+          if ('join' in n) joinParty(String(n.join));
+          if ('costume' in n) p.costume[String(n.who ?? 'leon')] = String(n.costume);
+        }
+        if (sc.id === scene) break;
+      }
+      this.go({ story: 'act1', scene, node });
+    };
+    const scenes = act1.scenes.filter((sc) => !sc.branch || sc.id === 's3_refuse');
+    const battles = ['수로 쥐 떼', '수로의 괴물', '검문소 병사', '추격 기사'];
+    const segs = ['a1_sewer_walk', 'a1_rune_room', 'a1_sewer_deep', 'a1_cistern_exit', 'a1_hideout', 'a1_slum', 'a1_checkpoint', 'a1_reeds'];
+    const cols: [string, [string, () => void][]][] = [
+      ['장면', [
+        ...scenes.map((sc): [string, () => void] => [sc.id === 's3_refuse' ? '배드 길 (거절)' : sc.title.replace(/^장면 /, '').slice(0, 14), () => jump(sc.id, 0)]),
+        ['장면 3 선택지', () => {
+          const sc = act1.scenes.find((x) => x.id === 'scene3');
+          jump('scene3', Math.max(0, (sc?.nodes.length ?? 1) - 1));
+        }],
+      ]],
+      ['전투', battles.map((b): [string, () => void] => [b, () => { const w = where((n) => (n as { battle?: string }).battle === b); jump(w.scene, w.node); }])],
+      ['이동 구간', segs.map((g): [string, () => void] => [g.replace('a1_', ''), () => { const w = where((n) => (n as { explore?: string }).explore === g); jump(w.scene, w.node); }])],
+    ];
+    this.openPanel('1막 시험', (add) => {
+      cols.forEach(([head, rows], c) => {
+        const x = 270 + c * 210;
+        add(this.add.text(x, 172, head, { fontFamily: FONT, fontSize: '17px', color: '#a89a78' }).setOrigin(0.5));
+        rows.forEach(([label, fn], i) => add(makeButton(this, x, 206 + i * 33, label, fn, { w: 196, h: 30, fontSize: 14, depth: 0 })));
+      });
     });
   }
 

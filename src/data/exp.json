@@ -46,23 +46,45 @@
   "enemies": {
     "gnosis": 15,
     "marcion_hooded": 0,
-    "mob_royal_knight": 30
+    "mob_royal_knight": 30,
+    "sewer_rat": 10,
+    "sewer_leech": 10,
+    "sewer_eel": 0,
+    "imperial_spear": 10,
+    "imperial_archer": 10,
+    "pursuit_sword": 10,
+    "pursuit_shield": 10
   },
   "_battles": "전투 이벤트를 끝냈을 때, 처음 한 번 (전투 이름: src/data/battle/battles.json)",
   "battles": {
     "하수인들": 30,
     "침입자": 60,
-    "test_branch": 0
+    "test_branch": 0,
+    "수로 쥐 떼": 30,
+    "수로의 괴물": 150,
+    "검문소 병사": 60,
+    "추격 기사": 100
   },
   "_looks": "조사할 물건을 처음 조사했을 때 (물건 ID: src/data/explore/looks.json). 없으면 default",
   "looks": {
     "default": 20,
-    "pendant": 0
+    "pendant": 0,
+    "a1_scorched_wall": 25,
+    "a1_grate": 25,
+    "a1_runes": 25,
+    "a1_bones": 25,
+    "a1_violet_paper": 25,
+    "a1_measurements": 25,
+    "a1_mourning_notice": 25,
+    "a1_checkpoint_board": 25,
+    "a1_hidden_coins": 50
   },
   "_endings": "엔딩 목록의 보상 받기 (배드·데드엔딩만, 한 번)",
   "endings": {
     "prologue_dead": 170,
-    "prologue_bad": 170
+    "prologue_bad": 170,
+    "act1_bad": 200
   },
+  "_1막": "변장 통과 60은 선택지 효과(tools/script/stories.mjs의 s6_disguise)",
   "_프롤로그합계": "하수인 6×15=90 + 전투 이벤트 30 + 침입자 60 + 조사 9×20=180 + 엔딩 170×2=340 = 700 (5레벨)"
 }

@@ -7,6 +7,11 @@ import { STORIES } from './stories.mjs';
 let failed = false;
 for (const cfg of STORIES) {
   const { story, warnings } = parseScript(readFileSync(cfg.source, 'utf8'), cfg);
+  // 엔딩 목록용 추가 정보 (힌트, 보상 경험치, 후일담)
+  for (const [id, extra] of Object.entries(cfg.endingExtras ?? {})) {
+    if (story.endings[id]) Object.assign(story.endings[id], extra);
+    else warnings.push(`endingExtras: 없는 엔딩 ${id}`);
+  }
   for (const w of warnings) console.warn(`[${cfg.id}] 경고: ${w}`);
   if (warnings.length) failed = true;
   writeFileSync(cfg.output, `${format(story)}\n`);

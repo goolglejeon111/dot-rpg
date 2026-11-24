@@ -1,0 +1,1037 @@
+{
+  "fx": {
+    "hit": {
+      "file": "assets/battle/fx/hit.png",
+      "w": 32,
+      "h": 32,
+      "frames": 4,
+      "rate": 20,
+      "loop": false,
+      "note": "피격 반짝임"
+    },
+    "hit_heavy": {
+      "file": "assets/battle/fx/hit_heavy.png",
+      "w": 48,
+      "h": 48,
+      "frames": 5,
+      "rate": 18,
+      "loop": false,
+      "note": "강한 피격"
+    },
+    "block": {
+      "file": "assets/battle/fx/block.png",
+      "w": 32,
+      "h": 32,
+      "frames": 4,
+      "rate": 20,
+      "loop": false,
+      "note": "막기 성공 불꽃"
+    },
+    "parry": {
+      "file": "assets/battle/fx/parry.png",
+      "w": 48,
+      "h": 48,
+      "frames": 5,
+      "rate": 18,
+      "loop": false,
+      "note": "튕겨 내기(패링) 섬광"
+    },
+    "guard_break": {
+      "file": "assets/battle/fx/guard_break.png",
+      "w": 48,
+      "h": 48,
+      "frames": 4,
+      "rate": 16,
+      "loop": false,
+      "note": "막기가 무너짐"
+    },
+    "dust_land": {
+      "file": "assets/battle/fx/dust_land.png",
+      "w": 48,
+      "h": 16,
+      "frames": 4,
+      "rate": 14,
+      "loop": false,
+      "note": "착지 먼지"
+    },
+    "dust_run": {
+      "file": "assets/battle/fx/dust_run.png",
+      "w": 16,
+      "h": 16,
+      "frames": 4,
+      "rate": 14,
+      "loop": false,
+      "note": "달리기 먼지"
+    },
+    "dust_roll": {
+      "file": "assets/battle/fx/dust_roll.png",
+      "w": 32,
+      "h": 16,
+      "frames": 5,
+      "rate": 14,
+      "loop": false,
+      "note": "구르기 먼지"
+    },
+    "jump_shadow": {
+      "file": "assets/battle/fx/jump_shadow.png",
+      "w": 24,
+      "h": 8,
+      "frames": 3,
+      "rate": 1,
+      "loop": false,
+      "note": "점프 그림자 (0=바닥, 2=가장 높이)"
+    },
+    "warn_glow": {
+      "file": "assets/battle/fx/warn_glow.png",
+      "w": 48,
+      "h": 56,
+      "frames": 4,
+      "rate": 10,
+      "loop": true,
+      "note": "막을 수 없는 공격 예고"
+    },
+    "warn_area": {
+      "file": "assets/battle/fx/warn_area.png",
+      "w": 96,
+      "h": 48,
+      "frames": 4,
+      "rate": 8,
+      "loop": true,
+      "note": "피할 수 없는 범위 공격 예고"
+    },
+    "gnosis_signal": {
+      "file": "assets/battle/fx/gnosis_signal.png",
+      "w": 48,
+      "h": 56,
+      "frames": 4,
+      "rate": 12,
+      "loop": true,
+      "note": "그노시스회 하수인 자폭 신호 (하얀 빛)"
+    },
+    "gnosis_explode": {
+      "file": "assets/battle/fx/gnosis_explode.png",
+      "w": 96,
+      "h": 96,
+      "frames": 6,
+      "rate": 16,
+      "loop": false,
+      "note": "자폭 폭발 → 흔적 없이 사라짐"
+    },
+    "gnosis_vanish": {
+      "file": "assets/battle/fx/gnosis_vanish.png",
+      "w": 48,
+      "h": 48,
+      "frames": 5,
+      "rate": 10,
+      "loop": false,
+      "note": "하수인이 빛으로 흩어짐"
+    },
+    "light_cast": {
+      "file": "assets/battle/fx/light_cast.png",
+      "w": 32,
+      "h": 32,
+      "frames": 4,
+      "rate": 12,
+      "loop": true,
+      "note": "시황제의 빛: 손에 모으기"
+    },
+    "light_bolt": {
+      "file": "assets/battle/fx/light_bolt.png",
+      "w": 32,
+      "h": 16,
+      "frames": 4,
+      "rate": 16,
+      "loop": true,
+      "note": "시황제의 빛: 날아가는 빛 (마르키온)"
+    },
+    "light_burst": {
+      "file": "assets/battle/fx/light_burst.png",
+      "w": 48,
+      "h": 48,
+      "frames": 5,
+      "rate": 16,
+      "loop": false,
+      "note": "시황제의 빛: 맞은 자리"
+    },
+    "wound_glow": {
+      "file": "assets/battle/fx/wound_glow.png",
+      "w": 16,
+      "h": 16,
+      "frames": 4,
+      "rate": 6,
+      "loop": true,
+      "note": "레온 어깨 상처의 희미한 빛"
+    },
+    "level_up": {
+      "file": "assets/battle/fx/level_up.png",
+      "w": 48,
+      "h": 64,
+      "frames": 6,
+      "rate": 12,
+      "loop": false,
+      "note": "레벨 업"
+    },
+    "unlock": {
+      "file": "assets/battle/fx/unlock.png",
+      "w": 48,
+      "h": 48,
+      "frames": 6,
+      "rate": 12,
+      "loop": false,
+      "note": "새 기술 해금"
+    },
+    "stun": {
+      "file": "assets/battle/fx/stun.png",
+      "w": 24,
+      "h": 12,
+      "frames": 4,
+      "rate": 8,
+      "loop": true,
+      "note": "기절(쓰러진 상태 위의 표시)"
+    },
+    "leon_slash1": {
+      "file": "assets/battle/fx/leon_slash1.png",
+      "w": 48,
+      "h": 48,
+      "frames": 4,
+      "rate": 22,
+      "loop": false,
+      "note": "레온 베기 1타"
+    },
+    "leon_slash2": {
+      "file": "assets/battle/fx/leon_slash2.png",
+      "w": 48,
+      "h": 48,
+      "frames": 4,
+      "rate": 22,
+      "loop": false,
+      "note": "레온 베기 2타"
+    },
+    "leon_slash3": {
+      "file": "assets/battle/fx/leon_slash3.png",
+      "w": 64,
+      "h": 64,
+      "frames": 5,
+      "rate": 20,
+      "loop": false,
+      "note": "레온 베기 3타(한 걸음 내디디며 강하게)"
+    },
+    "galia_cleave": {
+      "file": "assets/battle/fx/galia_cleave.png",
+      "w": 64,
+      "h": 64,
+      "frames": 5,
+      "rate": 16,
+      "loop": false,
+      "note": "갈리아 대검 휘두르기"
+    },
+    "elysia_bolt": {
+      "file": "assets/battle/fx/elysia_bolt.png",
+      "w": 16,
+      "h": 16,
+      "frames": 4,
+      "rate": 14,
+      "loop": true,
+      "note": "엘리시아 마력탄"
+    },
+    "elysia_bolt_hit": {
+      "file": "assets/battle/fx/elysia_bolt_hit.png",
+      "w": 32,
+      "h": 32,
+      "frames": 4,
+      "rate": 18,
+      "loop": false,
+      "note": "마력탄 맞은 자리"
+    },
+    "karg_slash": {
+      "file": "assets/battle/fx/karg_slash.png",
+      "w": 48,
+      "h": 48,
+      "frames": 4,
+      "rate": 26,
+      "loop": false,
+      "note": "카르크 쌍단검 연격"
+    },
+    "adrian_slash": {
+      "file": "assets/battle/fx/adrian_slash.png",
+      "w": 48,
+      "h": 48,
+      "frames": 4,
+      "rate": 20,
+      "loop": false,
+      "note": "아드리안 검"
+    },
+    "serena_stab": {
+      "file": "assets/battle/fx/serena_stab.png",
+      "w": 48,
+      "h": 24,
+      "frames": 4,
+      "rate": 22,
+      "loop": false,
+      "note": "세레나 단검 찌르기"
+    },
+    "leon_guard": {
+      "file": "assets/battle/fx/leon_guard.png",
+      "w": 32,
+      "h": 40,
+      "frames": 3,
+      "rate": 10,
+      "loop": true,
+      "note": "레온 막기 (흰빛 오러 방패)"
+    },
+    "galia_brace": {
+      "file": "assets/battle/fx/galia_brace.png",
+      "w": 48,
+      "h": 24,
+      "frames": 4,
+      "rate": 10,
+      "loop": true,
+      "note": "갈리아 버티기"
+    },
+    "elysia_blink": {
+      "file": "assets/battle/fx/elysia_blink.png",
+      "w": 48,
+      "h": 48,
+      "frames": 5,
+      "rate": 16,
+      "loop": false,
+      "note": "엘리시아 순간이동"
+    },
+    "karg_dash": {
+      "file": "assets/battle/fx/karg_dash.png",
+      "w": 48,
+      "h": 24,
+      "frames": 4,
+      "rate": 18,
+      "loop": false,
+      "note": "카르크 대시 (잔상은 게임에서 인물 그림을 겹쳐 그림)"
+    },
+    "adrian_block": {
+      "file": "assets/battle/fx/adrian_block.png",
+      "w": 40,
+      "h": 48,
+      "frames": 4,
+      "rate": 10,
+      "loop": true,
+      "note": "아드리안 방패 막기"
+    },
+    "adrian_bash": {
+      "file": "assets/battle/fx/adrian_bash.png",
+      "w": 48,
+      "h": 48,
+      "frames": 4,
+      "rate": 16,
+      "loop": false,
+      "note": "아드리안 방패 밀치기"
+    },
+    "serena_step": {
+      "file": "assets/battle/fx/serena_step.png",
+      "w": 64,
+      "h": 32,
+      "frames": 5,
+      "rate": 14,
+      "loop": false,
+      "note": "세레나 물러서기 (주변을 밀어냄)"
+    },
+    "leon_thrust": {
+      "file": "assets/battle/fx/leon_thrust.png",
+      "w": 96,
+      "h": 32,
+      "frames": 5,
+      "rate": 18,
+      "loop": false,
+      "note": "레온 스킬: 오러 찌르기"
+    },
+    "leon_oath": {
+      "file": "assets/battle/fx/leon_oath.png",
+      "w": 64,
+      "h": 96,
+      "frames": 6,
+      "rate": 14,
+      "loop": false,
+      "note": "레온 궁극기: 맹세의 검"
+    },
+    "galia_taunt": {
+      "file": "assets/battle/fx/galia_taunt.png",
+      "w": 64,
+      "h": 64,
+      "frames": 5,
+      "rate": 14,
+      "loop": false,
+      "note": "갈리아 스킬: 단장의 호령 (도발)"
+    },
+    "galia_quake": {
+      "file": "assets/battle/fx/galia_quake.png",
+      "w": 96,
+      "h": 64,
+      "frames": 6,
+      "rate": 14,
+      "loop": false,
+      "note": "갈리아 궁극기: 대지 가르기"
+    },
+    "elysia_rune": {
+      "file": "assets/battle/fx/elysia_rune.png",
+      "w": 96,
+      "h": 48,
+      "frames": 4,
+      "rate": 8,
+      "loop": true,
+      "note": "엘리시아 스킬: 룬 결계 (바닥)"
+    },
+    "elysia_overload": {
+      "file": "assets/battle/fx/elysia_overload.png",
+      "w": 96,
+      "h": 96,
+      "frames": 6,
+      "rate": 14,
+      "loop": false,
+      "note": "엘리시아 궁극기: 마력 폭주"
+    },
+    "karg_fang": {
+      "file": "assets/battle/fx/karg_fang.png",
+      "w": 48,
+      "h": 48,
+      "frames": 5,
+      "rate": 20,
+      "loop": false,
+      "note": "카르크 스킬: 송곳니 (방어막을 찢음)"
+    },
+    "karg_frenzy": {
+      "file": "assets/battle/fx/karg_frenzy.png",
+      "w": 48,
+      "h": 56,
+      "frames": 4,
+      "rate": 12,
+      "loop": true,
+      "note": "카르크 궁극기: 늑대의 피 (각성 기운)"
+    },
+    "adrian_heal": {
+      "file": "assets/battle/fx/adrian_heal.png",
+      "w": 48,
+      "h": 48,
+      "frames": 5,
+      "rate": 12,
+      "loop": false,
+      "note": "아드리안 스킬(신앙 전): 치유의 빛"
+    },
+    "adrian_sanctuary": {
+      "file": "assets/battle/fx/adrian_sanctuary.png",
+      "w": 96,
+      "h": 48,
+      "frames": 5,
+      "rate": 10,
+      "loop": true,
+      "note": "아드리안 궁극기(신앙 전): 성역"
+    },
+    "adrian_charge": {
+      "file": "assets/battle/fx/adrian_charge.png",
+      "w": 64,
+      "h": 32,
+      "frames": 4,
+      "rate": 18,
+      "loop": false,
+      "note": "아드리안 스킬(신앙 후): 방패 돌진"
+    },
+    "adrian_sever": {
+      "file": "assets/battle/fx/adrian_sever.png",
+      "w": 64,
+      "h": 64,
+      "frames": 6,
+      "rate": 16,
+      "loop": false,
+      "note": "아드리안 궁극기(신앙 후): 끊어 내는 검"
+    },
+    "serena_awe": {
+      "file": "assets/battle/fx/serena_awe.png",
+      "w": 96,
+      "h": 96,
+      "frames": 5,
+      "rate": 12,
+      "loop": false,
+      "note": "세레나 스킬: 위압"
+    },
+    "serena_command": {
+      "file": "assets/battle/fx/serena_command.png",
+      "w": 48,
+      "h": 48,
+      "frames": 6,
+      "rate": 12,
+      "loop": false,
+      "note": "세레나 궁극기: 황제의 명령"
+    }
+  },
+  "ui": {
+    "face_leon": {
+      "file": "assets/battle/ui/face_leon.png",
+      "w": 18,
+      "h": 18,
+      "frames": 2
+    },
+    "face_galia": {
+      "file": "assets/battle/ui/face_galia.png",
+      "w": 18,
+      "h": 18,
+      "frames": 2
+    },
+    "face_elysia": {
+      "file": "assets/battle/ui/face_elysia.png",
+      "w": 18,
+      "h": 18,
+      "frames": 2
+    },
+    "face_karg": {
+      "file": "assets/battle/ui/face_karg.png",
+      "w": 18,
+      "h": 18,
+      "frames": 2
+    },
+    "face_adrian": {
+      "file": "assets/battle/ui/face_adrian.png",
+      "w": 18,
+      "h": 18,
+      "frames": 2
+    },
+    "face_serena": {
+      "file": "assets/battle/ui/face_serena.png",
+      "w": 18,
+      "h": 18,
+      "frames": 2
+    },
+    "face_bram": {
+      "file": "assets/battle/ui/face_bram.png",
+      "w": 18,
+      "h": 18,
+      "frames": 2
+    },
+    "slot": {
+      "file": "assets/battle/ui/slot.png",
+      "w": 22,
+      "h": 22,
+      "frames": 3
+    },
+    "bar_hp_s": {
+      "file": "assets/battle/ui/bar_hp_s.png",
+      "w": 38,
+      "h": 5,
+      "frames": 1
+    },
+    "bar_hp_l": {
+      "file": "assets/battle/ui/bar_hp_l.png",
+      "w": 124,
+      "h": 8,
+      "frames": 1
+    },
+    "bar_sp": {
+      "file": "assets/battle/ui/bar_sp.png",
+      "w": 124,
+      "h": 5,
+      "frames": 1
+    },
+    "bar_gauge": {
+      "file": "assets/battle/ui/bar_gauge.png",
+      "w": 124,
+      "h": 5,
+      "frames": 1
+    },
+    "bar_combo": {
+      "file": "assets/battle/ui/bar_combo.png",
+      "w": 64,
+      "h": 6,
+      "frames": 1
+    },
+    "bar_exp": {
+      "file": "assets/battle/ui/bar_exp.png",
+      "w": 244,
+      "h": 5,
+      "frames": 1
+    },
+    "bar_enemy": {
+      "file": "assets/battle/ui/bar_enemy.png",
+      "w": 22,
+      "h": 4,
+      "frames": 1
+    },
+    "bar_boss": {
+      "file": "assets/battle/ui/bar_boss.png",
+      "w": 324,
+      "h": 10,
+      "frames": 1
+    },
+    "bar_revive": {
+      "file": "assets/battle/ui/bar_revive.png",
+      "w": 28,
+      "h": 4,
+      "frames": 1
+    },
+    "fill_red_2": {
+      "file": "assets/battle/ui/fill_red_2.png",
+      "w": 322,
+      "h": 2,
+      "frames": 1
+    },
+    "fill_red_3": {
+      "file": "assets/battle/ui/fill_red_3.png",
+      "w": 322,
+      "h": 3,
+      "frames": 1
+    },
+    "fill_red_4": {
+      "file": "assets/battle/ui/fill_red_4.png",
+      "w": 322,
+      "h": 4,
+      "frames": 1
+    },
+    "fill_red_6": {
+      "file": "assets/battle/ui/fill_red_6.png",
+      "w": 322,
+      "h": 6,
+      "frames": 1
+    },
+    "fill_red_8": {
+      "file": "assets/battle/ui/fill_red_8.png",
+      "w": 322,
+      "h": 8,
+      "frames": 1
+    },
+    "fill_green_2": {
+      "file": "assets/battle/ui/fill_green_2.png",
+      "w": 322,
+      "h": 2,
+      "frames": 1
+    },
+    "fill_green_3": {
+      "file": "assets/battle/ui/fill_green_3.png",
+      "w": 322,
+      "h": 3,
+      "frames": 1
+    },
+    "fill_green_4": {
+      "file": "assets/battle/ui/fill_green_4.png",
+      "w": 322,
+      "h": 4,
+      "frames": 1
+    },
+    "fill_green_6": {
+      "file": "assets/battle/ui/fill_green_6.png",
+      "w": 322,
+      "h": 6,
+      "frames": 1
+    },
+    "fill_green_8": {
+      "file": "assets/battle/ui/fill_green_8.png",
+      "w": 322,
+      "h": 8,
+      "frames": 1
+    },
+    "fill_white_2": {
+      "file": "assets/battle/ui/fill_white_2.png",
+      "w": 322,
+      "h": 2,
+      "frames": 1
+    },
+    "fill_white_3": {
+      "file": "assets/battle/ui/fill_white_3.png",
+      "w": 322,
+      "h": 3,
+      "frames": 1
+    },
+    "fill_white_4": {
+      "file": "assets/battle/ui/fill_white_4.png",
+      "w": 322,
+      "h": 4,
+      "frames": 1
+    },
+    "fill_white_6": {
+      "file": "assets/battle/ui/fill_white_6.png",
+      "w": 322,
+      "h": 6,
+      "frames": 1
+    },
+    "fill_white_8": {
+      "file": "assets/battle/ui/fill_white_8.png",
+      "w": 322,
+      "h": 8,
+      "frames": 1
+    },
+    "fill_purple_2": {
+      "file": "assets/battle/ui/fill_purple_2.png",
+      "w": 322,
+      "h": 2,
+      "frames": 1
+    },
+    "fill_purple_3": {
+      "file": "assets/battle/ui/fill_purple_3.png",
+      "w": 322,
+      "h": 3,
+      "frames": 1
+    },
+    "fill_purple_4": {
+      "file": "assets/battle/ui/fill_purple_4.png",
+      "w": 322,
+      "h": 4,
+      "frames": 1
+    },
+    "fill_purple_6": {
+      "file": "assets/battle/ui/fill_purple_6.png",
+      "w": 322,
+      "h": 6,
+      "frames": 1
+    },
+    "fill_purple_8": {
+      "file": "assets/battle/ui/fill_purple_8.png",
+      "w": 322,
+      "h": 8,
+      "frames": 1
+    },
+    "fill_rust_2": {
+      "file": "assets/battle/ui/fill_rust_2.png",
+      "w": 322,
+      "h": 2,
+      "frames": 1
+    },
+    "fill_rust_3": {
+      "file": "assets/battle/ui/fill_rust_3.png",
+      "w": 322,
+      "h": 3,
+      "frames": 1
+    },
+    "fill_rust_4": {
+      "file": "assets/battle/ui/fill_rust_4.png",
+      "w": 322,
+      "h": 4,
+      "frames": 1
+    },
+    "fill_rust_6": {
+      "file": "assets/battle/ui/fill_rust_6.png",
+      "w": 322,
+      "h": 6,
+      "frames": 1
+    },
+    "fill_rust_8": {
+      "file": "assets/battle/ui/fill_rust_8.png",
+      "w": 322,
+      "h": 8,
+      "frames": 1
+    },
+    "fill_gold_2": {
+      "file": "assets/battle/ui/fill_gold_2.png",
+      "w": 322,
+      "h": 2,
+      "frames": 1
+    },
+    "fill_gold_3": {
+      "file": "assets/battle/ui/fill_gold_3.png",
+      "w": 322,
+      "h": 3,
+      "frames": 1
+    },
+    "fill_gold_4": {
+      "file": "assets/battle/ui/fill_gold_4.png",
+      "w": 322,
+      "h": 4,
+      "frames": 1
+    },
+    "fill_gold_6": {
+      "file": "assets/battle/ui/fill_gold_6.png",
+      "w": 322,
+      "h": 6,
+      "frames": 1
+    },
+    "fill_gold_8": {
+      "file": "assets/battle/ui/fill_gold_8.png",
+      "w": 322,
+      "h": 8,
+      "frames": 1
+    },
+    "fill_sky_2": {
+      "file": "assets/battle/ui/fill_sky_2.png",
+      "w": 322,
+      "h": 2,
+      "frames": 1
+    },
+    "fill_sky_3": {
+      "file": "assets/battle/ui/fill_sky_3.png",
+      "w": 322,
+      "h": 3,
+      "frames": 1
+    },
+    "fill_sky_4": {
+      "file": "assets/battle/ui/fill_sky_4.png",
+      "w": 322,
+      "h": 4,
+      "frames": 1
+    },
+    "fill_sky_6": {
+      "file": "assets/battle/ui/fill_sky_6.png",
+      "w": 322,
+      "h": 6,
+      "frames": 1
+    },
+    "fill_sky_8": {
+      "file": "assets/battle/ui/fill_sky_8.png",
+      "w": 322,
+      "h": 8,
+      "frames": 1
+    },
+    "fill_cold_2": {
+      "file": "assets/battle/ui/fill_cold_2.png",
+      "w": 322,
+      "h": 2,
+      "frames": 1
+    },
+    "fill_cold_3": {
+      "file": "assets/battle/ui/fill_cold_3.png",
+      "w": 322,
+      "h": 3,
+      "frames": 1
+    },
+    "fill_cold_4": {
+      "file": "assets/battle/ui/fill_cold_4.png",
+      "w": 322,
+      "h": 4,
+      "frames": 1
+    },
+    "fill_cold_6": {
+      "file": "assets/battle/ui/fill_cold_6.png",
+      "w": 322,
+      "h": 6,
+      "frames": 1
+    },
+    "fill_cold_8": {
+      "file": "assets/battle/ui/fill_cold_8.png",
+      "w": 322,
+      "h": 8,
+      "frames": 1
+    },
+    "fill_crimson_2": {
+      "file": "assets/battle/ui/fill_crimson_2.png",
+      "w": 322,
+      "h": 2,
+      "frames": 1
+    },
+    "fill_crimson_3": {
+      "file": "assets/battle/ui/fill_crimson_3.png",
+      "w": 322,
+      "h": 3,
+      "frames": 1
+    },
+    "fill_crimson_4": {
+      "file": "assets/battle/ui/fill_crimson_4.png",
+      "w": 322,
+      "h": 4,
+      "frames": 1
+    },
+    "fill_crimson_6": {
+      "file": "assets/battle/ui/fill_crimson_6.png",
+      "w": 322,
+      "h": 6,
+      "frames": 1
+    },
+    "fill_crimson_8": {
+      "file": "assets/battle/ui/fill_crimson_8.png",
+      "w": 322,
+      "h": 8,
+      "frames": 1
+    },
+    "icon_attack": {
+      "file": "assets/battle/ui/icon_attack.png",
+      "w": 16,
+      "h": 16,
+      "frames": 1
+    },
+    "icon_guard": {
+      "file": "assets/battle/ui/icon_guard.png",
+      "w": 16,
+      "h": 16,
+      "frames": 1
+    },
+    "icon_jump": {
+      "file": "assets/battle/ui/icon_jump.png",
+      "w": 16,
+      "h": 16,
+      "frames": 1
+    },
+    "icon_interact": {
+      "file": "assets/battle/ui/icon_interact.png",
+      "w": 16,
+      "h": 16,
+      "frames": 1
+    },
+    "icon_skill": {
+      "file": "assets/battle/ui/icon_skill.png",
+      "w": 16,
+      "h": 16,
+      "frames": 1
+    },
+    "icon_ult": {
+      "file": "assets/battle/ui/icon_ult.png",
+      "w": 16,
+      "h": 16,
+      "frames": 1
+    },
+    "icon_combo": {
+      "file": "assets/battle/ui/icon_combo.png",
+      "w": 16,
+      "h": 16,
+      "frames": 1
+    },
+    "icon_evade": {
+      "file": "assets/battle/ui/icon_evade.png",
+      "w": 16,
+      "h": 16,
+      "frames": 1
+    },
+    "icon_lock": {
+      "file": "assets/battle/ui/icon_lock.png",
+      "w": 10,
+      "h": 12,
+      "frames": 1
+    },
+    "digits": {
+      "file": "assets/battle/ui/digits.png",
+      "w": 7,
+      "h": 9,
+      "frames": 10
+    },
+    "word_gameover": {
+      "file": "assets/battle/ui/word_gameover.png",
+      "w": 54,
+      "h": 11,
+      "frames": 1
+    },
+    "word_levelup": {
+      "file": "assets/battle/ui/word_levelup.png",
+      "w": 48,
+      "h": 11,
+      "frames": 1
+    },
+    "word_parry": {
+      "file": "assets/battle/ui/word_parry.png",
+      "w": 32,
+      "h": 11,
+      "frames": 1
+    },
+    "word_break": {
+      "file": "assets/battle/ui/word_break.png",
+      "w": 32,
+      "h": 11,
+      "frames": 1
+    },
+    "word_block": {
+      "file": "assets/battle/ui/word_block.png",
+      "w": 32,
+      "h": 11,
+      "frames": 1
+    },
+    "word_max": {
+      "file": "assets/battle/ui/word_max.png",
+      "w": 20,
+      "h": 11,
+      "frames": 1
+    },
+    "word_unlock": {
+      "file": "assets/battle/ui/word_unlock.png",
+      "w": 38,
+      "h": 11,
+      "frames": 1
+    },
+    "word_victory": {
+      "file": "assets/battle/ui/word_victory.png",
+      "w": 44,
+      "h": 11,
+      "frames": 1
+    },
+    "wheel": {
+      "file": "assets/battle/ui/wheel.png",
+      "w": 112,
+      "h": 112,
+      "frames": 1
+    },
+    "wheel_slot": {
+      "file": "assets/battle/ui/wheel_slot.png",
+      "w": 26,
+      "h": 26,
+      "frames": 3
+    },
+    "btn": {
+      "file": "assets/battle/ui/btn.png",
+      "w": 44,
+      "h": 44,
+      "frames": 2
+    },
+    "stick_base": {
+      "file": "assets/battle/ui/stick_base.png",
+      "w": 72,
+      "h": 72,
+      "frames": 1
+    },
+    "stick_knob": {
+      "file": "assets/battle/ui/stick_knob.png",
+      "w": 30,
+      "h": 30,
+      "frames": 1
+    }
+  },
+  "chars": {
+    "leon": {
+      "file": "assets/battle/chars/leon.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "bram": {
+      "file": "assets/battle/chars/bram.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "galia": {
+      "file": "assets/battle/chars/galia.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "adrian": {
+      "file": "assets/battle/chars/adrian.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "karg": {
+      "file": "assets/battle/chars/karg.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "serena": {
+      "file": "assets/battle/chars/serena.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "elysia": {
+      "file": "assets/battle/chars/elysia.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "mob_gnosis": {
+      "file": "assets/battle/chars/mob_gnosis.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "marcion_hooded": {
+      "file": "assets/battle/chars/marcion_hooded.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "mob_royal_knight": {
+      "file": "assets/battle/chars/mob_royal_knight.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    }
+  }
+}

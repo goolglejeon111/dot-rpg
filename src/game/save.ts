@@ -1,3 +1,4 @@
+import type { Progress } from './GameState';
 import type { FlagValue } from './types';
 
 /**
@@ -22,11 +23,15 @@ export interface Checkpoint {
   finished?: boolean;
   affection: Record<string, number>;
   flags: Record<string, FlagValue>;
+  /** 성장 기록 (예전 저장에는 없음) */
+  progress?: Progress;
 }
 
 interface Meta {
   settings: Settings;
   endings: string[];
+  /** 보상을 받은 엔딩 */
+  rewards: string[];
   read: string[];
   checkpoint: Checkpoint | null;
 }
@@ -46,6 +51,7 @@ export const AUTO_SPEEDS = [
 const fresh = (): Meta => ({
   settings: { textDelay: 30, autoDelay: 1600 },
   endings: [],
+  rewards: [],
   read: [],
   checkpoint: null,
 });
@@ -59,6 +65,7 @@ function load(): Meta {
     return {
       settings: { ...base.settings, ...(p.settings ?? {}) },
       endings: Array.isArray(p.endings) ? p.endings : [],
+      rewards: Array.isArray(p.rewards) ? p.rewards : [],
       read: Array.isArray(p.read) ? p.read : [],
       checkpoint: p.checkpoint ?? null,
     };
@@ -103,6 +110,16 @@ export const save = {
   markEnding(id: string) {
     if (!meta.endings.includes(id)) meta.endings.push(id);
     write();
+  },
+
+  hasReward: (id: string) => meta.rewards.includes(id),
+  /** 엔딩 보상 받기 표시. 경험치는 최신 저장(이어하기 지점)에 넣는다 */
+  claimReward(id: string, apply: (cp: Checkpoint) => void) {
+    if (meta.rewards.includes(id)) return false;
+    meta.rewards.push(id);
+    if (meta.checkpoint) apply(meta.checkpoint);
+    write();
+    return true;
   },
 
   isRead: (key: string) => readSet.has(key),

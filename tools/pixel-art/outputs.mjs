@@ -3,6 +3,11 @@
 // layer 옵션: x, y(위치), flipX(좌우 반전), remap(색 바꾸기 { 원래글자: 새글자 })
 import { SHORE_MASKS, shoreName } from './shore.mjs';
 import { CHARS } from './gen-characters.mjs';
+import { existsSync, readFileSync } from 'node:fs';
+
+// 전투 그림 목록(gen-battle.mjs가 만듦)
+const BATTLE_JSON = new URL('./battle-outputs.json', import.meta.url);
+const BATTLE_OUTPUTS = existsSync(BATTLE_JSON) ? JSON.parse(readFileSync(BATTLE_JSON, 'utf8')) : [];
 
 // ---- 캐릭터: 몸(35줄) 아래에 다리(10줄)를 깔아 32x40 한 칸을 만든다 ----
 const LEGS_Y = 30;
@@ -137,4 +142,5 @@ export const OUTPUTS = [
   { file: 'public/assets/sprites/shadow.png', cell: [20, 6], frames: ['shadow'] },
   { file: 'public/assets/sprites/shadow_large.png', cell: [44, 12], frames: ['shadow_large'] },
   { file: 'public/assets/sprites/talk_icon.png', cell: [12, 12], frames: ['talk_icon'] },
+  ...BATTLE_OUTPUTS,
 ];

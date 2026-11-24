@@ -1,15 +1,28 @@
 import initialState from '../data/initialState.json';
 import type { Condition, Effects, FlagValue } from './types';
 
+/** 성장 기록: 인물별 경험치, 깬 구간(최대 레벨), 처음 한 번만 주는 경험치를 받은 곳 */
+export interface Progress {
+  exp: Record<string, number>;
+  /** 깬 구간 (src/data/battle/levels.json의 maxLevel 키) */
+  stage: string;
+  /** 경험치를 이미 받은 조사·이벤트 ID */
+  once: string[];
+}
+
 export interface StateData {
   affection: Record<string, number>;
   flags: Record<string, FlagValue>;
+  progress: Progress;
 }
+
+const freshProgress = (): Progress => ({ exp: {}, stage: 'start', once: [] });
 
 function fresh(): StateData {
   return {
     affection: { ...initialState.affection },
     flags: { ...(initialState.flags as Record<string, FlagValue>) },
+    progress: freshProgress(),
   };
 }
 
@@ -66,6 +79,11 @@ class GameState {
     return true;
   }
 
+  /** 성장 기록 (직접 고치면 바로 반영) */
+  get progress(): Progress {
+    return this.data.progress;
+  }
+
   /** 현재 상태 사본 */
   snapshot(): StateData {
     return JSON.parse(JSON.stringify(this.data));
@@ -77,6 +95,7 @@ class GameState {
     this.data = {
       affection: { ...base.affection, ...(s.affection ?? {}) },
       flags: { ...base.flags, ...(s.flags ?? {}) },
+      progress: { ...base.progress, ...(s.progress ?? {}) },
     };
   }
 

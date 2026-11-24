@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { gainExp, levelOf } from '../battle/progress';
 import { allEndings, FIRST_STORY, stories } from '../game/data';
 import { gameState } from '../game/GameState';
 import { AUTO_SPEEDS, save, TEXT_SPEEDS } from '../game/save';
@@ -42,8 +43,10 @@ export class TitleScene extends Phaser.Scene {
       ['엔딩 목록', () => this.showEndings(), true],
       ['설정', () => this.showSettings(), true],
     ];
+    // 개발 중에만: 전투·갈래 시험 메뉴
+    if (import.meta.env.DEV) items.push(['개발 시험', () => this.showDevMenu(), true]);
     this.menu = items.map(([label, fn, enabled], i) =>
-      makeButton(this, W / 2, 340 + i * 74, label, fn, { w: 300, h: 56, fontSize: 24 }).setEnabled(enabled),
+      makeButton(this, W / 2, 320 + i * 70, label, fn, { w: 300, h: 54, fontSize: 24 }).setEnabled(enabled),
     );
     this.add
       .text(W / 2, H - 40, '진행: 클릭 · 스페이스 · Z   /   로그 L · 자동 A · 스킵 S', {
@@ -98,24 +101,103 @@ export class TitleScene extends Phaser.Scene {
     this.menu.forEach((b) => b.setVisible(true));
   }
 
+  /** 엔딩 목록: 본 엔딩은 이름과 "보상 받기", 못 본 엔딩은 ???와 힌트 한 줄 */
   private showEndings() {
     const list = allEndings();
     const seen = list.filter((e) => save.hasSeenEnding(e.id)).length;
     this.openPanel(`엔딩 목록 (${seen}/${list.length})`, (add) => {
       list.forEach((e, i) => {
+        const y = 190 + i * 62;
         const got = save.hasSeenEnding(e.id);
         const color = e.type === 'dead' ? '#e05a5a' : e.type === 'bad' ? '#b88ae0' : '#e0c27a';
+        add(this.add.text(180, y, e.label, { fontFamily: FONT, fontSize: '20px', color: got ? color : '#555555' }).setOrigin(0, 0.5));
         add(
           this.add
-            .text(200, 190 + i * 46, `${e.label}`, { fontFamily: FONT, fontSize: '22px', color: got ? color : '#555555' })
+            .text(320, y - (got ? 0 : 10), got ? e.title : '???', { fontFamily: FONT, fontSize: '21px', color: got ? '#ffffff' : '#666666' })
             .setOrigin(0, 0.5),
         );
+        if (!got) {
+          add(this.add.text(320, y + 14, e.hint ?? '', { fontFamily: FONT, fontSize: '15px', color: '#8a8a8a' }).setOrigin(0, 0.5));
+          return;
+        }
+        const claimed = save.hasReward(e.id);
         add(
-          this.add
-            .text(360, 190 + i * 46, got ? e.title : '???', { fontFamily: FONT, fontSize: '22px', color: got ? '#ffffff' : '#666666' })
-            .setOrigin(0, 0.5),
+          makeButton(this, W - 230, y, claimed ? '다시 보기' : '보상 받기', () => this.openReward(e.id), {
+            w: 130, h: 40, fontSize: 17, depth: 0, fill: claimed ? [0x1d1a2c, 0x3d3560] : [0x4a3a10, 0x6a5420],
+          }),
         );
       });
+    });
+  }
+
+  /** 엔딩 보상: 경험치(배드·데드만, 한 번), 일러스트(없으면 임시 화면), 짧은 후일담(없으면 빈칸) */
+  private openReward(id: string) {
+    const e = allEndings().find((x) => x.id === id);
+    if (!e) return;
+    const exp = e.type === 'dead' || e.type === 'bad' ? e.exp ?? 0 : 0;
+    let note = '';
+    const first = !save.hasReward(id);
+    if (first) {
+      save.claimReward(id, (cp) => {
+        if (!exp) return;
+        cp.progress ??= { exp: {}, stage: 'start', once: [] };
+        // 최신 저장의 파티(경험치 기록이 있는 인물, 없으면 레온)가 같은 양을 받는다
+        const ids = Object.keys(cp.progress.exp).length ? Object.keys(cp.progress.exp) : ['leon'];
+        const ups = gainExp(ids, exp, cp.progress);
+        note = `경험치 +${exp} (최신 저장에 반영)` + (ups.length ? `  ·  레온 Lv ${levelOf('leon', cp.progress)}` : '');
+      });
+      if (exp && !save.checkpoint) note = `경험치 +${exp} (저장이 없어 반영할 곳이 없습니다)`;
+    } else note = exp ? `경험치 ${exp}은(는) 이미 받았습니다` : '';
+    if (!exp) note ||= '트루·히든엔딩은 일러스트와 후일담만 열립니다';
+
+    this.openPanel(`${e.label}: ${e.title}`, (add) => {
+      // 일러스트 (아직 없으면 임시 화면)
+      add(this.add.rectangle(W / 2, 290, 520, 220, 0x221a26).setStrokeStyle(2, 0x6a5a7a));
+      add(this.add.text(W / 2, 290, '엔딩 일러스트\n(준비 중)', { fontFamily: FONT, fontSize: '20px', color: '#776a86', align: 'center' }).setOrigin(0.5));
+      add(
+        this.add
+          .text(W / 2, 430, e.epilogue ?? '', { fontFamily: FONT, fontSize: '18px', color: '#dddddd', align: 'center', wordWrap: { width: 560, useAdvancedWrap: true } })
+          .setOrigin(0.5, 0),
+      );
+      add(this.add.text(W / 2, 520, note, { fontFamily: FONT, fontSize: '18px', color: first && exp ? '#e0c27a' : '#999999' }).setOrigin(0.5));
+    });
+    // 닫으면 엔딩 목록으로
+    this.input.keyboard!.removeAllListeners('keydown-ESC');
+    this.input.keyboard!.once('keydown-ESC', () => this.closePanel());
+    const panel = this.panel;
+    panel?.once('destroy', () => this.time.delayedCall(0, () => !this.panel && this.showEndings()));
+  }
+
+  // ---------- 개발 시험 (npm run dev 일 때만) ----------
+
+  private showDevMenu() {
+    const pro = stories[FIRST_STORY];
+    const at = (scene: string, find: (n: object) => boolean, back = 0) => {
+      const sc = pro?.scenes.find((x) => x.id === scene);
+      return Math.max(0, (sc?.nodes.findIndex(find) ?? 0) - back);
+    };
+    const start = (data: StoryStartData, setup?: () => void) => {
+      gameState.reset();
+      setup?.();
+      this.go(data);
+    };
+    const rows: [string, () => void][] = [
+      ['갈래 전투 시험 장면', () => start({ story: 'dev_test' })],
+      ['장면 2 전투 (하수인들)', () => start({ story: FIRST_STORY, scene: 'scene2', node: at('scene2', (n) => 'battle' in n) })],
+      ['장면 3 전투 (침입자)', () => start({ story: FIRST_STORY, scene: 'scene3', node: at('scene3', (n) => 'battle' in n) })],
+      ['검을 뽑는다 (체력 0 연출)', () => start({ story: FIRST_STORY, scene: 'choice_draw', node: at('choice_draw', (n) => 'hpZero' in n, 2) })],
+      ['장면 2 전투, 5레벨 (아이콘 확인)', () => start({ story: FIRST_STORY, scene: 'scene2', node: at('scene2', (n) => 'battle' in n) }, () => {
+        gameState.progress.stage = 'prologue';
+        gameState.progress.exp.leon = 700;
+      })],
+    ];
+    this.openPanel('개발 시험', (add) => {
+      rows.forEach(([label, fn], i) => add(makeButton(this, W / 2, 200 + i * 64, label, fn, { w: 420, h: 50, fontSize: 20, depth: 0 })));
+      add(
+        this.add
+          .text(W / 2, 530, '전투 중: F6 적 전멸 · F7 브람 쓰러뜨리기 · F8 시간 끝 · F9 파티 전멸', { fontFamily: FONT, fontSize: '15px', color: '#888888' })
+          .setOrigin(0.5),
+      );
     });
   }
 

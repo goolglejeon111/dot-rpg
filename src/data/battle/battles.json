@@ -1,0 +1,53 @@
+{
+  "_설명": "대본의 {\"battle\": 이름}이 여기의 전투를 연다. party = 조작할 수 있는 파티, allies = NPC 아군, waves = 차례로 나오는 적. 좌표는 전투장 안 픽셀",
+  "_결과": "outcomes: 결과별 다음 행동. win(적 전멸) / fall:인물ID(그 인물이 쓰러짐) / timeout(제한 시간) / wipe(파티 전멸) / damage(적에게 준 피해가 damage 이상). 값: {\"continue\": true} 다음 대사, {\"next\": 장면ID}, {\"ending\": 엔딩ID}. wipe가 없으면 게임 오버, win이 없으면 다음 대사",
+  "하수인들": {
+    "title": "회랑의 그림자",
+    "arena": { "w": 448, "h": 288, "floor": "corridor", "tint": "#9a86b8" },
+    "party": ["leon"],
+    "start": { "leon": [200, 170] },
+    "allies": [{ "id": "bram", "x": 250, "y": 175 }],
+    "waves": [
+      [{ "enemy": "gnosis", "x": 380, "y": 120 }, { "enemy": "gnosis", "x": 400, "y": 200 }, { "enemy": "gnosis", "x": 60, "y": 150 }],
+      [{ "enemy": "gnosis", "x": 40, "y": 110 }, { "enemy": "gnosis", "x": 410, "y": 230 }],
+      [{ "enemy": "gnosis", "x": 230, "y": 60 }, { "enemy": "gnosis", "x": 60, "y": 240 }]
+    ],
+    "exp": 30,
+    "guide": "WASD 이동 · 왼쪽 클릭 공격 · Space 점프"
+  },
+  "침입자": {
+    "title": "침입자",
+    "arena": { "w": 448, "h": 288, "floor": "corridor", "tint": "#b8869a" },
+    "party": ["leon"],
+    "start": { "leon": [120, 170] },
+    "waves": [[{ "enemy": "marcion_hooded", "x": 330, "y": 150 }]],
+    "outcomes": { "damage": { "continue": true }, "wipe": { "continue": true } },
+    "damage": 150,
+    "exp": 60,
+    "guide": "붉게 빛나는 공격은 막을 수 없습니다. 바닥이 붉어지면 공격해서 시전을 끊으세요"
+  },
+  "test_branch": {
+    "title": "갈래 전투 시험",
+    "arena": { "w": 448, "h": 288, "floor": "corridor", "tint": "#86a8b8" },
+    "party": ["leon", "galia"],
+    "start": { "leon": [200, 160], "galia": [180, 200] },
+    "allies": [{ "id": "bram", "x": 240, "y": 200 }],
+    "waves": [
+      [{ "enemy": "gnosis", "x": 380, "y": 120 }, { "enemy": "gnosis", "x": 400, "y": 220 }],
+      [{ "enemy": "mob_royal_knight", "x": 60, "y": 150 }]
+    ],
+    "timeLimit": 60,
+    "outcomes": {
+      "win": { "next": "test_win" },
+      "fall:bram": { "next": "test_fall" },
+      "timeout": { "next": "test_timeout" },
+      "wipe": { "ending": "test_dead" }
+    },
+    "exp": 0,
+    "guide": "이기기 / 브람 쓰러짐 / 60초 / 전멸 → 각각 다른 장면 (F6 적 전멸, F7 브람 쓰러뜨리기, F8 시간 끝, F9 파티 전멸)"
+  },
+  "_cutscene": "체력 0 연출 전투장 (대본의 {\"hpZero\": ...})",
+  "hpZero": {
+    "arena": { "w": 448, "h": 288, "floor": "corridor", "tint": "#b88686" }
+  }
+}

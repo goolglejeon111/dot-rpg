@@ -1,0 +1,15 @@
+{
+  "_설명": "합동 기술 (R). 지금은 데이터만 있고 잠겨 있음. fx = 쓸 이펙트(이미 있는 것을 조합)",
+  "combos": [
+    { "pair": ["leon", "elysia"], "name": "룬의 검", "text": "룬으로 적을 묶고 오러로 일직선을 벰", "aim": "facing", "fx": ["elysia_rune", "leon_thrust"] },
+    { "pair": ["leon", "karg"], "name": "찢고 베기", "text": "카르크가 방어막을 찢고 레온이 오러 찌르기로 마무리", "aim": "facing", "fx": ["karg_fang", "leon_thrust"] },
+    { "pair": ["leon", "galia"], "name": "스승과 제자", "text": "엇갈리며 연속으로 베는 오러 검술", "aim": "self", "fx": ["galia_cleave", "leon_slash3"] },
+    { "pair": ["leon", "serena"], "name": "기사의 맹세", "text": "세레나의 명령을 받은 강화 맹세의 검", "aim": "facing", "fx": ["serena_command", "leon_oath"] },
+    { "pair": ["leon", "adrian"], "name": "검과 방패", "text": "방패로 적을 몰아 모으고 레온이 한꺼번에 벰", "aim": "facing", "fx": ["adrian_charge", "leon_slash3"] },
+    { "pair": ["elysia", "karg"], "name": "사냥", "text": "카르크가 적을 몰고 엘리시아가 범위 폭발", "aim": "self", "fx": ["karg_dash", "elysia_overload"] },
+    { "pair": ["elysia", "serena"], "name": "언니와 황녀", "text": "세레나가 적을 멈추고 엘리시아가 마력탄을 퍼부음", "aim": "self", "fx": ["serena_awe", "elysia_bolt"] },
+    { "pair": ["galia", "adrian"], "name": "성벽", "text": "나란히 돌진하며 앞의 적을 밀어냄", "aim": "facing", "fx": ["adrian_charge", "galia_brace"] },
+    { "pair": ["galia", "serena"], "name": "근위의 검", "text": "세레나를 지키며 주변을 휩쓺", "aim": "self", "fx": ["galia_taunt", "galia_cleave"] },
+    { "pair": ["karg", "adrian"], "name": "방패 뛰어넘기", "text": "방패를 딛고 뛰어올라 내리꽂음", "aim": "facing", "fx": ["adrian_block", "galia_quake"] }
+  ]
+}

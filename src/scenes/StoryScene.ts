@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import type { BattleResult, BattleStart } from '../battle/BattleScene';
+import { clearStory } from '../battle/progress';
 import { characters, stories } from '../game/data';
 import { gameState, type StateData } from '../game/GameState';
 import { makeBodyPlaceholder, PORTRAIT_H } from '../game/placeholders';
@@ -367,7 +369,8 @@ export class StoryScene extends Phaser.Scene {
     const sc = this.scene_;
     const node: StoryNode | undefined = sc.nodes[this.nodeIdx];
     this.monoIdx = 0;
-    if (node && ('text' in node || 'monologue' in node || 'choices' in node)) this.saveHere();
+    // 전투에서 지면(게임 오버) 이 저장부터 다시 시작한다
+    if (node && ('text' in node || 'monologue' in node || 'choices' in node || 'battle' in node)) this.saveHere();
     if (!node) {
       // 장면 끝: 다음 장면으로 (선택지로만 들어가는 장면은 건너뛴다)
       let next = this.sceneIdx + 1;
@@ -382,8 +385,9 @@ export class StoryScene extends Phaser.Scene {
     } else if ('choices' in node) {
       this.showChoices(node.choices);
     } else if ('battle' in node) {
-      console.info(`[story] 전투 자리(${node.battle}): ${node.note ?? ''} — 지금은 건너뜁니다`);
-      this.nextNode();
+      this.startBattle({ battle: node.battle });
+    } else if ('hpZero' in node) {
+      this.startBattle({ battle: 'hpZero', hpZero: { who: node.hpZero, by: node.by ?? 'mob_royal_knight', count: node.count ?? 3 } });
     } else if ('place' in node) {
       this.setPlace(node.place);
       this.nextNode();
@@ -394,6 +398,44 @@ export class StoryScene extends Phaser.Scene {
       gameState.applyEffects(node);
       this.showChapter(node.chapter);
     }
+  }
+
+  // ---------- 전투 ----------
+
+  /** 대사창을 닫고 전투 화면으로. 끝나면 결과에 따라 다음 대사·장면·엔딩, 또는 게임 오버 */
+  private startBattle(b: Omit<BattleStart, 'onEnd'>) {
+    this.mode = 'busy';
+    this.toggleAuto(false);
+    this.cameras.main.fadeOut(350, 0, 0, 0);
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      this.clearText();
+      for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
+      this.scene.launch('Battle', { ...b, onEnd: (r: BattleResult) => this.afterBattle(r) } satisfies BattleStart);
+      this.scene.sleep();
+    });
+  }
+
+  private afterBattle(r: BattleResult) {
+    this.scene.wake();
+    const a = r.action;
+    if (a === 'gameover-retry') {
+      // 가장 최근 저장 지점부터 다시
+      const cp = save.checkpoint;
+      if (!cp) return this.scene.start('Title');
+      gameState.restore(cp);
+      return this.scene.start('Story', { story: cp.story, scene: cp.scene, node: cp.node, returnTo: this.start.returnTo } satisfies StoryStartData);
+    }
+    if (a === 'gameover-title') return this.scene.start('Title');
+    this.cameras.main.fadeIn(400, 0, 0, 0);
+    this.time.delayedCall(350, () => {
+      if (a.next) {
+        const target = this.story.scenes.findIndex((s) => s.id === a.next);
+        if (target >= 0) return this.enterScene(target);
+        console.error(`[story] 전투 결과의 장면이 없습니다: ${a.next}`);
+      }
+      if (a.ending) return this.showEnding(a.ending);
+      this.nextNode();
+    });
   }
 
   private nextNode() {
@@ -456,7 +498,7 @@ export class StoryScene extends Phaser.Scene {
 
   /**
    * 스킵: 다음에 장소가 바뀌는 곳(다음 장면, 또는 장면 안의 장소 변경) 바로 뒤로 건너뛴다.
-   * 선택지·엔딩·막 끝은 건너뛰지 않고 그 앞에서 멈춘다. 건너뛴 대사의 효과(플래그 등)는 적용한다.
+   * 선택지·엔딩·막 끝·전투는 건너뛰지 않고 그 앞에서 멈춘다. 건너뛴 대사의 효과(플래그 등)는 적용한다.
    */
   private skipToNextPlace() {
     if (this.overlay || this.logView) return;
@@ -465,7 +507,7 @@ export class StoryScene extends Phaser.Scene {
     let i = this.nodeIdx + 1;
     for (; i < nodes.length; i++) {
       const n = nodes[i];
-      if ('place' in n || 'choices' in n || 'ending' in n || 'chapter' in n) break;
+      if ('place' in n || 'choices' in n || 'ending' in n || 'chapter' in n || 'battle' in n || 'hpZero' in n) break; // 전투는 건너뛰지 않음
       if ('text' in n) gameState.applyEffects(n);
     }
     this.toggleAuto(false);
@@ -795,6 +837,7 @@ export class StoryScene extends Phaser.Scene {
     this.mode = 'end';
     this.toggleAuto(false);
     const def = this.story.chapters[id];
+    clearStory(this.story.id); // 다음 구간이 열려 최대 레벨이 오른다
     const cp = save.checkpoint;
     save.setCheckpoint({
       story: this.story.id,

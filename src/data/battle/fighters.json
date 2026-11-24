@@ -1,0 +1,110 @@
+{
+  "_설명": "파티 인물과 NPC 아군의 전투 수치. 시간은 ms, 거리는 픽셀(월드 1배 기준). hp/atk/def는 1레벨 값, grow는 레벨마다 더하는 값",
+  "_공격": "attack.hits = 연속 공격 한 타씩. mult 공격력 배율, range 사거리, arc 부채꼴 각도, windup 준비, active 맞는 순간, recover 회복, step 앞으로 내딛는 거리, fx 이펙트, cols 전투 동작 그림의 열 [준비, 휘두름]",
+  "party": {
+    "leon": {
+      "name": "레온", "speed": 82, "hp": 120, "atk": 12, "def": 4, "grow": { "hp": 14, "atk": 2, "def": 1 },
+      "color": "white", "gauge": { "name": "오러", "fill": "white", "perHit": 8, "perParry": 25 },
+      "stamina": 100,
+      "attack": {
+        "chainWindow": 320,
+        "hits": [
+          { "mult": 1.0, "range": 30, "arc": 120, "windup": 90, "active": 70, "recover": 130, "step": 3, "fx": "leon_slash1", "cols": [0, 1] },
+          { "mult": 1.0, "range": 30, "arc": 120, "windup": 80, "active": 70, "recover": 130, "step": 3, "fx": "leon_slash2", "cols": [2, 3] },
+          { "mult": 1.6, "range": 38, "arc": 140, "windup": 160, "active": 90, "recover": 260, "step": 10, "fx": "leon_slash3", "cols": [4, 5], "heavy": true }
+        ]
+      },
+      "evade": { "type": "guard", "name": "막기", "cooldown": 1000, "maxHold": 2200, "drain": 40, "blockCost": 14, "parryWindow": 220, "regen": 35, "fx": "leon_guard" },
+      "skill": { "name": "오러 찌르기", "text": "앞으로 빠르게 돌진하며 찌름. 관통, 막기 자세를 무너뜨림", "aim": "facing", "cooldown": 6000, "fx": "leon_thrust" },
+      "ult": { "name": "맹세의 검", "text": "오러를 모아 크게 내려침. 막을 수 없는 공격, 빛의 방어막을 깸", "aim": "facing", "fx": "leon_oath" }
+    },
+    "galia": {
+      "name": "갈리아", "speed": 72, "hp": 170, "atk": 15, "def": 7, "grow": { "hp": 18, "atk": 2, "def": 2 },
+      "color": "crimson", "gauge": { "name": "오러", "fill": "white", "perHit": 8 },
+      "stamina": 100,
+      "attack": {
+        "chainWindow": 360,
+        "hits": [
+          { "mult": 1.2, "range": 40, "arc": 170, "windup": 220, "active": 90, "recover": 240, "step": 4, "fx": "galia_cleave", "cols": [0, 1], "push": 14 },
+          { "mult": 1.5, "range": 42, "arc": 170, "windup": 240, "active": 90, "recover": 320, "step": 6, "fx": "galia_cleave", "cols": [2, 3], "push": 18, "flipFx": true }
+        ]
+      },
+      "evade": { "type": "brace", "name": "버티기", "cooldown": 3000, "fx": "galia_brace" },
+      "skill": { "name": "단장의 호령", "text": "주변 적의 공격을 끌어옴(도발). 잠깐 받는 피해 감소", "aim": "self", "cooldown": 9000, "fx": "galia_taunt" },
+      "ult": { "name": "대지 가르기", "text": "대검을 내리꽂아 주변 적을 쓰러뜨리고 잠깐 일어나지 못하게 함", "aim": "self", "fx": "galia_quake" }
+    },
+    "elysia": {
+      "name": "엘리시아", "speed": 78, "hp": 90, "atk": 13, "def": 2, "grow": { "hp": 10, "atk": 3, "def": 1 },
+      "color": "purple", "gauge": { "name": "과부하", "fill": "purple", "perHit": 6 },
+      "stamina": 100,
+      "attack": {
+        "chainWindow": 260,
+        "hits": [
+          { "mult": 0.8, "range": 140, "arc": 20, "windup": 120, "active": 40, "recover": 120, "step": 0, "fx": "elysia_bolt", "cols": [8, 1], "projectile": 180 },
+          { "mult": 0.8, "range": 140, "arc": 20, "windup": 100, "active": 40, "recover": 160, "step": 0, "fx": "elysia_bolt", "cols": [9, 3], "projectile": 180 }
+        ]
+      },
+      "evade": { "type": "blink", "name": "순간이동", "cooldown": 4000, "fx": "elysia_blink" },
+      "skill": { "name": "룬 결계", "text": "바닥의 룬 안의 적을 느리게 하고 계속 피해", "aim": "self", "cooldown": 10000, "fx": "elysia_rune" },
+      "ult": { "name": "마력 폭주", "text": "주변 전체 큰 폭발. 사용 후 잠깐 움직이지 못함", "aim": "self", "fx": "elysia_overload" }
+    },
+    "karg": {
+      "name": "카르크", "speed": 96, "hp": 110, "atk": 10, "def": 3, "grow": { "hp": 12, "atk": 2, "def": 1 },
+      "color": "rust", "gauge": { "name": "야성", "fill": "rust", "perHit": 6 },
+      "stamina": 100,
+      "attack": {
+        "chainWindow": 260,
+        "hits": [
+          { "mult": 0.6, "range": 26, "arc": 110, "windup": 50, "active": 50, "recover": 70, "step": 3, "fx": "karg_slash", "cols": [0, 1] },
+          { "mult": 0.6, "range": 26, "arc": 110, "windup": 50, "active": 50, "recover": 70, "step": 3, "fx": "karg_slash", "cols": [2, 3], "flipFx": true },
+          { "mult": 0.7, "range": 26, "arc": 110, "windup": 50, "active": 50, "recover": 70, "step": 3, "fx": "karg_slash", "cols": [0, 1] },
+          { "mult": 0.9, "range": 30, "arc": 120, "windup": 80, "active": 60, "recover": 180, "step": 6, "fx": "karg_slash", "cols": [4, 5], "flipFx": true }
+        ]
+      },
+      "evade": { "type": "dash", "name": "대시", "cooldown": 3000, "charges": 2, "fx": "karg_dash" },
+      "skill": { "name": "송곳니", "text": "달려들어 연속으로 베고 뒤로 빠짐. 빛의 방어막을 찢음", "aim": "facing", "cooldown": 7000, "fx": "karg_fang" },
+      "ult": { "name": "늑대의 피", "text": "각성. 속도와 공격력 대폭 상승, 모든 공격이 방어막을 찢음", "aim": "self", "fx": "karg_frenzy" }
+    },
+    "adrian": {
+      "name": "아드리안", "speed": 76, "hp": 150, "atk": 11, "def": 8, "grow": { "hp": 16, "atk": 2, "def": 2 },
+      "color": "gold", "gauge": { "name": "신성력", "fill": "gold", "perHit": 7 },
+      "stamina": 100,
+      "attack": {
+        "chainWindow": 300,
+        "hits": [
+          { "mult": 1.0, "range": 30, "arc": 120, "windup": 110, "active": 70, "recover": 150, "step": 3, "fx": "adrian_slash", "cols": [0, 1] },
+          { "mult": 1.2, "range": 30, "arc": 120, "windup": 120, "active": 70, "recover": 220, "step": 5, "fx": "adrian_slash", "cols": [2, 3], "flipFx": true }
+        ]
+      },
+      "evade": { "type": "shield", "name": "방패 막기", "cooldown": 1500, "fx": "adrian_block", "after": { "name": "방패 밀치기", "fx": "adrian_bash" } },
+      "skill": { "name": "치유의 빛", "text": "주변 아군 회복", "aim": "self", "cooldown": 12000, "fx": "adrian_heal", "after": { "name": "방패 돌진", "text": "돌진해 적을 밀어내고 잠깐 기절", "aim": "facing", "fx": "adrian_charge" } },
+      "ult": { "name": "성역", "text": "안의 아군이 받는 피해 대폭 감소", "aim": "self", "fx": "adrian_sanctuary", "after": { "name": "끊어 내는 검", "text": "앞의 적을 크게 베고 신성력, 시황제의 강화 효과 제거", "aim": "facing", "fx": "adrian_sever" } },
+      "faithFlag": "adrian_faith_lost"
+    },
+    "serena": {
+      "name": "세레나", "speed": 80, "hp": 95, "atk": 8, "def": 3, "grow": { "hp": 10, "atk": 1, "def": 1 },
+      "color": "crimson", "gauge": { "name": "각성도", "fill": "crimson", "perHit": 6 },
+      "stamina": 100,
+      "attack": {
+        "chainWindow": 280,
+        "hits": [
+          { "mult": 0.7, "range": 28, "arc": 60, "windup": 80, "active": 60, "recover": 120, "step": 4, "fx": "serena_stab", "cols": [0, 1] },
+          { "mult": 0.8, "range": 30, "arc": 60, "windup": 80, "active": 60, "recover": 180, "step": 5, "fx": "serena_stab", "cols": [2, 3] }
+        ]
+      },
+      "evade": { "type": "step", "name": "물러서기", "cooldown": 4000, "fx": "serena_step" },
+      "skill": { "name": "위압", "text": "주변 적을 잠깐 멈춤", "aim": "self", "cooldown": 9000, "fx": "serena_awe" },
+      "ult": { "name": "황제의 명령", "text": "일정 시간 모든 아군 공격력, 속도 상승, 쿨타임 가속", "aim": "party", "fx": "serena_command" }
+    }
+  },
+  "_npc": "NPC 아군: 조작할 수 없고 기절·게임 오버 계산에 들어가지 않음 (체력이 1 아래로 내려가지 않음)",
+  "npc": {
+    "bram": {
+      "name": "브람", "speed": 78, "hp": 200, "atk": 10, "def": 5,
+      "attack": { "chainWindow": 300, "hits": [
+        { "mult": 1.0, "range": 30, "arc": 120, "windup": 160, "active": 70, "recover": 260, "step": 3, "fx": "leon_slash1", "cols": [0, 1], "fxTint": "warm" },
+        { "mult": 1.0, "range": 30, "arc": 120, "windup": 160, "active": 70, "recover": 420, "step": 3, "fx": "leon_slash2", "cols": [2, 3], "fxTint": "warm" }
+      ] }
+    }
+  }
+}

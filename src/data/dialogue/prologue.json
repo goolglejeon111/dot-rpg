@@ -3,8 +3,8 @@
   "title": "프롤로그: 시해의 밤",
   "source": "docs/대본/프롤로그.md",
   "endings": {
-    "prologue_dead": {"type":"dead","label":"DEAD END","title":"침소 앞의 반역자"},
-    "prologue_bad": {"type":"bad","label":"BAD END","title":"재판 없는 정의"}
+    "prologue_dead": {"type":"dead","label":"DEAD END","title":"침소 앞의 반역자","hint":"침소 앞에서, 칼끝들을 향해 검을 뽑는다면.","exp":80,"epilogue":""},
+    "prologue_bad": {"type":"bad","label":"BAD END","title":"재판 없는 정의","hint":"침소 앞에서, 조사를 믿고 검을 내려놓는다면.","exp":80,"epilogue":""}
   },
   "chapters": {
     "act1": {"title":"1막으로 이어집니다","finished":"프롤로그 끝"}
@@ -64,7 +64,7 @@
         {"speaker":"bram","expression":"surprised","text":"레온, 뒤!"},
         {"monologue":["검은 옷.","하나, 둘, 셋.","벽의 그림자에서 배어 나오듯, 사내들이 회랑을 메웠다."]},
         {"speaker":"bram","expression":"angry","text":"침입자다! 이 새끼들, 어디로 들어온 거야!"},
-        {"battle":"하수인들","note":"여기에 전투가 들어감 (지금은 건너뜀)"},
+        {"battle":"하수인들"},
         {"monologue":["칼이 부딪친다.","불꽃이 튄다."]},
         {"monologue":["베어 넘긴 사내 하나가, 쓰러지기 직전에 웃었다."]},
         {"monologue":["하얀 빛."]},
@@ -92,7 +92,7 @@
         {"speaker":"leon","expression":"angry","text":"정체를 밝혀라."},
         {"speaker":"marcion_hooded","expression":"normal","text":"알 필요 없다."},
         {"monologue":["대화는 거기서 끝났다."]},
-        {"battle":"침입자","note":"여기에 전투가 들어감 (지금은 건너뜀)"},
+        {"battle":"침입자"},
         {"monologue":["발을 내디딘다.","검 끝에 오러를 싣는다.","수련으로 쌓아 올린 생명이, 칼날 위에서 희게 타오른다."]},
         {"monologue":["닿았다."]},
         {"monologue":["칼날이 사내의 어깨를 파고들어, 그대로 빠져나간다."]},
@@ -165,6 +165,7 @@
         {"monologue":["오러를 끌어올린다."]},
         {"monologue":["그러나."]},
         {"monologue":["어깨의 상처가, 안쪽에서 타올랐다.","하얀 빛이 혈관을 따라 번진다. 오러가 흩어진다. 검을 쥔 손에서 힘이 빠져나간다."]},
+        {"hpZero":"leon","by":"mob_royal_knight","count":4},
         {"monologue":["첫 번째 칼날이 옆구리를 갈랐다.","두 번째가 허벅지를 꿰뚫었다.","무릎이 꺾인다. 바닥에 짚은 손등 위로, 세 번째 칼날이 내리꽂혔다."]},
         {"monologue":["마구 찔렸다."]},
         {"monologue":["몇 번째인지 세는 것을 그만두었을 때, 나는 폐하의 피 위에 엎드려 있었다.","내 피와 폐하의 피가 섞여, 어느 쪽이 어느 쪽인지 알 수 없었다."]},

@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "art": "node tools/pixel-art/build.mjs",
+    "art:battle": "node tools/pixel-art/gen-battle.mjs && node tools/pixel-art/build.mjs",
     "map": "node tools/map/make-village.mjs",
     "script": "node tools/script/convert.mjs",
     "script:check": "node tools/script/check.mjs"

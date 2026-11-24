@@ -1,4 +1,5 @@
 import charactersJson from '../data/characters.json';
+import { TEST_STORY } from '../dev/testStory';
 import type { CharacterDef, EndingDef, StoryData } from './types';
 
 export const characters: Record<string, CharacterDef> = {};
@@ -18,6 +19,9 @@ for (const [path, d] of Object.entries(modules)) {
   }
   stories[d.id] = d;
 }
+
+// 개발 중에만: 시험 이야기 (타이틀의 "개발 시험" 메뉴)
+if (import.meta.env.DEV) stories[TEST_STORY.id] = TEST_STORY;
 
 /** 첫 이야기 (새 게임이 시작하는 곳) */
 export const FIRST_STORY = 'prologue';

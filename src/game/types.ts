@@ -49,10 +49,22 @@ export interface ChoiceNode {
   choices: ChoiceOption[];
 }
 
-/** 나중에 전투가 들어갈 자리 (지금은 건너뜀) */
+/** 전투. battle = src/data/battle/battles.json의 전투 이름 */
 export interface BattleNode {
   battle: string;
   note?: string;
+}
+
+/**
+ * 체력 0 연출: 대사창을 닫고 who가 공격을 맞아 체력바가 0까지 떨어지며 쓰러진다 (조작 없음).
+ * 기절·게임 오버 규칙을 따르지 않는다. 끝나면 다음 대사로
+ */
+export interface HpZeroNode {
+  hpZero: string;
+  /** 공격하는 쪽 (전투 동작 그림이 있는 인물 ID) */
+  by?: string;
+  /** 공격하는 수 */
+  count?: number;
 }
 
 /** 장면 도중 장소 이름 바꾸기 */
@@ -73,6 +85,7 @@ export type StoryNode =
   | MonologueNode
   | ChoiceNode
   | BattleNode
+  | HpZeroNode
   | PlaceNode
   | EndingNode
   | ChapterNode;
@@ -94,6 +107,14 @@ export interface EndingDef {
   /** DEAD END, BAD END 등 */
   label: string;
   title: string;
+  /** 못 본 엔딩에 보이는 힌트 한 줄 */
+  hint?: string;
+  /** 보상 경험치 (트루·히든엔딩은 없음) */
+  exp?: number;
+  /** 짧은 후일담 (없으면 빈칸) */
+  epilogue?: string;
+  /** 엔딩 일러스트 파일 (없으면 임시 화면) */
+  illust?: string;
 }
 
 export interface ChapterDef {

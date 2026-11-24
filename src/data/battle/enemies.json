@@ -1,0 +1,22 @@
+{
+  "_설명": "적 수치. ai: 행동 방식, exp: 쓰러뜨렸을 때 경험치. 시간은 ms",
+  "gnosis": {
+    "name": "그노시스회 하수인", "sprite": "mob_gnosis", "hp": 36, "atk": 9, "def": 1, "speed": 52, "exp": 20,
+    "ai": "rusher",
+    "attack": { "range": 24, "windup": 420, "recover": 700, "cooldown": 900, "mult": 1.0, "fx": "hit" },
+    "selfDestruct": { "below": 0.3, "signal": 1300, "radius": 46, "mult": 2.4, "unblockable": true }
+  },
+  "marcion_hooded": {
+    "name": "침입자", "sprite": "marcion_hooded", "hp": 900, "atk": 12, "def": 3, "speed": 46, "exp": 0, "boss": true,
+    "ai": "caster",
+    "keepAway": 80,
+    "bolt": { "cast": 650, "speed": 170, "mult": 1.0, "cooldown": 1500, "unblockable": true },
+    "area": { "every": 3, "cast": 1400, "radius": 70, "mult": 1.5, "breakDamage": 20 },
+    "blink": { "cooldown": 4000, "distance": 90 }
+  },
+  "mob_royal_knight": {
+    "name": "근위기사", "sprite": "mob_royal_knight", "hp": 150, "atk": 14, "def": 6, "speed": 60, "exp": 30,
+    "ai": "rusher",
+    "attack": { "range": 30, "windup": 380, "recover": 600, "cooldown": 900, "mult": 1.0, "fx": "hit" }
+  }
+}

@@ -21,8 +21,10 @@ export const STORIES = [
     ],
     // 대사/독백 앞에 끼워 넣을 것. before = 그 대사나 독백 덩어리의 첫 줄
     inserts: [
-      { scene: 'scene2', before: '칼이 부딪친다.', node: { battle: '하수인들', note: '여기에 전투가 들어감 (지금은 건너뜀)' } },
-      { scene: 'scene3', before: '발을 내디딘다.', node: { battle: '침입자', note: '여기에 전투가 들어감 (지금은 건너뜀)' } },
+      { scene: 'scene2', before: '칼이 부딪친다.', node: { battle: '하수인들' } },
+      { scene: 'scene3', before: '발을 내디딘다.', node: { battle: '침입자' } },
+      // 체력 0 연출: 근위기사들이 레온을 공격해 체력바가 0이 되고 쓰러진 뒤 데드엔딩 독백으로
+      { scene: 'choice_draw', before: '첫 번째 칼날이 옆구리를 갈랐다.', node: { hpZero: 'leon', by: 'mob_royal_knight', count: 4 } },
       { scene: 'choice_surrender', before: '사흘 동안 지하 감옥에 갇혀 있었다.', node: { place: '지하 감옥' } },
       { scene: 'choice_surrender', before: '광장에 끌려 나왔을 때, 첫눈은 이미 진창이 되어 있었다.', node: { place: '광장' } },
       { scene: 'choice_window', before: '떨어진다.', node: { place: '해자' } },
@@ -43,6 +45,12 @@ export const STORIES = [
       { name: '레온', from: '브람, 저놈이 우두머리야. 침소로 간다!', to: '브람, 저놈이 우두머리야. 침소로 가자!' },
       { name: '레온', from: '…미안하다, 브람. 지금은 잡혀 줄 수 없어.', to: '…미안해, 브람. 지금은 잡혀 줄 수 없어.' },
     ],
+    // 엔딩 목록에서 쓰는 것: hint(못 본 엔딩의 힌트 한 줄), exp(보상 경험치. 트루·히든은 0),
+    // epilogue(짧은 후일담, 없으면 빈칸), illust(일러스트 파일. 없으면 임시 화면)
+    endingExtras: {
+      prologue_dead: { hint: '침소 앞에서, 칼끝들을 향해 검을 뽑는다면.', exp: 80, epilogue: '' },
+      prologue_bad: { hint: '침소 앞에서, 조사를 믿고 검을 내려놓는다면.', exp: 80, epilogue: '' },
+    },
     next: { id: 'act1', title: '1막으로 이어집니다' },
   },
 ];

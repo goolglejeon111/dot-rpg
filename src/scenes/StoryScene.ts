@@ -261,7 +261,11 @@ export class StoryScene extends Phaser.Scene {
     const first = this.start.scene ? this.story.scenes.findIndex((s) => s.id === this.start.scene) : 0;
     if (first < 0) console.warn(`[story] 없는 장면 id: ${this.start.scene} → 처음부터`);
     if (this.start.scene) this.enterScene(Math.max(0, first));
-    else this.showChapterCard(() => this.enterScene(0));
+    else {
+      // 챕터 화면 도중에 새로고침해도 이어하기가 남도록 먼저 저장
+      save.setCheckpoint({ story: this.story.id, scene: this.story.scenes[0].id, ...gameState.snapshot() });
+      this.showChapterCard(() => this.enterScene(0));
+    }
   }
 
   /** 새로 시작할 때 검은 화면에 "챕터: 프롤로그"를 띄운다. 클릭이나 키로 바로 넘길 수 있다 */

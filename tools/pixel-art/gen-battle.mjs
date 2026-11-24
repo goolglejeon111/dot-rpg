@@ -7,6 +7,7 @@
 //   src/data/battle/sprites.json                     게임이 읽는 스프라이트 목록 (크기, 프레임 수, 속도)
 //
 // 색은 palette.json 글자만 쓴다. 이펙트도 인물처럼 진한 윤곽선, 명암 3~4단계, 흐림 없음.
+import { CREATURES } from './creatures.mjs';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -800,6 +801,14 @@ for (const cfg of BATTLE_CHARS) {
   for (const view of VIEWS) for (let col = 0; col < COLS; col++) frames.push(battleFrame(cfg, view, col));
   CHAR_FRAMES[cfg.id] = frames;
 }
+// 1막 수로 생물 (creatures.mjs): 전투 시트 + 필드 걷기 시트
+const CHAR_CELL = {}; // id → 칸 크기 (기본 48)
+const WALK_FRAMES = {}; // id → Cv[] (32x40, 5열 x 8행)
+for (const [id, cr] of Object.entries(CREATURES)) {
+  CHAR_FRAMES[id] = cr.battle;
+  CHAR_CELL[id] = cr.cell;
+  if (cr.walk) WALK_FRAMES[id] = cr.walk;
+}
 
 // ---------------------------------------------------------------------
 // 전투 UI
@@ -1044,6 +1053,7 @@ writeFileSync(join(HERE, 'art', 'ui.txt'), uiTxt.join('\n'));
 
 const chTxt = head('인물·적 전투 동작 48x48 (열: 공격1준비, 공격1, 공격2준비, 공격2, 공격3준비, 공격3, 막기, 피격, 시전1, 시전2, 무릎, 쓰러짐 / 행: 아래, 왼쪽, 오른쪽, 위)');
 for (const [id, frames] of Object.entries(CHAR_FRAMES)) frames.forEach((f, i) => chTxt.push(`[bt_${id}_${i}]`, f.text(), ''));
+for (const [id, frames] of Object.entries(WALK_FRAMES)) frames.forEach((f, i) => chTxt.push(`[walk_${id}_${i}]`, f.text(), ''));
 writeFileSync(join(HERE, 'art', 'battle_chars.txt'), chTxt.join('\n'));
 
 // build.mjs가 만들 PNG 목록
@@ -1061,8 +1071,12 @@ for (const u of UI) {
 }
 for (const [id, frames] of Object.entries(CHAR_FRAMES)) {
   const file = `public/assets/battle/chars/${id}.png`;
-  outputs.push({ file, cell: [48, 48], columns: COLS, frames: frames.map((_, i) => `bt_${id}_${i}`) });
-  sprites.chars[id] = { file: file.replace('public/', ''), w: 48, h: 48, columns: COLS };
+  const size = CHAR_CELL[id] ?? 48;
+  outputs.push({ file, cell: [size, size], columns: COLS, frames: frames.map((_, i) => `bt_${id}_${i}`) });
+  sprites.chars[id] = { file: file.replace('public/', ''), w: size, h: size, columns: COLS };
+}
+for (const [id, frames] of Object.entries(WALK_FRAMES)) {
+  outputs.push({ file: `public/assets/sprites/${id}.png`, cell: [32, 40], columns: 5, frames: frames.map((_, i) => `walk_${id}_${i}`) });
 }
 // 확인용: 모든 이펙트를 한 장에 (한 줄에 이펙트 하나, 96x96 칸 가운데)
 const PREVIEW_CELL = 96;
@@ -1078,7 +1092,9 @@ for (const e of FX) {
 outputs.push({ file: 'tools/pixel-art/preview_effects.png', cell: [PREVIEW_CELL, PREVIEW_CELL], columns: maxFrames, frames: pv, background: 'T', scale: 1 });
 // 확인용: 인물 전투 동작
 const pc = [];
-for (const [id, frames] of Object.entries(CHAR_FRAMES)) frames.forEach((_, i) => pc.push(`bt_${id}_${i}`));
+for (const [id, frames] of Object.entries(CHAR_FRAMES)) if (!CHAR_CELL[id]) frames.forEach((_, i) => pc.push(`bt_${id}_${i}`));
+for (const id of Object.keys(CREATURES)) if (CHAR_CELL[id] === 48) CHAR_FRAMES[id].forEach((_, i) => pc.push(`bt_${id}_${i}`));
+outputs.push({ file: 'tools/pixel-art/preview_eel.png', cell: [96, 96], columns: COLS, frames: CHAR_FRAMES.sewer_eel.slice(24, 36).map((_, i) => `bt_sewer_eel_${24 + i}`), background: 'W', scale: 2 });
 outputs.push({ file: 'tools/pixel-art/preview_battle_chars.png', cell: [48, 48], columns: COLS, frames: pc, background: 'g', scale: 2 });
 
 writeFileSync(join(HERE, 'battle-outputs.json'), JSON.stringify(outputs));

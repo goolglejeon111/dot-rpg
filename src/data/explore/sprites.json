@@ -28,7 +28,25 @@
       "water",
       "water2",
       "quay",
-      "cobble"
+      "cobble",
+      "sewer_floor",
+      "sewer_floor2",
+      "sewer_edge",
+      "sewer_water",
+      "sewer_water2",
+      "sewer_wall_top",
+      "sewer_wall",
+      "cistern_floor",
+      "cellar_floor",
+      "cellar_wall",
+      "mud",
+      "mud_snow",
+      "shack_wall",
+      "shack_roof",
+      "bridge",
+      "grass",
+      "sand",
+      "river"
     ],
     "solid": [
       "wall_top",
@@ -41,7 +59,15 @@
       "castle_moss",
       "castle_base",
       "water",
-      "water2"
+      "water2",
+      "sewer_water",
+      "sewer_water2",
+      "sewer_wall_top",
+      "sewer_wall",
+      "cellar_wall",
+      "shack_wall",
+      "shack_roof",
+      "river"
     ],
     "notes": {
       "floor": "대리석 바닥",
@@ -67,7 +93,25 @@
       "water": "해자 물",
       "water2": "해자 물 (다른 물결)",
       "quay": "둑 가장자리 (물 아래쪽)",
-      "cobble": "둑 자갈길"
+      "cobble": "둑 자갈길",
+      "sewer_floor": "수로 돌길",
+      "sewer_floor2": "수로 돌길 (물웅덩이)",
+      "sewer_edge": "수로 돌길 가장자리 (아래가 물)",
+      "sewer_water": "수로 물",
+      "sewer_water2": "수로 물 (다른 물결)",
+      "sewer_wall_top": "수로 벽 윗면",
+      "sewer_wall": "수로 벽 앞면 (벽돌, 이끼)",
+      "cistern_floor": "저수조 가장자리 돌길",
+      "cellar_floor": "염색 공방 지하 흙바닥",
+      "cellar_wall": "공방 지하 회벽 (염료 자국)",
+      "mud": "빈민가 진흙 길",
+      "mud_snow": "빈민가 진흙 길 (녹다 만 눈)",
+      "shack_wall": "판잣집 벽",
+      "shack_roof": "판잣집 지붕 (눈)",
+      "bridge": "나무 다리 판",
+      "grass": "풀밭",
+      "sand": "물가 모랫길",
+      "river": "강물 (낮)"
     }
   },
   "props": {
@@ -223,6 +267,113 @@
       "frames": 2,
       "rate": 3,
       "note": "조사 표시"
+    },
+    "scorch": {
+      "file": "assets/explore/scorch.png",
+      "w": 28,
+      "h": 30,
+      "frames": 1,
+      "note": "벽의 하얀 그을린 손자국 (wall)"
+    },
+    "bones": {
+      "file": "assets/explore/bones.png",
+      "w": 30,
+      "h": 16,
+      "frames": 1,
+      "note": "저수조 가장자리의 뼈"
+    },
+    "coins": {
+      "file": "assets/explore/coins.png",
+      "w": 18,
+      "h": 10,
+      "frames": 1,
+      "note": "옛 동전 더미 (숨겨진 장소)"
+    },
+    "ladder": {
+      "file": "assets/explore/ladder.png",
+      "w": 24,
+      "h": 64,
+      "frames": 1,
+      "note": "벽에 붙은 쇠사다리 (저수조 출구)"
+    },
+    "rune_float": {
+      "file": "assets/explore/rune_float.png",
+      "w": 16,
+      "h": 16,
+      "frames": 4,
+      "rate": 6,
+      "note": "물 위에서 도는 보랏빛 룬"
+    },
+    "dye_vat": {
+      "file": "assets/explore/dye_vat.png",
+      "w": 30,
+      "h": 30,
+      "frames": 1,
+      "note": "염료 통"
+    },
+    "rune_table": {
+      "file": "assets/explore/rune_table.png",
+      "w": 40,
+      "h": 30,
+      "frames": 1,
+      "note": "룬이 그려진 탁자 (보랏빛 종이)"
+    },
+    "straw_bed": {
+      "file": "assets/explore/straw_bed.png",
+      "w": 56,
+      "h": 30,
+      "frames": 1,
+      "note": "짚 침대"
+    },
+    "cloth": {
+      "file": "assets/explore/cloth.png",
+      "w": 30,
+      "h": 44,
+      "frames": 1,
+      "note": "마른 천 (줄에 걸린 염색 천)"
+    },
+    "measure_paper": {
+      "file": "assets/explore/measure_paper.png",
+      "w": 22,
+      "h": 26,
+      "frames": 1,
+      "note": "벽에 붙은 측정 기록 (wall)"
+    },
+    "notice": {
+      "file": "assets/explore/notice.png",
+      "w": 22,
+      "h": 28,
+      "frames": 1,
+      "note": "국상 공고문 (wall)"
+    },
+    "wanted": {
+      "file": "assets/explore/wanted.png",
+      "w": 18,
+      "h": 22,
+      "frames": 1,
+      "note": "벽의 수배 전단 (wall)"
+    },
+    "palisade": {
+      "file": "assets/explore/palisade.png",
+      "w": 32,
+      "h": 44,
+      "frames": 1,
+      "note": "검문소 목책"
+    },
+    "reeds": {
+      "file": "assets/explore/reeds.png",
+      "w": 32,
+      "h": 40,
+      "frames": 2,
+      "rate": 2,
+      "note": "갈대"
+    },
+    "boat": {
+      "file": "assets/explore/boat.png",
+      "w": 72,
+      "h": 32,
+      "frames": 1,
+      "note": "버려진 작은 배"
     }
   }
 }

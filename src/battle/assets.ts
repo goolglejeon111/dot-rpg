@@ -16,6 +16,7 @@ const CHARS = sprites.chars as Record<string, Sheet>;
 /** 필드 걷기 시트 (전투에도 이동·점프 동작으로 씀) */
 export const WALK_SPRITES = [
   'leon', 'serena', 'elysia', 'karg', 'adrian', 'galia', 'bram', 'marcion_hooded', 'mob_royal_knight', 'mob_gnosis',
+  'leon_hood', 'mob_citizen', 'sewer_rat', 'sewer_leech', 'imperial_spear', 'imperial_archer', 'pursuit_sword', 'pursuit_shield',
 ];
 
 export const fxInfo = (key: string) => FX[key];

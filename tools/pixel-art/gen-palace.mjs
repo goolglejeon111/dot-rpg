@@ -742,12 +742,326 @@ prop('look', 9, 9, 2, (c, i) => {
   }
 }, { rate: 3, note: '조사 표시' });
 
+// =====================================================================
+// 1막 타일과 물건 (기존 번호를 지키려고 맨 뒤에 붙인다)
+// =====================================================================
+/** 수로의 젖은 돌길 */
+function sewerFloor(c, seed) {
+  const rnd = rng(seed);
+  c.rect(0, 0, 31, 31, 'R');
+  for (let y = 0; y < 32; y += 8)
+    for (let x = (y / 8) % 2 ? -8 : 0; x < 32; x += 16) {
+      c.rect(Math.max(0, x), y, Math.min(31, x + 14), y + 6, rnd() < 0.5 ? 'T' : 'R');
+      c.rect(Math.max(0, x), y, Math.min(31, x + 14), y, 'T');
+    }
+  for (let k = 0; k < 5; k++) c.set(rnd() * 31, rnd() * 31, rnd() < 0.5 ? 'W' : 'G');
+}
+tile('sewer_floor', (c) => sewerFloor(c, 41), { note: '수로 돌길' });
+tile('sewer_floor2', (c) => {
+  sewerFloor(c, 43);
+  c.ellipse(20, 20, 6, 2.5, 'W'); // 물웅덩이
+  c.rect(17, 19, 20, 19, 'A');
+}, { note: '수로 돌길 (물웅덩이)' });
+tile('sewer_edge', (c) => {
+  sewerFloor(c, 47);
+  c.rect(0, 27, 31, 31, 'T');
+  c.rect(0, 27, 31, 27, 't');
+  c.rect(0, 31, 31, 31, 'k');
+}, { note: '수로 돌길 가장자리 (아래가 물)' });
+/** 탁한 수로 물 */
+function sewerWater(c, seed) {
+  const rnd = rng(seed);
+  c.rect(0, 0, 31, 31, 'k');
+  for (let i = 0; i < 8; i++) {
+    const x = rnd() * 26;
+    const y = 2 + rnd() * 28;
+    c.rect(x, y, x + 2 + rnd() * 4, y, rnd() < 0.5 ? 'Q' : 'W');
+  }
+  for (let i = 0; i < 2; i++) c.set(rnd() * 31, rnd() * 31, 'G');
+}
+tile('sewer_water', (c) => sewerWater(c, 51), { solid: true, note: '수로 물' });
+tile('sewer_water2', (c) => sewerWater(c, 53), { solid: true, note: '수로 물 (다른 물결)' });
+/** 수로 벽돌 (위에서 본 벽 윗면, 앞면) */
+tile('sewer_wall_top', (c) => {
+  c.rect(0, 0, 31, 31, 'K');
+  for (let y = 3; y < 32; y += 8) c.rect(0, y, 31, y, 'k');
+  c.rect(0, 0, 31, 0, 'R');
+}, { solid: true, note: '수로 벽 윗면' });
+tile('sewer_wall', (c) => {
+  const rnd = rng(57);
+  c.rect(0, 0, 31, 31, 'R');
+  for (let y = 0; y < 32; y += 6) {
+    c.rect(0, y + 5, 31, y + 5, 'k');
+    for (let x = (y / 6) % 2 ? 5 : 0; x < 32; x += 11) c.rect(x, y, x, y + 5, 'k');
+    for (let x = 0; x < 32; x++) if (rnd() < 0.08) c.set(x, y + 1, 'T');
+  }
+  // 이끼와 물자국
+  for (let x = 0; x < 32; x++) if (rnd() < 0.3) c.rect(x, 26 + Math.floor(rnd() * 4), x, 31, 'Q');
+}, { solid: true, note: '수로 벽 앞면 (벽돌, 이끼)' });
+
+/** 저수조 (둥근 벽 안쪽, 물은 sewer_water 그대로) */
+tile('cistern_floor', (c) => {
+  sewerFloor(c, 61);
+  for (let x = 0; x < 32; x += 4) c.set(x, 15, 'k');
+}, { note: '저수조 가장자리 돌길' });
+
+/** 은신처: 염색 공방 지하 (흙 바닥, 회벽) */
+tile('cellar_floor', (c) => {
+  const rnd = rng(71);
+  c.rect(0, 0, 31, 31, 'D');
+  for (let k = 0; k < 14; k++) c.set(rnd() * 31, rnd() * 31, rnd() < 0.5 ? 'C' : 'd');
+  for (let k = 0; k < 3; k++) c.set(rnd() * 31, rnd() * 31, 'u'); // 염료 얼룩
+}, { note: '염색 공방 지하 흙바닥' });
+tile('cellar_wall', (c) => {
+  c.rect(0, 0, 31, 31, 'V');
+  c.rect(0, 26, 31, 31, 'O');
+  c.rect(0, 26, 31, 26, 'P');
+  for (let y = 4; y < 26; y += 7) c.rect(0, y, 31, y, 't');
+  c.ellipse(9, 14, 3, 5, 'u');
+  c.ellipse(24, 9, 2, 3, 'X');
+}, { solid: true, note: '공방 지하 회벽 (염료 자국)' });
+
+/** 빈민가: 진흙 길, 녹다 만 눈, 판잣집 */
+function mud(c, seed, snow) {
+  const rnd = rng(seed);
+  c.rect(0, 0, 31, 31, 'D');
+  for (let k = 0; k < 16; k++) c.set(rnd() * 31, rnd() * 31, rnd() < 0.5 ? 'C' : 'd');
+  if (snow) {
+    c.ellipse(10, 9, 7, 4, (d) => (d < 0.7 ? 'v' : 'V'));
+    c.ellipse(24, 24, 5, 3, (d) => (d < 0.7 ? 'v' : 'V'));
+  }
+}
+tile('mud', (c) => mud(c, 81, false), { note: '빈민가 진흙 길' });
+tile('mud_snow', (c) => mud(c, 83, true), { note: '빈민가 진흙 길 (녹다 만 눈)' });
+tile('shack_wall', (c) => {
+  c.rect(0, 0, 31, 31, 'o');
+  for (let x = 0; x < 32; x += 6) {
+    c.rect(x, 0, x, 31, 'P');
+    c.rect(x + 1, 0, x + 1, 31, 'p');
+  }
+  c.rect(0, 12, 31, 13, 'O');
+  c.rect(0, 30, 31, 31, 'P');
+}, { solid: true, note: '판잣집 벽' });
+tile('shack_roof', (c) => {
+  c.rect(0, 0, 31, 31, 'Z');
+  for (let y = 2; y < 32; y += 5) c.rect(0, y, 31, y, 'X');
+  // 녹다 만 눈
+  c.rect(0, 0, 31, 4, 'v');
+  for (let x = 0; x < 32; x += 3) c.rect(x, 5, x, 6 + (x % 4), 'V');
+}, { solid: true, note: '판잣집 지붕 (눈)' });
+
+/** 다리, 강둑 */
+tile('bridge', (c) => {
+  for (let y = 0; y < 32; y += 8) {
+    c.rect(0, y, 31, y + 6, 'o');
+    c.rect(0, y, 31, y, 'p');
+    c.rect(0, y + 7, 31, y + 7, 'P');
+  }
+  for (const x of [3, 28]) for (let y = 1; y < 32; y += 8) c.set(x, y + 3, 'O');
+}, { note: '나무 다리 판' });
+tile('grass', (c) => {
+  const rnd = rng(91);
+  c.rect(0, 0, 31, 31, 'g');
+  for (let k = 0; k < 22; k++) {
+    const x = rnd() * 31;
+    const y = rnd() * 30;
+    c.set(x, y, rnd() < 0.5 ? 'G' : 'q');
+    c.set(x, y + 1, 'G');
+  }
+}, { note: '풀밭' });
+tile('sand', (c) => {
+  const rnd = rng(93);
+  c.rect(0, 0, 31, 31, 'c');
+  for (let k = 0; k < 18; k++) c.set(rnd() * 31, rnd() * 31, rnd() < 0.6 ? 'd' : 'D');
+}, { note: '물가 모랫길' });
+tile('river', (c) => {
+  const rnd = rng(95);
+  c.rect(0, 0, 31, 31, 'A');
+  for (let i = 0; i < 8; i++) {
+    const x = rnd() * 26;
+    const y = 2 + rnd() * 28;
+    c.rect(x, y, x + 3 + rnd() * 5, y, rnd() < 0.6 ? 'a' : 'W');
+  }
+}, { solid: true, note: '강물 (낮)' });
+
+// ---- 1막 물건 ----
+prop('scorch', 28, 30, 1, (c) => {
+  // 벽에 줄지어 찍힌 하얀 손바닥 자국
+  for (const [x, y] of [[4, 6], [14, 14], [22, 4]]) {
+    c.ellipse(x + 2, y + 5, 2.6, 3, 'V');
+    for (let f = 0; f < 4; f++) c.rect(x + f * 1.3, y, x + f * 1.3, y + 2, 'V');
+    c.set(x + 2, y + 5, 'v');
+  }
+}, { note: '벽의 하얀 그을린 손자국 (wall)' });
+prop('bones', 30, 16, 1, (c) => {
+  c.line(2, 12, 16, 9, 'V', 2);
+  c.disc(2, 12, 2, 'v');
+  c.disc(16, 9, 2, 'v');
+  c.ellipse(23, 9, 5, 4, (d) => (d < 0.6 ? 'v' : 'V'));
+  c.set(21, 9, 'k');
+  c.set(25, 9, 'k');
+  c.line(8, 15, 26, 14, 'V');
+  c.outline('T');
+}, { note: '저수조 가장자리의 뼈' });
+prop('coins', 18, 10, 1, (c) => {
+  for (const [x, y] of [[4, 6], [9, 7], [13, 6], [7, 4], [11, 3], [9, 1]]) c.ellipse(x, y + 1, 2.4, 1.4, (d) => (d < 0.5 ? 'y' : 'Y'));
+  c.outline('O');
+}, { note: '옛 동전 더미 (숨겨진 장소)' });
+prop('ladder', 24, 64, 1, (c) => {
+  c.rect(3, 0, 5, 63, 'M');
+  c.rect(18, 0, 20, 63, 'M');
+  for (let y = 4; y < 64; y += 9) c.rect(3, y, 20, y + 1, 'm');
+  c.edge('L');
+}, { note: '벽에 붙은 쇠사다리 (저수조 출구)' });
+prop('rune_float', 16, 16, 4, (c, i) => {
+  const a = (i / 4) * Math.PI * 2;
+  c.disc(8, 8, 6.5, (t) => (t > 0.8 ? 'I' : '.'));
+  for (let k = 0; k < 3; k++) {
+    const ang = a + (k * Math.PI * 2) / 3;
+    c.line(8, 8, 8 + Math.cos(ang) * 5, 8 + Math.sin(ang) * 5, 'i');
+  }
+  c.disc(8, 8, 1.5, 'v');
+}, { rate: 6, note: '물 위에서 도는 보랏빛 룬' });
+prop('dye_vat', 30, 30, 1, (c) => {
+  c.rect(2, 8, 27, 29, (x) => (x < 6 ? 'p' : x > 23 ? 'O' : 'o'));
+  for (const y of [12, 24]) c.rect(2, y, 27, y + 1, 'L');
+  c.ellipse(14.5, 8, 12.5, 4, 'o');
+  c.ellipse(14.5, 8, 10.5, 3, (d) => (d < 0.6 ? 'u' : 'I'));
+  c.edge('P');
+}, { note: '염료 통' });
+prop('rune_table', 40, 30, 1, (c) => {
+  c.rect(1, 6, 38, 17, 'o');
+  c.rect(1, 6, 38, 7, 'p');
+  c.rect(1, 17, 38, 18, 'O');
+  for (const x of [3, 34]) c.rect(x, 18, x + 2, 29, 'O');
+  // 탁자에 그린 룬, 보랏빛 종이 묶음
+  c.ellipse(13, 12, 7, 3.5, (d) => (d > 0.75 ? 'i' : '.'));
+  c.line(9, 12, 17, 12, 'i');
+  c.rect(26, 9, 33, 13, 'i');
+  c.rect(26, 11, 33, 11, 'u');
+  c.edge('P');
+}, { note: '룬이 그려진 탁자 (보랏빛 종이)' });
+prop('straw_bed', 56, 30, 1, (c) => {
+  c.ellipse(28, 18, 26, 10, (d) => (d < 0.5 ? 'y' : d < 0.85 ? 'Y' : 'O'));
+  const rnd = rng(7);
+  for (let k = 0; k < 30; k++) {
+    const x = 6 + rnd() * 44;
+    const y = 12 + rnd() * 12;
+    c.line(x, y, x + 3, y - 1, 'O');
+  }
+  c.rect(8, 14, 20, 20, 'V'); // 마른 천
+  c.edge('P');
+}, { note: '짚 침대' });
+prop('cloth', 30, 44, 1, (c) => {
+  c.rect(0, 0, 29, 1, 'P');
+  for (const [x, col] of [[2, 'u'], [11, 'X'], [20, 'a']]) {
+    c.rect(x, 2, x + 7, 40, col);
+    for (let y = 6; y < 40; y += 5) c.set(x + 3, y, 'k');
+  }
+}, { note: '마른 천 (줄에 걸린 염색 천)' });
+prop('measure_paper', 22, 26, 1, (c) => {
+  c.rect(0, 0, 21, 25, 'v');
+  for (let y = 3; y < 20; y += 2) c.rect(2, y, 19, y, 'T');
+  for (let y = 20; y < 25; y += 2) c.rect(2, y, 19, y, 'X');
+  c.edge('V');
+}, { note: '벽에 붙은 측정 기록 (wall)' });
+prop('notice', 22, 28, 1, (c) => {
+  c.rect(0, 0, 21, 27, 'V');
+  c.rect(3, 2, 18, 4, 'K');
+  for (let y = 8; y < 24; y += 3) c.rect(3, y, 18, y, 'T');
+  c.rect(0, 0, 21, 0, 'K');
+  c.edge('D');
+}, { note: '국상 공고문 (wall)' });
+prop('wanted', 18, 22, 1, (c) => {
+  c.rect(0, 0, 17, 21, 'v');
+  c.rect(3, 2, 14, 3, 'X');
+  c.disc(6, 10, 3, 'S');
+  c.disc(12, 10, 3, 'S');
+  c.rect(3, 15, 14, 15, 'T');
+  c.rect(3, 18, 14, 18, 'T');
+  c.edge('V');
+}, { note: '벽의 수배 전단 (wall)' });
+prop('palisade', 32, 44, 1, (c) => {
+  for (const x of [1, 9, 17, 25]) {
+    c.rect(x, 6, x + 5, 43, (xx) => (xx === x ? 'p' : xx === x + 5 ? 'O' : 'o'));
+    for (let k = 0; k < 3; k++) c.rect(x + 1 + k, 5 - k * 2, x + 4 - k, 5 - k * 2 + 1, 'o');
+  }
+  c.rect(0, 18, 31, 20, 'O');
+  c.rect(0, 34, 31, 36, 'O');
+  c.edge('P');
+}, { note: '검문소 목책' });
+prop('reeds', 32, 40, 2, (c, i) => {
+  const rnd = rng(13);
+  for (let k = 0; k < 11; k++) {
+    const x = 2 + rnd() * 28;
+    const h = 22 + rnd() * 16;
+    const sway = i === 1 ? 2 : 0;
+    c.line(x, 39, x + sway + (rnd() - 0.5) * 3, 39 - h, rnd() < 0.5 ? 'd' : 'D');
+    c.ellipse(x + sway, 39 - h + 2, 1.2, 3, 'O');
+  }
+}, { rate: 2, note: '갈대' });
+prop('boat', 72, 32, 1, (c) => {
+  c.ellipse(36, 14, 34, 12, (d, x, y) => (y < 12 ? '.' : d < 0.55 ? 'o' : d < 0.85 ? 'O' : 'P'));
+  c.rect(4, 12, 67, 15, 'p');
+  c.rect(4, 12, 67, 12, 'c');
+  for (const x of [22, 46]) c.rect(x, 13, x + 3, 22, 'O'); // 앉는 판
+  c.line(10, 17, 30, 8, 'O', 2); // 노
+  c.edge('P');
+}, { note: '버려진 작은 배' });
+
+
+// ---- 이야기 화면 가운데에 크게 띄우는 아이템 그림 (public/assets/items/) ----
+const ITEMS = []; // { key, cv }
+function item(key, w, h, draw) {
+  const c = new Cv(w, h);
+  draw(c);
+  ITEMS.push({ key, cv: c });
+}
+item('pendant', 48, 48, (c) => {
+  // 끊어진 은 사슬과 눈 모양 펜던트, 가운데 새겨진 빛
+  for (let i = 0; i < 9; i++) {
+    c.ellipse(8 + i * 2, 4 + i * 1.6, 1.3, 1, i % 2 ? 'm' : 'M');
+    if (i < 6) c.ellipse(41 - i * 2, 4 + i * 1.6, 1.3, 1, i % 2 ? 'm' : 'M');
+  }
+  c.ellipse(24, 28, 18, 10, (d) => (d < 0.7 ? 'm' : 'M'));
+  c.ellipse(24, 28, 14, 7, (d) => (d < 0.6 ? 'l' : 'm'));
+  c.disc(24, 28, 5.5, (t) => (t < 0.45 ? 'y' : 'Y'));
+  c.disc(24, 28, 2, 'v');
+  for (const [dx, dy] of [[0, -9], [0, 9], [-9, 0], [9, 0]]) c.line(24 + dx * 0.7, 28 + dy * 0.5, 24 + dx, 28 + dy * 0.75, 'Y');
+  c.set(30, 22, 'v');
+  c.set(31, 21, 'v');
+  c.edge('L');
+});
+item('wanted_poster', 64, 84, (c) => {
+  c.rect(0, 0, 63, 83, 'V');
+  c.rect(2, 2, 61, 81, 'v');
+  c.rect(6, 6, 57, 13, 'X'); // 붉은 제목 띠
+  c.rect(6, 6, 57, 6, 'x');
+  // 얼굴 둘 (레온: 갈색 머리 / 갈리아: 은빛 머리)
+  const face = (x, hair) => {
+    c.rect(x, 18, x + 21, 43, 'V');
+    c.ellipse(x + 11, 33, 7, 8, (d) => (d < 0.7 ? 's' : 'S'));
+    c.ellipse(x + 11, 26, 8, 5, (d) => (d < 0.6 ? hair[0] : hair[1]));
+    c.set(x + 8, 33, 'k');
+    c.set(x + 14, 33, 'k');
+    c.rect(x + 9, 38, x + 13, 38, 'S');
+    c.rect(x + 2, 42, x + 20, 43, hair[1]);
+  };
+  face(7, ['h', 'H']);
+  face(35, ['m', 'M']);
+  for (let y = 50; y < 74; y += 4) c.rect(8, y, 55, y + 1, 'T');
+  c.disc(48, 74, 5, 'X');
+  c.disc(48, 74, 3, 'x');
+  c.edge('D');
+});
+
 // ---------------------------------------------------------------------
 // 파일 쓰기
 // ---------------------------------------------------------------------
 const txt = ['# 프롤로그 맵 그림 (tools/pixel-art/gen-palace.mjs가 만든 파일. 다시 실행하면 덮어씀)', ''];
 for (const t of TILES) txt.push(`[pal_${t.key}]`, t.cv.text(), '');
 for (const p of PROPS) p.frames.forEach((f, i) => txt.push(`[pal_${p.key}_${i}]`, f.text(), ''));
+for (const it of ITEMS) txt.push(`[item_${it.key}]`, it.cv.text(), '');
 writeFileSync(join(HERE, 'art', 'palace.txt'), txt.join('\n'));
 
 const COLS = 8;
@@ -770,6 +1084,7 @@ for (const p of PROPS) {
   outputs.push({ file, cell: [p.w, p.h], frames: p.frames.map((_, i) => `pal_${p.key}_${i}`) });
   sprites.props[p.key] = { file: file.replace('public/', ''), w: p.w, h: p.h, frames: p.frames.length, rate: p.rate, note: p.note };
 }
+for (const it of ITEMS) outputs.push({ file: `public/assets/items/${it.key}.png`, cell: [it.cv.w, it.cv.h], frames: [`item_${it.key}`] });
 // 확인용 한 장
 const CELL = 144;
 const pv = [

@@ -1062,6 +1062,24 @@
       "w": 48,
       "h": 48,
       "columns": 12
+    },
+    "sewer_rat": {
+      "file": "assets/battle/chars/sewer_rat.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "sewer_leech": {
+      "file": "assets/battle/chars/sewer_leech.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "sewer_eel": {
+      "file": "assets/battle/chars/sewer_eel.png",
+      "w": 96,
+      "h": 96,
+      "columns": 12
     }
   }
 }

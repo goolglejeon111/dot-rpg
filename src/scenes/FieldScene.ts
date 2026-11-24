@@ -11,7 +11,11 @@ type Dir = 'down' | 'left' | 'right' | 'up';
 const DIRS: Dir[] = ['down', 'left', 'right', 'up']; // 스프라이트 시트 행 순서
 const WATER = [6, 7]; // terrain 타일 번호 + 1 (Tiled는 1부터 셈)
 
-/** 인물 스프라이트 시트 (32x40). 모두 5열(서기, 걷기1~4) x 4행(아래, 왼쪽, 오른쪽, 위) */
+/**
+ * 인물 스프라이트 시트 (32x40). 모두 5열 x 8행
+ *   0~3행: 서기, 걷기1~4 (아래, 왼쪽, 오른쪽, 위)
+ *   4~7행: 점프 웅크림, 뛰어오름, 꼭대기, 착지, 서기 (같은 방향 순서). 높이는 코드가 스프라이트를 올려서 만든다
+ */
 const CHARACTER_SPRITES = [
   'leon', 'serena', 'elysia', 'karg', 'adrian', 'galia',
   'bram', 'oswald', 'marcion_hooded', 'marcion', 'ignatius', 'herman', 'cassius',
@@ -271,18 +275,26 @@ export class FieldScene extends Phaser.Scene {
       .setDepth(100000);
   }
 
-  /** 모든 인물의 걷기 애니메이션: {인물ID}-walk-{방향} */
+  /** 모든 인물의 걷기·점프 애니메이션: {인물ID}-walk-{방향}, {인물ID}-jump-{방향} */
   private makeAnims() {
     for (const id of CHARACTER_SPRITES) {
       DIRS.forEach((dir, row) => {
-        const key = `${id}-walk-${dir}`;
-        if (this.anims.exists(key)) return;
-        this.anims.create({
-          key,
-          frames: this.anims.generateFrameNumbers(id, { start: row * 5 + 1, end: row * 5 + 4 }),
-          frameRate: 8,
-          repeat: -1,
-        });
+        if (!this.anims.exists(`${id}-walk-${dir}`)) {
+          this.anims.create({
+            key: `${id}-walk-${dir}`,
+            frames: this.anims.generateFrameNumbers(id, { start: row * 5 + 1, end: row * 5 + 4 }),
+            frameRate: 8,
+            repeat: -1,
+          });
+        }
+        if (!this.anims.exists(`${id}-jump-${dir}`)) {
+          const j = (4 + row) * 5;
+          this.anims.create({
+            key: `${id}-jump-${dir}`,
+            frames: this.anims.generateFrameNumbers(id, { frames: [j, j + 1, j + 2, j + 2, j + 1, j + 3, j + 4] }),
+            frameRate: 12,
+          });
+        }
       });
     }
   }

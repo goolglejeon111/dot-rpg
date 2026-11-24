@@ -25,6 +25,35 @@ function walkRow(body, legs, extra = {}, remap) {
   ];
 }
 
+/**
+ * 점프 5칸: 웅크림(몸 2픽셀 내려감), 뛰어오름(발 3픽셀 당김), 꼭대기(발 4픽셀), 착지 웅크림, 서기.
+ * 높이(공중에 뜨는 정도)는 게임 코드가 스프라이트를 올려서 만들고, 그림자는 땅에 남긴다.
+ */
+function jumpRow(body, legs, extra = {}, remap) {
+  const f = (legY, bodyY) => ({
+    ...extra,
+    layers: [
+      { art: `${legs}_stand`, y: legY, remap },
+      { art: body, y: bodyY },
+    ],
+  });
+  return [f(LEGS_Y, 2), f(LEGS_Y - 3, 0), f(LEGS_Y - 4, 0), f(LEGS_Y, 2), f(LEGS_Y, 0)];
+}
+
+/** 걷기 4행 + 점프 4행 (아래, 왼쪽, 오른쪽, 위) */
+function fullSheet(b, remap) {
+  return [
+    ...walkRow(b('down'), 'leon_legs_front', {}, remap),
+    ...walkRow(b('right'), 'leon_legs_side', { flipX: true }, remap),
+    ...walkRow(b('right'), 'leon_legs_side', {}, remap),
+    ...walkRow(b('up'), 'leon_legs_front', {}, remap),
+    ...jumpRow(b('down'), 'leon_legs_front', {}, remap),
+    ...jumpRow(b('right'), 'leon_legs_side', { flipX: true }, remap),
+    ...jumpRow(b('right'), 'leon_legs_side', {}, remap),
+    ...jumpRow(b('up'), 'leon_legs_front', {}, remap),
+  ];
+}
+
 /** 서 있기 한 칸 */
 const stand = (body, legs, remap, flipX = false) => ({
   flipX,
@@ -34,7 +63,11 @@ const stand = (body, legs, remap, flipX = false) => ({
   ],
 });
 
-/** 인물 시트: 5열(서기, 걷기1~4) x 4행(아래, 왼쪽, 오른쪽, 위). 파티원·NPC·모브 모두 같은 모양 */
+/**
+ * 인물 시트: 5열 x 8행. 파티원·NPC·모브 모두 같은 모양
+ *   0~3행: 걷기(서기, 걷기1~4) 아래, 왼쪽, 오른쪽, 위
+ *   4~7행: 점프(웅크림, 뛰어오름, 꼭대기, 착지, 서기) 같은 방향 순서
+ */
 function characterSheet(c) {
   const b = (v) => `${c.id}_body_${v}`;
   const remap = Object.keys(c.legs ?? {}).length ? c.legs : undefined;
@@ -42,12 +75,7 @@ function characterSheet(c) {
     file: `public/assets/sprites/${c.id}.png`,
     cell: [32, 40],
     columns: 5,
-    frames: [
-      ...walkRow(b('down'), 'leon_legs_front', {}, remap),
-      ...walkRow(b('right'), 'leon_legs_side', { flipX: true }, remap),
-      ...walkRow(b('right'), 'leon_legs_side', {}, remap),
-      ...walkRow(b('up'), 'leon_legs_front', {}, remap),
-    ],
+    frames: fullSheet(b, remap),
   };
 }
 
@@ -85,13 +113,8 @@ export const OUTPUTS = [
   {
     file: 'public/assets/sprites/leon.png',
     cell: [32, 40],
-    columns: 5, // 행: 아래, 왼쪽, 오른쪽, 위 / 열: 서기, 걷기1~4
-    frames: [
-      ...walkRow('leon_body_down', 'leon_legs_front'),
-      ...walkRow('leon_body_right', 'leon_legs_side', { flipX: true }),
-      ...walkRow('leon_body_right', 'leon_legs_side'),
-      ...walkRow('leon_body_up', 'leon_legs_front'),
-    ],
+    columns: 5, // characterSheet와 같은 배치 (걷기 4행 + 점프 4행)
+    frames: fullSheet((v) => `leon_body_${v}`),
   },
   ...CHARS.map(characterSheet),
   // 확인용: 모든 인물을 한 장에 (4방향씩 가로로 두 묶음), 풀밭 배경, 3배 확대

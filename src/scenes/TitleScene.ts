@@ -23,7 +23,7 @@ export class TitleScene extends Phaser.Scene {
     this.cameras.main.fadeIn(400, 0, 0, 0);
 
     this.add
-      .text(W / 2, 170, stories[FIRST_STORY]?.title ?? 'Dot RPG', {
+      .text(W / 2, 170, '대륙전기', {
         fontFamily: FONT,
         fontSize: '44px',
         color: '#e0c27a',

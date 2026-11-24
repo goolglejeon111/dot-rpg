@@ -260,7 +260,43 @@ export class StoryScene extends Phaser.Scene {
     }
     const first = this.start.scene ? this.story.scenes.findIndex((s) => s.id === this.start.scene) : 0;
     if (first < 0) console.warn(`[story] 없는 장면 id: ${this.start.scene} → 처음부터`);
-    this.enterScene(Math.max(0, first));
+    if (this.start.scene) this.enterScene(Math.max(0, first));
+    else this.showChapterCard(() => this.enterScene(0));
+  }
+
+  /** 새로 시작할 때 검은 화면에 "챕터: 프롤로그"를 띄운다. 클릭이나 키로 바로 넘길 수 있다 */
+  private showChapterCard(then: () => void) {
+    const name = this.story.title.split(':')[0].trim();
+    const black = this.add.rectangle(0, 0, W, H, 0x000000, 1).setOrigin(0).setInteractive();
+    const text = this.add
+      .text(W / 2, H / 2, `챕터: ${name}`, { fontFamily: FONT, fontSize: '46px', color: '#e0c27a', fontStyle: 'bold' })
+      .setOrigin(0.5)
+      .setAlpha(0)
+      .setShadow(0, 4, '#000000', 10);
+    this.overlay = this.add.container(0, 0, [black, text]).setDepth(30);
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      hold.remove();
+      this.input.keyboard!.off('keydown', finish);
+      this.tweens.killTweensOf(text);
+      this.tweens.add({
+        targets: [black, text],
+        alpha: 0,
+        duration: 500,
+        onComplete: () => {
+          this.closeOverlay();
+          then();
+        },
+      });
+    };
+    this.tweens.add({ targets: text, alpha: 1, duration: 700, delay: 300 });
+    const hold = this.time.delayedCall(2600, finish);
+    this.time.delayedCall(400, () => {
+      black.once('pointerdown', finish);
+      this.input.keyboard!.on('keydown', finish);
+    });
   }
 
   // ---------- 장면 ----------

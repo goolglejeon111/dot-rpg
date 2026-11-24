@@ -244,7 +244,7 @@ export class StoryScene extends Phaser.Scene {
     makeButton(this, W - 392, 30, '로그 (L)', () => this.openLog(), small);
     this.autoBtn = makeButton(this, W - 294, 30, '자동 (A)', () => this.toggleAuto(), small);
     this.skipBtn = makeButton(this, W - 196, 30, '스킵 (S)', () => this.skipToNextPlace(), small);
-    makeButton(this, W - 72, 30, '타이틀로', () => this.leave(), { ...small, w: 112 });
+    makeButton(this, W - 72, 30, '타이틀로', () => this.confirmLeave(), { ...small, w: 112 });
 
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (p.rightButtonDown()) return;
@@ -880,6 +880,37 @@ export class StoryScene extends Phaser.Scene {
   }
 
   // ---------- 끝내기 ----------
+
+  /** 오른쪽 위 "타이틀로": 한 번 물어본 뒤 타이틀로 */
+  private confirmLeave() {
+    if (this.overlay || this.mode === 'end') return;
+    if (this.logView) this.closeLog();
+    this.time.paused = true; // 글자 찍기·자동 진행 멈춤
+    const shade = this.add.rectangle(0, 0, W, H, 0x000000, 0.6).setOrigin(0).setInteractive();
+    const box = this.add.graphics();
+    box.fillStyle(0x14121e, 0.98);
+    box.fillRoundedRect(W / 2 - 230, H / 2 - 110, 460, 220, 14);
+    box.lineStyle(3, 0xcdb88a, 1);
+    box.strokeRoundedRect(W / 2 - 230, H / 2 - 110, 460, 220, 14);
+    const msg = this.add
+      .text(W / 2, H / 2 - 40, '타이틀 화면으로 이동하시겠습니까?', { fontFamily: FONT, fontSize: '24px', color: '#ffffff' })
+      .setOrigin(0.5);
+    const close = (go: boolean) => {
+      this.input.keyboard!.off('keydown', onKey);
+      this.closeOverlay();
+      this.time.paused = false;
+      if (go) this.leave();
+    };
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === 'Escape') close(false);
+      else if (ev.key === 'Enter') close(true);
+    };
+    const opt = { w: 160, h: 50, fontSize: 21, depth: 0 };
+    const yes = makeButton(this, W / 2 - 95, H / 2 + 45, '예', () => close(true), opt);
+    const no = makeButton(this, W / 2 + 95, H / 2 + 45, '아니요', () => close(false), opt);
+    this.overlay = this.add.container(0, 0, [shade, box, msg, yes, no]).setDepth(40);
+    this.input.keyboard!.on('keydown', onKey);
+  }
 
   private leave() {
     this.mode = 'end';

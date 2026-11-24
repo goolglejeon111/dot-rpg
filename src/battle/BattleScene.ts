@@ -7,6 +7,7 @@ import { gameState } from '../game/GameState';
 import { fxInfo, makeBattleAnims, preloadBattle } from './assets';
 import { EXP_REWARD, gainExp, gainOnce, isUnlocked, levelOf, statsOf, unlockLevel, type LevelUp, type Unlock } from './progress';
 import { MAPS, findObj, footOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf } from '../explore/mapData';
+import type { ExploreScene } from '../explore/ExploreScene';
 
 // =====================================================================
 // 종류
@@ -33,6 +34,8 @@ export interface BattleStart {
   battle: string;
   /** 체력 0 연출 */
   hpZero?: { who: string; by: string; count: number };
+  /** 지금 떠 있는 맵 화면. 있으면 그 맵 위에서 그대로 싸운다 (화면 전환 없음) */
+  map?: ExploreScene;
   onEnd: (r: BattleResult) => void;
 }
 
@@ -115,7 +118,8 @@ interface BattleDef {
   party?: string[];
   start?: Record<string, number[]>;
   allies?: { id: string; x: number; y: number }[];
-  waves?: { enemy: string; x: number; y: number }[][];
+  /** actor = 맵에 서 있던 인물 ID. 그 인물이 그 자리에서 그대로 싸운다 (x, y 대신) */
+  waves?: { enemy: string; x?: number; y?: number; actor?: string }[][];
   outcomes?: Record<string, OutcomeAction>;
   damage?: number;
   timeLimit?: number;
@@ -183,6 +187,9 @@ export class Fighter {
   stunUntil = 0;
   exploded = false;
   recoverUntil = 0;
+
+  /** 맵 위에서 싸울 때, 이 인물이 맡은 맵 인물 ID (끝나면 그 자리로 돌려놓음) */
+  actorId?: string;
 
   constructor(
     readonly id: string,
@@ -268,7 +275,11 @@ export class BattleScene extends Phaser.Scene {
 
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private attackClick = false;
-  private aimPoint: { x: number; y: number } | null = null;
+  /** 맵 위에서 싸우는 중 (전투장 좌표 + ox, oy = 맵 좌표) */
+  onMap: ExploreScene | null = null;
+  ox = 0;
+  oy = 0;
+  private lit = false;
   private prevVin: Partial<VirtualInput> = {};
 
   constructor() {
@@ -304,6 +315,10 @@ export class BattleScene extends Phaser.Scene {
     const all = battles as unknown as Record<string, BattleDef>;
     this.bdef = data.hpZero ? all.hpZero : all[data.battle];
     if (!this.bdef) console.error(`[battle] battles.json에 없는 전투: ${data.battle}`);
+    // 맵 화면이 떠 있으면 그 맵 위에서 싸운다 (정해 둔 맵과 같을 때, 또는 체력 0 연출)
+    const m = data.map;
+    this.onMap = m?.currentMap && (data.hpZero || !this.bdef?.arena.map || this.bdef.arena.map === m.mapId) ? m : null;
+    this.lit = false;
   }
 
   preload() {
@@ -329,23 +344,68 @@ export class BattleScene extends Phaser.Scene {
     this.add.rectangle(-80, -80, ar.width + 160, ar.height + 160, tint).setOrigin(0).setBlendMode(Phaser.BlendModes.MULTIPLY).setDepth(-9);
   }
 
+  /**
+   * 맵 위에서 싸우기: 전투장 = 맵의 arena 구역(체력 0 연출은 레온 둘레). 그림은 맵 화면이 그대로 그리고,
+   * 이 장면은 투명한 카메라로 싸우는 인물·이펙트만 그 위에 겹친다. 조명도 맵과 같게
+   */
+  private setupMap(m: ExploreScene) {
+    const md = m.currentMap!;
+    const { w, h } = this.bdef.arena;
+    const ar = !this.start.hpZero && findObj(md, 'arena');
+    if (ar) {
+      this.ox = ar.x;
+      this.oy = ar.y;
+    } else {
+      const l = m.actorInfo(this.start.hpZero?.who ?? 'leon');
+      this.ox = Math.round((l?.x ?? w / 2) - w / 2);
+      this.oy = Math.round((l?.y ?? h / 2) - h / 2 - 30);
+    }
+    this.cameras.main.setZoom(ZOOM).setBackgroundColor('rgba(0,0,0,0)');
+    this.syncCamera();
+    const L = m.lighting();
+    this.lit = L.lit;
+    if (this.lit) {
+      this.lights.enable().setAmbientColor(L.ambient);
+      for (const l of L.lights) this.lights.addLight(l.x - this.ox, l.y - this.oy, l.r, l.color, l.intensity);
+    }
+  }
+
+  /** 맵 화면 카메라와 같은 곳을 본다 */
+  private syncCamera() {
+    const m = this.onMap;
+    if (!m) return;
+    const c = m.cameras.main;
+    this.cameras.main.setScroll(c.scrollX - this.ox, c.scrollY - this.oy);
+  }
+
+  /** 맵 인물의 자리 (전투장 좌표) */
+  private actorAt(id: string) {
+    const a = this.onMap?.actorInfo(id);
+    return a ? { x: a.x - this.ox, y: a.y - this.oy, facing: a.facing as Dir } : null;
+  }
+
   create() {
     makeBattleAnims(this);
     const { w, h, tint } = this.bdef.arena;
     this.bounds = { x0: 12, x1: w - 12, y0: 50, y1: h - 6 };
     const cam = this.cameras.main;
-    cam.setZoom(ZOOM).centerOn(w / 2, h / 2 - 10).setBackgroundColor('#08070c');
-    cam.fadeIn(350, 0, 0, 0);
+    if (this.onMap) this.setupMap(this.onMap);
+    else {
+      cam.setZoom(ZOOM).centerOn(w / 2, h / 2 - 10).setBackgroundColor('#08070c');
+      cam.fadeIn(350, 0, 0, 0);
+    }
 
     // 전투장: 돌바닥 + 위쪽 벽 (terrain 타일)
     const t = Phaser.Display.Color.HexStringToColor(tint).color;
-    if (this.bdef.arena.map) this.drawMapArena(this.bdef.arena.map, t);
+    if (this.onMap) {
+      // 바닥은 맵 화면이 그린다
+    } else if (this.bdef.arena.map) this.drawMapArena(this.bdef.arena.map, t);
     else {
       this.add.tileSprite(0, 0, w, h, 'terrain_tiles', 4).setOrigin(0).setTint(t).setDepth(-10);
       this.add.tileSprite(0, -32, w, 32, 'terrain_tiles', 7).setOrigin(0).setTint(t).setDepth(-9);
       this.add.tileSprite(0, 0, w, 40, 'terrain_tiles', 8).setOrigin(0).setTint(t).setDepth(-9);
     }
-    this.add.rectangle(0, h, w, 6, 0x000000, 0.6).setOrigin(0).setDepth(-9);
+    if (!this.onMap) this.add.rectangle(0, h, w, 6, 0x000000, 0.6).setOrigin(0).setDepth(-9);
 
     if (this.start.hpZero) this.setupHpZero();
     else this.setupBattle();
@@ -357,10 +417,8 @@ export class BattleScene extends Phaser.Scene {
     this.input.mouse?.disableContextMenu();
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (this.ended || this.cutscene) return;
-      if (p.leftButtonDown() || p.wasTouch) {
-        this.attackClick = true;
-        this.aimPoint = { x: p.worldX, y: p.worldY };
-      }
+      // 공격은 캐릭터가 바라보는 쪽(정면)으로 나간다. 클릭 위치는 상관없음
+      if (p.leftButtonDown() || p.wasTouch) this.attackClick = true;
     });
 
     this.scene.launch('BattleHUD', { battle: this });
@@ -420,9 +478,13 @@ export class BattleScene extends Phaser.Scene {
   private setupBattle() {
     const b = this.bdef;
     for (const id of b.party ?? ['leon']) {
-      const pos = b.start?.[id] ?? [b.arena.w / 2, b.arena.h / 2];
+      // 맵 위에서는 서 있던 자리에서 그대로
+      const at = this.actorAt(id);
+      const pos = at ? [at.x, at.y] : b.start?.[id] ?? [b.arena.w / 2, b.arena.h / 2];
       const f = this.makePartyFighter(id, pos[0], pos[1]);
-      if (f) this.party.push(f);
+      if (!f) continue;
+      if (at) this.takeActor(f, id, at.facing);
+      this.party.push(f);
     }
     this.controlled = this.party[0] ?? null;
     for (const a of b.allies ?? []) {
@@ -430,9 +492,20 @@ export class BattleScene extends Phaser.Scene {
       if (!d) continue;
       const f = new Fighter(a.id, a.id, 'ally', d);
       Object.assign(f, { hp: d.hp, maxHp: d.hp, atk: d.atk, defense: d.def, speed: d.speed });
-      this.spawn(f, a.x, a.y);
+      const at = this.actorAt(a.id);
+      this.spawn(f, at?.x ?? a.x, at?.y ?? a.y);
+      if (at) this.takeActor(f, a.id, at.facing);
     }
     this.spawnWave(0);
+  }
+
+  /** 맵 인물을 숨기고 이 전투 인물이 대신 싸운다 */
+  private takeActor(f: Fighter, actorId: string, facing: Dir) {
+    f.actorId = actorId;
+    f.facing = facing;
+    f.aimX = dirVec(facing)[0];
+    f.aimY = dirVec(facing)[1];
+    this.onMap?.hideActor(actorId, true);
   }
 
   private makePartyFighter(id: string, x: number, y: number) {
@@ -448,7 +521,7 @@ export class BattleScene extends Phaser.Scene {
     return f;
   }
 
-  private spawnEnemy(key: string, x: number, y: number) {
+  private spawnEnemy(key: string, x: number, y: number, quiet = false) {
     const e = (enemies as unknown as Record<string, EnemyDef>)[key];
     if (!e) return console.warn(`[battle] enemies.json에 없는 적: ${key}`);
     const d: FighterDef = {
@@ -465,8 +538,8 @@ export class BattleScene extends Phaser.Scene {
     Object.assign(f, { hp: e.hp, maxHp: e.hp, atk: e.atk, defense: e.def, speed: e.speed });
     f.aiCd = 600 + Math.random() * 600;
     this.spawn(f, x, y);
-    // 나타날 때 빛
-    this.fx('gnosis_vanish', x, y - BODY, { depth: y + 1, alpha: 0.8 });
+    // 나타날 때 빛 (맵에 서 있던 인물이 그대로 싸우면 없음)
+    if (!quiet) this.fx('gnosis_vanish', x, y - BODY, { depth: y + 1, alpha: 0.8 });
     return f;
   }
 
@@ -475,6 +548,7 @@ export class BattleScene extends Phaser.Scene {
     f.y = y;
     f.shadow = this.add.sprite(x, y + 1, 'fx_jump_shadow', 0).setOrigin(0.5, 0.5);
     f.sprite = this.add.sprite(x, y, f.spriteKey, DIRS.indexOf(f.facing) * 5).setOrigin(0.5, 1);
+    if (this.lit) f.sprite.setPipeline('Light2D');
     if (f.team === 'enemy' && !f.enemy?.boss) {
       f.hpBar = {
         frame: this.add.image(x, y, 'ui_bar_enemy').setOrigin(0.5, 0).setVisible(false),
@@ -488,13 +562,20 @@ export class BattleScene extends Phaser.Scene {
     const wave = this.bdef.waves?.[i];
     if (!wave) return;
     this.waveIdx = i;
-    this.pendingSpawns += wave.length;
-    wave.forEach((s, k) =>
+    wave.forEach((s, k) => {
+      // 맵에 서 있던 인물: 바로 그 자리에서 싸운다
+      const at = s.actor ? this.actorAt(s.actor) : null;
+      if (at) {
+        const e = this.spawnEnemy(s.enemy, at.x, at.y, true);
+        if (e) this.takeActor(e, s.actor!, at.facing);
+        return;
+      }
+      this.pendingSpawns++;
       this.time.delayedCall(400 + k * 220, () => {
         this.pendingSpawns--;
-        if (!this.ended) this.spawnEnemy(s.enemy, s.x, s.y);
-      }),
-    );
+        if (!this.ended) this.spawnEnemy(s.enemy, s.x ?? this.bdef.arena.w / 2, s.y ?? this.bdef.arena.h / 2);
+      });
+    });
   }
 
   /** 체력 0 연출: who 주위를 공격자들이 둘러싸고 차례로 찌른다 */
@@ -508,11 +589,21 @@ export class BattleScene extends Phaser.Scene {
     this.controlled = f;
     f.facing = 'down';
     const attackers: Fighter[] = [];
+    // 맵 위라면 레온이 서 있던 자리, 맵에 있던 그 병사들이 그대로 덤빈다
+    const me = this.actorAt(who);
+    if (me) {
+      f.x = me.x;
+      f.y = me.y;
+      this.takeActor(f, who, 'down');
+    }
+    const onMapIds = this.onMap?.actorsOf(by) ?? [];
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2 + 0.4;
-      const e = this.spawnEnemy(by, cx + Math.cos(a) * 64, cy + Math.sin(a) * 40);
+      const at = onMapIds[i] ? this.actorAt(onMapIds[i]) : null;
+      const e = at ? this.spawnEnemy(by, at.x, at.y, true) : this.spawnEnemy(by, f.x + Math.cos(a) * 64, f.y + Math.sin(a) * 40);
       if (!e) continue;
-      e.facing = dirOf(cx - e.x, cy - e.y);
+      if (at) this.takeActor(e, onMapIds[i], at.facing);
+      e.facing = dirOf(f.x - e.x, f.y - e.y);
       e.state = 'idle';
       e.aiCd = 1e9; // 스스로 움직이지 않음
       attackers.push(e);
@@ -563,7 +654,10 @@ export class BattleScene extends Phaser.Scene {
 
   update(_t: number, rawDelta: number) {
     const dt = Math.min(50, rawDelta) * this.timeScale;
-    if (this.frozen) return this.renderAll();
+    if (this.frozen) {
+      this.syncCamera();
+      return this.renderAll();
+    }
     this.now += dt;
     if (!this.cutscene && !this.ended) {
       this.elapsed += dt;
@@ -575,6 +669,7 @@ export class BattleScene extends Phaser.Scene {
     this.separate();
     if (!this.cutscene && !this.ended) this.checkOutcome();
     this.renderAll();
+    this.syncCamera();
   }
 
   // ---- 입력 ----
@@ -649,7 +744,10 @@ export class BattleScene extends Phaser.Scene {
       const held = this.now - f.guardStart;
       f.stamina -= (ev.drain ?? 40) * (dt / 1000);
       if (!press.evadeHeld || held > (ev.maxHold ?? 2000) || f.stamina <= 0) this.endGuard(f);
-      if (len > 0) f.facing = dirOf(mx, my), (f.aimX = mx), (f.aimY = my);
+      if (len > 0) {
+        f.facing = dirOf(mx, my);
+        [f.aimX, f.aimY] = dirVec(f.facing);
+      }
       return;
     }
 
@@ -657,26 +755,13 @@ export class BattleScene extends Phaser.Scene {
     if (press.skill) this.tryMove(f, 'skill');
     if (press.ult) this.tryMove(f, 'ult');
 
-    if (press.attack) {
-      if (this.aimPoint) {
-        // PC: 클릭한 쪽을 바라본다
-        const ax = this.aimPoint.x - f.x;
-        const ay = this.aimPoint.y - (f.y - BODY);
-        const l = Math.hypot(ax, ay) || 1;
-        f.aimX = ax / l;
-        f.aimY = ay / l;
-        f.facing = dirOf(ax, ay);
-        this.aimPoint = null;
-      }
-      this.requestAttack(f);
-    }
+    if (press.attack) this.requestAttack(f);
 
     if (f.state === 'idle' || f.state === 'move') {
       if (len > 0.1) {
         f.state = 'move';
         f.facing = dirOf(mx, my);
-        f.aimX = mx / Math.max(len, 0.01);
-        f.aimY = my / Math.max(len, 0.01);
+        [f.aimX, f.aimY] = dirVec(f.facing); // 공격·기술은 바라보는 쪽(정면)으로
         this.moveBy(f, mx * f.speed * (dt / 1000), my * f.speed * (dt / 1000));
       } else f.state = 'idle';
     } else if (f.airborne || f.vz !== 0) {
@@ -782,6 +867,8 @@ export class BattleScene extends Phaser.Scene {
   private requestAttack(f: Fighter) {
     const hits = f.def.attack?.hits;
     if (!hits || f.airborne) return;
+    // 캐릭터 정면으로
+    [f.aimX, f.aimY] = dirVec(f.facing);
     if (f.state === 'idle' || f.state === 'move') return this.startHit(f, 0);
     if (f.state === 'attack') f.queued = true;
   }
@@ -1341,8 +1428,17 @@ export class BattleScene extends Phaser.Scene {
   // ---- 이동, 겹침 ----
 
   private moveBy(f: Fighter, dx: number, dy: number) {
-    f.x = Phaser.Math.Clamp(f.x + dx, this.bounds.x0, this.bounds.x1);
-    f.y = Phaser.Math.Clamp(f.y + dy, this.bounds.y0, this.bounds.y1);
+    const nx = Phaser.Math.Clamp(f.x + dx, this.bounds.x0, this.bounds.x1);
+    const ny = Phaser.Math.Clamp(f.y + dy, this.bounds.y0, this.bounds.y1);
+    const m = this.onMap;
+    if (!m) {
+      f.x = nx;
+      f.y = ny;
+      return;
+    }
+    // 맵 위: 벽·기둥·가구에 막힌다 (가로, 세로 따로 → 벽을 따라 미끄러짐)
+    if (!m.solidAt(nx + this.ox, f.y + this.oy)) f.x = nx;
+    if (!m.solidAt(f.x + this.ox, ny + this.oy)) f.y = ny;
   }
 
   /** 서로 겹치지 않게 살짝 밀어냄 */
@@ -1482,6 +1578,20 @@ export class BattleScene extends Phaser.Scene {
   private leave(r: BattleResult) {
     if (this.leaving) return;
     this.leaving = true;
+    if (this.onMap && typeof r.action !== 'string') {
+      // 맵 위: 화면을 바꾸지 않고, 싸운 인물들을 맵의 그 자리로 돌려놓는다
+      const m = this.onMap;
+      for (const f of this.all) {
+        if (!f.actorId) continue;
+        // 쓰러진 하수인은 사라진 채로, 아군과 보스(대본에서 계속 나옴)는 그 자리에 다시 세움
+        if (f.team !== 'enemy' || f.alive || f.enemy?.boss) m.putActor(f.actorId, f.x + this.ox, f.y + this.oy, f.facing);
+      }
+      this.leaving = false;
+      this.scene.stop('BattleHUD');
+      this.scene.stop();
+      this.start.onEnd(r);
+      return;
+    }
     this.cameras.main.fadeOut(400, 0, 0, 0);
     this.scene.get('BattleHUD')?.cameras.main.fadeOut(400, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {

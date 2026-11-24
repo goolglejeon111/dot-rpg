@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import looksData from '../data/explore/looks.json';
 import stageData from '../data/explore/stage.json';
+import battlesData from '../data/battle/battles.json';
 import { makeBattleAnims, preloadBattle } from '../battle/assets';
 import { EXP_REWARD, gainOnce, isCapped, levelOf, levelProgress } from '../battle/progress';
 import { gameState } from '../game/GameState';
@@ -13,7 +14,7 @@ import {
  * 맵 화면: 대화(Story)의 아래층에 깔리는 도트 맵.
  *   무대(stage)  인물을 세우고 카메라를 옮긴다. 대사는 그 위 Story 장면이 띄운다
  *   이동(play)   레온을 직접 움직인다. 이동 WASD/방향키 · 살펴보기 F · 휴대폰은 조이스틱과 살펴보기 버튼
- *                가까이 가면 물건 위에 표시가 뜨고, F를 누르면 레온의 독백(Story가 보여 줌). 처음 한 번 경험치
+ *                가까이 가면 레온 머리 위에 표시가 뜨고, F를 누르면 레온의 독백(Story가 보여 줌). 처음 한 번 경험치
  * 데이터: 맵 src/data/maps/*.json, 무대·이동 구간 src/data/explore/stage.json, 물건 독백 src/data/explore/looks.json
  * 밤 조명: Light2D. 맵 전체에 어두운 푸른빛(ambient), 횃불·촛불 주변만 따뜻하게 밝다
  */
@@ -33,11 +34,17 @@ export interface ActorSpec {
   facing?: string;
   pose?: string;
   sprite?: string;
+  /** 걷는 빠르기 (없으면 보통 걸음) */
+  speed?: number;
 }
 export interface StageDef {
   map?: string;
   focus?: Pt;
   blood?: boolean;
+  /** 대사창을 잠깐 내리고 이만큼(ms) 무대만 보여 준 뒤 다음 대사로 */
+  wait?: number;
+  /** 처음엔 숨긴 물건(hidden prop)을 보이게(true)/숨기게(false). 이미 주운 것은 계속 숨김 */
+  props?: Record<string, boolean>;
   actors?: Record<string, ActorSpec | null>;
 }
 export interface SegmentDef {
@@ -45,6 +52,8 @@ export interface SegmentDef {
   looks: string[];
   goal: string;
   hint?: string;
+  /** 도착점에 가기 전에 꼭 조사(줍기)해야 하는 것 */
+  need?: string[];
   tutorial?: boolean;
   after?: string;
 }
@@ -54,7 +63,7 @@ export const STAGE = stageData as unknown as {
   stages: Record<string, StageDef>;
   segments: Record<string, SegmentDef>;
 };
-const LOOKS = looksData as unknown as Record<string, { name: string; text: string }>;
+const LOOKS = looksData as unknown as Record<string, { name: string; text: string; pickup?: boolean }>;
 /** 독백 글: 줄바꿈 = 한 줄씩, 빈 줄 = 화면 나눔 */
 export const lookPages = (id: string) =>
   (LOOKS[id]?.text ?? '').split(/\n\s*\n/).map((p) => p.split('\n').filter((l) => l.trim()));
@@ -83,8 +92,6 @@ interface Lookable {
   id: string;
   x: number;
   y: number;
-  icon: Phaser.GameObjects.Sprite;
-  iconY: number;
 }
 type Box = { x0: number; y0: number; x1: number; y1: number };
 type Vis = Phaser.GameObjects.GameObject & Phaser.GameObjects.Components.Visible;
@@ -98,8 +105,10 @@ export class ExploreScene extends Phaser.Scene {
   private mapH = 0;
   private grid: boolean[] = [];
   private boxes: Box[] = [];
+  /** 이름으로 찾는 물건 그림 (숨겼다 보이는 것) */
+  private named = new Map<string, Phaser.GameObjects.Sprite>();
   private worldObjs: Phaser.GameObjects.GameObject[] = [];
-  private lights2: { light: Phaser.GameObjects.Light; base: number; r: number }[] = [];
+  private lights2: { light: Phaser.GameObjects.Light; base: number; r: number; color: number }[] = [];
   private blood?: Phaser.Tilemaps.TilemapLayer;
   private tilemap?: Phaser.Tilemaps.Tilemap;
   private actors = new Map<string, Actor>();
@@ -110,8 +119,11 @@ export class ExploreScene extends Phaser.Scene {
   private onEnd?: () => void;
   private lookables: Lookable[] = [];
   private near: Lookable | null = null;
+  /** 살펴볼 수 있을 때 레온 머리 위에 뜨는 표시 */
+  private mark?: Phaser.GameObjects.Sprite;
   private reading = false;
   private lockUntil = 0;
+  private needWarn = 0;
   private moved = 0;
   private tutStep = 0;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
@@ -214,6 +226,7 @@ export class ExploreScene extends Phaser.Scene {
     this.mapH = md.height * TS;
     this.grid = solidGrid(md);
     this.boxes = [];
+    this.named.clear();
 
     const cam = this.cameras.main;
     cam.setBackgroundColor(propOf<string>(md, 'bg') ?? '#05040a');
@@ -252,6 +265,10 @@ export class ExploreScene extends Phaser.Scene {
     if (o.type === 'prop') {
       if (!PROPS[o.name]) return;
       const s = this.world(makePropSprite(this, o));
+      if (propOf(o, 'hidden')) {
+        s.setVisible(false);
+        this.named.set(o.name, s);
+      }
       const fl = FLAMES[o.name];
       const top = f.y - PROPS[o.name].h;
       if (fl) {
@@ -288,7 +305,7 @@ export class ExploreScene extends Phaser.Scene {
   private addLight(x: number, y: number, r: number, color: number, intensity: number, steady = false) {
     if (!this.lit) return;
     const light = this.lights.addLight(x, y, r, color, intensity);
-    this.lights2.push({ light, base: steady ? -1 : intensity, r });
+    this.lights2.push({ light, base: steady ? -1 : intensity, r, color });
   }
 
   /** 횃불·촛불 일렁임 */
@@ -350,6 +367,7 @@ export class ExploreScene extends Phaser.Scene {
     if (!this.map) return;
     if (reset) for (const id of [...this.actors.keys()]) this.removeActor(id);
     if (def.blood !== undefined) this.blood?.setVisible(def.blood);
+    for (const [name, on] of Object.entries(def.props ?? {})) this.named.get(name)?.setVisible(on && !this.seen(name));
     for (const [id, spec] of Object.entries(def.actors ?? {})) {
       if (spec === null) this.removeActor(id);
       else this.placeActor(id, spec, instant);
@@ -384,6 +402,7 @@ export class ExploreScene extends Phaser.Scene {
       a = { id, key, spr, shadow, facing: 'down', down: false, walking: false };
       this.actors.set(id, a);
     }
+    a.spr.setVisible(true);
     if (at) {
       this.tweens.killTweensOf(a.spr);
       a.walking = false;
@@ -407,7 +426,7 @@ export class ExploreScene extends Phaser.Scene {
         const dir: Dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
         act.spr.setOrigin(0.5, 1).play(`${act.key}-walk-${dir}`, true);
         this.tweens.add({
-          targets: act.spr, x: to.x, y: to.y, duration: (dist / WALK_SPEED) * 1000,
+          targets: act.spr, x: to.x, y: to.y, duration: (dist / (spec.speed ?? WALK_SPEED)) * 1000,
           onComplete: () => {
             act.walking = false;
             this.pose(act);
@@ -434,6 +453,88 @@ export class ExploreScene extends Phaser.Scene {
     a.spr.destroy();
     a.shadow.destroy();
     this.actors.delete(id);
+  }
+
+  // ---------------------------------------------------------------
+  // 전투 (BattleScene이 이 맵 위에서 싸운다)
+  // ---------------------------------------------------------------
+
+  get currentMap() {
+    return this.map;
+  }
+
+  /** 밤빛 색과 불빛들 (전투 장면이 같은 조명을 쓴다) */
+  lighting() {
+    return {
+      lit: this.lit,
+      ambient: hex(propOf<string>(this.map ?? {}, 'ambient') ?? '#5a6494'),
+      lights: this.lights2.map((l) => ({ x: l.light.x, y: l.light.y, r: l.r, color: l.color, intensity: l.base < 0 ? l.light.intensity : l.base })),
+    };
+  }
+
+  actorInfo(id: string) {
+    const a = this.actors.get(id);
+    return a ? { x: a.spr.x, y: a.spr.y, facing: a.facing, key: a.key, down: a.down } : null;
+  }
+
+  /** 그림이 key인 인물들의 ID */
+  actorsOf(key: string) {
+    return [...this.actors.values()].filter((a) => a.key === key && a.spr.visible).map((a) => a.id);
+  }
+
+  /** 전투 동안 맵의 인물을 숨긴다 (전투 장면이 같은 자리에 싸우는 인물을 띄움) */
+  hideActor(id: string, hidden: boolean) {
+    const a = this.actors.get(id);
+    if (!a) return;
+    this.tweens.killTweensOf(a.spr);
+    a.walking = false;
+    a.spr.setVisible(!hidden);
+    a.shadow.setVisible(!hidden);
+  }
+
+  /** 전투가 끝난 자리로 인물을 옮긴다 */
+  putActor(id: string, x: number, y: number, facing: string) {
+    const a = this.actors.get(id);
+    if (!a) return;
+    a.spr.setPosition(x, y).setVisible(true);
+    a.facing = facing as Dir;
+    a.down = false;
+    this.pose(a);
+  }
+
+  /** 발밑(x, y)이 벽이나 물건에 막혔는지 (인물은 빼고) */
+  solidAt(x: number, y: number, w = 12, h = 6) {
+    if (!this.map) return false;
+    const a = { x0: x - w / 2, y0: y - h, x1: x + w / 2, y1: y };
+    if (a.x0 < 0 || a.x1 > this.mapW || a.y0 < 0 || a.y1 > this.mapH) return true;
+    const cols = this.map.width;
+    for (let ty = Math.floor(a.y0 / TS); ty <= Math.floor((a.y1 - 0.01) / TS); ty++)
+      for (let tx = Math.floor(a.x0 / TS); tx <= Math.floor((a.x1 - 0.01) / TS); tx++) if (this.grid[ty * cols + tx]) return true;
+    return this.boxes.some((b) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0);
+  }
+
+  /**
+   * 이 맵 위에서 싸울 수 있으면 전투장 가운데 (맵 좌표), 아니면 null.
+   * 전투의 arena.map이 지금 맵과 같아야 한다. 체력 0 연출은 who 둘레
+   */
+  battleCenter(battle: string, who?: string) {
+    if (!this.map) return null;
+    if (who) {
+      const a = this.actors.get(who);
+      return a ? { x: a.spr.x, y: a.spr.y - 30 } : null;
+    }
+    const def = (battlesData as unknown as Record<string, { arena: { map?: string } }>)[battle];
+    if (!def?.arena.map || def.arena.map !== this.mapId) return null;
+    const ar = findObj(this.map, 'arena');
+    return ar ? { x: ar.x + ar.width / 2, y: ar.y + ar.height / 2 } : null;
+  }
+
+  /** 카메라를 (x, y)로 옮기고 ms 뒤 done */
+  lookAt(x: number, y: number, ms: number, done: () => void) {
+    const cam = this.cameras.main;
+    cam.stopFollow();
+    cam.pan(x, y, ms, 'Sine.easeInOut');
+    this.time.delayedCall(ms + 30, done);
   }
 
   // ---------------------------------------------------------------
@@ -468,10 +569,10 @@ export class ExploreScene extends Phaser.Scene {
         continue;
       }
       if (this.seen(id)) continue;
-      const iconY = Number(propOf(o, 'iconY') ?? 30);
-      const icon = this.world(this.add.sprite(o.x, o.y - iconY, 'ex_look', 0).setDepth(9500).setAlpha(0).play('ex_look'));
-      this.lookables.push({ id, x: o.x, y: o.y, icon, iconY });
+      this.lookables.push({ id, x: o.x, y: o.y });
     }
+    this.mark?.destroy();
+    this.mark = this.world(this.add.sprite(leon.spr.x, leon.spr.y - 44, 'ex_look', 0).setDepth(9500).setAlpha(0).play('ex_look'));
     this.hud.setVisible(true);
     this.touchUi.forEach((t) => t.setVisible(true));
     this.refreshHud();
@@ -482,8 +583,9 @@ export class ExploreScene extends Phaser.Scene {
   private stopPlay() {
     this.seg = null;
     this.near = null;
-    for (const l of this.lookables) l.icon.destroy();
     this.lookables = [];
+    this.mark?.destroy();
+    this.mark = undefined;
     this.hud?.setVisible(false);
     this.prompt?.setVisible(false);
     this.touchUi.forEach((t) => t.setVisible(false));
@@ -508,7 +610,7 @@ export class ExploreScene extends Phaser.Scene {
     }
     for (const a of this.actors.values()) {
       a.spr.setDepth(a.spr.y);
-      a.shadow.setPosition(Math.round(a.spr.x), Math.round(a.spr.y)).setVisible(!a.down);
+      a.shadow.setPosition(Math.round(a.spr.x), Math.round(a.spr.y)).setVisible(!a.down && a.spr.visible);
     }
   }
 
@@ -537,7 +639,7 @@ export class ExploreScene extends Phaser.Scene {
     this.moved += Math.hypot(x - ox, y - oy);
     if (this.seg?.tutorial && this.tutStep === 0 && this.moved > 60) {
       this.tutStep = 1;
-      this.guide('물건 가까이 가면 위에 표시가 뜹니다. F를 누르면 살펴봅니다 (처음 한 번 경험치)');
+      this.guide('물건 가까이 가면 머리 위에 표시가 뜹니다. F를 누르면 살펴봅니다 (처음 한 번 경험치)');
     }
   }
 
@@ -568,15 +670,18 @@ export class ExploreScene extends Phaser.Scene {
         }
       }
     }
-    if (best !== this.near) {
-      if (this.near?.icon.active) this.tweens.add({ targets: this.near.icon, alpha: 0, duration: 150 });
-      if (best) this.tweens.add({ targets: best.icon, alpha: 1, duration: 150 });
+    const mark = this.mark;
+    if (best !== this.near && mark) {
+      this.tweens.killTweensOf(mark);
+      this.tweens.add({ targets: mark, alpha: best ? 1 : 0, duration: 150 });
     }
     this.near = best;
-    if (!best) return this.prompt.setVisible(false);
+    // 표시는 레온 머리 위 (서 있는 그림 높이 40)
+    mark?.setPosition(Math.round(a.spr.x), Math.round(a.spr.y - 48));
+    if (!best || !mark) return this.prompt.setVisible(false);
     const cam = this.cameras.main;
-    const sx = (best.x - cam.worldView.x) * ZOOM;
-    const sy = (best.icon.y - 8 - cam.worldView.y) * ZOOM;
+    const sx = (mark.x - cam.worldView.x) * ZOOM;
+    const sy = (mark.y - 10 - cam.worldView.y) * ZOOM;
     const key = this.stickKnob ? '살펴보기' : 'F';
     this.prompt.setText(`${key}  ${LOOKS[best.id]?.name ?? '살펴보기'}`).setPosition(sx, sy).setVisible(true);
   }
@@ -587,6 +692,12 @@ export class ExploreScene extends Phaser.Scene {
     if (!g) return;
     const r = Number(propOf(g, 'r') ?? 40);
     if (Math.hypot(a.spr.x - g.x, (a.spr.y - g.y) * 1.2) > r) return;
+    const missing = this.seg.need?.find((id) => !this.seen(id));
+    if (missing) {
+      if (this.time.now > this.needWarn) this.guide(`먼저 ${LOOKS[missing]?.name ?? missing} (F)`, 2500);
+      this.needWarn = this.time.now + 2600;
+      return;
+    }
     this.pose(a);
     const cb = this.onEnd;
     this.stopPlay();
@@ -609,8 +720,10 @@ export class ExploreScene extends Phaser.Scene {
     this.pose(leon);
     this.reading = true;
     this.prompt.setVisible(false);
-    this.tweens.killTweensOf(l.icon);
-    l.icon.setAlpha(0);
+    if (this.mark) {
+      this.tweens.killTweensOf(this.mark);
+      this.mark.setAlpha(0);
+    }
     this.host.playMonologue(lookPages(l.id), () => {
       this.reading = false;
       this.lockUntil = this.time.now + 250;
@@ -621,7 +734,12 @@ export class ExploreScene extends Phaser.Scene {
   private lookDone(l: Lookable) {
     const amount = EXP_REWARD.look(l.id);
     const ups = gainOnce(`look:${l.id}`, ['leon'], amount);
-    l.icon.destroy();
+    if (LOOKS[l.id]?.pickup) {
+      this.named.get(l.id)?.setVisible(false);
+      const item = LOOKS[l.id].name.replace(/ 줍기$/, '');
+      const c = item.charCodeAt(item.length - 1) - 0xac00;
+      this.toast(`${item}${c >= 0 && c < 11172 && c % 28 ? '을' : '를'} 얻었습니다`);
+    }
     this.lookables = this.lookables.filter((x) => x !== l);
     this.near = null;
     if (amount) this.toast(`경험치 +${amount}${isCapped('leon') && !ups.length ? '   (최대 레벨: 프롤로그를 마치면 반영)' : ''}`);
@@ -711,9 +829,11 @@ export class ExploreScene extends Phaser.Scene {
   private refreshHud() {
     this.lvText.setText(`Lv ${levelOf('leon')}`);
     this.expFill.setCrop(0, 0, Math.round(242 * levelProgress('leon')), 10);
-    const all = this.seg?.looks.length ?? 0;
-    const done = this.seg?.looks.filter((id) => this.seen(id)).length ?? 0;
-    this.countText.setText(all ? `살펴본 것 ${done} / ${all}` : '');
+    // 조사 수: 줍는 것(pickup)은 빼고 센다
+    const list = this.seg?.looks.filter((id) => !LOOKS[id]?.pickup) ?? [];
+    const all = list.length;
+    const done = list.filter((id) => this.seen(id)).length;
+    this.countText.setText(all ? `조사 ${done} / ${all}` : '');
   }
 
   private guide(text: string, ms = 0) {

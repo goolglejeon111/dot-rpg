@@ -26,6 +26,13 @@ for (const cfg of STORIES) {
     a.push((rw ? l.slice(0, l.length - rw.from.length) + rw.to : l).replace(/^> /, ''));
   }
 
+  // stories.mjs의 monoEdits(게임에서만 줄이거나 뺀 독백)도 대본 쪽에 똑같이 적용해서 맞춰 본다
+  for (const e of cfg.monoEdits ?? []) {
+    const i = a.findIndex((_, k) => e.from.every((l, j) => a[k + j] === l));
+    if (i >= 0) a.splice(i, e.from.length, ...e.to);
+    else console.log(`  줄이거나 뺄 독백을 대본에서 찾지 못함: ${e.from[0]}`);
+  }
+
   // json → 같은 모양의 글줄
   const names = Object.fromEntries(Object.entries(cfg.names).map(([k, v]) => [v, k]));
   const b = [];

@@ -1,5 +1,10 @@
 {
   "_설명": "조사할 물건. 위치는 맵 파일(src/data/maps/*.json)의 objects 레이어에서 type이 look이고 name이 이 ID인 점. 어느 이동 구간에서 조사할 수 있는지는 stage.json의 segments.looks. text는 레온의 독백: 줄바꿈은 한 줄씩, 빈 줄은 화면 나눔. 경험치는 src/data/exp.json의 looks (처음 한 번만).",
+  "pendant": {
+    "name": "펜던트 줍기",
+    "pickup": true,
+    "text": "눈의 모양. 그 안에 새겨진 빛.\n\n펜던트를 주워 들었다."
+  },
   "portrait": {
     "name": "시황제의 초상화",
     "text": "삼백 년 전, 대륙을 하나로 묶은 사람.\n황궁 어디에 서 있어도, 그의 눈이 내려다본다.\n\n…오늘 밤은, 그 눈이 유난히 차갑다."

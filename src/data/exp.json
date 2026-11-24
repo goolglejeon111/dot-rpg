@@ -56,7 +56,8 @@
   },
   "_looks": "조사할 물건을 처음 조사했을 때 (물건 ID: src/data/explore/looks.json). 없으면 default",
   "looks": {
-    "default": 20
+    "default": 20,
+    "pendant": 0
   },
   "_endings": "엔딩 목록의 보상 받기 (배드·데드엔딩만, 한 번)",
   "endings": {

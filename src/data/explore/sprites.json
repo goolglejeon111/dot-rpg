@@ -158,6 +158,14 @@
       "rate": 4,
       "note": "촛대 (2프레임)"
     },
+    "pendant": {
+      "file": "assets/explore/pendant.png",
+      "w": 12,
+      "h": 12,
+      "frames": 2,
+      "rate": 3,
+      "note": "침입자가 떨어뜨린 눈 모양 펜던트 (2프레임 반짝임)"
+    },
     "window_open": {
       "file": "assets/explore/window_open.png",
       "w": 36,

@@ -1,5 +1,6 @@
 {
   "_설명": "대본의 {\"battle\": 이름}이 여기의 전투를 연다. party = 조작할 수 있는 파티, allies = NPC 아군, waves = 차례로 나오는 적. 좌표는 전투장 안 픽셀",
+  "_맵": "arena.map이 지금 떠 있는 맵과 같으면 화면 전환 없이 그 맵 위에서 싸운다. 전투장 = 그 맵의 arena 구역(좌표 0,0 = 구역 왼쪽 위). 파티·아군은 맵에 서 있던 자리에서 시작하고, waves의 actor는 맵에 서 있던 그 인물이 그 자리에서 싸운다",
   "_결과": "outcomes: 결과별 다음 행동. win(적 전멸) / fall:인물ID(그 인물이 쓰러짐) / timeout(제한 시간) / wipe(파티 전멸) / damage(적에게 준 피해가 damage 이상). 값: {\"continue\": true} 다음 대사, {\"next\": 장면ID}, {\"ending\": 엔딩ID}. wipe가 없으면 게임 오버, win이 없으면 다음 대사",
   "하수인들": {
     "title": "회랑의 그림자",
@@ -8,23 +9,23 @@
     "start": { "leon": [200, 170] },
     "allies": [{ "id": "bram", "x": 250, "y": 175 }],
     "waves": [
-      [{ "enemy": "gnosis", "x": 380, "y": 120 }, { "enemy": "gnosis", "x": 400, "y": 200 }, { "enemy": "gnosis", "x": 60, "y": 150 }],
+      [{ "enemy": "gnosis", "actor": "g1" }, { "enemy": "gnosis", "actor": "g2" }, { "enemy": "gnosis", "actor": "g3" }],
       [{ "enemy": "gnosis", "x": 40, "y": 110 }, { "enemy": "gnosis", "x": 410, "y": 230 }],
       [{ "enemy": "gnosis", "x": 230, "y": 60 }]
     ],
-    "guide": "WASD 이동 · 왼쪽 클릭 공격 · Space 점프"
+    "guide": "WASD 이동 · 왼쪽 클릭 공격 (바라보는 쪽으로) · Space 점프"
   },
   "침입자": {
     "title": "침입자",
     "arena": { "w": 448, "h": 288, "floor": "corridor", "tint": "#8a8cb4", "map": "chamber_corridor" },
     "party": ["leon"],
     "start": { "leon": [120, 170] },
-    "waves": [[{ "enemy": "marcion_hooded", "x": 330, "y": 150 }]],
+    "waves": [[{ "enemy": "marcion_hooded", "actor": "intruder" }]],
     "outcomes": { "finisher": { "continue": true }, "wipe": { "continue": true } },
     "guide": "바닥이 붉어지면 막을 수 없습니다. 범위 밖으로 피하거나 공격해서 시전을 끊으세요",
     "_튜토리얼": "goal: hit 베기, block 막기, parry 튕겨 내기, dodge 붉은 범위 피하기, free 자유. count 만큼 하면 다음 단계",
     "tutorial": [
-      { "goal": "hit", "text": "침입자에게 다가가 왼쪽 클릭으로 베세요", "count": 3 },
+      { "goal": "hit", "text": "침입자 쪽을 보고 왼쪽 클릭으로 베세요 (공격은 바라보는 쪽으로 나갑니다)", "count": 3 },
       { "goal": "block", "text": "Shift를 누르고 있으면 앞에서 오는 빛을 막습니다", "count": 2 },
       { "goal": "parry", "text": "빛이 닿기 직전에 Shift를 누르면 튕겨 내고 반격합니다", "count": 1, "skipAfterBlocks": 6 },
       { "goal": "dodge", "text": "바닥이 붉어지면 막을 수 없습니다. 붉은 범위 밖으로 피하세요", "count": 2 },

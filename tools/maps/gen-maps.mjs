@@ -12,7 +12,8 @@
 //     type prop   그림 물건. name = 그림 이름(src/data/explore/sprites.json). 사각형 = 그림 크기, 아래 가운데가 발밑
 //                 속성 wall(벽에 걸림, 막지 않음) / solid "가로,세로"(발밑 막는 상자)
 //     type body   쓰러진 인물. 속성 sprite(전투 그림 ID), facing
-//     type look   조사할 곳. name = 물건 ID(src/data/explore/looks.json). 속성 iconY = 머리 위 표시 높이
+//     type look   조사할 곳. name = 물건 ID(src/data/explore/looks.json). 표시는 가까이 간 레온 머리 위에 뜬다
+//     (prop에 hidden: true면 처음엔 안 보이고, stage.json의 props로 보이게 한다)
 //     type spawn  인물이 서는 자리. 속성 facing
 //     type goal   닿으면 이동이 끝나는 곳. 속성 r(반지름)
 //     type arena  전투장으로 쓰는 구역 (448x288)
@@ -84,7 +85,7 @@ function tiled(id, def) {
     value,
   }));
   const objects = def.objects.map((o) => {
-    const base = { id: oid++, name: o.name ?? '', type: o.type, rotation: 0, visible: true };
+    const base = { id: oid++, name: o.name ?? '', type: o.type, rotation: 0, visible: !o.hidden };
     let shape;
     if (o.type === 'prop') {
       const s = SPR.props[o.name];
@@ -265,6 +266,10 @@ const MAPS = {};
     spawn('ante_intruder', door, 160, 'down'),
   );
   objects.push({ type: 'goal', name: 'goal_ante', x: 990, y: 150, r: 48 });
+  // 장면 3에서 침입자가 떨어뜨린 펜던트 (장면 4에서 문 앞에서 줍는다), 침소로 들어가는 곳
+  objects.push({ type: 'prop', name: 'pendant', x: door - 4, y: 150, hidden: true }, look('pendant', door - 4, 146));
+  objects.push(spawn('wake_leon', 1100, 160, 'right'));
+  objects.push({ type: 'goal', name: 'goal_bed', x: door, y: 116, r: 24 });
   objects.push({ type: 'arena', name: 'arena', x: 30 * TS, y: 48, w: 448, h: 288 });
   MAPS.chamber_corridor = { rows: m.rows(), objects, props: { place: '침소로 가는 회랑', ambient: '#343a5c', bg: '#050409' } };
 }

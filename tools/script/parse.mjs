@@ -145,6 +145,18 @@ export function parseScript(md, cfg) {
     if (!usedRewrites.has(r)) warnings.push(`바꿔 쓸 대사를 대본에서 찾지 못함: ${r.name} / ${r.from}`);
   }
 
+  // 게임에서만 줄이거나 빼는 독백 덩어리 (from = 대본의 독백 덩어리 전체, to = 바꿀 줄들. 빈 배열이면 뺌)
+  for (const e of cfg.monoEdits ?? []) {
+    const sc = story.scenes.find((s) => s.id === e.scene);
+    const i = sc?.nodes.findIndex((n) => n.monologue && n.monologue.join('|') === e.from.join('|')) ?? -1;
+    if (!sc || i < 0) {
+      warnings.push(`줄이거나 뺄 독백을 찾지 못함: ${e.scene} / ${e.from[0]}`);
+      continue;
+    }
+    if (e.to.length) sc.nodes[i] = { monologue: e.to };
+    else sc.nodes.splice(i, 1);
+  }
+
   // 나중에 넣을 요소(전투, 장소 변경)를 표시한다
   for (const ins of cfg.inserts ?? []) {
     const sc = story.scenes.find((s) => s.id === ins.scene);

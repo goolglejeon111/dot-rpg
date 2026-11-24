@@ -112,6 +112,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   private monoMark!: Phaser.GameObjects.Text;
   private choiceButtons: Button[] = [];
   private activeChoices: ChoiceOption[] = [];
+  private logBtn!: Button;
   private autoBtn!: Button;
   private skipBtn!: Button;
   private overlay?: Phaser.GameObjects.Container;
@@ -256,7 +257,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
 
     // 오른쪽 위 메뉴
     const small = { w: 92, h: 36, fontSize: 17, depth: 9 };
-    makeButton(this, W - 392, 30, '로그 (L)', () => this.openLog(), small);
+    this.logBtn = makeButton(this, W - 392, 30, '로그 (L)', () => this.openLog(), small);
     this.autoBtn = makeButton(this, W - 294, 30, '자동 (A)', () => this.toggleAuto(), small);
     this.skipBtn = makeButton(this, W - 196, 30, '스킵 (S)', () => this.skipToNextPlace(), small);
     makeButton(this, W - 72, 30, '타이틀로', () => this.confirmLeave(), { ...small, w: 112 });
@@ -522,7 +523,12 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       const d = STAGE.stages[node.stage];
       if (d) this.withMap((m) => m.applyStage(d, { reset: !!d.map }));
       else console.warn(`[story] stage.json에 없는 무대: ${node.stage}`);
-      this.nextNode();
+      if (!d?.wait) return this.nextNode();
+      // 대사창을 잠깐 내리고 맵에서 벌어지는 일을 보여 준다
+      this.mode = 'busy';
+      this.clearText();
+      for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side);
+      this.time.delayedCall(d.wait, () => this.nextNode());
     } else if ('place' in node) {
       this.setPlace(node.place);
       if (!STAGE.places[node.place]) return this.nextNode();
@@ -548,9 +554,21 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   // ---------- 전투 ----------
 
   /** 대사창을 닫고 전투 화면으로. 끝나면 결과에 따라 다음 대사·장면·엔딩, 또는 게임 오버 */
-  private startBattle(b: Omit<BattleStart, 'onEnd'>) {
+  private startBattle(b: Omit<BattleStart, 'onEnd' | 'map'>) {
     this.mode = 'busy';
     this.toggleAuto(false);
+    // 맵이 떠 있으면 화면을 바꾸지 않고, 카메라만 전투장으로 옮겨 그 자리에서 싸운다
+    const m = this.mapState === 'on' ? (this.scene.get('Explore') as ExploreScene) : null;
+    const center = m?.battleCenter(b.battle, b.hpZero?.who);
+    if (m && center) {
+      this.clearText();
+      for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side);
+      m.lookAt(center.x, center.y, 450, () => {
+        this.scene.launch('Battle', { ...b, map: m, onEnd: (r: BattleResult) => this.afterBattle(r) } satisfies BattleStart);
+        this.scene.sleep();
+      });
+      return;
+    }
     this.curtainIn(350, () => {
       this.clearText();
       for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
@@ -588,7 +606,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       return this.scene.start('Story', { story: cp.story, scene: cp.scene, node: cp.node, returnTo: this.start.returnTo } satisfies StoryStartData);
     }
     if (a === 'gameover-title') return this.scene.start('Title');
-    if (this.mapState !== 'off') this.scene.wake('Explore');
+    if (this.mapState !== 'off' && this.scene.isSleeping('Explore')) this.scene.wake('Explore');
     this.curtainOut(400);
     this.time.delayedCall(350, () => {
       if (a.next) {
@@ -633,6 +651,12 @@ export class StoryScene extends Phaser.Scene implements MapHost {
         this.nextNode();
       }
     }
+  }
+
+  /** 로그·자동·스킵 버튼은 대화 중에만 (이동·살펴보기·엔딩 화면에서는 숨김) */
+  update() {
+    const talk = this.mode !== 'explore' && this.mode !== 'end' && !this.looking;
+    for (const b of [this.logBtn, this.autoBtn, this.skipBtn]) if (b && b.visible !== talk) b.setVisible(talk);
   }
 
   private onKey(ev: KeyboardEvent) {

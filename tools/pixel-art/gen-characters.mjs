@@ -224,6 +224,7 @@ function head(g, c, v) {
     else g.rect(13, 15, 18, 15, c.moustache);
   }
   if (c.mitre) mitre(g, c, v);
+  if (c.laurel) laurel(g, v);
   if (c.circlet) {
     if (v === 'right') g.rect(13, 8, 21, 8, 'k');
     else {
@@ -295,6 +296,32 @@ function mitre(g, c, v) {
 // ---- 몸통 ----
 
 /** 몸 아랫단 모양: 'coat'(트임), 'robe'(넓게 퍼짐), 'tunic'(짧음), 'skirt' */
+/** 금 월계관: 이마 위로 두르고, 잎을 위로 비스듬히 세움 (알드릭 황제) */
+function laurel(g, v) {
+  if (v === 'right') {
+    g.rect(9, 7, 21, 7, 'Y');
+    for (const x of [10, 13, 16, 19]) {
+      g.set(x, 6, 'y');
+      g.set(x + 1, 5, 'Y');
+    }
+    g.set(21, 6, 'y');
+    return;
+  }
+  if (v === 'up') {
+    g.rect(8, 8, 23, 8, 'Y');
+    for (const x of [9, 12, 15, 18, 21]) g.set(x, 7, 'y');
+    g.rect(14, 9, 17, 9, 'Y'); // 뒤에서 묶은 매듭
+    return;
+  }
+  g.rect(8, 8, 23, 8, 'Y');
+  for (const x of [8, 11, 14, 17, 20, 23]) {
+    g.set(x, 7, 'y');
+    g.set(x + (x < 16 ? -1 : 1), 6, 'Y');
+  }
+  g.set(15, 5, 'y');
+  g.set(16, 5, 'y');
+}
+
 function torso(g, c, v) {
   const o = c.outfit;
   const r = o.ramp;
@@ -621,6 +648,17 @@ const PROPS = {
     g.set(x0 + 0.5, 3, 'i');
     g.set(x0 + 1, 2, 'l');
   },
+  /** 황제의 홀: 긴 금 막대, 꼭대기에 독수리 (알드릭) */
+  scepter(g, c, v, front) {
+    if (v === 'up' ? front : !front) return;
+    const x0 = v === 'right' ? 23 : 4;
+    g.rect(x0, 4, x0, 34, (x, y) => (y % 5 === 0 ? 'y' : 'Y'));
+    g.rect(x0 - 1, 2, x0 + 1, 3, 'y'); // 독수리 날개
+    g.set(x0 - 2, 1, 'Y');
+    g.set(x0 + 2, 1, 'Y');
+    g.set(x0, 1, 'y');
+    g.set(x0, 0, 'Y');
+  },
   /** 금 지팡이 + 십자 (이그나티우스) */
   goldStaff(g, c, v, front) {
     if (v === 'up' ? front : !front) return;
@@ -858,6 +896,15 @@ export const CHARS = [
     props: ['sword'],
   },
   {
+    id: 'aldric', kind: 'npc', legs: { K: 'v', k: 'V', L: 'Y', M: 'y' }, // 금 월계관, 흰 비단옷과 금 자수, 담비털을 두른 붉은 망토, 독수리 홀
+    hair: { ramp: ['h', 'H', 'J', 'k'], style: 'short' },
+    laurel: true, eye: 'A', brow: 'J', gloves: 'v',
+    cape: R.red,
+    outfit: { ramp: R.white, lower: 'robe', collar: 'v', cuff: 'Y', hem: 'Y' },
+    decor: ['ermine'],
+    props: ['scepter'],
+  },
+  {
     id: 'marcion_hooded', kind: 'npc', legs: { K: 'k', k: 'k' }, // 검은 후드, 그림자 진 얼굴, 하얀 빛
     hood: R.black, eye: 'T',
     cape: R.black,
@@ -963,6 +1010,42 @@ Object.assign(DECOR, {
     g.rect(19, 18, 20, 33, (x) => (x === 19 ? 'Y' : 'O'));
     g.rect(14, 22, 17, 22, 'Y');
     g.rect(15, 21, 16, 25, 'Y');
+  },
+  /** 알드릭 황제: 흰 담비털 어깨 망토(검은 점), 붉은 대관 망토의 털 안단, 금 자수 옷자락, 가슴의 훈장 */
+  ermine(g, c, v) {
+    const fur = (x, y) => ((x * 3 + y * 5) % 7 === 0 ? 'k' : (x + y) % 4 === 0 ? 'V' : 'v');
+    if (v === 'up') {
+      g.trap(17, 21, 7, 24, 5, 26, fur);
+      for (let y = 22; y <= 34; y++) {
+        g.set(5 + Math.round((y - 22) * -0.15), y, fur(5, y));
+      }
+      g.rect(4, 33, 27, 34, fur);
+      return;
+    }
+    if (v === 'right') {
+      g.ellipse(14.5, 19, 5.5, 3, fur);
+      g.rect(9, 21, 10, 34, fur); // 망토 앞자락의 털
+      g.rect(12, 30, 21, 30, 'y');
+      for (let x = 12; x <= 21; x += 2) g.set(x, 32, 'Y');
+      return;
+    }
+    // 앞: 어깨를 덮는 털, 양옆으로 흘러내리는 붉은 망토와 털 안단
+    g.ellipse(9.5, 19, 5, 3.2, fur);
+    g.ellipse(21.5, 19, 5, 3.2, fur);
+    g.rect(13, 17, 18, 18, 'v'); // 레이스 깃
+    g.rect(4, 19, 5, 34, (x, y) => (x === 4 ? 'Z' : 'X'));
+    g.rect(26, 19, 27, 34, (x, y) => (x === 27 ? 'Z' : 'X'));
+    g.rect(6, 22, 7, 34, fur);
+    g.rect(24, 22, 25, 34, fur);
+    // 금 자수: 앞섶과 옷자락
+    g.rect(15, 19, 16, 26, (x, y) => ((y + x) % 2 ? 'y' : 'v'));
+    for (let x = 9; x <= 22; x++) {
+      g.set(x, 31, x % 2 ? 'y' : 'Y');
+      if (x % 3 === 0) g.set(x, 32, 'Y');
+    }
+    // 훈장 (붉은 끈, 은 별)
+    g.set(12, 21, 'x');
+    g.set(12, 22, 'm');
   },
   raggedHem(g, c, v) {
     for (let x = 4; x <= 27; x++) if (x % 3 === 0) g.set(x, 34, '.');

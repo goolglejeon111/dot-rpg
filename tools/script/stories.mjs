@@ -13,7 +13,7 @@ export const STORIES = [
       { match: '장면 1.', id: 'scene1', place: "황궁 동쪽 회랑", color: '#141a2a' },
       { match: '장면 2.', id: 'scene2', place: "황궁 동쪽 회랑", color: '#1a1424' },
       { match: '장면 3.', id: 'scene3', place: "침소로 가는 회랑", color: '#1c1218' },
-      { match: '장면 4.', id: 'scene4', place: '황제의 침소', color: '#220e10' },
+      { match: '장면 4.', id: 'scene4', place: '침소로 가는 회랑', color: '#220e10' },
       { match: '장면 5.', id: 'scene5', place: '침소 앞', color: '#1e1014' },
       { match: '▶ 1.', id: 'choice_draw', choice: 1, place: '침소 앞', color: '#260808' },
       { match: '▶ 2.', id: 'choice_surrender', choice: 2, place: '침소 앞', color: '#16161a' },
@@ -37,6 +37,9 @@ export const STORIES = [
       { scene: 'scene3', before: '세계가 하얗게 지워진다.', node: { stage: 'corr_fall' } },
       { scene: 'scene3', before: '마지막으로 본 것은.', node: { stage: 'corr_door' } },
       { scene: 'scene4', before: '폐하…?', node: { stage: 'bed_up' } },
+      // 문 앞에서 펜던트를 F로 줍고 침소로 들어간다
+      { scene: 'scene4', before: '폐하…?', node: { explore: 'door' } },
+      { scene: 'scene4', before: '폐하…?', node: { place: '황제의 침소' } },
       { scene: 'scene4', before: '붉었다.', node: { stage: 'bed_blood' } },
       { scene: 'scene4', before: '폐하! 폐하, 정신 차리십시오…!', node: { stage: 'bed_rush' } },
       { scene: 'scene4', before: '회랑 너머에서, 발소리가 몰려온다.', node: { explore: 'chamber' } },
@@ -52,6 +55,20 @@ export const STORIES = [
       { scene: 'choice_surrender', before: '광장에 끌려 나왔을 때, 첫눈은 이미 진창이 되어 있었다.', node: { place: '광장' } },
       { scene: 'choice_window', before: '떨어진다.', node: { place: '해자' } },
       { scene: 'choice_window', before: '틈으로 몸을 밀어 넣는다.', node: { place: '지하 수로' } },
+    ],
+    // 대본(docs)은 그대로 두고 게임에서만 줄이거나 빼는 독백. from = 독백 덩어리 전체, to = 바꿀 줄 (빈 배열 = 뺌)
+    monoEdits: [
+      // 펜던트가 떨어지는 묘사는 짧게 (펜던트는 장면 4에서 문 앞에서 직접 줍는다)
+      {
+        scene: 'scene3',
+        from: ['바닥에 떨어진 팔은, 닿자마자 하얀 빛이 되어 흩어졌다.', '그 곁으로 작은 펜던트 하나가 굴러간다.', '눈의 모양. 그 안에 새겨진 빛.'],
+        to: ['바닥에 떨어진 팔은 하얀 빛이 되어 흩어지고, 작은 펜던트 하나가 굴러갔다.'],
+      },
+      // 칼날의 피로 누명을 암시하는 독백은 뺀다
+      { scene: 'scene4', from: ['손에 무언가가 쥐어져 있다.', '내 검.', '칼날이 끝까지 붉게 젖어 있었다.'], to: [] },
+      { scene: 'scene4', from: ['그것이 누구의 피인지.', '이 방에 들어오는 사람은, 아무도 묻지 않을 것이다.'], to: [] },
+      // 펜던트는 문 앞에서 직접 주웠으므로
+      { scene: 'scene4', from: ['다른 손 안에는, 쓰러지면서도 놓지 않았던 펜던트가 있었다.'], to: [] },
     ],
     // 대본(docs)은 그대로 두고 게임에서만 바꿔 쓰는 대사. name: 대본의 이름, from: 대본 대사, to: 게임 대사
     // 레온은 동료(브람)에게 반말로 말한다

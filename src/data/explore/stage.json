@@ -14,6 +14,7 @@
     "choice_window": "bed_choice"
   },
   "places": {
+    "황제의 침소": { "map": "bedchamber", "stage": "bed_enter" },
     "해자": { "map": "moat", "stage": "moat_fall" },
     "지하 감옥": { "map": null },
     "광장": { "map": null },
@@ -58,8 +59,6 @@
     "hall_after": {
       "focus": [1290, 230],
       "actors": {
-        "leon": { "at": "hall_leon", "facing": "right" },
-        "bram": { "at": "hall_bram", "facing": "left" },
         "g1": { "sprite": "mob_gnosis", "at": [1380, 314], "facing": "up" },
         "g2": { "sprite": "mob_gnosis", "at": [1470, 270], "facing": "left" },
         "g3": null
@@ -67,7 +66,8 @@
     },
     "hall_shadow": {
       "focus": [1650, 200],
-      "actors": { "shadow": { "sprite": "marcion_hooded", "at": [1560, 176], "walk": [1900, 176], "facing": "right" } }
+      "wait": 2000,
+      "actors": { "shadow": { "sprite": "marcion_hooded", "at": [1520, 176], "walk": [1900, 176], "facing": "right", "speed": 170 } }
     },
     "hall_run": {
       "focus": "leon",
@@ -88,10 +88,7 @@
     },
     "corr_after": {
       "focus": [1110, 160],
-      "actors": {
-        "leon": { "at": [1060, 156], "facing": "right" },
-        "intruder": { "sprite": "marcion_hooded", "at": [1180, 156], "facing": "left" }
-      }
+      "props": { "pendant": true }
     },
     "corr_fall": {
       "actors": { "leon": { "pose": "down", "facing": "right" } }
@@ -102,13 +99,19 @@
     },
 
     "bed_wake": {
-      "map": "bedchamber",
-      "focus": [352, 300],
-      "blood": false,
-      "actors": { "leon": { "at": "wake_leon", "pose": "down", "facing": "up" } }
+      "map": "chamber_corridor",
+      "focus": [1140, 150],
+      "props": { "pendant": true },
+      "actors": { "leon": { "at": "wake_leon", "pose": "down", "facing": "right" } }
     },
     "bed_up": {
-      "actors": { "leon": { "pose": "stand", "facing": "up" } }
+      "actors": { "leon": { "pose": "stand", "facing": "right" } }
+    },
+    "bed_enter": {
+      "map": "bedchamber",
+      "focus": [352, 280],
+      "blood": false,
+      "actors": { "leon": { "at": "wake_leon", "walk": [352, 330], "facing": "up" } }
     },
     "bed_blood": {
       "focus": [352, 210],
@@ -204,6 +207,13 @@
       "looks": ["guard"],
       "goal": "goal_ante",
       "hint": "회랑 끝, 침소 앞으로"
+    },
+    "door": {
+      "map": "chamber_corridor",
+      "looks": ["pendant"],
+      "need": ["pendant"],
+      "goal": "goal_bed",
+      "hint": "문 앞에 떨어진 펜던트를 F로 줍고, 열린 침소 문으로 들어갑니다"
     },
     "chamber": {
       "map": "bedchamber",

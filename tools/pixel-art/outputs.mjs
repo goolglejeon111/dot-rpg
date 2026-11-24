@@ -34,46 +34,40 @@ const stand = (body, legs, remap, flipX = false) => ({
   ],
 });
 
-/** 인물 시트. 파티원: 5열(서기, 걷기1~4) x 4행 / NPC·모브: 4열(아래, 왼쪽, 오른쪽, 위) */
+/** 인물 시트: 5열(서기, 걷기1~4) x 4행(아래, 왼쪽, 오른쪽, 위). 파티원·NPC·모브 모두 같은 모양 */
 function characterSheet(c) {
   const b = (v) => `${c.id}_body_${v}`;
   const remap = Object.keys(c.legs ?? {}).length ? c.legs : undefined;
-  if (c.kind === 'party') {
-    return {
-      file: `public/assets/sprites/${c.id}.png`,
-      cell: [32, 40],
-      columns: 5,
-      frames: [
-        ...walkRow(b('down'), 'leon_legs_front', {}, remap),
-        ...walkRow(b('right'), 'leon_legs_side', { flipX: true }, remap),
-        ...walkRow(b('right'), 'leon_legs_side', {}, remap),
-        ...walkRow(b('up'), 'leon_legs_front', {}, remap),
-      ],
-    };
-  }
   return {
     file: `public/assets/sprites/${c.id}.png`,
     cell: [32, 40],
-    columns: 4,
+    columns: 5,
     frames: [
-      stand(b('down'), 'leon_legs_front', remap),
-      stand(b('right'), 'leon_legs_side', remap, true),
-      stand(b('right'), 'leon_legs_side', remap),
-      stand(b('up'), 'leon_legs_front', remap),
+      ...walkRow(b('down'), 'leon_legs_front', {}, remap),
+      ...walkRow(b('right'), 'leon_legs_side', { flipX: true }, remap),
+      ...walkRow(b('right'), 'leon_legs_side', {}, remap),
+      ...walkRow(b('up'), 'leon_legs_front', {}, remap),
     ],
   };
+}
+
+/** 확인용: 서 있는 4방향 */
+function standRow(c) {
+  const b = (v) => `${c.id}_body_${v}`;
+  const remap = Object.keys(c.legs ?? {}).length ? c.legs : undefined;
+  return [
+    stand(b('down'), 'leon_legs_front', remap),
+    stand(b('right'), 'leon_legs_side', remap, true),
+    stand(b('right'), 'leon_legs_side', remap),
+    stand(b('up'), 'leon_legs_front', remap),
+  ];
 }
 
 // 확인용 한 장: 인물마다 한 줄씩 (아래, 왼쪽, 오른쪽, 위), 발밑 그림자 포함
 const LEON = { id: 'leon', legs: {} };
 const ALL = [LEON, ...CHARS];
 const withShadow = (f) => ({ ...f, layers: [{ art: 'shadow', x: 6, y: 34 }, ...f.layers] });
-const leonStand = (v, legs, flipX) => stand(`leon_body_${v}`, legs, undefined, flipX);
-const PREVIEW_FRAMES = ALL.flatMap((c) =>
-  c === LEON
-    ? [leonStand('down', 'leon_legs_front'), leonStand('right', 'leon_legs_side', true), leonStand('right', 'leon_legs_side'), leonStand('up', 'leon_legs_front')]
-    : characterSheet({ ...c, kind: 'npc' }).frames,
-).map(withShadow);
+const PREVIEW_FRAMES = ALL.flatMap(standRow).map(withShadow);
 
 export const OUTPUTS = [
   {

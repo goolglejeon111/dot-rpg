@@ -11,15 +11,14 @@ type Dir = 'down' | 'left' | 'right' | 'up';
 const DIRS: Dir[] = ['down', 'left', 'right', 'up']; // 스프라이트 시트 행 순서
 const WATER = [6, 7]; // terrain 타일 번호 + 1 (Tiled는 1부터 셈)
 
-/** 인물 스프라이트 시트 (32x40). 파티원은 5열 걷기, 나머지는 4열 서기(아래, 왼쪽, 오른쪽, 위) */
-const PARTY = ['leon', 'serena', 'elysia', 'karg', 'adrian', 'galia'];
+/** 인물 스프라이트 시트 (32x40). 모두 5열(서기, 걷기1~4) x 4행(아래, 왼쪽, 오른쪽, 위) */
 const CHARACTER_SPRITES = [
-  ...PARTY,
+  'leon', 'serena', 'elysia', 'karg', 'adrian', 'galia',
   'bram', 'oswald', 'marcion_hooded', 'marcion', 'ignatius', 'herman', 'cassius',
   'mob_royal_knight', 'mob_paladin', 'mob_gnosis', 'mob_citizen',
 ];
 /** 서 있는 프레임 번호 */
-const standFrame = (key: string, dir: Dir) => DIRS.indexOf(dir) * (PARTY.includes(key) ? 5 : 1);
+const standFrame = (dir: Dir) => DIRS.indexOf(dir) * 5;
 
 /** 오브젝트 종류별 그림과 발밑 충돌 상자 (발밑 가운데 기준, 픽셀) */
 const PROPS: Record<string, { key: string; foot: [number, number] | null; shadow?: string; dy?: number }> = {
@@ -111,7 +110,7 @@ export class FieldScene extends Phaser.Scene {
       } else if (o.type === 'npc') {
         const facing = (prop('facing') as Dir) ?? 'down';
         const key = (prop('sprite') as string) ?? 'mob_citizen';
-        const sprite = this.add.sprite(x, y, key, standFrame(key, facing)).setOrigin(0.5, 1).setDepth(y);
+        const sprite = this.add.sprite(x, y, key, standFrame(facing)).setOrigin(0.5, 1).setDepth(y);
         this.add.image(x, y + 1, 'shadow').setOrigin(0.5, 1).setDepth(-1);
         const tag = this.nameTag(x, y, characters[prop('character') as string]?.name ?? o.name ?? '');
         addFoot(x, y, 14, 8);
@@ -247,7 +246,7 @@ export class FieldScene extends Phaser.Scene {
     const dy = this.player.y - npc.sprite.y;
     const toPlayer: Dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : dy < 0 ? 'up' : 'down';
     const opposite: Record<Dir, Dir> = { left: 'right', right: 'left', up: 'down', down: 'up' };
-    npc.sprite.setFrame(standFrame(npc.sprite.texture.key, toPlayer));
+    npc.sprite.setFrame(standFrame(toPlayer));
     this.facing = opposite[toPlayer];
     this.stand();
     this.talkIcon.setVisible(false);
@@ -272,16 +271,19 @@ export class FieldScene extends Phaser.Scene {
       .setDepth(100000);
   }
 
+  /** 모든 인물의 걷기 애니메이션: {인물ID}-walk-{방향} */
   private makeAnims() {
-    DIRS.forEach((dir, row) => {
-      const key = `leon-walk-${dir}`;
-      if (this.anims.exists(key)) return;
-      this.anims.create({
-        key,
-        frames: this.anims.generateFrameNumbers('leon', { start: row * 5 + 1, end: row * 5 + 4 }),
-        frameRate: 8,
-        repeat: -1,
+    for (const id of CHARACTER_SPRITES) {
+      DIRS.forEach((dir, row) => {
+        const key = `${id}-walk-${dir}`;
+        if (this.anims.exists(key)) return;
+        this.anims.create({
+          key,
+          frames: this.anims.generateFrameNumbers(id, { start: row * 5 + 1, end: row * 5 + 4 }),
+          frameRate: 8,
+          repeat: -1,
+        });
       });
-    });
+    }
   }
 }

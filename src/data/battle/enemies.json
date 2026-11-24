@@ -7,12 +7,13 @@
     "selfDestruct": { "below": 0.3, "signal": 1300, "radius": 46, "mult": 2.4, "unblockable": true }
   },
   "marcion_hooded": {
-    "name": "침입자", "sprite": "marcion_hooded", "hp": 900, "atk": 12, "def": 3, "speed": 46, "exp": 0, "boss": true,
+    "name": "침입자", "sprite": "marcion_hooded", "hp": 260, "atk": 12, "def": 3, "speed": 38, "exp": 0, "boss": true,
     "ai": "caster",
-    "keepAway": 80,
-    "bolt": { "cast": 650, "speed": 170, "mult": 1.0, "cooldown": 1500, "unblockable": true },
-    "area": { "every": 3, "cast": 1400, "radius": 70, "mult": 1.5, "breakDamage": 20 },
-    "blink": { "cooldown": 4000, "distance": 90 }
+    "keepAway": 56,
+    "recover": 1100,
+    "bolt": { "cast": 700, "speed": 160, "mult": 1.0, "cooldown": 1600 },
+    "area": { "every": 3, "cast": 1500, "radius": 70, "mult": 1.5, "breakDamage": 20 },
+    "blink": { "cooldown": 10000, "distance": 70 }
   },
   "mob_royal_knight": {
     "name": "근위기사", "sprite": "mob_royal_knight", "hp": 150, "atk": 14, "def": 6, "speed": 60, "exp": 30,

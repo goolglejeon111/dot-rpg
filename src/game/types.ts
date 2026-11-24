@@ -55,6 +55,11 @@ export interface BattleNode {
   note?: string;
 }
 
+/** 이동 맵: 레온을 움직여 맵을 지나간다 (물건 살펴보기, 경험치). explore = src/data/explore/maps.json의 맵 이름 */
+export interface ExploreNode {
+  explore: string;
+}
+
 /**
  * 체력 0 연출: 대사창을 닫고 who가 공격을 맞아 체력바가 0까지 떨어지며 쓰러진다 (조작 없음).
  * 기절·게임 오버 규칙을 따르지 않는다. 끝나면 다음 대사로
@@ -85,6 +90,7 @@ export type StoryNode =
   | MonologueNode
   | ChoiceNode
   | BattleNode
+  | ExploreNode
   | HpZeroNode
   | PlaceNode
   | EndingNode

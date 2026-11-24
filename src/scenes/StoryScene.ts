@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import type { BattleResult, BattleStart } from '../battle/BattleScene';
+import type { ExploreStart } from '../explore/ExploreScene';
 import { clearStory } from '../battle/progress';
 import { characters, stories } from '../game/data';
 import { gameState, type StateData } from '../game/GameState';
@@ -370,7 +371,7 @@ export class StoryScene extends Phaser.Scene {
     const node: StoryNode | undefined = sc.nodes[this.nodeIdx];
     this.monoIdx = 0;
     // 전투에서 지면(게임 오버) 이 저장부터 다시 시작한다
-    if (node && ('text' in node || 'monologue' in node || 'choices' in node || 'battle' in node)) this.saveHere();
+    if (node && ('text' in node || 'monologue' in node || 'choices' in node || 'battle' in node || 'explore' in node)) this.saveHere();
     if (!node) {
       // 장면 끝: 다음 장면으로 (선택지로만 들어가는 장면은 건너뛴다)
       let next = this.sceneIdx + 1;
@@ -386,6 +387,8 @@ export class StoryScene extends Phaser.Scene {
       this.showChoices(node.choices);
     } else if ('battle' in node) {
       this.startBattle({ battle: node.battle });
+    } else if ('explore' in node) {
+      this.startExplore(node.explore);
     } else if ('hpZero' in node) {
       this.startBattle({ battle: 'hpZero', hpZero: { who: node.hpZero, by: node.by ?? 'mob_royal_knight', count: node.count ?? 3 } });
     } else if ('place' in node) {
@@ -411,6 +414,26 @@ export class StoryScene extends Phaser.Scene {
       this.clearText();
       for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
       this.scene.launch('Battle', { ...b, onEnd: (r: BattleResult) => this.afterBattle(r) } satisfies BattleStart);
+      this.scene.sleep();
+    });
+  }
+
+  /** 대사창을 닫고 이동 맵으로. goal에 닿으면 다음 대사로 */
+  private startExplore(map: string) {
+    this.mode = 'busy';
+    this.toggleAuto(false);
+    this.cameras.main.fadeOut(350, 0, 0, 0);
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      this.clearText();
+      for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
+      this.scene.launch('Explore', {
+        map,
+        onEnd: () => {
+          this.scene.wake();
+          this.cameras.main.fadeIn(400, 0, 0, 0);
+          this.time.delayedCall(350, () => this.nextNode());
+        },
+      } satisfies ExploreStart);
       this.scene.sleep();
     });
   }
@@ -507,7 +530,7 @@ export class StoryScene extends Phaser.Scene {
     let i = this.nodeIdx + 1;
     for (; i < nodes.length; i++) {
       const n = nodes[i];
-      if ('place' in n || 'choices' in n || 'ending' in n || 'chapter' in n || 'battle' in n || 'hpZero' in n) break; // 전투는 건너뛰지 않음
+      if ('place' in n || 'choices' in n || 'ending' in n || 'chapter' in n || 'battle' in n || 'hpZero' in n || 'explore' in n) break; // 전투·이동 맵은 건너뛰지 않음
       if ('text' in n) gameState.applyEffects(n);
     }
     this.toggleAuto(false);

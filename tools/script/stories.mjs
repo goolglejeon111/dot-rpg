@@ -21,6 +21,9 @@ export const STORIES = [
     ],
     // 대사/독백 앞에 끼워 넣을 것. before = 그 대사나 독백 덩어리의 첫 줄
     inserts: [
+      // 이동 맵 (src/data/explore/maps.json): 레온을 움직여 지나가며 물건을 살펴본다
+      { scene: 'scene1', before: '또 너냐, 아르덴 촌놈.', node: { explore: 'palace_hall' } },
+      { scene: 'scene3', before: '그 끝에서, 그림자가 멈춰 섰다.', node: { explore: 'chamber_corridor' } },
       { scene: 'scene2', before: '칼이 부딪친다.', node: { battle: '하수인들' } },
       { scene: 'scene3', before: '발을 내디딘다.', node: { battle: '침입자' } },
       // 체력 0 연출: 근위기사들이 레온을 공격해 체력바가 0이 되고 쓰러진 뒤 데드엔딩 독백으로

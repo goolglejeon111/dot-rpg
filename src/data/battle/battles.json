@@ -21,10 +21,20 @@
     "party": ["leon"],
     "start": { "leon": [120, 170] },
     "waves": [[{ "enemy": "marcion_hooded", "x": 330, "y": 150 }]],
-    "outcomes": { "damage": { "continue": true }, "wipe": { "continue": true } },
-    "damage": 150,
+    "outcomes": { "finisher": { "continue": true }, "wipe": { "continue": true } },
     "exp": 60,
-    "guide": "붉게 빛나는 공격은 막을 수 없습니다. 바닥이 붉어지면 공격해서 시전을 끊으세요"
+    "guide": "바닥이 붉어지면 막을 수 없습니다. 범위 밖으로 피하거나 공격해서 시전을 끊으세요",
+    "_튜토리얼": "goal: hit 베기, block 막기, parry 튕겨 내기, dodge 붉은 범위 피하기, free 자유. count 만큼 하면 다음 단계",
+    "tutorial": [
+      { "goal": "hit", "text": "침입자에게 다가가 왼쪽 클릭으로 베세요", "count": 3 },
+      { "goal": "block", "text": "Shift를 누르고 있으면 앞에서 오는 빛을 막습니다", "count": 2 },
+      { "goal": "parry", "text": "빛이 닿기 직전에 Shift를 누르면 튕겨 내고 반격합니다", "count": 1, "skipAfterBlocks": 6 },
+      { "goal": "dodge", "text": "바닥이 붉어지면 막을 수 없습니다. 붉은 범위 밖으로 피하세요", "count": 2 },
+      { "goal": "free", "text": "이제 몰아붙이세요! 시전 뒤 멈춘 틈을 노리세요" }
+    ],
+    "_마지막일격": "보스 체력이 at 이하가 되면 궁극기를 잠시 열어 자동으로 마무리 (대본상 팔을 베는 장면)",
+    "finisher": { "at": 0.35, "name": "맹세의 검" },
+    "noFall": true
   },
   "test_branch": {
     "title": "갈래 전투 시험",

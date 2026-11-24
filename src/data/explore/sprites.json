@@ -1,0 +1,68 @@
+{
+  "tiles": {
+    "file": "assets/explore/palace_tiles.png",
+    "size": 32,
+    "names": [
+      "floor",
+      "floor2",
+      "carpet_top",
+      "carpet_mid",
+      "carpet_bot",
+      "wall_top",
+      "wall_front",
+      "wall_window"
+    ]
+  },
+  "props": {
+    "portrait": {
+      "file": "assets/explore/portrait.png",
+      "w": 26,
+      "h": 30,
+      "frames": 1
+    },
+    "banner": {
+      "file": "assets/explore/banner.png",
+      "w": 16,
+      "h": 44,
+      "frames": 1
+    },
+    "torch": {
+      "file": "assets/explore/torch.png",
+      "w": 12,
+      "h": 22,
+      "frames": 3,
+      "rate": 6
+    },
+    "armor": {
+      "file": "assets/explore/armor.png",
+      "w": 22,
+      "h": 40,
+      "frames": 1
+    },
+    "vase": {
+      "file": "assets/explore/vase.png",
+      "w": 16,
+      "h": 28,
+      "frames": 1
+    },
+    "table": {
+      "file": "assets/explore/table.png",
+      "w": 32,
+      "h": 28,
+      "frames": 1
+    },
+    "door": {
+      "file": "assets/explore/door.png",
+      "w": 32,
+      "h": 48,
+      "frames": 1
+    },
+    "look": {
+      "file": "assets/explore/look.png",
+      "w": 9,
+      "h": 9,
+      "frames": 2,
+      "rate": 3
+    }
+  }
+}

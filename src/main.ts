@@ -3,6 +3,7 @@ import { BattleHUD } from './battle/BattleHUD';
 import { BattleScene } from './battle/BattleScene';
 import { gameState } from './game/GameState';
 import { FieldScene } from './scenes/FieldScene';
+import { ExploreScene } from './explore/ExploreScene';
 import { StoryScene } from './scenes/StoryScene';
 import { TitleScene } from './scenes/TitleScene';
 
@@ -35,7 +36,7 @@ const game = new Phaser.Game({
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   // 첫 장면 = 타이틀. 필드(FieldScene)는 1막에서 이어 붙일 예정
-  scene: [TitleScene, StoryScene, FieldScene, BattleScene, BattleHUD],
+  scene: [TitleScene, StoryScene, FieldScene, ExploreScene, BattleScene, BattleHUD],
 });
 
 window.addEventListener('resize', () => game.scale.setZoom(fitZoom()));

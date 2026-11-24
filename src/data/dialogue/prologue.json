@@ -27,6 +27,7 @@
       "id": "scene1", "title": "장면 1. 황궁의 밤", "place": "황궁 회랑", "color": "#141a2a",
       "nodes": [
         {"monologue":["제국력 312년, 황도 아에테리움.","자정을 앞둔 황궁은, 숨소리 하나 없이 고요했다."]},
+        {"explore":"palace_hall"},
         {"speaker":"bram","expression":"normal","text":"또 너냐, 아르덴 촌놈."},
         {"speaker":"leon","expression":"normal","text":"오늘 밤은 너랑 같이 돌라는 명령이야."},
         {"speaker":"bram","expression":"angry","text":"알아. 그것도 침소 쪽 회랑을. 거긴 원래 단장님이 직접 맡으시는 자리야."},
@@ -86,6 +87,7 @@
       "nodes": [
         {"monologue":["침소로 이어지는 마지막 회랑."]},
         {"monologue":["경비병들이 쓰러져 있었다.","넷. 전부 목이 꺾인 채로.","칼을 뽑은 흔적조차 없었다."]},
+        {"explore":"chamber_corridor"},
         {"monologue":["그 끝에서, 그림자가 멈춰 섰다."]},
         {"speaker":"leon","expression":"angry","text":"거기까지다. 황실 근위기사 레온이다. 무기를 버려라."},
         {"speaker":"marcion_hooded","expression":"normal","text":"…근위기사라. 이 밤에 길을 막는 게 고작 어린 기사 하나인가."},

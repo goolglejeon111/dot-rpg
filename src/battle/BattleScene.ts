@@ -95,6 +95,17 @@ interface EnemyDef {
   bolt?: { cast: number; speed: number; mult: number; cooldown: number; unblockable: boolean };
   area?: { every: number; cast: number; radius: number; mult: number; breakDamage: number };
   blink?: { cooldown: number; distance: number };
+  /** 시전 뒤 멈춰 서 있는 시간 (이때 때리기 쉽다) */
+  recover?: number;
+}
+
+/** 전투 튜토리얼 한 단계. goal: hit(적을 벰) block(막기) parry(튕겨 내기) dodge(붉은 범위 피하기) free(자유) */
+interface TutStep {
+  goal: 'hit' | 'block' | 'parry' | 'dodge' | 'free';
+  text: string;
+  count?: number;
+  /** 이 단계에서 막기를 이만큼 하면 그냥 넘어감 (튕겨 내기가 어려울 때) */
+  skipAfterBlocks?: number;
 }
 
 interface BattleDef {
@@ -109,6 +120,11 @@ interface BattleDef {
   timeLimit?: number;
   exp?: number;
   guide?: string;
+  tutorial?: TutStep[];
+  /** 마지막 일격: 보스 체력이 at 이하가 되면 궁극기를 잠시 열어 자동으로 쓰고 체력을 0으로 (대본 연출용) */
+  finisher?: { at: number; name: string };
+  /** 파티가 쓰러지지 않음 (체력 1에서 멈춤) */
+  noFall?: boolean;
 }
 
 type State =
@@ -166,6 +182,7 @@ export class Fighter {
   area?: { x: number; y: number; r: number; warn: Phaser.GameObjects.Sprite };
   stunUntil = 0;
   exploded = false;
+  recoverUntil = 0;
 
   constructor(
     readonly id: string,
@@ -243,6 +260,11 @@ export class BattleScene extends Phaser.Scene {
   wheelOpen = false;
   /** 기절·게임 오버 규칙을 쓰는지 (체력 0 연출에서는 끔) */
   cutscene = false;
+  /** 튜토리얼 진행: 몇 번째 단계, 그 단계에서 몇 번 했는지 */
+  tutI = 0;
+  tutN = 0;
+  tutBlocks = 0;
+  finishing = false;
 
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private attackClick = false;
@@ -273,6 +295,10 @@ export class BattleScene extends Phaser.Scene {
     this.notices = [];
     this.wheelOpen = false;
     this.cutscene = !!data.hpZero;
+    this.tutI = 0;
+    this.tutN = 0;
+    this.tutBlocks = 0;
+    this.finishing = false;
     this.vin = { mx: 0, my: 0, attack: false, evade: false, jump: false, skill: false, ult: false, combo: false, interact: false, swap: 0 };
     this.prevVin = {};
     const all = battles as unknown as Record<string, BattleDef>;
@@ -316,7 +342,53 @@ export class BattleScene extends Phaser.Scene {
     });
 
     this.scene.launch('BattleHUD', { battle: this });
-    this.notices.push({ kind: 'guide', text: this.bdef.guide ?? '', ms: 6000 });
+    if (this.bdef.tutorial?.length) this.tutShow();
+    else this.notices.push({ kind: 'guide', text: this.bdef.guide ?? '', ms: 6000 });
+  }
+
+  // ---- 튜토리얼 ----
+
+  /** 지금 단계의 목표 (튜토리얼이 없거나 끝났으면 free) */
+  get tutGoal(): TutStep['goal'] {
+    return this.bdef.tutorial?.[this.tutI]?.goal ?? 'free';
+  }
+
+  get tutorialDone() {
+    const t = this.bdef.tutorial;
+    return !t || this.tutI >= t.length - 1;
+  }
+
+  private tutShow() {
+    const st = this.bdef.tutorial?.[this.tutI];
+    if (!st) return;
+    const c = st.count ?? 1;
+    const text = st.goal === 'free' ? st.text : c > 1 ? `${st.text}  (${this.tutN}/${c})` : st.text;
+    this.notices.push({ kind: 'guide', text, ms: st.goal === 'free' ? 5000 : 600000 });
+  }
+
+  /** 튜토리얼 목표를 한 번 해냄. 지금 단계의 목표였으면 true */
+  private tutEvent(goal: TutStep['goal']) {
+    const st = this.bdef.tutorial?.[this.tutI];
+    if (!st || this.ended) return false;
+    if (goal === 'block' && st.skipAfterBlocks && ++this.tutBlocks >= st.skipAfterBlocks && st.goal !== 'block') {
+      this.notices.push({ kind: 'toast', text: '괜찮습니다. 튕겨 내기는 싸우면서 익혀도 됩니다' });
+      this.tutNext();
+      return true;
+    }
+    if (st.goal !== goal) return false;
+    this.tutN++;
+    if (this.tutN >= (st.count ?? 1)) {
+      this.notices.push({ kind: 'toast', text: goal === 'parry' ? '튕겨 냈습니다!' : '좋습니다!' });
+      this.tutNext();
+    } else this.tutShow();
+    return true;
+  }
+
+  private tutNext() {
+    this.tutI++;
+    this.tutN = 0;
+    this.tutBlocks = 0;
+    this.time.delayedCall(700, () => this.tutShow());
   }
 
   // ---------------------------------------------------------------
@@ -797,11 +869,13 @@ export class BattleScene extends Phaser.Scene {
           t.aimY = fy / fl;
           t.facing = dirOf(fx, fy);
           this.startHit(t, 2); // 반격 = 3타째 강한 베기
+          if (t === this.controlled) this.tutEvent('parry') || this.tutEvent('block');
           return false;
         } else {
           this.fx('block', t.x + (fx / fl) * 10, t.y - BODY + (fy / fl) * 6, { depth: t.y + 5, flipX: fx > 0 });
           t.stamina -= ev.blockCost ?? 14;
           this.moveBy(t, (-fx / fl) * 3, (-fy / fl) * 3);
+          if (t === this.controlled) this.tutEvent('block');
           if (t.stamina <= 0) {
             this.word('break', t);
             this.endGuard(t);
@@ -814,6 +888,11 @@ export class BattleScene extends Phaser.Scene {
     let dmg = o.raw ? amount : Math.max(1, Math.round(amount * (0.9 + Math.random() * 0.2) - t.defense * 0.5));
     // NPC 아군은 쓰러지지 않음 (갈래 전투에서 "그 인물이 쓰러지면"이 있으면 쓰러질 수 있음)
     if (t.team === 'ally' && !this.bdef.outcomes?.[`fall:${t.id}`]) dmg = Math.min(dmg, t.hp - 1);
+    // 쓰러지지 않는 전투 (대본상 지면 안 되는 전투)
+    if (t.team === 'party' && this.bdef.noFall) dmg = Math.min(dmg, t.hp - 1);
+    // 마지막 일격 전에는 보스 체력이 그 아래로 내려가지 않음 (튜토리얼을 다 할 때까지)
+    const fin = this.bdef.finisher;
+    if (fin && t.enemy?.boss && !this.tutorialDone) dmg = Math.min(dmg, Math.max(0, t.hp - Math.ceil(t.maxHp * fin.at) - 1));
     if (dmg <= 0 && t.team === 'ally') {
       this.fx('hit', t.x, t.y - BODY, { depth: t.y + 5 });
       return true;
@@ -826,6 +905,18 @@ export class BattleScene extends Phaser.Scene {
       this.comboGauge = Math.min(100, this.comboGauge + 3);
     }
     if (t.team === 'enemy') this.damageDealt += dmg;
+    if (t.team === 'enemy' && src && src === this.controlled) this.tutEvent('hit');
+    // 마지막 일격
+    if (fin && t.enemy?.boss && this.tutorialDone && !this.finishing && t.hp <= t.maxHp * fin.at) {
+      t.hp = Math.max(1, t.hp);
+      this.startFinisher(t);
+      return true;
+    }
+    // 보스도 강한 베기(3타째)에는 잠깐 휘청인다
+    if (t.enemy?.boss && o.heavy && t.state !== 'cast' && t.hp > 0) {
+      t.state = 'stagger';
+      t.stunUntil = this.now + 450;
+    }
     if (t.state === 'cast' && t.castKind === 'area') t.castTaken += dmg;
 
     // 밀려남
@@ -958,9 +1049,8 @@ export class BattleScene extends Phaser.Scene {
     e.state = 'prep';
     e.stateT = 0;
     e.combo = -1;
-    // 하얀 빛 신호 + 막을 수 없는 공격의 붉은 윤곽 + 바닥의 범위
+    // 하얀 빛 신호 + 바닥의 붉은 범위
     e.signal = this.fx('gnosis_signal', e.x, e.y - BODY, { loop: true, depth: e.y + 2 });
-    e.glow = this.fx('warn_glow', e.x, e.y - 22, { loop: true, depth: e.y + 1 });
     const warn = this.fx('warn_area', e.x, e.y, { loop: true, depth: -5 });
     warn.setScale(sd.radius / 46).setAlpha(0.85);
     e.area = { x: e.x, y: e.y, r: sd.radius, warn };
@@ -1103,7 +1193,16 @@ export class BattleScene extends Phaser.Scene {
     e.facing = dirOf(dx, dy);
     e.aimX = dx / d;
     e.aimY = dy / d;
-    if (d < keep) {
+    const goal = ed.boss && this.bdef.tutorial ? this.tutGoal : 'free';
+    // 튜토리얼 첫 단계(베기 연습)에는 가만히 서 있는다
+    if (goal === 'hit') {
+      e.state = 'idle';
+      e.aiCd = Math.max(e.aiCd, 600);
+      return;
+    }
+    // 시전 직후에는 잠깐 멈춰 선다 (반격할 틈)
+    if (this.now < e.recoverUntil) e.state = 'idle';
+    else if (d < keep) {
       const nx = e.x - (dx / d) * e.speed * (dt / 1000);
       const ny = e.y - (dy / d) * e.speed * (dt / 1000);
       const cornered = nx < this.bounds.x0 + 20 || nx > this.bounds.x1 - 20 || ny < this.bounds.y0 + 14 || ny > this.bounds.y1 - 14;
@@ -1123,19 +1222,18 @@ export class BattleScene extends Phaser.Scene {
     } else e.state = 'idle';
     if (e.aiCd <= 0) {
       e.attacks++;
-      const area = ed.area && e.attacks % ed.area.every === 0;
+      // 튜토리얼: 막기 연습엔 빛만, 피하기 연습엔 범위 공격만
+      const area = goal === 'dodge' ? !!ed.area : goal === 'block' || goal === 'parry' ? false : ed.area && e.attacks % ed.area.every === 0;
       e.state = 'cast';
       e.stateT = 0;
       e.castKind = area ? 'area' : 'bolt';
       e.castTaken = 0;
-      e.glow = this.fx('warn_glow', e.x, e.y - 22, { loop: true, depth: e.y + 1 });
       const hand = this.fx('light_cast', e.x + e.aimX * 10, e.y - BODY - 2, { loop: true, depth: e.y + 3 });
       e.extra.push(hand);
       if (area) {
         const warn = this.fx('warn_area', t.x, t.y, { loop: true, depth: -5 });
         warn.setScale(ed.area!.radius / 46).setAlpha(0.9);
         e.area = { x: t.x, y: t.y, r: ed.area!.radius, warn };
-        this.notices.push({ kind: 'toast', text: '피할 수 없는 공격! 공격해서 시전을 끊으세요' });
       }
     }
   }
@@ -1145,7 +1243,7 @@ export class BattleScene extends Phaser.Scene {
     e.stateT += dt;
     const cast = e.castKind === 'area' ? ed.area!.cast : ed.bolt!.cast;
     // 범위 공격은 일정 피해를 받으면 끊긴다
-    if (e.castKind === 'area' && e.castTaken >= ed.area!.breakDamage) {
+    if (e.castKind === 'area' && e.castTaken >= ed.area!.breakDamage && this.tutGoal !== 'dodge') {
       this.word('break', e);
       this.endCast(e);
       e.state = 'stagger';
@@ -1158,9 +1256,15 @@ export class BattleScene extends Phaser.Scene {
       const { x, y, r } = e.area;
       this.fx('light_burst', x, y - 10, { depth: y + 10, scale: r / 20 });
       this.cameras.main.shake(160, 0.005);
+      let hitMe = false;
       for (const t of this.all.filter((a) => a.targetable && a.team !== 'enemy')) {
-        if (Math.hypot(t.x - x, (t.y - y) / 0.5) <= r) this.damage(t, e, e.atk * ed.area!.mult, { area: true, unblockable: true, heavy: true, push: 10, from: { x, y } });
+        if (Math.hypot(t.x - x, (t.y - y) / 0.5) <= r) {
+          this.damage(t, e, e.atk * ed.area!.mult, { area: true, unblockable: true, heavy: true, push: 10, from: { x, y } });
+          if (t === this.controlled) hitMe = true;
+        }
       }
+      if (!hitMe) this.tutEvent('dodge');
+      else if (this.tutGoal === 'dodge') this.notices.push({ kind: 'toast', text: '붉은 범위 밖으로 걸어 나가세요' });
     } else {
       // 빛을 쏜다 (조준한 쪽으로)
       const t = this.all.filter((a) => a.targetable && a.team !== 'enemy').sort((a, b) => Math.hypot(a.x - e.x, a.y - e.y) - Math.hypot(b.x - e.x, b.y - e.y))[0];
@@ -1174,6 +1278,7 @@ export class BattleScene extends Phaser.Scene {
     this.endCast(e);
     e.state = 'idle';
     e.aiCd = (ed.bolt?.cooldown ?? 1500) + Math.random() * 500;
+    e.recoverUntil = this.now + (ed.recover ?? 0);
   }
 
   private endCast(e: Fighter) {
@@ -1241,6 +1346,57 @@ export class BattleScene extends Phaser.Scene {
   // ---------------------------------------------------------------
   // 결과
   // ---------------------------------------------------------------
+
+  /**
+   * 마지막 일격 (대본: 레온이 침입자의 팔을 벤다).
+   * 궁극기를 잠시 열어 자동으로 쓰고, 보스 체력을 0으로 만든 뒤 결과 'finisher'로 끝낸다
+   */
+  private startFinisher(e: Fighter) {
+    const fin = this.bdef.finisher!;
+    const l = this.controlled ?? this.party[0];
+    this.finishing = true;
+    this.endCast(e);
+    for (const p of this.projectiles) p.s.destroy();
+    this.projectiles = [];
+    e.state = 'stagger';
+    e.stunUntil = Infinity;
+    this.frozen = true;
+    this.notices.push({ kind: 'unlock', text: `궁극기 「${fin.name}」 일시 개방`, what: 'ult' });
+    if (!l) return this.time.delayedCall(1200, () => this.finish('finisher'));
+    l.state = 'prep';
+    this.fx('unlock', l.x, l.y - BODY, { depth: l.y + 5 });
+    this.cameras.main.flash(250, 255, 255, 255);
+    this.time.delayedCall(1100, () => {
+      // 달려들며 내려친다
+      const dx = e.x - l.x;
+      const dy = e.y - l.y;
+      const dl = Math.hypot(dx, dy) || 1;
+      l.aimX = dx / dl;
+      l.aimY = dy / dl;
+      l.facing = dirOf(dx, dy);
+      l.state = 'attack';
+      l.combo = 2;
+      l.stateT = 0;
+      this.tweens.add({ targets: l, x: e.x - (dx / dl) * 20, y: e.y - (dy / dl) * 6, duration: 170, ease: 'Quad.out' });
+    });
+    this.time.delayedCall(1320, () => {
+      l.stateT = 9999;
+      this.fx(l.def.ult?.fx ?? 'hit_heavy', e.x, e.y - BODY, { depth: e.y + 10 });
+      this.fx('hit_heavy', e.x, e.y - BODY, { depth: e.y + 11 });
+      this.cameras.main.shake(320, 0.012);
+      this.cameras.main.flash(300, 255, 255, 255);
+      this.damageNumber(e, e.hp, false);
+      e.hp = 0;
+      // 무릎 꿇은 모습으로 멈춤
+      e.sprite.setTexture(`bt_${e.spriteKey}`, DIRS.indexOf(e.facing) * 12 + 10);
+      e.hpBar?.frame.setVisible(false);
+      e.hpBar?.fill.setVisible(false);
+    });
+    this.time.delayedCall(2300, () => {
+      l.state = 'idle';
+      this.finish('finisher');
+    });
+  }
 
   private checkOutcome() {
     const b = this.bdef;
@@ -1392,7 +1548,7 @@ export class BattleScene extends Phaser.Scene {
     }
     // 무적(일어난 직후) 깜빡임, 막을 수 없는 공격 준비 중엔 붉게
     s.setAlpha(this.now < f.invulnUntil ? (Math.floor(this.now / 80) % 2 ? 0.5 : 1) : 1);
-    if (f.glow) s.setTint(Math.floor(this.now / 120) % 2 ? 0xff9a9a : 0xffffff);
+    if (f.state === 'prep' && f.enemy?.selfDestruct) s.setTint(Math.floor(this.now / 120) % 2 ? 0xff9a9a : 0xffffff);
     else s.clearTint();
     f.glow?.setPosition(f.x, f.y - 22 - f.z).setDepth(f.y + 1);
     f.signal?.setPosition(f.x, f.y - BODY).setDepth(f.y + 2);

@@ -287,6 +287,8 @@ export class BattleScene extends Phaser.Scene {
   oy = 0;
   private lit = false;
   private prevVin: Partial<VirtualInput> = {};
+  /** 어두운 맵에서 인물이 들고 다니는 빛 (맵 화면의 빛과 함께 움직인다) */
+  private carry: { id: string; light: Phaser.GameObjects.Light; base: number; pulse: boolean } | null = null;
 
   constructor() {
     super('Battle');
@@ -328,6 +330,7 @@ export class BattleScene extends Phaser.Scene {
     const m = data.map;
     this.onMap = m?.currentMap && (data.hpZero || !this.bdef?.arena.map || this.bdef.arena.map === m.mapId) ? m : null;
     this.lit = false;
+    this.carry = null;
   }
 
   preload() {
@@ -376,7 +379,25 @@ export class BattleScene extends Phaser.Scene {
     if (this.lit) {
       this.lights.enable().setAmbientColor(L.ambient);
       for (const l of L.lights) this.lights.addLight(l.x - this.ox, l.y - this.oy, l.r, l.color, l.intensity);
+      const c = m.carrier();
+      if (c) this.carry = { id: c.id, light: this.lights.addLight(0, 0, c.r, c.color, c.intensity), base: c.intensity, pulse: c.pulse };
     }
+  }
+
+  /** 빛을 든 인물을 따라 빛을 옮긴다 (맵 화면의 바닥 빛도 같이) */
+  private updateCarry() {
+    const c = this.carry;
+    if (!c || !this.onMap) return;
+    const f = this.party.find((p) => p.id === c.id && p.alive);
+    if (!f) return;
+    const x = f.x;
+    const y = f.y - 24 - f.z;
+    c.light.setPosition(x, y);
+    if (c.pulse) {
+      const t = this.time.now / 1000;
+      c.light.intensity = c.base * (0.75 + 0.25 * Math.max(0, Math.sin(t * 2.4)) ** 3);
+    }
+    this.onMap.trackCarry(c.id, { x: x + this.ox, y: y + this.oy });
   }
 
   /** 맵 화면 카메라와 같은 곳을 본다 */
@@ -697,6 +718,7 @@ export class BattleScene extends Phaser.Scene {
     this.updateProjectiles(dt);
     this.separate();
     if (!this.cutscene && !this.ended) this.checkOutcome();
+    this.updateCarry();
     this.renderAll();
     this.syncCamera();
   }
@@ -1586,6 +1608,7 @@ export class BattleScene extends Phaser.Scene {
   private finish(outcome: string, forced?: OutcomeAction) {
     if (this.ended) return;
     this.ended = true;
+    if (this.carry) this.onMap?.trackCarry(this.carry.id, null);
     this.wheelOpen = false;
     this.timeScale = 1;
     this.reviving = null;

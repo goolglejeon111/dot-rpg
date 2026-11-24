@@ -46,6 +46,18 @@ const FLOOR = {
   '~': (x, y) => ((x * 3 + y * 7) % 4 === 0 ? 'water2' : 'water'),
   q: () => 'quay',
   c: () => 'cobble',
+  // 1막
+  s: (x, y) => ((x * 7 + y * 13) % 9 === 0 ? 'sewer_floor2' : 'sewer_floor'),
+  e: () => 'sewer_edge',
+  o: (x, y) => ((x * 3 + y * 7) % 4 === 0 ? 'sewer_water2' : 'sewer_water'),
+  i: () => 'cistern_floor',
+  k: () => 'cellar_floor',
+  m: () => 'mud',
+  n: () => 'mud_snow',
+  b: () => 'bridge',
+  g: () => 'grass',
+  d: () => 'sand',
+  r: () => 'river',
 };
 const WALL = {
   '#': () => 'wall_top',
@@ -56,6 +68,12 @@ const WALL = {
   H: () => 'castle_top',
   C: (x, y) => ((x * 13 + y * 5) % 6 === 0 ? 'castle_moss' : 'castle_wall'),
   B: () => 'castle_base',
+  // 1막
+  X: () => 'sewer_wall_top',
+  S: () => 'sewer_wall',
+  K: () => 'cellar_wall',
+  P: () => 'shack_wall',
+  R: () => 'shack_roof',
 };
 
 /** 맵 한 장을 Tiled JSON으로 */
@@ -351,6 +369,243 @@ const MAPS = {};
     spawn('moat_view', 560, 300, 'up'),
   );
   MAPS.moat = { rows: m.rows(), objects, props: { place: '해자', ambient: '#3a4670', bg: '#04040a' } };
+}
+
+// =====================================================================
+// 1막 맵
+// =====================================================================
+/** 바닥 칸 바로 위가 막힌 윗면(X)이면 그 칸을 벽 앞면(S)으로 (수로 통로를 깎아 낸 뒤) */
+function faces(m, top = 'X', face = 'S') {
+  const g = m.g;
+  for (let y = 1; y < g.length; y++)
+    for (let x = 0; x < g[0].length; x++) if (FLOOR[g[y][x]] && g[y - 1][x] === top) g[y - 1][x] = face;
+  return m;
+}
+const ty = (row) => row * TS + TS / 2; // 칸 가운데 y
+const npc = (name, x, y, sprite, facing, talk) => ({ type: 'npc', name, x, y, sprite, facing, talk });
+
+// ---- 1막-1) 지하 수로 통로 (60 x 20): 물길 양옆 좁은 돌길, 가운데 넓은 물가(전투장) ----
+{
+  const W = 60;
+  const H = 20;
+  const m = grid(W, H, 'X');
+  m.rect(1, 3, W - 2, 6, 's');
+  m.rect(1, 7, W - 2, 7, 'e');
+  m.rect(1, 8, W - 2, 13, 'o');
+  m.rect(1, 14, W - 2, 16, 's');
+  m.rect(22, 7, 37, 12, 's'); // 가운데 넓은 물가 (위아래 돌길을 잇는다)
+  m.rect(22, 13, 37, 13, 's');
+  m.rect(1, 13, 21, 13, 'e');
+  m.rect(38, 13, W - 2, 13, 'e');
+  faces(m);
+  const objects = [];
+  objects.push(wallItem('grate', cx(2), 96));
+  objects.push(look('a1_grate', cx(2), 118, 60));
+  objects.push(wallItem('scorch', cx(12), 84), wallItem('scorch', cx(15), 84), look('a1_scorched_wall', cx(13), 118, 50));
+  objects.push(spawn('leon_start', cx(3), 150, 'right'), spawn('shore', cx(28), 300, 'down'));
+  objects.push({ type: 'goal', name: 'goal_shore', x: cx(29), y: 280, r: 56 });
+  objects.push({ type: 'arena', name: 'arena', x: 23 * TS, y: 4 * TS, w: 448, h: 288 });
+  MAPS.sewer_a = { rows: m.rows(), objects, props: { place: '지하 수로', ambient: '#0a0912', bg: '#030206', dark: true } };
+}
+
+// ---- 1막-2) 룬이 떠 있는 수로 (25 x 15): 물 위에 보랏빛 룬 6개 ----
+{
+  const W = 25;
+  const H = 15;
+  const m = grid(W, H, 'X');
+  m.rect(1, 3, W - 2, 6, 's');
+  m.rect(1, 7, W - 2, 7, 'e');
+  m.rect(1, 8, W - 2, 10, 'o');
+  m.rect(1, 11, W - 2, 12, 's');
+  faces(m);
+  const objects = [];
+  const runes = [[7, 8.6], [10, 9.6], [13, 8.4], [16, 9.8], [19, 8.8], [12, 10.4]];
+  for (const [c, r] of runes) {
+    objects.push({ type: 'prop', name: 'rune_float', x: cx(c), y: r * TS + 8 });
+    objects.push({ type: 'light', name: `rune${c}`, x: cx(c), y: r * TS, color: '#a07cff', radius: 70, intensity: 1.1 });
+  }
+  objects.push(look('a1_runes', cx(12), 228, 60));
+  objects.push(spawn('leon_start', cx(1), 150, 'right'), spawn('leon_talk', cx(9), 170, 'right'), spawn('elysia', cx(14), 172, 'right'));
+  objects.push({ type: 'goal', name: 'goal_exit', x: cx(23), y: 150, r: 40 });
+  MAPS.sewer_rune = { rows: m.rows(), objects, props: { place: '룬이 떠 있는 수로', ambient: '#0d0b18', bg: '#030206', dark: true } };
+}
+
+// ---- 1막-3) 수로 깊은 곳 (50 x 25): 갈림길이 많은 통로, 몹 무리, 숨겨진 동전, 끝에 저수조 입구 ----
+{
+  const W = 50;
+  const H = 25;
+  const m = grid(W, H, 'X');
+  m.rect(1, 3, 24, 5, 's'); // 들어오는 길
+  m.rect(22, 3, 24, 13, 's'); // 아래로
+  m.rect(25, 3, 31, 5, 's'); // 첫 갈림길 (막다른 길)
+  m.rect(8, 11, 41, 13, 's'); // 가운데 큰길
+  m.rect(8, 14, 41, 14, 'e');
+  m.rect(8, 15, 41, 16, 'o'); // 큰길 옆 물길
+  m.rect(26, 7, 39, 13, 's'); // 넓은 방 (필드 전투장)
+  m.rect(36, 7, 47, 9, 's'); // 셋째 갈림길 (막다른 길)
+  m.rect(10, 13, 12, 13, 's');
+  m.rect(10, 14, 12, 21, 's'); // 아래 갈림길
+  m.rect(10, 15, 12, 16, 's');
+  m.rect(3, 19, 9, 20, 's'); // 막다른 물길 끝의 작은 공간 (숨겨진 장소)
+  m.rect(3, 21, 9, 21, 'e');
+  m.rect(3, 22, 12, 22, 'o');
+  m.rect(39, 14, 41, 21, 's'); // 저수조 쪽
+  m.rect(39, 15, 41, 16, 's');
+  m.rect(39, 19, 48, 21, 's');
+  faces(m);
+  const objects = [];
+  objects.push({ type: 'prop', name: 'coins', x: cx(3) + 6, y: 20 * TS + 20 }, look('a1_hidden_coins', cx(3) + 6, 20 * TS + 26, 20 * TS - 4));
+  objects.push(spawn('leon_start', cx(1), 140, 'right'), spawn('elysia_start', cx(0) + 4, 150, 'right'));
+  objects.push(spawn('fork3', cx(44), ty(8), 'right'), spawn('fork_knights', cx(47), ty(8), 'left'));
+  // 몹 무리 (닿으면 짧은 전투). battle = battles.json 이름
+  objects.push({ type: 'mob', name: 'mob1', x: cx(17), y: ty(12), sprite: 'sewer_rat', battle: '수로 몹 1' });
+  objects.push({ type: 'mob', name: 'mob2', x: cx(33), y: ty(9), sprite: 'sewer_leech', battle: '수로 몹 2' });
+  objects.push({ type: 'mob', name: 'mob3', x: cx(40), y: ty(18), sprite: 'sewer_rat', battle: '수로 몹 3' });
+  objects.push({ type: 'goal', name: 'goal_cistern', x: cx(48), y: ty(20), r: 40 });
+  objects.push({ type: 'arena', name: 'arena', x: 26 * TS, y: 5 * TS, w: 448, h: 288 });
+  MAPS.sewer_b = { rows: m.rows(), objects, props: { place: '수로 깊은 곳', ambient: '#09080f', bg: '#030206', dark: true } };
+}
+
+// ---- 1막-4) 저수조 (30 x 25): 가운데는 물, 가장자리만 걷는다 ----
+{
+  const W = 30;
+  const H = 25;
+  const m = grid(W, H, 'X');
+  for (let y = 3; y <= 21; y++)
+    for (let x = 1; x <= W - 2; x++) {
+      const d = Math.hypot((x - 14.5) / 13.5, (y - 12) / 9.5);
+      if (d <= 1) m.set(x, y, 'i');
+      const w = Math.hypot((x - 14.5) / 9.5, (y - 7) / 4.4);
+      if (w <= 1) m.set(x, y, 'o');
+    }
+  // 물 아래 가장자리
+  for (let x = 1; x < W - 1; x++) for (let y = 4; y < 21; y++) if (m.g[y][x] === 'i' && m.g[y - 1][x] === 'o') m.g[y - 1][x] = 'o';
+  m.rect(0, 17, 6, 19, 'i'); // 들어오는 길
+  m.rect(23, 4, 28, 6, 'i'); // 사다리 앞
+  faces(m);
+  const objects = [];
+  objects.push(wallItem('ladder', cx(27), 4 * TS));
+  objects.push({ type: 'prop', name: 'bones', x: cx(4), y: ty(15) + 6 }, look('a1_bones', cx(4), ty(15) + 10, ty(15) - 20));
+  objects.push(spawn('leon_start', cx(0) + 8, ty(18), 'right'), spawn('elysia_start', cx(0) - 6, ty(18), 'right'));
+  objects.push(spawn('leon_edge', cx(13), ty(14), 'up'), spawn('elysia_edge', cx(16), ty(14), 'up'), spawn('eel', cx(15), ty(8), 'down'));
+  objects.push({ type: 'goal', name: 'goal_enter', x: cx(9), y: ty(17), r: 48 });
+  objects.push({ type: 'goal', name: 'goal_ladder', x: cx(27), y: 4 * TS + 40, r: 30, press: '사다리 오르기' });
+  objects.push({ type: 'arena', name: 'arena', x: 8 * TS, y: 9 * TS, w: 448, h: 288 });
+  MAPS.sewer_cistern = { rows: m.rows(), objects, props: { place: '저수조', ambient: '#0b0a14', bg: '#030206', dark: true } };
+}
+
+// ---- 1막-5) 마탑 은신처: 염색 공방 지하 (15 x 12) ----
+{
+  const W = 15;
+  const H = 12;
+  const m = grid(W, H, 'X');
+  m.rect(1, 3, W - 2, 10, 'k');
+  faces(m, 'X', 'K');
+  const objects = [];
+  objects.push({ type: 'prop', name: 'straw_bed', x: cx(3), y: ty(8) + 8, solid: '50,14' });
+  objects.push({ type: 'prop', name: 'dye_vat', x: cx(10), y: ty(9) + 10, solid: '26,10' }, { type: 'prop', name: 'dye_vat', x: cx(12), y: ty(9) + 10, solid: '26,10' });
+  objects.push(wallItem('cloth', cx(5), 92), wallItem('cloth', cx(9), 92));
+  objects.push({ type: 'prop', name: 'rune_table', x: cx(7), y: ty(5) + 8, solid: '36,10' }, look('a1_violet_paper', cx(7), ty(5) + 20, ty(5) - 30));
+  objects.push(wallItem('measure_paper', cx(11), 76), look('a1_measurements', cx(11), 112, 50));
+  objects.push({ type: 'prop', name: 'candle', x: cx(6), y: ty(4), solid: '8,6' }, { type: 'prop', name: 'candle', x: cx(9), y: ty(7) });
+  objects.push(wallItem('ladder', cx(13), 3 * TS));
+  objects.push(spawn('leon_bed', cx(3), ty(8), 'down'), spawn('leon_start', cx(4), ty(9), 'down'), spawn('elysia', cx(8), ty(8), 'left'));
+  objects.push({ type: 'goal', name: 'goal_exit', x: cx(13), y: 3 * TS + 24, r: 26, press: '밖으로 나가기' });
+  MAPS.hideout = { rows: m.rows(), objects, props: { place: '마탑 은신처', ambient: '#584a40', bg: '#05040a' } };
+}
+
+// ---- 1막-6) 황도 외곽 빈민가 (40 x 20): 새벽, 벽마다 수배 전단, 지붕에 녹다 만 눈 ----
+{
+  const W = 40;
+  const H = 20;
+  const m = grid(W, H);
+  m.rect(0, 0, W - 1, 1, 'R');
+  m.rect(0, 2, W - 1, 3, 'P');
+  m.rect(0, 4, W - 1, 14, 'm');
+  m.rect(0, 15, W - 1, 16, 'P');
+  m.rect(0, 17, W - 1, 19, 'R');
+  for (const [x, y] of [[4, 6], [9, 12], [15, 5], [22, 13], [27, 7], [33, 11], [37, 5]]) m.rect(x, y, x + 1, y, 'n');
+  m.rect(12, 15, 13, 19, 'm'); // 골목
+  m.rect(28, 0, 29, 3, 'm');
+  const objects = [];
+  for (const c of [3, 8, 14, 19, 24, 31, 35]) objects.push(wallItem('wanted', cx(c), 104));
+  objects.push(wallItem('notice', cx(21), 108), look('a1_mourning_notice', cx(21), 136, 76));
+  objects.push(npc('passerby1', cx(7), ty(9), 'mob_citizen', 'down', 'a1_passerby1'));
+  objects.push(npc('passerby2', cx(18), ty(6), 'mob_citizen', 'down', 'a1_passerby2'));
+  objects.push(npc('passerby3', cx(30), ty(12), 'mob_citizen', 'left', 'a1_passerby3'));
+  objects.push(spawn('leon_start', cx(1), ty(9), 'right'), spawn('elysia_start', cx(0), ty(10), 'right'));
+  objects.push(spawn('leon_poster', cx(14), ty(5), 'up'), spawn('elysia_poster', cx(16), ty(6), 'left'));
+  objects.push({ type: 'goal', name: 'goal_exit', x: cx(39), y: ty(9), r: 48 });
+  MAPS.slum_alley = { rows: m.rows(), objects, props: { place: '황도 외곽 빈민가', ambient: '#6f86b8', bg: '#0b1020' } };
+}
+
+// ---- 1막-7) 아우렐 강 다리 검문소 (30 x 20): 낮. 목책과 병사, 게시판 ----
+{
+  const W = 30;
+  const H = 20;
+  const m = grid(W, H);
+  m.rect(0, 0, W - 1, H - 1, 'g');
+  m.rect(0, 8, 20, 11, 'c'); // 길
+  m.rect(21, 0, W - 1, H - 1, 'r'); // 강
+  m.rect(21, 8, W - 1, 11, 'b'); // 다리
+  const objects = [];
+  for (const y of [4, 5, 6, 13, 14, 15]) objects.push({ type: 'prop', name: 'palisade', x: cx(20), y: ty(y) + 14, solid: '30,12' });
+  objects.push({ type: 'prop', name: 'board', x: cx(17), y: ty(6) + 12, solid: '26,8' }, look('a1_checkpoint_board', cx(17), ty(6) + 26, ty(6) - 30));
+  objects.push(spawn('leon_start', cx(1), ty(9), 'right'), spawn('elysia_start', cx(0), ty(10), 'right'));
+  objects.push(spawn('leon_gate', cx(14), ty(9), 'right'), spawn('elysia_gate', cx(13), ty(10), 'right'));
+  const guards = [['sp1', 18, 8], ['sp2', 18, 11], ['sp3', 19, 7], ['sp4', 19, 12], ['ar1', 16, 5], ['ar2', 16, 14]];
+  for (const [n, c, r] of guards) objects.push(spawn(n, cx(c), ty(r), 'left'));
+  objects.push(spawn('leon_far', cx(29), ty(9), 'right'), spawn('elysia_far', cx(28), ty(10), 'right'));
+  objects.push({ type: 'goal', name: 'goal_gate', x: cx(15), y: ty(9) + 16, r: 60 });
+  objects.push({ type: 'arena', name: 'arena', x: 6 * TS, y: 5 * TS, w: 448, h: 288 });
+  MAPS.bridge_checkpoint = { rows: m.rows(), objects, props: { place: '아우렐 강 다리 검문소', ambient: '#ffffff', bg: '#5a7a3a' } };
+}
+
+// ---- 1막-8) 강둑 (50 x 15): 해질녘. 갈대밭, 물가 길. 오른쪽에서 왼쪽으로 ----
+{
+  const W = 50;
+  const H = 15;
+  const m = grid(W, H);
+  m.rect(0, 0, W - 1, 4, 'r');
+  m.rect(0, 5, W - 1, 6, 'd');
+  m.rect(0, 7, W - 1, H - 1, 'g');
+  m.rect(0, 5, 4, 5, 'r'); // 배가 있는 작은 물굽이
+  const objects = [];
+  const rnd = (() => {
+    let s = 9;
+    return () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+  })();
+  for (let i = 0; i < 26; i++) {
+    const c = 1 + Math.floor(rnd() * (W - 2));
+    const r = 8 + Math.floor(rnd() * 6);
+    if (c > 16 && c < 33) continue; // 전투장은 비워 둔다
+    objects.push({ type: 'prop', name: 'reeds', x: cx(c), y: ty(r) + 12 });
+  }
+  objects.push({ type: 'prop', name: 'boat', x: cx(2) + 8, y: ty(5) + 10 });
+  objects.push(spawn('leon_start', cx(47), ty(8), 'left'), spawn('elysia_start', cx(48), ty(9), 'left'));
+  objects.push(spawn('leon_mid', cx(25), ty(8), 'left'), spawn('elysia_mid', cx(26), ty(9), 'left'));
+  for (const [n, c, r] of [['k1', 35, 7], ['k2', 36, 9], ['k3', 35, 11], ['k4', 37, 8], ['k5', 37, 10]]) objects.push(spawn(n, cx(c), ty(r), 'left'));
+  objects.push({ type: 'goal', name: 'goal_boat', x: cx(3), y: ty(6) + 8, r: 40, press: '배에 오르기' });
+  objects.push({ type: 'arena', name: 'arena', x: 18 * TS, y: 5 * TS, w: 448, h: 288 });
+  MAPS.riverbank = { rows: m.rows(), objects, props: { place: '강둑', ambient: '#ffb98a', bg: '#3a2a20' } };
+}
+
+// ---- 1막-9) 강을 따라 내려가는 배 (화면 하나): 배는 가운데, 밤 → 새벽 ----
+{
+  const W = 16;
+  const H = 12;
+  const m = grid(W, H);
+  m.rect(0, 0, W - 1, 2, 'g');
+  m.rect(0, 3, W - 1, 3, 'd');
+  m.rect(0, 4, W - 1, 8, 'r');
+  m.rect(0, 9, W - 1, 9, 'd');
+  m.rect(0, 10, W - 1, 11, 'g');
+  const objects = [];
+  for (const c of [1, 4, 9, 13]) objects.push({ type: 'prop', name: 'reeds', x: cx(c), y: ty(2) + 14 });
+  for (const c of [2, 7, 11, 14]) objects.push({ type: 'prop', name: 'reeds', x: cx(c), y: ty(11) + 14 });
+  objects.push({ type: 'prop', name: 'boat', x: cx(8), y: ty(6) + 18 });
+  objects.push(spawn('leon_boat', cx(7) + 2, ty(6) + 8, 'down'), spawn('elysia_boat', cx(9) - 2, ty(6) + 8, 'down'));
+  MAPS.river_boat = { rows: m.rows(), objects, props: { place: '강 위', ambient: '#2a3560', bg: '#05070f' } };
 }
 
 // ---------------------------------------------------------------------

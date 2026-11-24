@@ -127,7 +127,9 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   /** 아래층 맵 화면(Explore) 상태 */
   private mapState: 'off' | 'loading' | 'on' = 'off';
   /** 물건 살펴보기 독백 */
-  private looking: { pages: string[][]; page: number; line: number; done: () => void } | null = null;
+  private looking: { pages: string[][]; page: number; line: number; done: () => void; name?: string } | null = null;
+  /** 맵 위 몹과의 짧은 전투가 끝나면 이동으로 돌아간다 */
+  private fieldDone: (() => void) | null = null;
 
   constructor() {
     super('Story');
@@ -390,14 +392,15 @@ export class StoryScene extends Phaser.Scene implements MapHost {
    */
   private mapSteps(i: number, node: number): (StageDef | null)[] {
     const sc = this.story.scenes[i];
-    const first = STAGE.scenes[sc.id];
+    // 장면 무대: "이야기:장면" 이름이 먼저 (막마다 장면 ID가 겹침), 프롤로그는 장면 ID만으로도
+    const first = STAGE.scenes[`${this.story.id}:${sc.id}`] ?? (this.story.id === 'prologue' ? STAGE.scenes[sc.id] : undefined);
     const steps: (StageDef | null)[] = [first ? STAGE.stages[first] ?? null : null];
     for (const n of sc.nodes.slice(0, node)) {
-      if ('stage' in n) steps.push(STAGE.stages[n.stage] ?? {});
+      if ('stage' in n) steps.push(STAGE.stages[n.stage]?.dark ? null : STAGE.stages[n.stage] ?? {});
       else if ('place' in n && STAGE.places[n.place]) steps.push(this.placeStage(n.place));
       else if ('explore' in n) {
         const after = STAGE.segments[n.explore]?.after;
-        if (after) steps.push(STAGE.stages[after] ?? {});
+        if (after) steps.push(STAGE.stages[after]?.dark ? null : STAGE.stages[after] ?? {});
       }
     }
     return steps;
@@ -441,6 +444,18 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     }
   }
 
+  /** 화면 전체 효과: 번쩍임(색), 흔들림(세기) */
+  private screenFx(fx: { flash?: string; shake?: number }) {
+    if (fx.flash) {
+      const c = Phaser.Display.Color.HexStringToColor(fx.flash);
+      this.cameras.main.flash(220, c.red, c.green, c.blue);
+    }
+    if (fx.shake) {
+      this.cameras.main.shake(320, fx.shake);
+      if (this.mapState === 'on') this.scene.get('Explore').cameras.main.shake(320, fx.shake);
+    }
+  }
+
   private hideMap() {
     if (this.mapState !== 'off') this.scene.stop('Explore');
     this.mapState = 'off';
@@ -454,8 +469,32 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.showLookLine();
   }
 
+  /** 행인의 한 줄 대사: 이름표만 있는 대사창 (경험치 없음) */
+  playTalk(name: string, text: string, done: () => void) {
+    this.looking = { pages: [[text]], page: 0, line: 0, done, name };
+    this.showLookLine();
+  }
+
+  /** 맵 위의 몹 무리와 짧은 전투 (맵에서 벗어난 전투장). 이기면 그 자리 이동으로 */
+  fieldBattle(battle: string, done: () => void) {
+    this.fieldDone = done;
+    this.startBattle({ battle }, true);
+  }
+
   private showLookLine() {
     const L = this.looking!;
+    if (L.name) {
+      this.mono.setVisible(false);
+      this.box.setVisible(true);
+      this.nextMark.setVisible(false);
+      this.highlight(null, DIM_SPEAK);
+      this.nameText.setText(L.name);
+      this.nameBox.setVisible(true);
+      const t = L.pages[0][0];
+      this.backlog.push({ name: L.name, text: t });
+      this.typeText(t, (x) => this.lineText.setText(x));
+      return;
+    }
     const page = L.pages[L.page];
     const before = page.slice(0, L.line);
     const line = page[L.line];
@@ -530,8 +569,19 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       this.startBattle({ battle: 'hpZero', hpZero: { who: node.hpZero, by: node.by ?? 'mob_royal_knight', count: node.count ?? 3 } });
     } else if ('stage' in node) {
       const d = STAGE.stages[node.stage];
-      if (d) this.withMap((m) => m.applyStage(d, { reset: !!d.map }));
-      else console.warn(`[story] stage.json에 없는 무대: ${node.stage}`);
+      if (d?.screen) this.screenFx(d.screen);
+      if (d?.dark) {
+        // 맵을 내리고 검은 화면 위에서 이어 간다
+        this.mode = 'busy';
+        return this.curtainIn(450, () => {
+          this.clearText();
+          this.hideMap();
+          this.curtainOut(500);
+          this.time.delayedCall(500, () => this.nextNode());
+        });
+      }
+      if (d && (d.map || this.mapState !== 'off')) this.withMap((m) => m.applyStage(d, { reset: !!d.map }));
+      else if (!d) console.warn(`[story] stage.json에 없는 무대: ${node.stage}`);
       if (!d?.wait) return this.nextNode();
       // 대사창을 잠깐 내리고 맵에서 벌어지는 일을 보여 준다
       this.mode = 'busy';
@@ -578,11 +628,11 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   // ---------- 전투 ----------
 
   /** 대사창을 닫고 전투 화면으로. 끝나면 결과에 따라 다음 대사·장면·엔딩, 또는 게임 오버 */
-  private startBattle(b: Omit<BattleStart, 'onEnd' | 'map'>) {
+  private startBattle(b: Omit<BattleStart, 'onEnd' | 'map'>, offMap = false) {
     this.mode = 'busy';
     this.toggleAuto(false);
     // 맵이 떠 있으면 화면을 바꾸지 않고, 카메라만 전투장으로 옮겨 그 자리에서 싸운다
-    const m = this.mapState === 'on' ? (this.scene.get('Explore') as ExploreScene) : null;
+    const m = this.mapState === 'on' && !offMap ? (this.scene.get('Explore') as ExploreScene) : null;
     const center = m?.battleCenter(b.battle, b.hpZero?.who);
     if (m && center) {
       this.clearText();
@@ -612,7 +662,13 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.withMap((m) =>
       m.play(seg, () => {
         this.mode = 'busy';
-        const after = def?.after && STAGE.stages[def.after];
+        const after = def?.after ? STAGE.stages[def.after] : undefined;
+        if (after?.dark)
+          return this.curtainIn(450, () => {
+            this.hideMap();
+            this.curtainOut(500);
+            this.time.delayedCall(500, () => this.nextNode());
+          });
         if (after) m.applyStage(after);
         this.time.delayedCall(300, () => this.nextNode());
       }),
@@ -632,6 +688,12 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     if (a === 'gameover-title') return this.scene.start('Title');
     if (this.mapState !== 'off' && this.scene.isSleeping('Explore')) this.scene.wake('Explore');
     this.curtainOut(400);
+    const field = this.fieldDone;
+    if (field) {
+      this.fieldDone = null;
+      this.mode = 'explore';
+      return field();
+    }
     this.time.delayedCall(350, () => {
       if (a.next) {
         const target = this.story.scenes.findIndex((s) => s.id === a.next);
@@ -744,7 +806,9 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.showItem(null);
     // 건너뛴 무대 변화는 바로 적용
     const defs = passed.map((id) => STAGE.stages[id]).filter(Boolean);
-    if (defs.length) this.withMap((m) => defs.forEach((d) => m.applyStage(d, { reset: !!d.map, instant: true })));
+    const steps = defs.map((d) => (d.dark ? null : d));
+    if (steps.some((d) => d === null || d.map)) this.applyMap(steps, true, () => {});
+    else if (defs.length && this.mapState !== 'off') this.withMap((m) => defs.forEach((d) => m.applyStage(d, { instant: true })));
     this.toggleAuto(false);
     this.clearText();
     for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);

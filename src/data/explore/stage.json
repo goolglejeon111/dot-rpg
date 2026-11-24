@@ -11,7 +11,22 @@
     "scene5": "bed_guards",
     "choice_draw": "bed_choice",
     "choice_surrender": "bed_choice",
-    "choice_window": "bed_choice"
+    "choice_window": "bed_choice",
+    "act1:scene1": "a1_s1",
+    "act1:scene2": "a1_rune",
+    "act1:s2_lower": "a1_rune_talk",
+    "act1:s2_aim": "a1_rune_talk",
+    "act1:scene3": "a1_rune_talk",
+    "act1:s3_refuse": "a1_bad_walk",
+    "act1:s3_accept": "a1_rune_talk",
+    "act1:scene4": "a1_rune_talk",
+    "act1:scene4_1": "a1_cistern_after",
+    "act1:scene5": "a1_hideout",
+    "act1:scene6": "a1_slum_poster",
+    "act1:s6_charge": "a1_gate",
+    "act1:s6_disguise": "a1_gate",
+    "act1:scene6_1": "a1_river",
+    "act1:scene7": "a1_reeds"
   },
   "places": {
     "황제의 침소": { "map": "bedchamber", "stage": "bed_enter" },
@@ -67,13 +82,20 @@
     "hall_shadow": {
       "focus": [1650, 200],
       "wait": 2000,
-      "actors": { "shadow": { "sprite": "marcion_hooded", "at": [1520, 176], "walk": [1900, 176], "facing": "right", "speed": 170 } }
+      "actors": {
+        "shadow": {
+          "sprite": "marcion_hooded",
+          "at": [1520, 176],
+          "walk": [1900, 176],
+          "facing": "right",
+          "speed": 170
+        }
+      }
     },
     "hall_run": {
       "focus": "leon",
       "actors": { "shadow": null, "leon": { "walk": [1880, 176], "facing": "right" } }
     },
-
     "corr_open": {
       "map": "chamber_corridor",
       "focus": "leon",
@@ -83,48 +105,41 @@
       "focus": [1110, 160],
       "actors": {
         "leon": { "walk": [1060, 156], "facing": "right" },
-        "intruder": { "sprite": "marcion_hooded", "at": [1184, 132], "walk": [1180, 156], "facing": "left" }
+        "intruder": {
+          "sprite": "marcion_hooded",
+          "at": [1184, 132],
+          "walk": [1180, 156],
+          "facing": "left"
+        }
       }
     },
-    "corr_after": {
-      "focus": [1110, 160],
-      "props": { "pendant": true }
-    },
-    "corr_fall": {
-      "actors": { "leon": { "pose": "down", "facing": "right" } }
-    },
+    "corr_after": { "focus": [1110, 160], "props": { "pendant": true } },
+    "corr_fall": { "actors": { "leon": { "pose": "down", "facing": "right" } } },
     "corr_door": {
       "focus": [1150, 150],
-      "actors": { "intruder": { "sprite": "marcion_hooded", "walk": "intruder_door", "facing": "up" } }
+      "actors": {
+        "intruder": { "sprite": "marcion_hooded", "walk": "intruder_door", "facing": "up" }
+      }
     },
-
     "bed_wake": {
       "map": "chamber_corridor",
       "focus": [1140, 150],
       "props": { "pendant": true },
       "actors": { "leon": { "at": "wake_leon", "pose": "down", "facing": "right" } }
     },
-    "bed_up": {
-      "actors": { "leon": { "pose": "stand", "facing": "right" } }
-    },
+    "bed_up": { "actors": { "leon": { "pose": "stand", "facing": "right" } } },
     "bed_enter": {
       "map": "bedchamber",
       "focus": [352, 280],
       "blood": false,
       "actors": { "leon": { "at": "wake_leon", "walk": [352, 330], "facing": "up" } }
     },
-    "bed_blood": {
-      "focus": [352, 210],
-      "blood": true
-    },
+    "bed_blood": { "focus": [352, 210], "blood": true },
     "bed_rush": {
       "focus": [352, 210],
       "actors": { "leon": { "walk": "leon_bed", "facing": "left" } }
     },
-    "bed_turn": {
-      "focus": [352, 300],
-      "actors": { "leon": { "facing": "down" } }
-    },
+    "bed_turn": { "focus": [352, 300], "actors": { "leon": { "facing": "down" } } },
     "bed_guards": {
       "map": "bedchamber",
       "focus": [352, 300],
@@ -137,9 +152,24 @@
     "bed_oswald": {
       "actors": {
         "oswald": { "at": [352, 480], "walk": "door_oswald", "facing": "up" },
-        "k1": { "sprite": "mob_royal_knight", "at": [330, 500], "walk": "knight1", "facing": "up" },
-        "k2": { "sprite": "mob_royal_knight", "at": [370, 500], "walk": "knight2", "facing": "up" },
-        "k3": { "sprite": "mob_royal_knight", "at": [352, 510], "walk": "knight3", "facing": "up" }
+        "k1": {
+          "sprite": "mob_royal_knight",
+          "at": [330, 500],
+          "walk": "knight1",
+          "facing": "up"
+        },
+        "k2": {
+          "sprite": "mob_royal_knight",
+          "at": [370, 500],
+          "walk": "knight2",
+          "facing": "up"
+        },
+        "k3": {
+          "sprite": "mob_royal_knight",
+          "at": [352, 510],
+          "walk": "knight3",
+          "facing": "up"
+        }
       }
     },
     "bed_choice": {
@@ -163,16 +193,9 @@
       "actors": { "leon": { "walk": [144, 118], "facing": "up" } }
     },
     "bed_gone": {
-      "actors": {
-        "leon": null,
-        "bram": { "walk": [150, 126], "facing": "up" }
-      }
+      "actors": { "leon": null, "bram": { "walk": [150, 126], "facing": "up" } }
     },
-
-    "moat_fall": {
-      "map": "moat",
-      "focus": "moat_view"
-    },
+    "moat_fall": { "map": "moat", "focus": "moat_view" },
     "moat_dive": {
       "wait": 2400,
       "fall": { "sprite": "leon", "from": [560, 110], "to": [560, 350], "ms": 900 }
@@ -180,14 +203,328 @@
     "moat_chase": {
       "focus": [560, 380],
       "actors": {
-        "k1": { "sprite": "mob_royal_knight", "at": [-20, 470], "walk": "knight1", "facing": "up" },
-        "k2": { "sprite": "mob_royal_knight", "at": [-60, 482], "walk": "knight2", "facing": "up" },
-        "k3": { "sprite": "mob_royal_knight", "at": [1060, 470], "walk": "knight3", "facing": "up" }
+        "k1": {
+          "sprite": "mob_royal_knight",
+          "at": [-20, 470],
+          "walk": "knight1",
+          "facing": "up"
+        },
+        "k2": {
+          "sprite": "mob_royal_knight",
+          "at": [-60, 482],
+          "walk": "knight2",
+          "facing": "up"
+        },
+        "k3": {
+          "sprite": "mob_royal_knight",
+          "at": [1060, 470],
+          "walk": "knight3",
+          "facing": "up"
+        }
       }
     },
-    "moat_grate": {
-      "focus": [784, 300]
-    }
+    "moat_grate": { "focus": [784, 300] },
+    "a1_s1": {
+      "map": "sewer_a",
+      "focus": "leon",
+      "actors": { "leon": { "at": "leon_start", "facing": "right" } }
+    },
+    "a1_wound": { "flash": { "who": "leon", "color": "#ffffff" } },
+    "a1_rune": {
+      "map": "sewer_rune",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_start", "facing": "right" },
+        "elysia": { "at": "elysia", "facing": "up" }
+      }
+    },
+    "a1_rune_walk": {
+      "focus": [384, 170],
+      "actors": { "leon": { "walk": "leon_talk", "facing": "right" } }
+    },
+    "a1_rune_aim": {
+      "screen": { "shake": 0.004 },
+      "actors": { "elysia": { "facing": "left" } }
+    },
+    "a1_rune_talk": {
+      "map": "sewer_rune",
+      "focus": [384, 170],
+      "actors": {
+        "leon": { "at": "leon_talk", "facing": "right" },
+        "elysia": { "at": "elysia", "facing": "left" }
+      }
+    },
+    "a1_rune_flash": {
+      "flash": { "who": "leon", "color": "#ffffff" },
+      "screen": { "flash": "#d8c8ff" }
+    },
+    "a1_seal": { "flash": { "who": "leon", "color": "#a47cff" } },
+    "a1_bad_walk": {
+      "map": "sewer_b",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_start", "walk": "fork3", "facing": "right", "speed": 60 }
+      }
+    },
+    "a1_bad_glow": { "flash": { "who": "leon", "color": "#ffffff" } },
+    "a1_bad_knights": {
+      "focus": "leon",
+      "actors": {
+        "leon": { "facing": "right" },
+        "k1": { "sprite": "pursuit_sword", "at": [1520, 240], "facing": "left" },
+        "k2": { "sprite": "pursuit_sword", "at": "fork_knights", "facing": "left" },
+        "k3": { "sprite": "pursuit_shield", "at": [1520, 304], "facing": "left" }
+      }
+    },
+    "a1_black": { "dark": true },
+    "a1_bad_hit": { "screen": { "flash": "#b02020" } },
+    "a1_to_deep": {
+      "map": "sewer_b",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_start", "facing": "right" },
+        "elysia": { "at": "elysia_start", "facing": "right" }
+      }
+    },
+    "a1_cistern": {
+      "map": "sewer_cistern",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_start", "walk": "leon_edge", "facing": "up" },
+        "elysia": { "at": "elysia_start", "walk": "elysia_edge", "facing": "up" }
+      }
+    },
+    "a1_eel_rise": { "focus": "eel", "screen": { "shake": 0.01 } },
+    "a1_cistern_after": {
+      "map": "sewer_cistern",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_edge", "facing": "up" },
+        "elysia": { "at": "elysia_edge", "facing": "up" }
+      }
+    },
+    "a1_fever_red": { "screen": { "flash": "#a01818" } },
+    "a1_fever_violet": { "screen": { "flash": "#a47cff" } },
+    "a1_hideout_wake": {
+      "map": "hideout",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_bed", "pose": "down", "facing": "down" },
+        "elysia": { "at": "elysia", "facing": "left" }
+      }
+    },
+    "a1_hideout_up": { "actors": { "leon": { "pose": "stand", "facing": "right" } } },
+    "a1_hideout": {
+      "map": "hideout",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_start", "facing": "right" },
+        "elysia": { "at": "elysia", "facing": "left" }
+      }
+    },
+    "a1_slum_dawn": {
+      "map": "slum_alley",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_start", "walk": "leon_poster", "facing": "up" },
+        "elysia": { "at": "elysia_start", "walk": "elysia_poster", "facing": "up" }
+      }
+    },
+    "a1_slum_poster": {
+      "map": "slum_alley",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_poster", "facing": "up" },
+        "elysia": { "at": "elysia_poster", "facing": "up" }
+      }
+    },
+    "a1_checkpoint": {
+      "map": "bridge_checkpoint",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_start", "facing": "right" },
+        "elysia": { "at": "elysia_start", "facing": "right" },
+        "sp1": { "sprite": "imperial_spear", "at": "sp1", "facing": "left" },
+        "sp2": { "sprite": "imperial_spear", "at": "sp2", "facing": "left" },
+        "sp3": { "sprite": "imperial_spear", "at": "sp3", "facing": "left" },
+        "sp4": { "sprite": "imperial_spear", "at": "sp4", "facing": "left" },
+        "ar1": { "sprite": "imperial_archer", "at": "ar1", "facing": "left" },
+        "ar2": { "sprite": "imperial_archer", "at": "ar2", "facing": "left" }
+      }
+    },
+    "a1_gate": {
+      "map": "bridge_checkpoint",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_gate", "facing": "right" },
+        "elysia": { "at": "elysia_gate", "facing": "right" },
+        "sp1": { "sprite": "imperial_spear", "at": "sp1", "facing": "left" },
+        "sp2": { "sprite": "imperial_spear", "at": "sp2", "facing": "left" },
+        "sp3": { "sprite": "imperial_spear", "at": "sp3", "facing": "left" },
+        "sp4": { "sprite": "imperial_spear", "at": "sp4", "facing": "left" },
+        "ar1": { "sprite": "imperial_archer", "at": "ar1", "facing": "left" },
+        "ar2": { "sprite": "imperial_archer", "at": "ar2", "facing": "left" }
+      }
+    },
+    "a1_bridge_cross": {
+      "focus": "leon",
+      "actors": {
+        "sp1": {
+          "sprite": "imperial_spear",
+          "at": "sp1",
+          "facing": "left",
+          "pose": "down"
+        },
+        "sp2": {
+          "sprite": "imperial_spear",
+          "at": "sp2",
+          "facing": "left",
+          "pose": "down"
+        },
+        "sp3": {
+          "sprite": "imperial_spear",
+          "at": "sp3",
+          "facing": "left",
+          "pose": "down"
+        },
+        "sp4": {
+          "sprite": "imperial_spear",
+          "at": "sp4",
+          "facing": "left",
+          "pose": "down"
+        },
+        "ar1": {
+          "sprite": "imperial_archer",
+          "at": "ar1",
+          "facing": "left",
+          "pose": "down"
+        },
+        "ar2": {
+          "sprite": "imperial_archer",
+          "at": "ar2",
+          "facing": "left",
+          "pose": "down"
+        },
+        "leon": { "walk": "leon_far", "facing": "right" },
+        "elysia": { "walk": "elysia_far", "facing": "right" }
+      }
+    },
+    "a1_disguise": {
+      "flash": { "who": "leon", "color": "#a47cff" },
+      "aura": { "leon": "#a47cff" }
+    },
+    "a1_disguise_walk": {
+      "focus": "leon",
+      "actors": {
+        "leon": { "walk": "leon_far", "facing": "right", "speed": 50 },
+        "elysia": { "walk": "elysia_far", "facing": "right", "speed": 50 }
+      }
+    },
+    "a1_disguise_off": { "aura": { "leon": null } },
+    "a1_river": {
+      "map": "riverbank",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_start", "walk": "leon_mid", "facing": "left" },
+        "elysia": { "at": "elysia_start", "walk": "elysia_mid", "facing": "left" }
+      }
+    },
+    "a1_horse": {
+      "focus": [1000, 290],
+      "actors": {
+        "leon": { "facing": "right" },
+        "elysia": { "facing": "right" },
+        "k1": { "sprite": "pursuit_sword", "at": "k1", "facing": "left" },
+        "k2": { "sprite": "pursuit_sword", "at": "k2", "facing": "left" },
+        "k3": { "sprite": "pursuit_sword", "at": "k3", "facing": "left" },
+        "k4": { "sprite": "pursuit_shield", "at": "k4", "facing": "left" },
+        "k5": { "sprite": "pursuit_shield", "at": "k5", "facing": "left" }
+      }
+    },
+    "a1_knights_down": {
+      "focus": "leon",
+      "actors": {
+        "k1": {
+          "sprite": "pursuit_sword",
+          "at": "k1",
+          "facing": "left",
+          "pose": "down"
+        },
+        "k2": {
+          "sprite": "pursuit_sword",
+          "at": "k2",
+          "facing": "left",
+          "pose": "down"
+        },
+        "k3": {
+          "sprite": "pursuit_sword",
+          "at": "k3",
+          "facing": "left",
+          "pose": "down"
+        },
+        "k4": {
+          "sprite": "pursuit_shield",
+          "at": "k4",
+          "facing": "left",
+          "pose": "down"
+        },
+        "k5": {
+          "sprite": "pursuit_shield",
+          "at": "k5",
+          "facing": "left",
+          "pose": "down"
+        }
+      }
+    },
+    "a1_reeds": {
+      "map": "riverbank",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_mid", "facing": "left" },
+        "elysia": { "at": "elysia_mid", "facing": "left" },
+        "k1": {
+          "sprite": "pursuit_sword",
+          "at": "k1",
+          "facing": "left",
+          "pose": "down"
+        },
+        "k2": {
+          "sprite": "pursuit_sword",
+          "at": "k2",
+          "facing": "left",
+          "pose": "down"
+        },
+        "k3": {
+          "sprite": "pursuit_sword",
+          "at": "k3",
+          "facing": "left",
+          "pose": "down"
+        },
+        "k4": {
+          "sprite": "pursuit_shield",
+          "at": "k4",
+          "facing": "left",
+          "pose": "down"
+        },
+        "k5": {
+          "sprite": "pursuit_shield",
+          "at": "k5",
+          "facing": "left",
+          "pose": "down"
+        }
+      }
+    },
+    "a1_boat": {
+      "map": "river_boat",
+      "focus": [272, 216],
+      "actors": {
+        "leon": { "at": "leon_boat", "facing": "right" },
+        "elysia": { "at": "elysia_boat", "facing": "left" }
+      }
+    },
+    "a1_boat_dim": { "ambient": "#161c38" },
+    "a1_boat_night": { "ambient": "#2a3560" },
+    "a1_boat_dawn": { "ambient": "#ffc890" }
   },
 
   "segments": {
@@ -225,6 +562,61 @@
       "goal": "goal_door",
       "hint": "문 쪽으로 가면 이야기가 이어집니다",
       "after": "bed_turn"
+    },
+    "a1_sewer_walk": {
+      "map": "sewer_a",
+      "looks": ["a1_grate", "a1_scorched_wall"],
+      "goal": "goal_shore",
+      "hint": "물길을 따라 수로 가운데로",
+      "speed": 0.7
+    },
+    "a1_rune_room": {
+      "map": "sewer_rune",
+      "looks": ["a1_runes"],
+      "goal": "goal_exit",
+      "hint": "룬 수로 너머, 오른쪽 출구로",
+      "after": "a1_to_deep"
+    },
+    "a1_sewer_deep": {
+      "map": "sewer_b",
+      "looks": ["a1_hidden_coins"],
+      "goal": "goal_cistern",
+      "hint": "갈림길을 지나 저수조 입구로",
+      "after": "a1_cistern"
+    },
+    "a1_cistern_exit": {
+      "map": "sewer_cistern",
+      "looks": ["a1_bones"],
+      "goal": "goal_ladder",
+      "hint": "저수조 반대편의 사다리를 F로 오릅니다",
+      "after": "a1_black"
+    },
+    "a1_hideout": {
+      "map": "hideout",
+      "looks": ["a1_violet_paper", "a1_measurements"],
+      "goal": "goal_exit",
+      "hint": "사다리를 F로 올라 밖으로",
+      "after": "a1_slum_dawn"
+    },
+    "a1_slum": {
+      "map": "slum_alley",
+      "looks": ["a1_mourning_notice"],
+      "goal": "goal_exit",
+      "hint": "골목 오른쪽 끝으로",
+      "after": "a1_checkpoint"
+    },
+    "a1_checkpoint": {
+      "map": "bridge_checkpoint",
+      "looks": ["a1_checkpoint_board"],
+      "goal": "goal_gate",
+      "hint": "다리 입구의 목책 쪽으로"
+    },
+    "a1_reeds": {
+      "map": "riverbank",
+      "looks": [],
+      "goal": "goal_boat",
+      "hint": "갈대밭 왼쪽 끝의 배를 F로",
+      "after": "a1_boat"
     }
   }
 }

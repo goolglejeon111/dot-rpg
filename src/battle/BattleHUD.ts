@@ -7,6 +7,9 @@ import { isCapped, isUnlocked, levelOf, levelProgress, maxLevel, type Unlock } f
 const W = 960;
 const H = 720;
 const S = 2; // UI 도트 배율
+/** 큰 글자 알림(승리·레벨 업·해금) 하나가 보이는 시간과, 다음 알림까지 쉬는 시간 (ms) */
+const BANNER_SHOW = 1800;
+const BANNER_GAP = 400;
 /** 휴대폰·태블릿 (주소 끝에 ?touch=1을 붙이면 PC에서도 휴대폰 버튼을 볼 수 있음) */
 const isTouch = () => window.matchMedia('(pointer: coarse)').matches || new URLSearchParams(location.search).has('touch');
 
@@ -45,6 +48,9 @@ export class BattleHUD extends Phaser.Scene {
   private guideText!: Phaser.GameObjects.Text;
   private wheel?: Phaser.GameObjects.Container;
   private gameOver = false;
+  /** 큰 글자 알림 줄: 다음 알림을 띄울 수 있는 때, 마지막으로 잡힌 알림이 뜨는 때 */
+  private bannerFreeAt = 0;
+  private lastBannerAt = 0;
   private touch = false;
   private stick?: { base: Phaser.GameObjects.Image; knob: Phaser.GameObjects.Image; id: number; x: number; y: number };
 
@@ -62,7 +68,14 @@ export class BattleHUD extends Phaser.Scene {
     this.stick = undefined;
   }
 
+  /** 줄 서 있는 큰 글자 알림이 모두 끝날 때까지 남은 시간(ms). 전투를 끝내기 전에 기다린다 */
+  bannerLeft() {
+    return Math.max(0, this.bannerFreeAt - BANNER_GAP - this.time.now);
+  }
+
   create() {
+    this.bannerFreeAt = 0;
+    this.lastBannerAt = 0;
     this.touch = isTouch();
     this.input.addPointer(3);
     this.cameras.main.fadeIn(350, 0, 0, 0);
@@ -316,9 +329,15 @@ export class BattleHUD extends Phaser.Scene {
     while (b.notices.length) {
       const n = b.notices.shift()!;
       if (n.kind === 'toast') this.toast(n.text);
-      else if (n.kind === 'guide' && n.text) this.guide(n.text, n.ms ?? 5000);
-      else if (n.kind === 'levelup') this.banner('ui_word_levelup', n.text, '#e0c27a');
-      else if (n.kind === 'unlock') this.banner('ui_word_unlock', n.text, '#ffffff', 900, n.what);
+      else if (n.kind === 'guide' && n.text) {
+        // 큰 글자 알림이 줄 서 있으면, 바로 앞 알림(예: 해금)이 뜰 때 같이 뜬다
+        const text = n.text;
+        const ms = n.ms ?? 5000;
+        const wait = this.lastBannerAt - this.time.now;
+        if (wait > 0) this.time.delayedCall(wait, () => this.guide(text, ms));
+        else this.guide(text, ms);
+      } else if (n.kind === 'levelup') this.banner('ui_word_levelup', n.text, '#e0c27a');
+      else if (n.kind === 'unlock') this.banner('ui_word_unlock', n.text, '#ffffff', n.what);
       else if (n.kind === 'word' && n.text === 'victory') this.banner('ui_word_victory', '', '#ffffff');
       else if (n.kind === 'word' && n.text === 'gameover') this.showGameOver();
     }
@@ -337,14 +356,21 @@ export class BattleHUD extends Phaser.Scene {
     this.tweens.add({ targets: this.guideBox, alpha: 0, delay: ms, duration: 600 });
   }
 
-  /** LEVEL UP, UNLOCK 같은 큰 글자 */
-  private banner(key: string, text: string, color: string, delay = 0, what?: Unlock) {
-    this.time.delayedCall(delay, () => {
+  /**
+   * VICTORY, LEVEL UP, UNLOCK 같은 큰 글자.
+   * 같은 자리에 겹치지 않도록 줄을 세워, 앞 알림이 사라진 뒤 BANNER_GAP만큼 쉬고 다음 알림을 띄운다
+   */
+  private banner(key: string, text: string, color: string, what?: Unlock) {
+    const now = this.time.now;
+    const start = Math.max(now, this.bannerFreeAt);
+    this.lastBannerAt = start;
+    this.bannerFreeAt = start + BANNER_SHOW + BANNER_GAP;
+    this.time.delayedCall(start - now, () => {
       const im = this.add.image(W / 2, 290, key).setScale(4).setAlpha(0);
       const t = this.add.text(W / 2, 336, text, { fontFamily: FONT, fontSize: '24px', color, fontStyle: 'bold' }).setOrigin(0.5).setShadow(0, 2, '#000', 4).setAlpha(0);
       this.tweens.add({ targets: [im, t], alpha: 1, duration: 200 });
       this.tweens.add({ targets: im, scale: { from: 5, to: 4 }, duration: 250, ease: 'Back.easeOut' });
-      this.tweens.add({ targets: [im, t], alpha: 0, delay: 1700, duration: 500, onComplete: () => (im.destroy(), t.destroy()) });
+      this.tweens.add({ targets: [im, t], alpha: 0, delay: BANNER_SHOW - 500, duration: 500, onComplete: () => (im.destroy(), t.destroy()) });
       // 해금된 아이콘을 반짝
       const ic = this.icons.find((i) => i.what === what);
       if (ic) {

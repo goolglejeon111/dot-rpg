@@ -1602,14 +1602,23 @@ export class BattleScene extends Phaser.Scene {
     action ??= { continue: true };
     const done = action;
     // 전투 이벤트 경험치 (처음 한 번)
+    // 승리 글자가 먼저, 그다음 레벨 업·해금 (HUD가 차례로 간격을 두고 띄운다)
+    if (outcome === 'win') this.notices.push({ kind: 'word', text: 'victory' });
     const bex = EXP_REWARD.battle(this.start.battle);
     if (outcome !== 'wipe' && bex && !this.cutscene) {
       this.showLevelUps(gainOnce(`battle:${this.start.battle}`, this.party.map((p) => p.id), bex));
     }
-    if (outcome === 'win') this.notices.push({ kind: 'word', text: 'victory' });
     if (outcome === 'damage') this.cameras.main.flash(500, 255, 255, 255);
-    const wait = outcome === 'done' ? 200 : this.notices.some((e) => e.kind === 'levelup') ? 2600 : 1500;
-    this.time.delayedCall(wait, () => this.leave({ outcome, action: done }));
+    const wait = outcome === 'done' ? 200 : 1500;
+    this.time.delayedCall(wait, () => this.leaveAfterBanners({ outcome, action: done }));
+  }
+
+  /** HUD의 큰 글자 알림이 다 지나간 뒤에 전투를 끝낸다 */
+  private leaveAfterBanners(r: BattleResult) {
+    const hud = this.scene.get('BattleHUD') as unknown as { bannerLeft?: () => number } | null;
+    const left = hud?.bannerLeft?.() ?? 0;
+    if (left > 0) this.time.delayedCall(left, () => this.leave(r));
+    else this.leave(r);
   }
 
   /** HUD의 게임 오버 화면에서 고름 */

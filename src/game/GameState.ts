@@ -16,6 +16,8 @@ export interface Progress {
   unlocks: string[];
   /** 인물별 도트 겉모습 (대본의 costume. 없으면 기본 그림) */
   costume: Record<string, string>;
+  /** 임시 동료: 인물 ID → 들어온 순간의 레온 레벨 (경험치를 받지 않고 이 레벨로 고정. 대본의 guest) */
+  guests: Record<string, number>;
 }
 
 export interface StateData {
@@ -24,7 +26,7 @@ export interface StateData {
   progress: Progress;
 }
 
-export const freshProgress = (): Progress => ({ exp: {}, stage: 'start', once: [], party: ['leon'], unlocks: ['move'], costume: {} });
+export const freshProgress = (): Progress => ({ exp: {}, stage: 'start', once: [], party: ['leon'], unlocks: ['move'], costume: {}, guests: {} });
 
 /** 예전 저장(조작이 레벨로 열리던 때)의 열린 조작: 그때 레온의 레벨로 열려 있던 것 */
 function legacyUnlocks(p: Partial<Progress>): string[] {
@@ -121,6 +123,7 @@ class GameState {
     if (!Array.isArray(p.party) || !p.party.length) p.party = ['leon'];
     if (!p.unlocks.includes('move')) p.unlocks.unshift('move');
     p.costume ??= {};
+    p.guests ??= {};
   }
 
   reset() {

@@ -89,9 +89,14 @@ export interface UnlockNode {
   unlock: 'evade' | 'skill' | 'ult' | 'combo';
 }
 
-/** 파티 합류 */
+/** 파티 합류 (임시 동료였으면 정식 파티원으로) */
 export interface JoinNode {
   join: string;
+}
+
+/** 임시 동료로 파티에 넣기 (경험치를 받지 않고 레벨 고정, 초상화에 "임시") */
+export interface GuestNode {
+  guest: string;
 }
 
 /** 도트 겉모습 바꾸기 (필드·전투). costume = 그림 이름 (예: leon_hood). who 없으면 레온 */
@@ -124,6 +129,7 @@ export type StoryNode =
   | PlaceNode
   | UnlockNode
   | JoinNode
+  | GuestNode
   | CostumeNode
   | ItemNode
   | EndingNode

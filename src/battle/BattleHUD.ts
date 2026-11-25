@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import combos from '../data/battle/combos.json';
 import { FONT, makeButton } from '../game/ui';
 import type { BattleScene, Fighter, VirtualInput } from './BattleScene';
-import { isCapped, isUnlocked, levelOf, levelProgress, maxLevel, type Unlock } from './progress';
+import { isCapped, isGuest, isUnlocked, levelOf, levelProgress, maxLevel, type Unlock } from './progress';
 
 const W = 960;
 const H = 720;
@@ -42,6 +42,7 @@ export class BattleHUD extends Phaser.Scene {
   private lvText!: Phaser.GameObjects.Text;
   private expText!: Phaser.GameObjects.Text;
   private boss?: { bar: Bar; name: Phaser.GameObjects.Text };
+  private guard?: { bar: Bar; name: Phaser.GameObjects.Text };
   private timerText!: Phaser.GameObjects.Text;
   private toastText!: Phaser.GameObjects.Text;
   private guideBox!: Phaser.GameObjects.Container;
@@ -67,6 +68,7 @@ export class BattleHUD extends Phaser.Scene {
     this.slots = [];
     this.icons = [];
     this.boss = undefined;
+    this.guard = undefined;
     this.wheel = undefined;
     this.wheelSlots = [];
     this.comboTouch = undefined;
@@ -99,6 +101,12 @@ export class BattleHUD extends Phaser.Scene {
         e.stopPropagation();
         this.b.vin.swap = i + 1;
       });
+      // 임시 동료 표시
+      if (isGuest(f.id))
+        this.add
+          .text(x + 11 * S, y + 20 * S, '임시', { fontFamily: FONT, fontSize: '13px', color: '#ffe0a0', backgroundColor: '#5a3a18', padding: { x: 3, y: 0 } })
+          .setOrigin(0.5, 1)
+          .setDepth(2);
       this.slots.push({ slot, face, hp, num });
     });
 
@@ -329,6 +337,16 @@ export class BattleHUD extends Phaser.Scene {
       this.boss = { bar, name };
     }
     if (this.boss) this.setBar(this.boss.bar, boss ? boss.hp / boss.maxHp : 0);
+
+    // 지켜야 하는 대상의 체력 (위쪽 가운데)
+    const pr = b.protectTarget;
+    if (pr && !this.guard) {
+      const gx = W / 2 - 162 * S;
+      const bar = this.bar(gx, 44, 'boss', 'green_8');
+      const name = this.add.text(W / 2, 38, '지켜야 할 것: ' + pr.def.name, { fontFamily: FONT, fontSize: '17px', color: '#dff4de', fontStyle: 'bold' }).setOrigin(0.5, 1).setShadow(0, 2, '#000', 3);
+      this.guard = { bar, name };
+    }
+    if (this.guard) this.setBar(this.guard.bar, pr ? pr.hp / pr.maxHp : 0);
 
     const tl = b.timeLeft;
     this.timerText.setText(tl === null ? '' : `남은 시간 ${Math.ceil(tl)}`);

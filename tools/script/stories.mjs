@@ -203,7 +203,7 @@ export const STORIES = [
       { scene: 'scene1', before: '그 말을 들은 것이, 이틀 전이었다.', node: { explore: 'a2_desert_walk' } },
       { scene: 'scene2', before: '마지막 한 마리가 모래 속으로 무너졌을 때.', node: { battle: '모래 괴물 무리' } },
       { scene: 'scene2', before: '제복을 가리던 갈색 천은, 괴물의 발톱에 찢겨 모래 속으로 사라지고 없었다.', node: { costume: 'leon' } },
-      { scene: 's4_resist', before: '빨랐다.', node: { hpZero: 'leon', by: 'mob_wolf', count: 3 } },
+      { scene: 's4_resist', before: '이게 제국의 기사라고? 웃기는군.', node: { hpZero: 'leon', by: 'karg', count: 1 } },
       { scene: 'scene5', before: '엘리시아는 감옥에 들어온 뒤로, 창살 너머의 카르크만 보고 있었다.', node: { explore: 'a2_prison' } },
       { scene: 'scene5_1', before: '마지막 전갈의 등껍질이 갈라졌을 때, 동쪽 하늘이 밝아 오고 있었다.', node: { battle: '우물 방어' } },
       { scene: 'scene6_1', before: '동쪽 교역로는, 모래 언덕 사이로 길게 뻗어 있었다.', node: { guest: 'karg' } },

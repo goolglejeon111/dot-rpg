@@ -32,7 +32,11 @@ export function rawLevel(exp: number) {
   return l;
 }
 
-export const levelOf = (id: string, p: Progress = gameState.progress) => Math.min(rawLevel(expOf(id, p)), maxLevel(p));
+/** 임시 동료인가 (대본의 guest. 경험치를 받지 않고 레벨이 고정) */
+export const isGuest = (id: string, p: Progress = gameState.progress) => p.guests?.[id] !== undefined;
+
+export const levelOf = (id: string, p: Progress = gameState.progress) =>
+  Math.min(isGuest(id, p) ? p.guests[id] : rawLevel(expOf(id, p)), maxLevel(p));
 export const isCapped = (id: string) => levelOf(id) >= maxLevel();
 
 /** 지금 레벨 안에서의 진행 (0~1). 최대 레벨이면 1 */
@@ -66,16 +70,32 @@ export function unlock(what: Unlock, p: Progress = gameState.progress) {
   return true;
 }
 
-/** 파티 합류. 경험치는 레온과 같은 값으로 맞춰 같은 레벨로 들어온다 */
+/**
+ * 파티 합류. 경험치는 그때 파티(임시 동료 빼고)의 평균으로 맞춰 들어온다 (docs/전투.md: 나중에 합류하는 동료는 파티 평균 레벨).
+ * 임시 동료였으면 정식 파티원으로 바뀐다
+ */
 export function joinParty(id: string, p: Progress = gameState.progress) {
-  if (p.party.includes(id)) return false;
-  p.party.push(id);
-  p.exp[id] = Math.max(expOf(id, p), expOf('leon', p));
+  const wasGuest = isGuest(id, p);
+  if (p.party.includes(id) && !wasGuest) return false;
+  const members = p.party.filter((m) => m !== id && !isGuest(m, p));
+  const avg = members.length ? Math.round(members.reduce((s, m) => s + expOf(m, p), 0) / members.length) : 0;
+  if (wasGuest) delete p.guests[id];
+  if (!p.party.includes(id)) p.party.push(id);
+  p.exp[id] = Math.max(expOf(id, p), avg);
   return true;
 }
 
-/** 지금 파티 (조사, 전투 이벤트, 선택지 경험치를 받는 인물) */
-export const partyIds = (p: Progress = gameState.progress) => (p.party?.length ? [...p.party] : ['leon']);
+/** 임시 동료로 넣는다: 조작과 교체는 되지만 경험치를 받지 않고, 레벨은 들어온 순간의 레온 레벨로 고정 */
+export function addGuest(id: string, p: Progress = gameState.progress) {
+  if (p.party.includes(id)) return false;
+  p.guests ??= {};
+  p.guests[id] = levelOf('leon', p);
+  p.party.push(id);
+  return true;
+}
+
+/** 지금 파티에서 경험치를 받는 인물 (조사, 전투 이벤트, 선택지 경험치. 임시 동료는 빠짐) */
+export const partyIds = (p: Progress = gameState.progress) => (p.party?.length ? p.party.filter((id) => !isGuest(id, p)) : ['leon']);
 
 export interface LevelUp {
   id: string;
@@ -88,6 +108,7 @@ export function gainExp(ids: string[], amount: number, p: Progress = gameState.p
   const ups: LevelUp[] = [];
   if (amount <= 0) return ups;
   for (const id of ids) {
+    if (isGuest(id, p)) continue;
     const from = levelOf(id, p);
     p.exp[id] = expOf(id, p) + amount;
     const to = levelOf(id, p);

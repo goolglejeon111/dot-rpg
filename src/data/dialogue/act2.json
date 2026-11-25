@@ -92,9 +92,9 @@
       "nodes": [
         {"speaker":"leon","expression":"angry","text":"끌려갈 생각은 없다."},
         {"speaker":"karg","expression":"smile","text":"좋아. 그 편이 덜 지루하지."},
-        {"hpZero":"leon","by":"mob_wolf","count":3},
         {"monologue":["빨랐다."]},
         {"monologue":["검을 들기도 전에, 그는 이미 내 등 뒤에 있었다.","두 자루의 단검이 목덜미에 닿았다."]},
+        {"hpZero":"leon","by":"karg","count":1},
         {"speaker":"karg","expression":"angry","text":"이게 제국의 기사라고? 웃기는군."}
       ]
     },

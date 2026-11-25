@@ -22,6 +22,8 @@ export interface OutcomeAction {
   continue?: boolean;
   next?: string;
   ending?: string;
+  /** 게임 오버 화면으로 (지켜야 하는 대상이 무너졌을 때 등) */
+  gameover?: boolean;
 }
 
 export interface BattleResult {
@@ -128,6 +130,28 @@ interface TutStep {
   skipAfterBlocks?: number;
 }
 
+/**
+ * 지켜야 하는 대상: 체력만 있고 공격하지 않는 아군. 적이 먼저 노리고, 쓰러지면 결과 fall:ID.
+ * prop = 전투장 맵의 물건 이름(그 물건 발밑에 놓임, 그림은 맵이 그린다). x, y = 전투장 좌표(prop이 없을 때).
+ * sprite = 직접 그릴 그림(없으면 맵의 그림만). crack = 체력이 반 아래일 때 겹쳐 그리는 그림(ex_ 물건 그림 이름).
+ * follow = 이 파티원을 따라 걷는다(따라다니는 NPC)
+ */
+interface ProtectDef {
+  id: string;
+  name: string;
+  hp: number;
+  def?: number;
+  prop?: string;
+  x?: number;
+  y?: number;
+  sprite?: string;
+  crack?: string;
+  follow?: string;
+  speed?: number;
+  /** 몸 반지름 (적이 이만큼 떨어져서도 때릴 수 있다) */
+  radius?: number;
+}
+
 interface BattleDef {
   title?: string;
   /** map: 맵 파일(src/data/maps) 이름. 그 맵의 arena 구역을 전투장 바닥으로 쓴다 */
@@ -148,6 +172,12 @@ interface BattleDef {
   noFall?: boolean;
   /** 연계 게이지가 가득 찬 채로 시작 (합동 기술을 처음 배우는 전투) */
   comboFull?: boolean;
+  /** 연계 게이지 시작값 (0~100) */
+  comboStart?: number;
+  /** 연계 게이지가 처음 가득 찼을 때 한 번 띄우는 안내 */
+  comboGuide?: string;
+  /** 지켜야 하는 대상 */
+  protect?: ProtectDef;
   /** 휴대폰에서 보여 줄 안내 (없으면 guide) */
   guideTouch?: string;
   /** 안내를 이 기술을 쓸 때까지 띄워 둔다 */
@@ -237,6 +267,15 @@ export class Fighter {
 
   /** 맵 위에서 싸울 때, 이 인물이 맡은 맵 인물 ID (끝나면 그 자리로 돌려놓음) */
   actorId?: string;
+  /** 지켜야 하는 대상 */
+  protect?: ProtectDef;
+  /** 몸 반지름 (큰 물건은 멀리서도 맞는다) */
+  radius = 0;
+  /** 금 간 모습 (지켜야 하는 대상) */
+  crack?: Phaser.GameObjects.Sprite;
+  /** 마지막으로 이 적을 때린 인물과 그때 */
+  lastHitBy: Fighter | null = null;
+  lastHitAt = -1e9;
 
   constructor(
     readonly id: string,
@@ -507,6 +546,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.scene.launch('BattleHUD', { battle: this });
     if (this.bdef.comboFull) this.comboGauge = 100;
+    else if (this.bdef.comboStart) this.comboGauge = this.bdef.comboStart;
     const touch = window.matchMedia('(pointer: coarse)').matches || new URLSearchParams(location.search).has('touch');
     const guide = (touch && this.bdef.guideTouch) || this.bdef.guide || '';
     if (this.bdef.tutorial?.length) this.tutShow();
@@ -596,7 +636,109 @@ export class BattleScene extends Phaser.Scene {
       this.spawn(f, at?.x ?? a.x, at?.y ?? a.y);
       if (at) this.takeActor(f, a.id, at.facing);
     }
+    if (b.protect) this.spawnProtect(b.protect);
     this.spawnWave(0);
+  }
+
+  /** 지켜야 하는 대상을 세운다 */
+  private spawnProtect(p: ProtectDef) {
+    const d: FighterDef = { name: p.name, speed: p.speed ?? 50, hp: p.hp, atk: 0, def: p.def ?? 0 };
+    const f = new Fighter(p.id, p.sprite ?? p.id, 'ally', d);
+    Object.assign(f, { hp: p.hp, maxHp: p.hp, atk: 0, defense: p.def ?? 0, speed: d.speed });
+    f.protect = p;
+    f.radius = p.radius ?? 0;
+    let x = p.x ?? this.bdef.arena.w / 2;
+    let y = p.y ?? this.bdef.arena.h / 2;
+    const mapId = this.onMap?.mapId ?? this.bdef.arena.map;
+    const md = mapId ? MAPS[mapId] : undefined;
+    const ar = md && findObj(md, 'arena');
+    const o = p.prop && md ? objectsOf(md).find((k) => k.type === 'prop' && k.name === p.prop) : undefined;
+    if (o && ar) {
+      const ft = footOf(o);
+      x = ft.x - ar.x;
+      y = ft.y - ar.y;
+    }
+    const at = p.follow ? null : this.actorAt(p.id);
+    if (at) {
+      x = at.x;
+      y = at.y;
+    }
+    f.x = x;
+    f.y = y;
+    f.shadow = this.add.sprite(x, y + 1, 'fx_jump_shadow', 0).setOrigin(0.5, 0.5).setVisible(false);
+    const key = p.sprite && this.textures.exists(p.sprite) ? p.sprite : '';
+    f.sprite = key ? this.add.sprite(x, y, key, 0).setOrigin(0.5, 1) : this.add.sprite(x, y, '__DEFAULT').setVisible(false);
+    if (key && p.follow) f.shadow.setVisible(true);
+    if (this.lit && key) f.sprite.setPipeline('Light2D');
+    if (at) this.takeActor(f, p.id, at.facing);
+    if (p.crack && this.textures.exists(p.crack)) {
+      f.crack = this.add.sprite(x, y, p.crack, 0).setOrigin(0.5, 1).setDepth(y + 0.5).setVisible(false);
+      if (this.lit) f.crack.setPipeline('Light2D');
+    }
+    f.hpBar = {
+      frame: this.add.image(x, y, 'ui_bar_enemy').setOrigin(0.5, 0),
+      fill: this.add.image(x, y, 'ui_fill_green_2').setOrigin(0, 0),
+    };
+    this.all.push(f);
+  }
+
+  /** 지켜야 하는 대상 (HUD가 체력바를 그린다) */
+  get protectTarget() {
+    return this.all.find((f) => f.protect) ?? null;
+  }
+
+  /** 적이 노릴 인물: 지켜야 하는 대상이 먼저. 방금 자기를 때린 인물이 가까이 있으면 그쪽 */
+  private targetOf(e: Fighter) {
+    const list = this.all.filter((t) => t.targetable && t.team !== 'enemy');
+    if (!list.length) return null;
+    const near = (a: Fighter, b: Fighter) => (Math.hypot(a.x - e.x, a.y - e.y) - a.radius < Math.hypot(b.x - e.x, b.y - e.y) - b.radius ? a : b);
+    const pr = list.find((t) => t.protect);
+    if (!pr) return list.reduce(near);
+    const h = e.lastHitBy;
+    if (h && h.targetable && this.now - e.lastHitAt < 2500 && Math.hypot(h.x - e.x, h.y - e.y) < 70) return h;
+    return pr;
+  }
+
+  /** 지켜야 하는 대상: 따라다니는 NPC면 그 파티원 뒤를 따라 걷는다 */
+  private updateProtect(f: Fighter, dt: number) {
+    const p = f.protect!;
+    if (f.state === 'hurt') {
+      f.stateT += dt;
+      if (f.stateT > 260) f.state = 'idle';
+      return;
+    }
+    if (!p.follow) return void (f.state = 'idle');
+    const lead = this.party.find((x) => x.id === p.follow && x.state !== 'fainted') ?? this.controlled;
+    if (!lead) return;
+    const dx = lead.x - f.x;
+    const dy = lead.y - f.y;
+    const d = Math.hypot(dx, dy);
+    if (d > 34) {
+      f.state = 'move';
+      f.facing = dirOf(dx, dy);
+      this.moveBy(f, (dx / d) * f.speed * (dt / 1000), (dy / d) * f.speed * (dt / 1000));
+    } else f.state = 'idle';
+  }
+
+  /** 지켜야 하는 대상 그리기: 그림이 있으면 걷기, 반 아래면 금 간 모습 */
+  private renderProtect(f: Fighter) {
+    const s = f.sprite;
+    if (s.visible) {
+      s.setPosition(Math.round(f.x), Math.round(f.y)).setDepth(f.y);
+      f.shadow.setPosition(Math.round(f.x), Math.round(f.y)).setDepth(-4);
+      const k = f.spriteKey;
+      if (f.protect?.follow && this.anims.exists(`${k}-walk-${f.facing}`)) {
+        if (f.state === 'move') s.play(`${k}-walk-${f.facing}`, true);
+        else s.stop().setFrame(DIRS.indexOf(f.facing) * 5);
+      }
+      s.setTint(f.state === 'hurt' ? 0xffb0a0 : 0xffffff);
+    }
+    f.crack?.setPosition(Math.round(f.x), Math.round(f.y)).setVisible(f.hp < f.maxHp * 0.5);
+    if (f.hpBar) {
+      const top = Math.round(f.y - Math.max(44, (f.crack?.height ?? s.height ?? 0) + 8));
+      f.hpBar.frame.setPosition(Math.round(f.x), top).setDepth(10000).setVisible(true);
+      f.hpBar.fill.setPosition(Math.round(f.x) - 10, top + 1).setCrop(0, 0, Math.max(0, Math.round((20 * f.hp) / f.maxHp)), 2).setDepth(10001).setVisible(true);
+    }
   }
 
   /** 맵 인물을 숨기고 이 전투 인물이 대신 싸운다 */
@@ -1309,7 +1451,7 @@ export class BattleScene extends Phaser.Scene {
       const dx = t.x - f.x;
       const dy = t.y - f.y;
       const d = Math.hypot(dx, dy);
-      if (d > h.range + 8 + (t.enemy?.ai === 'eel' ? 18 : 0)) continue;
+      if (d > h.range + 8 + t.radius + (t.enemy?.ai === 'eel' ? 18 : 0)) continue;
       const da = Math.abs(Phaser.Math.Angle.Wrap(Math.atan2(dy, dx) - ang));
       if (d > 10 && da > Phaser.Math.DegToRad(h.arc / 2)) continue;
       hit = this.damage(t, f, f.atk * h.mult, { heavy: h.heavy, push: h.push ?? (h.heavy ? 10 : 4) }) || hit;
@@ -1408,7 +1550,13 @@ export class BattleScene extends Phaser.Scene {
     }
     if (src && src.team !== 'enemy') {
       this.addGauge(src, src.def.gauge?.perHit ?? 6);
+      const was = this.comboGauge;
       this.comboGauge = Math.min(100, this.comboGauge + 3);
+      if (was < 100 && this.comboGauge >= 100 && this.bdef.comboGuide) this.onceGuide(`tut:combo:${this.start.battle}`, this.bdef.comboGuide, 8000);
+    }
+    if (t.team === 'enemy' && src) {
+      t.lastHitBy = src;
+      t.lastHitAt = this.now;
     }
     if (t.team === 'enemy') this.damageDealt += dmg;
     if (t.team === 'enemy' && src && src === this.controlled) this.tutEvent('hit');
@@ -1601,6 +1749,7 @@ export class BattleScene extends Phaser.Scene {
 
   private updateFighter(f: Fighter, dt: number) {
     if (!f.alive) return;
+    if (f.protect) return f.state === 'fainted' ? undefined : this.updateProtect(f, dt);
     // 룬 결계 안의 적은 느려진다
     if (f.team === 'enemy' && this.runes.some((r) => this.inRune(f, r))) dt *= 0.5;
     // 전투장 안으로 걸어 들어오는 중
@@ -1711,12 +1860,11 @@ export class BattleScene extends Phaser.Scene {
   private enemyAI(e: Fighter, dt: number) {
     const ed = e.enemy!;
     if (ed.ai === 'eel') return this.eelAI(e, dt);
-    const targets = this.all.filter((t) => t.targetable && t.team !== 'enemy');
-    if (!targets.length) {
+    const t = this.targetOf(e);
+    if (!t) {
       e.state = 'idle';
       return;
     }
-    const t = targets.reduce((a, b) => (Math.hypot(a.x - e.x, a.y - e.y) < Math.hypot(b.x - e.x, b.y - e.y) ? a : b));
     const dx = t.x - e.x;
     const dy = t.y - e.y;
     const d = Math.hypot(dx, dy) || 1;
@@ -1731,7 +1879,7 @@ export class BattleScene extends Phaser.Scene {
       e.aimX = dx / d;
       e.aimY = dy / d;
       e.facing = dirOf(dx, dy);
-      if (d > a.range) {
+      if (d > a.range + t.radius) {
         e.state = 'move';
         this.moveBy(e, (dx / d) * e.speed * (dt / 1000), (dy / d) * e.speed * (dt / 1000));
       } else {
@@ -1824,7 +1972,7 @@ export class BattleScene extends Phaser.Scene {
       else if (this.tutGoal === 'dodge') this.notices.push({ kind: 'toast', text: '붉은 범위 밖으로 걸어 나가세요' });
     } else {
       // 빛을 쏜다 (조준한 쪽으로)
-      const t = this.all.filter((a) => a.targetable && a.team !== 'enemy').sort((a, b) => Math.hypot(a.x - e.x, a.y - e.y) - Math.hypot(b.x - e.x, b.y - e.y))[0];
+      const t = this.targetOf(e);
       if (t) {
         const dx = t.x - e.x;
         const dy = t.y - e.y;
@@ -1992,7 +2140,7 @@ export class BattleScene extends Phaser.Scene {
       p.y += p.vy * (dt / 1000);
       p.s.setPosition(p.x, p.y);
       const foes = this.foesOf(p.owner);
-      const hit = foes.find((t) => (t.enemy?.ai === 'eel' ? Math.abs(t.x - p.x) < 26 && t.y - p.y > -6 && t.y - p.y < 80 : Math.abs(t.x - p.x) < 9 && Math.abs(t.y - BODY - p.y) < 14) && !t.airborne);
+      const hit = foes.find((t) => (t.enemy?.ai === 'eel' ? Math.abs(t.x - p.x) < 26 && t.y - p.y > -6 && t.y - p.y < 80 : Math.abs(t.x - p.x) < 9 + t.radius && Math.abs(t.y - BODY - p.y) < 14 + t.radius) && !t.airborne);
       const out = p.x < 0 || p.y < 20 || p.x > this.bdef.arena.w || p.y > this.bdef.arena.h;
       if (hit) {
         this.damage(hit, p.owner, p.dmg, { unblockable: p.unblockable, push: 6, from: { x: p.x - p.vx * 0.05, y: p.y + BODY - p.vy * 0.05 } });
@@ -2032,11 +2180,11 @@ export class BattleScene extends Phaser.Scene {
         const dx = b.x - a.x;
         const dy = (b.y - a.y) * 1.6;
         const d = Math.hypot(dx, dy);
-        const min = 13;
+        const min = 13 + a.radius + b.radius;
         if (d < min && d > 0.01) {
           const push = (min - d) / 2;
-          const bossA = a.enemy?.boss ? 0 : 1;
-          const bossB = b.enemy?.boss ? 0 : 1;
+          const bossA = a.enemy?.boss || (a.protect && !a.protect.follow) ? 0 : 1;
+          const bossB = b.enemy?.boss || (b.protect && !b.protect.follow) ? 0 : 1;
           this.moveBy(a, (-dx / d) * push * bossA, (-dy / d) * push * 0.6 * bossA);
           this.moveBy(b, (dx / d) * push * bossB, (dy / d) * push * 0.6 * bossB);
         }
@@ -2147,7 +2295,8 @@ export class BattleScene extends Phaser.Scene {
     const outs = this.bdef.outcomes ?? {};
     let action: OutcomeAction | undefined = forced ?? outs[outcome];
     if (!action && outcome === 'win') action = { continue: true };
-    if (!action && outcome === 'wipe') {
+    if ((!action && outcome === 'wipe') || action?.gameover) {
+      if (outcome.startsWith('fall:')) this.notices.push({ kind: 'toast', text: `${this.all.find((f) => `fall:${f.id}` === outcome)?.def.name ?? ''}이(가) 무너졌습니다` });
       // 게임 오버
       this.time.delayedCall(900, () => {
         this.frozen = true;
@@ -2192,7 +2341,8 @@ export class BattleScene extends Phaser.Scene {
       for (const f of this.all) {
         if (!f.actorId) continue;
         // 쓰러진 하수인은 사라진 채로, 아군과 보스(대본에서 계속 나옴)는 그 자리에 다시 세움
-        if (f.team !== 'enemy' || f.alive || f.enemy?.boss) m.putActor(f.actorId, f.x + this.ox, f.y + this.oy, f.facing);
+        if (f.protect && !f.protect.follow) m.hideActor(f.actorId, false);
+        else if (f.team !== 'enemy' || f.alive || f.enemy?.boss) m.putActor(f.actorId, f.x + this.ox, f.y + this.oy, f.facing);
         else if (f.enemy?.faint) m.putActor(f.actorId, f.x + this.ox, f.y + this.oy, f.facing, true);
       }
       this.leaving = false;
@@ -2216,7 +2366,7 @@ export class BattleScene extends Phaser.Scene {
   // ---------------------------------------------------------------
 
   private renderAll() {
-    for (const f of this.all) if (f.alive) this.renderFighter(f);
+    for (const f of this.all) if (f.alive) (f.protect ? this.renderProtect(f) : this.renderFighter(f));
     // 깨우기 막대
     const r = this.reviving;
     if (r) {

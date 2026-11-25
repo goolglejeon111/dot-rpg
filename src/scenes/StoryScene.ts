@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { BattleResult, BattleStart } from '../battle/BattleScene';
 import { STAGE, type ExploreScene, type ExploreStart, type MapHost, type StageDef } from '../explore/ExploreScene';
-import { clearStory, gainOnce, joinParty, maxLevel, partyIds, unlock, unlockInfo, type Unlock } from '../battle/progress';
+import { addGuest, clearStory, gainOnce, joinParty, maxLevel, partyIds, unlock, unlockInfo, type Unlock } from '../battle/progress';
 import { characters, stories } from '../game/data';
 import { gameState, type StateData } from '../game/GameState';
 import { makeBodyPlaceholder, PORTRAIT_H } from '../game/placeholders';
@@ -617,6 +617,9 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     } else if ('join' in node) {
       joinParty(node.join);
       this.nextNode();
+    } else if ('guest' in node) {
+      addGuest(node.guest);
+      this.nextNode();
     } else if ('costume' in node) {
       this.setCostume(node.who ?? 'leon', node.costume);
       this.nextNode();
@@ -808,6 +811,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       // 건너뛰어도 효과는 남는다 (아이템 확대는 닫힌 채로)
       if ('unlock' in n) unlock(n.unlock);
       if ('join' in n) joinParty(n.join);
+      if ('guest' in n) addGuest(n.guest);
       if ('costume' in n) this.setCostume(n.who ?? 'leon', n.costume);
     }
     this.showItem(null);

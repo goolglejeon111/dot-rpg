@@ -11,7 +11,7 @@
  "tilewidth": 32,
  "tileheight": 32,
  "nextlayerid": 5,
- "nextobjectid": 51,
+ "nextobjectid": 49,
  "properties": [
   {
    "name": "place",
@@ -2206,43 +2206,6 @@
     },
     {
      "id": 30,
-     "name": "sanctum",
-     "type": "prop",
-     "rotation": 0,
-     "visible": true,
-     "x": 1868,
-     "y": 36,
-     "width": 40,
-     "height": 60,
-     "properties": [
-      {
-       "name": "wall",
-       "type": "bool",
-       "value": true
-      }
-     ]
-    },
-    {
-     "id": 31,
-     "name": "sanctum",
-     "type": "look",
-     "rotation": 0,
-     "visible": true,
-     "x": 1888,
-     "y": 112,
-     "width": 0,
-     "height": 0,
-     "point": true,
-     "properties": [
-      {
-       "name": "iconY",
-       "type": "int",
-       "value": 30
-      }
-     ]
-    },
-    {
-     "id": 32,
      "name": "window",
      "type": "look",
      "rotation": 0,
@@ -2261,7 +2224,7 @@
      ]
     },
     {
-     "id": 33,
+     "id": 31,
      "name": "armor",
      "type": "prop",
      "rotation": 0,
@@ -2279,7 +2242,7 @@
      ]
     },
     {
-     "id": 34,
+     "id": 32,
      "name": "vase",
      "type": "prop",
      "rotation": 0,
@@ -2297,7 +2260,7 @@
      ]
     },
     {
-     "id": 35,
+     "id": 33,
      "name": "window5",
      "type": "snow",
      "rotation": 0,
@@ -2315,7 +2278,7 @@
      ]
     },
     {
-     "id": 36,
+     "id": 34,
      "name": "window11",
      "type": "snow",
      "rotation": 0,
@@ -2333,7 +2296,7 @@
      ]
     },
     {
-     "id": 37,
+     "id": 35,
      "name": "window17",
      "type": "snow",
      "rotation": 0,
@@ -2351,7 +2314,7 @@
      ]
     },
     {
-     "id": 38,
+     "id": 36,
      "name": "window23",
      "type": "snow",
      "rotation": 0,
@@ -2369,7 +2332,7 @@
      ]
     },
     {
-     "id": 39,
+     "id": 37,
      "name": "window29",
      "type": "snow",
      "rotation": 0,
@@ -2387,7 +2350,7 @@
      ]
     },
     {
-     "id": 40,
+     "id": 38,
      "name": "window37",
      "type": "snow",
      "rotation": 0,
@@ -2405,7 +2368,7 @@
      ]
     },
     {
-     "id": 41,
+     "id": 39,
      "name": "window44",
      "type": "snow",
      "rotation": 0,
@@ -2423,7 +2386,7 @@
      ]
     },
     {
-     "id": 42,
+     "id": 40,
      "name": "window53",
      "type": "snow",
      "rotation": 0,
@@ -2441,7 +2404,7 @@
      ]
     },
     {
-     "id": 43,
+     "id": 41,
      "name": "leon_start",
      "type": "spawn",
      "rotation": 0,
@@ -2460,7 +2423,7 @@
      ]
     },
     {
-     "id": 44,
+     "id": 42,
      "name": "bram_wait",
      "type": "spawn",
      "rotation": 0,
@@ -2479,7 +2442,7 @@
      ]
     },
     {
-     "id": 45,
+     "id": 43,
      "name": "talk_leon",
      "type": "spawn",
      "rotation": 0,
@@ -2498,7 +2461,7 @@
      ]
     },
     {
-     "id": 46,
+     "id": 44,
      "name": "hall_leon",
      "type": "spawn",
      "rotation": 0,
@@ -2517,7 +2480,7 @@
      ]
     },
     {
-     "id": 47,
+     "id": 45,
      "name": "hall_bram",
      "type": "spawn",
      "rotation": 0,
@@ -2536,7 +2499,7 @@
      ]
     },
     {
-     "id": 48,
+     "id": 46,
      "name": "goal_bram",
      "type": "goal",
      "rotation": 0,
@@ -2555,7 +2518,7 @@
      ]
     },
     {
-     "id": 49,
+     "id": 47,
      "name": "goal_hall",
      "type": "goal",
      "rotation": 0,
@@ -2574,7 +2537,7 @@
      ]
     },
     {
-     "id": 50,
+     "id": 48,
      "name": "arena",
      "type": "arena",
      "rotation": 0,

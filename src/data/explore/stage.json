@@ -475,7 +475,7 @@
   "segments": {
     "hall_patrol": {
       "map": "east_hall",
-      "looks": ["portrait", "honor", "prayer", "petition", "sanctum"],
+      "looks": ["portrait", "honor", "prayer", "petition"],
       "goal": "goal_bram",
       "hint": "순찰을 돌며 둘러본 뒤, 회랑 가운데의 브람에게 가면 이야기가 이어집니다",
       "tutorial": true,
@@ -483,7 +483,7 @@
     },
     "hall_window": {
       "map": "east_hall",
-      "looks": ["portrait", "honor", "prayer", "petition", "sanctum", "window"],
+      "looks": ["portrait", "honor", "prayer", "petition", "window"],
       "goal": "goal_hall",
       "hint": "넓은 홀에서 기다리는 브람에게 가면 이야기가 이어집니다",
       "after": "hall_s2_ready"

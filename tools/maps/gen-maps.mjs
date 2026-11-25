@@ -225,7 +225,6 @@ const MAPS = {};
   objects.push(wallItem('honor', 19 * TS, 86), look('honor', 19 * TS, 112, 42));
   objects.push({ type: 'prop', name: 'prayer', x: 25 * TS, y: 122, solid: '16,8' }, look('prayer', 25 * TS, 134, 78));
   objects.push(wallItem('board', 31 * TS - 8, 82), look('petition', 31 * TS - 8, 112, 44));
-  objects.push(wallItem('sanctum', 59 * TS, 96), look('sanctum', 59 * TS, 112, 30));
   objects.push(look('window', cx(44), 112, 40));
   // 장식
   objects.push({ type: 'prop', name: 'armor', x: cx(36), y: 126, solid: '18,8' }, { type: 'prop', name: 'vase', x: cx(45), y: 126, solid: '14,8' });

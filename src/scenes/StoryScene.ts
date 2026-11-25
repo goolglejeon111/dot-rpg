@@ -478,6 +478,13 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   /** 맵 위의 몹 무리와 짧은 전투 (맵에서 벗어난 전투장). 이기면 그 자리 이동으로 */
   fieldBattle(battle: string, done: () => void) {
     this.fieldDone = done;
+    // 어두운 수로에서 처음 싸울 때: 엘리시아가 빛을 밝힌 뒤 전투 (이후로는 계속 밝다)
+    const m = this.mapState === 'on' ? (this.scene.get('Explore') as ExploreScene) : null;
+    if (m?.needsLight())
+      return this.playTalk('엘리시아', '잠깐만요. 이렇게 깜깜해서야 칼끝도 안 보이겠네요. …빛을 좀 밝혀 둘게요.', () => {
+        this.mode = 'busy';
+        m.castLight(() => this.startBattle({ battle }, true));
+      });
     this.startBattle({ battle }, true);
   }
 

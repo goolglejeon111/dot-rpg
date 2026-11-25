@@ -166,13 +166,6 @@
       "rate": 4,
       "note": "루멘 신성국의 은제 기도대 (2프레임)"
     },
-    "sanctum": {
-      "file": "assets/explore/sanctum.png",
-      "w": 40,
-      "h": 60,
-      "frames": 1,
-      "note": "지하 성소의 문 (문틈 빛)"
-    },
     "door_gold": {
       "file": "assets/explore/door_gold.png",
       "w": 44,

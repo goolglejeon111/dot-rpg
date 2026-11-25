@@ -125,6 +125,10 @@ interface Mob {
   sprs: Phaser.GameObjects.Sprite[];
 }
 /** 인물을 따라다니는 빛: leon = 어깨 상처의 하얀 빛(맥박), elysia = 지팡이의 보랏빛 */
+/** 엘리시아가 빛을 밝힌 뒤(이 표시가 once에 있으면) 어두운 맵도 이만큼 밝게 본다 */
+export const LIGHT_KEY = 'a1:elysia_light';
+const LIT_AMBIENT = '#8a86ac';
+
 const CARRY: Record<string, { color: number; r: number; intensity: number; pulse: boolean }> = {
   leon: { color: 0xeef4ff, r: 96, intensity: 1.5, pulse: true },
   elysia: { color: 0xa47cff, r: 128, intensity: 1.6, pulse: false },
@@ -304,7 +308,7 @@ export class ExploreScene extends Phaser.Scene {
     cam.setBounds(Math.min(0, (this.mapW - vw) / 2), Math.min(0, (this.mapH - vh) / 2), Math.max(this.mapW, vw), Math.max(this.mapH, vh));
 
     // 밤 조명
-    if (this.lit) this.lights.enable().setAmbientColor(hex(propOf<string>(md, 'ambient') ?? '#5a6494'));
+    if (this.lit) this.lights.enable().setAmbientColor(this.ambientOf(md));
 
     const { tm, ts } = makeTilemap(this, id);
     this.tilemap = tm;
@@ -665,11 +669,48 @@ export class ExploreScene extends Phaser.Scene {
     return this.map;
   }
 
+  private ambientOf(md: Parameters<typeof propOf>[0]) {
+    if (propOf(md, 'dark') && gameState.progress.once.includes(LIGHT_KEY)) return hex(LIT_AMBIENT);
+    return hex(propOf<string>(md, 'ambient') ?? '#5a6494');
+  }
+
+  private curAmbient() {
+    const c = this.lights.ambientColor;
+    return Phaser.Display.Color.GetColor(Math.round(c.r * 255), Math.round(c.g * 255), Math.round(c.b * 255));
+  }
+
+  /** 어두운 맵에 엘리시아가 있고, 아직 빛을 밝히지 않았는가 */
+  needsLight() {
+    return !!this.map && !!propOf(this.map, 'dark') && this.actors.has('elysia') && !gameState.progress.once.includes(LIGHT_KEY);
+  }
+
+  /** 엘리시아의 빛 마법: 보랏빛이 번진 뒤 맵 전체가 밝아지고, 이후로 어두운 맵도 계속 밝다 */
+  castLight(done: () => void) {
+    if (!gameState.progress.once.includes(LIGHT_KEY)) gameState.progress.once.push(LIGHT_KEY);
+    const a = this.actors.get('elysia');
+    if (a) {
+      const fx = this.world(this.add.sprite(a.spr.x, a.spr.y, a.spr.texture.key, a.spr.frame.name).setOrigin(a.spr.originX, a.spr.originY));
+      fx.setTintFill(0xc8b0ff).setDepth(a.spr.depth + 1).setBlendMode(Phaser.BlendModes.ADD);
+      this.tweens.add({ targets: fx, alpha: 0, duration: 700, onComplete: () => fx.destroy() });
+    }
+    if (!this.lit || !this.map) return void this.time.delayedCall(500, done);
+    const from = Phaser.Display.Color.ValueToColor(this.curAmbient());
+    const to = Phaser.Display.Color.ValueToColor(this.ambientOf(this.map));
+    this.tweens.addCounter({
+      from: 0, to: 100, duration: 900,
+      onUpdate: (tw) => {
+        const c = Phaser.Display.Color.Interpolate.ColorWithColor(from, to, 100, tw.getValue() ?? 0);
+        this.lights.setAmbientColor(Phaser.Display.Color.GetColor(c.r, c.g, c.b));
+      },
+      onComplete: () => this.time.delayedCall(250, done),
+    });
+  }
+
   /** 밤빛 색과 불빛들 (전투 장면이 같은 조명을 쓴다) */
   lighting() {
     return {
       lit: this.lit,
-      ambient: hex(propOf<string>(this.map ?? {}, 'ambient') ?? '#5a6494'),
+      ambient: this.lit ? this.curAmbient() : this.ambientOf(this.map ?? {}),
       lights: this.lights2.map((l) => ({ x: l.light.x, y: l.light.y, r: l.r, color: l.color, intensity: l.base < 0 ? l.light.intensity : l.base })),
     };
   }

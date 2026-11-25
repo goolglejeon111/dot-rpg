@@ -348,6 +348,9 @@ const BODY = 18; // 발밑에서 몸 가운데까지
 /** 궁극기 마지막 일격 때 느려지는 배율 (0.3 = 약 3배 느리게) */
 const FINISH_SLOW = 0.3;
 const JUMP_V = 140;
+/** 물속 걸음 배율과 잠기는 깊이 (ExploreScene과 같게) */
+const WADE_SLOW = 0.55;
+const WADE_DEPTH = 12;
 /** 점프 중 이동 빠르기 배율 (점프 거리를 정함) */
 const AIR_SPEED = 0.7;
 const GRAVITY = 620;
@@ -2629,15 +2632,20 @@ export class BattleScene extends Phaser.Scene {
   // ---- 이동, 겹침 ----
 
   private moveBy(f: Fighter, dx: number, dy: number) {
-    const nx = Phaser.Math.Clamp(f.x + dx, this.bounds.x0, this.bounds.x1);
-    const ny = Phaser.Math.Clamp(f.y + dy, this.bounds.y0, this.bounds.y1);
     const m = this.onMap;
     if (!m) {
-      f.x = nx;
-      f.y = ny;
+      f.x = Phaser.Math.Clamp(f.x + dx, this.bounds.x0, this.bounds.x1);
+      f.y = Phaser.Math.Clamp(f.y + dy, this.bounds.y0, this.bounds.y1);
       return;
     }
+    // 물속에서 걷기는 느리게 (탐색 맵과 같은 배율)
+    if (f.state === 'move' && f.z === 0 && m.wadeAt(f.x + this.ox, f.y + this.oy)) {
+      dx *= WADE_SLOW;
+      dy *= WADE_SLOW;
+    }
     // 맵 위: 벽·기둥·가구에 막힌다 (가로, 세로 따로 → 벽을 따라 미끄러짐)
+    const nx = Phaser.Math.Clamp(f.x + dx, this.bounds.x0, this.bounds.x1);
+    const ny = Phaser.Math.Clamp(f.y + dy, this.bounds.y0, this.bounds.y1);
     if (!m.solidAt(nx + this.ox, f.y + this.oy)) f.x = nx;
     if (!m.solidAt(f.x + this.ox, ny + this.oy)) f.y = ny;
   }
@@ -2933,6 +2941,15 @@ export class BattleScene extends Phaser.Scene {
     else s.clearTint();
     f.glow?.setPosition(f.x, f.y - 22 - f.z).setDepth(f.y + 1);
     f.signal?.setPosition(f.x, f.y - BODY).setDepth(f.y + 2);
+    // 걸어 들어갈 수 있는 물: 아랫몸이 잠기고 물결 띠 (탐색 맵과 같은 깊이)
+    const wet = f.z === 0 && f.state !== 'fainted' && !!this.onMap?.wadeAt(f.x + this.ox, f.y + this.oy);
+    if (wet) {
+      s.setCrop(0, 0, s.frame.width, Math.max(0, Math.round(s.originY * s.frame.height - WADE_DEPTH)));
+      f.shadow.setPosition(Math.round(f.x), Math.round(f.y - WADE_DEPTH)).setDepth(f.y + 0.2).setFrame(0).setTint(0xa8c0a0);
+    } else if (s.isCropped) {
+      s.setCrop();
+      f.shadow.clearTint();
+    }
     for (const o of f.extra) {
       const sp = o as Phaser.GameObjects.Sprite;
       if (sp.anims?.currentAnim?.key === 'fx_leon_guard') {

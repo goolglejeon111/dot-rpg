@@ -1067,11 +1067,6 @@
        "name": "name",
        "type": "string",
        "value": "sewer_water"
-      },
-      {
-       "name": "solid",
-       "type": "bool",
-       "value": true
       }
      ]
     },
@@ -1082,11 +1077,6 @@
        "name": "name",
        "type": "string",
        "value": "sewer_water2"
-      },
-      {
-       "name": "solid",
-       "type": "bool",
-       "value": true
       }
      ]
     },

@@ -41,6 +41,7 @@ for (const [path, data] of Object.entries(files)) MAPS[path.split('/').pop()!.re
 export const PROPS = sprites.props as Record<string, { file: string; w: number; h: number; frames: number; rate?: number }>;
 const TILE_NAMES = sprites.tiles.names;
 const SOLID_TILES = new Set(sprites.tiles.solid);
+const WADE_TILES = new Set<string>((sprites.tiles as { wade?: string[] }).wade ?? []);
 export const TS = 32;
 
 export const propOf = <T extends TiledProp['value']>(o: { properties?: TiledProp[] }, key: string): T | undefined =>
@@ -63,6 +64,13 @@ export function solidGrid(map: TiledMap) {
     if (w) return SOLID_TILES.has(TILE_NAMES[w - 1]);
     return !f;
   });
+}
+
+/** 걸어 들어갈 수 있는 물 칸 (몸이 잠기고 느려짐) */
+export function wadeGrid(map: TiledMap) {
+  const floor = layerOf(map, 'floor')?.data ?? [];
+  const walls = layerOf(map, 'walls')?.data ?? [];
+  return floor.map((f, i) => !walls[i] && !!f && WADE_TILES.has(TILE_NAMES[f - 1]));
 }
 
 export function preloadMapArt(scene: Phaser.Scene) {

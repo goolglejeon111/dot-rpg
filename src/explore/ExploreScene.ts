@@ -7,14 +7,14 @@ import { EXP_REWARD, gainOnce, isCapped, levelOf, levelProgress, partyIds } from
 import { gameState } from '../game/GameState';
 import type { StoryFxDef } from '../scenes/StoryFx';
 import {
-  FLAMES, MAPS, PROPS, TS, findObj, footOf, layerOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf, solidGrid,
+  FLAMES, MAPS, PROPS, TS, findObj, footOf, layerOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf, solidGrid, wadeGrid,
   type TiledMap, type TiledObj,
 } from './mapData';
 
 /**
  * 맵 화면: 대화(Story)의 아래층에 깔리는 도트 맵.
  *   무대(stage)  인물을 세우고 카메라를 옮긴다. 대사는 그 위 Story 장면이 띄운다
- *   이동(play)   레온을 직접 움직인다. 이동 WASD/방향키 · 살펴보기 F · 휴대폰은 조이스틱과 살펴보기 버튼
+ *   이동(play)   레온을 직접 움직인다. 이동 WASD/방향키 · 살펴보기 F · 점프 Space · 휴대폰은 조이스틱과 살펴보기·점프 버튼. 수로 물에 들어가면 몸이 1/3 잠기고 느려짐
  *                가까이 가면 레온 머리 위에 표시가 뜨고, F를 누르면 레온의 독백(Story가 보여 줌). 처음 한 번 경험치
  * 데이터: 맵 src/data/maps/*.json, 무대·이동 구간 src/data/explore/stage.json, 물건 독백 src/data/explore/looks.json
  * 밤 조명: Light2D. 맵 전체에 어두운 푸른빛(ambient), 횃불·촛불 주변만 따뜻하게 밝다
@@ -138,6 +138,12 @@ const SPEED = 92;
 const WALK_SPEED = 78;
 const NEAR = 52; // 이만큼 가까우면 표시가 뜨고 F로 살펴볼 수 있다
 const FOOT = { w: 14, h: 8 };
+/** 물속 걸음 빠르기 배율, 잠기는 깊이(px, 몸의 1/3쯤) */
+const WADE_SPEED = 0.55;
+const WADE_DEPTH = 12;
+/** 평상시 점프 높이(px), 걸리는 시간 */
+const JUMP_H = 14;
+const JUMP_MS = 420;
 const FONT = '"Noto Sans KR", "Malgun Gothic", sans-serif';
 const hex = (s: string) => Phaser.Display.Color.HexStringToColor(s).color;
 
@@ -153,6 +159,8 @@ interface Actor {
   walking: boolean;
   /** 그림만 위로 (px) */
   lift?: number;
+  /** 점프하는 중 (lift가 점프 높이) */
+  jumping?: boolean;
   /** 끌린 자국 색과 마지막 자국 자리 */
   drag?: string;
   lastDrag?: { x: number; y: number };
@@ -228,6 +236,7 @@ export class ExploreScene extends Phaser.Scene {
   private mapW = 0;
   private mapH = 0;
   private grid: boolean[] = [];
+  private wade: boolean[] = [];
   private boxes: Box[] = [];
   /** 이름으로 찾는 물건 그림 (숨겼다 보이는 것) */
   private named = new Map<string, Phaser.GameObjects.Sprite>();
@@ -368,6 +377,7 @@ export class ExploreScene extends Phaser.Scene {
     this.mapW = md.width * TS;
     this.mapH = md.height * TS;
     this.grid = solidGrid(md);
+    this.wade = wadeGrid(md);
     this.boxes = [];
     this.named.clear();
 
@@ -1209,9 +1219,10 @@ export class ExploreScene extends Phaser.Scene {
       if (this.blinking.has(id)) s.setAlpha(Math.random() < 0.18 ? 0.05 : 0.2 + Math.random() * 0.3);
     }
     for (const a of this.actors.values()) {
-      a.spr.setDepth(a.spr.y + (a.lift ? 2 : 0));
-      a.shadow.setPosition(Math.round(a.spr.x), Math.round(a.spr.y)).setVisible(!a.down && !a.lift && a.spr.visible);
-      if (a.lift !== undefined && a.walking) a.spr.setOrigin(0.5, 1 + a.lift / a.spr.height);
+      a.spr.setDepth(a.spr.y + (a.lift && !a.jumping ? 2 : 0));
+      a.shadow.setPosition(Math.round(a.spr.x), Math.round(a.spr.y)).setVisible(!a.down && (!a.lift || !!a.jumping) && a.spr.visible);
+      if (a.lift !== undefined && (a.walking || a.jumping || a.id === 'leon') && !a.down) a.spr.setOrigin(0.5, 1 + a.lift / a.spr.height);
+      this.wadeLook(a);
       if (a.drag && a.walking) this.dragMark(a);
     }
     this.updateSky();
@@ -1334,7 +1345,7 @@ export class ExploreScene extends Phaser.Scene {
     }
     a.facing = Math.abs(mx) > Math.abs(my) ? (mx > 0 ? 'right' : 'left') : my > 0 ? 'down' : 'up';
     a.spr.play(`${a.key}-walk-${a.facing}`, true);
-    const step = SPEED * (this.seg?.speed ?? 1) * (dt / 1000);
+    const step = SPEED * (this.seg?.speed ?? 1) * (dt / 1000) * (this.wadeAt(a.spr.x, a.spr.y) && !a.jumping ? WADE_SPEED : 1);
     const { x: ox, y: oy } = a.spr;
     let x = ox;
     let y = oy;
@@ -1346,6 +1357,59 @@ export class ExploreScene extends Phaser.Scene {
       this.tutStep = 1;
       this.guide('물건 가까이 가면 머리 위에 표시가 뜹니다. F를 누르면 살펴봅니다 (처음 한 번 경험치)');
     }
+  }
+
+  /** 발밑이 걸어 들어갈 수 있는 물인지 */
+  wadeAt(x: number, y: number) {
+    if (!this.map) return false;
+    const tx = Math.floor(x / TS);
+    const ty = Math.floor((y - 2) / TS);
+    if (tx < 0 || ty < 0 || tx >= this.map.width || ty >= this.map.height) return false;
+    return this.wade[ty * this.map.width + tx];
+  }
+
+  /** 점프: 그림만 포물선으로 떴다 내려온다 (움직임은 그대로) */
+  private jump(a: Actor) {
+    if (a.jumping || a.down || this.reading) return;
+    a.jumping = true;
+    this.tweens.addCounter({
+      from: 0, to: 1, duration: JUMP_MS, ease: 'Linear',
+      onUpdate: (tw) => void (a.lift = Math.sin(Math.PI * (tw.getValue() ?? 0)) * JUMP_H),
+      onComplete: () => {
+        a.lift = 0;
+        a.jumping = false;
+        if (this.wadeAt(a.spr.x, a.spr.y)) this.splash(a.spr.x, a.spr.y);
+        else this.dust(a.spr.x, a.spr.y, 0x8a8070, 4);
+      },
+    });
+  }
+
+  /** 물에 내려앉을 때 물방울 */
+  private splash(x: number, y: number) {
+    for (let i = 0; i < 7; i++) {
+      const d = this.world(this.add.rectangle(x + (Math.random() - 0.5) * 12, y - WADE_DEPTH, 2, 2, 0xb8cca8, 0.9).setDepth(y + 1));
+      this.tweens.add({ targets: d, x: d.x + (Math.random() - 0.5) * 20, duration: 420 });
+      this.tweens.add({ targets: d, y: d.y - 6 - Math.random() * 8, duration: 200, ease: 'Quad.out', yoyo: true, onComplete: () => d.destroy() });
+    }
+  }
+
+  /** 물속이면 아랫몸을 잘라 잠긴 모습, 물 위에 물결 띠 */
+  private wadeLook(a: Actor) {
+    const s = a.spr;
+    const inWater = s.visible && !a.lift && this.wadeAt(s.x, s.y);
+    if (!inWater) {
+      if (s.isCropped) s.setCrop();
+      a.shadow.setFillStyle(0x0a0810, 0.4).setSize(16, 6).setDepth(-13);
+      return;
+    }
+    const feet = s.originY * s.frame.height;
+    s.setCrop(0, 0, s.frame.width, Math.max(0, Math.round(feet - WADE_DEPTH)));
+    a.shadow
+      .setPosition(Math.round(s.x), Math.round(s.y - WADE_DEPTH))
+      .setFillStyle(0xa8c0a0, 0.35 + Math.sin(this.time.now / 260 + s.x) * 0.1)
+      .setSize(18, 5)
+      .setDepth(s.y + 0.2)
+      .setVisible(true);
   }
 
   private blocked(x: number, y: number) {
@@ -1511,9 +1575,10 @@ export class ExploreScene extends Phaser.Scene {
 
   private makeInput() {
     const kb = this.input.keyboard!;
-    this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,F') as Record<string, Phaser.Input.Keyboard.Key>;
+    this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,F,SPACE') as Record<string, Phaser.Input.Keyboard.Key>;
     kb.addCapture('UP,DOWN,LEFT,RIGHT');
     this.keys.F.on('down', () => this.look());
+    this.keys.SPACE.on('down', () => this.tryJump());
 
     const touch = this.sys.game.device.input.touch || new URLSearchParams(location.search).has('touch');
     if (!touch) return;
@@ -1530,6 +1595,18 @@ export class ExploreScene extends Phaser.Scene {
     });
     btn.on('pointerup', () => btn.setFrame(0));
     btn.on('pointerout', () => btn.setFrame(0));
+    // 점프 버튼 (살펴보기 버튼 위)
+    const jbtn = this.ui(this.add.image(W - 110, H - 280, 'ui_btn', 0).setScale(1.5).setInteractive());
+    const jlabel = this.ui(this.add.text(W - 110, H - 280, '점프', { fontFamily: FONT, fontSize: '16px', color: '#ffffff' }).setOrigin(0.5).setShadow(0, 2, '#000', 2));
+    this.touchUi.push(jbtn, jlabel);
+    jbtn.setVisible(false);
+    jlabel.setVisible(false);
+    jbtn.on('pointerdown', () => {
+      jbtn.setFrame(1);
+      this.tryJump();
+    });
+    jbtn.on('pointerup', () => jbtn.setFrame(0));
+    jbtn.on('pointerout', () => jbtn.setFrame(0));
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (this.seg && p.x < W / 2 && this.stick.id < 0) this.stick = { id: p.id, x: base.x, y: base.y, dx: 0, dy: 0 };
     });
@@ -1553,6 +1630,12 @@ export class ExploreScene extends Phaser.Scene {
     };
     this.input.on('pointerup', up);
     this.input.on('pointerupoutside', up);
+  }
+
+  /** 직접 움직이는 구간에서만 점프 */
+  private tryJump() {
+    const leon = this.actors.get('leon');
+    if (this.seg && leon && !this.reading) this.jump(leon);
   }
 
   private refreshHud() {

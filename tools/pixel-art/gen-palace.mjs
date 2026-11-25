@@ -23,7 +23,7 @@ const TILES = []; // { key, cv, solid, note }
 const tile = (key, draw, o = {}) => {
   const c = new Cv(32, 32);
   draw(c);
-  TILES.push({ key, cv: c, solid: !!o.solid, note: o.note ?? '' });
+  TILES.push({ key, cv: c, solid: !!o.solid, wade: !!o.wade, note: o.note ?? '' });
 };
 
 /** 대리석 바닥: 16x16 판 네 장, 판마다 밝기 다르게, 가는 줄눈과 결 */
@@ -779,8 +779,8 @@ function sewerWater(c, seed) {
   }
   for (let i = 0; i < 2; i++) c.set(rnd() * 31, rnd() * 31, 'G');
 }
-tile('sewer_water', (c) => sewerWater(c, 51), { solid: true, note: '수로 물' });
-tile('sewer_water2', (c) => sewerWater(c, 53), { solid: true, note: '수로 물 (다른 물결)' });
+tile('sewer_water', (c) => sewerWater(c, 51), { wade: true, note: '수로 물 (걸어 들어가면 몸이 1/3 잠기고 느려짐)' });
+tile('sewer_water2', (c) => sewerWater(c, 53), { wade: true, note: '수로 물 (다른 물결)' });
 /** 수로 벽돌 (위에서 본 벽 윗면, 앞면) */
 tile('sewer_wall_top', (c) => {
   c.rect(0, 0, 31, 31, 'K');
@@ -1355,6 +1355,7 @@ const sprites = {
     columns: COLS,
     names: TILES.map((t) => t.key),
     solid: TILES.filter((t) => t.solid).map((t) => t.key),
+    wade: TILES.filter((t) => t.wade).map((t) => t.key),
     notes: Object.fromEntries(TILES.map((t) => [t.key, t.note])),
   },
   props: {},

@@ -74,8 +74,6 @@
       "castle_base",
       "water",
       "water2",
-      "sewer_water",
-      "sewer_water2",
       "sewer_wall_top",
       "sewer_wall",
       "cellar_wall",
@@ -89,6 +87,10 @@
       "adobe_roof",
       "bars",
       "rock_wall"
+    ],
+    "wade": [
+      "sewer_water",
+      "sewer_water2"
     ],
     "notes": {
       "floor": "대리석 바닥",
@@ -118,7 +120,7 @@
       "sewer_floor": "수로 돌길",
       "sewer_floor2": "수로 돌길 (물웅덩이)",
       "sewer_edge": "수로 돌길 가장자리 (아래가 물)",
-      "sewer_water": "수로 물",
+      "sewer_water": "수로 물 (걸어 들어가면 몸이 1/3 잠기고 느려짐)",
       "sewer_water2": "수로 물 (다른 물결)",
       "sewer_wall_top": "수로 벽 윗면",
       "sewer_wall": "수로 벽 앞면 (벽돌, 이끼)",

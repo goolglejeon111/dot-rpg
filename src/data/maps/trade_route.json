@@ -14,6 +14,11 @@
  "nextobjectid": 28,
  "properties": [
   {
+   "name": "desert",
+   "type": "bool",
+   "value": true
+  },
+  {
    "name": "place",
    "type": "string",
    "value": "동쪽 교역로"

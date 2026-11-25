@@ -516,6 +516,20 @@
       "frames": 1,
       "note": "모래에 반쯤 묻힌 흰 천 (금실 무늬)"
     },
+    "notebook": {
+      "file": "assets/explore/notebook.png",
+      "w": 10,
+      "h": 6,
+      "frames": 1,
+      "note": "엘리시아의 펼친 측정 기록장"
+    },
+    "shield_down": {
+      "file": "assets/explore/shield_down.png",
+      "w": 24,
+      "h": 12,
+      "frames": 1,
+      "note": "모래에 쓰러진 아드리안의 방패"
+    },
     "shoes": {
       "file": "assets/explore/shoes.png",
       "w": 14,

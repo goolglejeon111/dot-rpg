@@ -41,6 +41,28 @@ export interface ActorSpec {
   sprite?: string;
   /** 걷는 빠르기 (없으면 보통 걸음) */
   speed?: number;
+  /** 발밑은 그대로 두고 그림만 이만큼(px) 위로 (말 위에 탄 모습) */
+  lift?: number;
+  /** 지금 자리(말 위)에서 이 자리로 뛰어내린 뒤 walk */
+  hop?: Pt;
+  /** 고개를 숙였다 드는 짧은 동작 (walk가 있으면 도착한 뒤) */
+  nod?: boolean;
+  /** 모래 속에서 기어 나오며 나타난다 */
+  emerge?: boolean;
+  /** 앉아서 무언가를 적는 동작 (pose kneel과 함께). false면 그만 */
+  write?: boolean;
+  /** walk 끝에 닿으면 퇴장 */
+  leave?: boolean;
+  /** 걸을 때 발밑에 끌린 자국을 남긴다 (색). null이면 그만 */
+  drag?: string | null;
+}
+/** 맵 위에 잠깐 놓는 물건 그림 (ex_ 그림): 굴러가기·미끄러지기 */
+export interface ItemSpec {
+  key: string;
+  at?: Pt;
+  to?: Pt;
+  ms?: number;
+  delay?: number;
 }
 /** StoryFxDef 칸(꿈, 남의 기억, 막간)은 대화 화면(StoryFx)이 그린다. 맵은 무시 */
 export interface StageDef extends StoryFxDef {
@@ -80,6 +102,8 @@ export interface StageDef extends StoryFxDef {
   flicker?: Record<string, string | null>;
   /** 인물의 손에서 작은 불씨가 화면 위로 올라가 사라진다 */
   embers?: { who: string; color: string };
+  /** 맵 위에 물건 그림을 놓거나(움직이거나) 치운다(null) */
+  items?: Record<string, ItemSpec | null>;
 }
 export interface SegmentDef {
   map: string;
@@ -127,6 +151,13 @@ interface Actor {
   /** 무릎 꿇음 (전투 그림의 무릎 칸) */
   kneel?: boolean;
   walking: boolean;
+  /** 그림만 위로 (px) */
+  lift?: number;
+  /** 끌린 자국 색과 마지막 자국 자리 */
+  drag?: string;
+  lastDrag?: { x: number; y: number };
+  /** 적는 동작의 종이·펜 */
+  writeFx?: Phaser.GameObjects.GameObject[];
 }
 interface Lookable {
   id: string;
@@ -218,6 +249,10 @@ export class ExploreScene extends Phaser.Scene {
   private namedLights = new Map<string, { light: Phaser.GameObjects.Light; base: number }[]>();
   private pillarFx?: { bar: Phaser.GameObjects.Rectangle; glow: Phaser.GameObjects.Rectangle; t0: number };
   private veilFx?: Phaser.GameObjects.Rectangle;
+  private items = new Map<string, Phaser.GameObjects.Image>();
+  /** 사막 낮의 노란 색조·아지랑이, 밤하늘의 별 (맵 속성 desert / stars) */
+  private haze?: Phaser.GameObjects.Container;
+  private stars: Phaser.GameObjects.Rectangle[] = [];
   private spots: { id: string; light: Phaser.GameObjects.Light }[] = [];
   private blinking = new Set<string>();
   private onEnd?: () => void;
@@ -352,6 +387,7 @@ export class ExploreScene extends Phaser.Scene {
     this.lightUp(this.world(tm.createLayer('walls', ts, 0, 0)!.setDepth(-15)));
 
     for (const o of objectsOf(md)) this.makeObject(o);
+    this.makeSky(md);
   }
 
   private clearWorld() {
@@ -369,6 +405,9 @@ export class ExploreScene extends Phaser.Scene {
     this.pillarFx = undefined;
     this.veilFx?.destroy();
     this.veilFx = undefined;
+    this.items.clear();
+    this.haze = undefined;
+    this.stars = [];
     this.mobs = [];
     this.npcs.clear();
     this.auras.clear();
@@ -683,6 +722,7 @@ export class ExploreScene extends Phaser.Scene {
       else this.blinking.delete(id);
     }
     if (def.embers && !instant) this.playEmbers(def.embers);
+    for (const [id, it] of Object.entries(def.items ?? {})) this.placeItem(id, it, instant);
   }
 
   /** 불씨: 인물 손에서 화면 위로 */
@@ -757,6 +797,7 @@ export class ExploreScene extends Phaser.Scene {
   private placeActor(id: string, spec: ActorSpec, instant: boolean) {
     let a = this.actors.get(id);
     const at = this.point(spec.at);
+    const fresh = !a;
     if (!a) {
       const start = at ?? this.point(spec.walk);
       if (!start) return console.warn(`[map] 처음 나오는 인물은 자리(at)가 필요합니다: ${id}`);
@@ -766,40 +807,148 @@ export class ExploreScene extends Phaser.Scene {
       a = { id, key, spr, shadow, facing: 'down', down: false, walking: false };
       this.actors.set(id, a);
     }
-    a.spr.setVisible(true);
+    const act = a;
+    act.spr.setVisible(true);
     if (at) {
-      this.tweens.killTweensOf(a.spr);
-      a.walking = false;
-      a.spr.setPosition(at.x, at.y);
+      this.tweens.killTweensOf(act.spr);
+      act.walking = false;
+      act.spr.setPosition(at.x, at.y);
     }
-    if (spec.facing) a.facing = spec.facing as Dir;
-    if (spec.pose === 'down') [a.down, a.kneel] = [true, false];
-    else if (spec.pose === 'kneel') [a.down, a.kneel] = [true, true];
-    else if (spec.pose === 'stand') [a.down, a.kneel] = [false, false];
+    if (spec.lift !== undefined) act.lift = spec.lift;
+    if (spec.drag !== undefined) [act.drag, act.lastDrag] = [spec.drag ?? undefined, undefined];
+    if (spec.facing) act.facing = spec.facing as Dir;
+    const setPose = () => {
+      if (spec.pose === 'down') [act.down, act.kneel] = [true, false];
+      else if (spec.pose === 'kneel') [act.down, act.kneel] = [true, true];
+      else if (spec.pose === 'stand') [act.down, act.kneel] = [false, false];
+    };
     const to = this.point(spec.walk);
-    if (to) {
-      const dx = to.x - a.spr.x;
-      const dy = to.y - a.spr.y;
+    const hop = this.point(spec.hop);
+    // 도착한 뒤: 자세, 고개 숙이기, 적기, 퇴장
+    const arrive = () => {
+      act.walking = false;
+      if (spec.facing) act.facing = spec.facing as Dir;
+      setPose();
+      this.pose(act);
+      if (spec.write !== undefined) this.setWriting(act, spec.write && !instant);
+      if (spec.nod && !instant) this.playNod(act);
+      if (spec.leave) this.removeActor(act.id);
+    };
+    const walk = () => {
+      if (!to) return arrive();
+      const dx = to.x - act.spr.x;
+      const dy = to.y - act.spr.y;
       const dist = Math.hypot(dx, dy);
-      this.tweens.killTweensOf(a.spr);
-      a.walking = false;
-      if (instant || dist < 2) a.spr.setPosition(to.x, to.y);
-      else {
-        const act = a;
-        act.walking = true;
-        act.down = false;
-        const dir: Dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
-        act.spr.setOrigin(0.5, 1).play(`${act.key}-walk-${dir}`, true);
-        this.tweens.add({
-          targets: act.spr, x: to.x, y: to.y, duration: (dist / (spec.speed ?? WALK_SPEED)) * 1000,
-          onComplete: () => {
-            act.walking = false;
-            this.pose(act);
-          },
-        });
+      if (instant || dist < 2) {
+        act.spr.setPosition(to.x, to.y);
+        return arrive();
       }
+      act.walking = true;
+      act.down = false;
+      this.setWriting(act, false);
+      const dir: Dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+      act.spr.setOrigin(0.5, 1).play(`${act.key}-walk-${dir}`, true);
+      this.tweens.add({ targets: act.spr, x: to.x, y: to.y, duration: (dist / (spec.speed ?? WALK_SPEED)) * 1000, onComplete: arrive });
+    };
+    this.tweens.killTweensOf(act.spr);
+    act.walking = false;
+    if (!to && !hop) setPose();
+    this.pose(act);
+    if (spec.emerge && fresh && !instant) this.playEmerge(act);
+    if (hop) {
+      // 말에서 뛰어내리기: 그림 높이를 포물선으로 낮추며 옆자리로
+      const from = { x: act.spr.x, y: act.spr.y, lift: act.lift ?? 0 };
+      if (instant) {
+        act.spr.setPosition(hop.x, hop.y);
+        act.lift = 0;
+        return walk();
+      }
+      act.walking = true;
+      this.tweens.addCounter({
+        from: 0, to: 1, duration: 420, ease: 'Sine.inOut',
+        onUpdate: (tw) => {
+          const t = tw.getValue() ?? 0;
+          act.spr.setPosition(from.x + (hop.x - from.x) * t, from.y + (hop.y - from.y) * t);
+          act.lift = from.lift * (1 - t) + Math.sin(Math.PI * t) * 8;
+        },
+        onComplete: () => {
+          act.lift = 0;
+          act.walking = false;
+          this.dust(hop.x, hop.y, 0xd6b98a, 6);
+          this.time.delayedCall(180, walk);
+        },
+      });
+      return;
     }
-    this.pose(a);
+    if (to || spec.nod || spec.write !== undefined || spec.leave) walk();
+  }
+
+  /** 고개를 숙였다 든다 (그림을 살짝 눌렀다 편다) */
+  private playNod(a: Actor) {
+    this.tweens.add({ targets: a.spr, scaleY: 0.9, duration: 260, yoyo: true, hold: 420, ease: 'Sine.inOut' });
+  }
+
+  /** 모래 속에서 기어 나온다: 그림이 아래에서 위로 드러나고 모래가 튄다 */
+  private playEmerge(a: Actor) {
+    a.spr.setScale(1, 0.05);
+    this.tweens.add({ targets: a.spr, scaleY: 1, duration: 700, ease: 'Back.out' });
+    this.dust(a.spr.x, a.spr.y, 0xd6b98a, 10);
+  }
+
+  /** 발밑에 흙먼지 (작은 네모가 튀어 올랐다 떨어짐) */
+  private dust(x: number, y: number, color: number, n: number) {
+    for (let i = 0; i < n; i++) {
+      const d = this.world(this.add.rectangle(x + (Math.random() - 0.5) * 10, y - 1, 2, 2, color).setDepth(y + 1));
+      this.tweens.add({ targets: d, x: d.x + (Math.random() - 0.5) * 30, duration: 500 });
+      this.tweens.add({ targets: d, y: y - 6 - Math.random() * 10, duration: 220, ease: 'Quad.out', yoyo: true, onComplete: () => d.destroy() });
+    }
+  }
+
+  /** 앉아서 적기: 무릎 앞에 종이, 펜 끝이 좌우로 움직인다 */
+  private setWriting(a: Actor, on: boolean) {
+    for (const o of a.writeFx ?? []) o.destroy();
+    a.writeFx = undefined;
+    if (!on || !this.textures.exists('ex_notebook')) return;
+    const fwd = { down: [0, 6], up: [0, -4], left: [-8, 2], right: [8, 2] }[a.facing];
+    const x = a.spr.x + fwd[0];
+    const y = a.spr.y + fwd[1];
+    const paper = this.lightUp(this.world(this.add.image(x, y, 'ex_notebook').setOrigin(0.5, 1).setDepth(a.spr.y + 0.5)));
+    const pen = this.lightUp(this.world(this.add.rectangle(x - 3, y - 4, 1, 3, 0x2f2c3b).setOrigin(0.5, 1).setDepth(a.spr.y + 0.6)));
+    this.tweens.add({ targets: pen, x: x + 3, duration: 380, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    this.tweens.add({ targets: pen, y: y - 2, duration: 1520, yoyo: true, repeat: -1, ease: 'Stepped' });
+    a.writeFx = [paper, pen];
+  }
+
+  /** 맵 위 물건 그림: 놓기, 굴러가기(to), 치우기(null) */
+  private placeItem(id: string, spec: ItemSpec | null, instant: boolean) {
+    const old = this.items.get(id);
+    if (spec === null) {
+      old?.destroy();
+      this.items.delete(id);
+      return;
+    }
+    const at = this.point(spec.at);
+    let it = old;
+    if (!it) {
+      if (!at || !this.textures.exists(`ex_${spec.key}`)) return;
+      it = this.lightUp(this.world(this.add.image(at.x, at.y, `ex_${spec.key}`).setOrigin(0.5, 1).setDepth(at.y)));
+      this.items.set(id, it);
+    } else if (at) it.setPosition(at.x, at.y);
+    const to = this.point(spec.to);
+    if (!to) return;
+    const item = it;
+    if (instant) return void item.setPosition(to.x, to.y).setDepth(to.y);
+    // 굴러가기: 통통 튀며 미끄러지다 멈춘다
+    const from = { x: item.x, y: item.y };
+    this.tweens.addCounter({
+      from: 0, to: 1, delay: spec.delay ?? 0, duration: spec.ms ?? 700, ease: 'Quad.out',
+      onUpdate: (tw) => {
+        const t = tw.getValue() ?? 0;
+        const bounce = Math.abs(Math.sin(t * Math.PI * 3)) * (1 - t) * 6;
+        item.setPosition(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t - bounce).setDepth(item.y + bounce);
+      },
+      onComplete: () => this.dust(to.x, to.y, 0xd6b98a, 5),
+    });
   }
 
   private pose(a: Actor) {
@@ -808,6 +957,7 @@ export class ExploreScene extends Phaser.Scene {
     const row = DIRS.indexOf(a.facing);
     if (a.down && this.textures.exists(`bt_${a.key}`)) a.spr.setTexture(`bt_${a.key}`, row * 12 + (a.kneel ? 10 : 11)).setOrigin(0.5, 0.86);
     else a.spr.setTexture(a.key, row * 5).setOrigin(0.5, 1);
+    if (a.lift) a.spr.setOrigin(0.5, a.spr.originY + a.lift / a.spr.height);
   }
 
   /** 인물의 지금 도트 그림 (대본의 costume. 그림이 없으면 기본) */
@@ -831,6 +981,7 @@ export class ExploreScene extends Phaser.Scene {
     if (!a) return;
     this.tweens.killTweensOf(a.spr);
     if ((this.cameras.main as unknown as { _follow: unknown })._follow === a.spr) this.cameras.main.stopFollow();
+    this.setWriting(a, false);
     a.spr.destroy();
     a.shadow.destroy();
     this.actors.delete(id);
@@ -1058,8 +1209,66 @@ export class ExploreScene extends Phaser.Scene {
       if (this.blinking.has(id)) s.setAlpha(Math.random() < 0.18 ? 0.05 : 0.2 + Math.random() * 0.3);
     }
     for (const a of this.actors.values()) {
-      a.spr.setDepth(a.spr.y);
-      a.shadow.setPosition(Math.round(a.spr.x), Math.round(a.spr.y)).setVisible(!a.down && a.spr.visible);
+      a.spr.setDepth(a.spr.y + (a.lift ? 2 : 0));
+      a.shadow.setPosition(Math.round(a.spr.x), Math.round(a.spr.y)).setVisible(!a.down && !a.lift && a.spr.visible);
+      if (a.lift !== undefined && a.walking) a.spr.setOrigin(0.5, 1 + a.lift / a.spr.height);
+      if (a.drag && a.walking) this.dragMark(a);
+    }
+    this.updateSky();
+  }
+
+  /** 끌린 망토 자국: 걸은 자리에 옅은 줄을 남기고 천천히 사라진다 */
+  private dragMark(a: Actor) {
+    const p = { x: a.spr.x, y: a.spr.y };
+    if (a.lastDrag && Math.hypot(p.x - a.lastDrag.x, p.y - a.lastDrag.y) < 4) return;
+    a.lastDrag = p;
+    const m = this.lightUp(this.world(this.add.rectangle(p.x, p.y - 1, 6, 2, hex(a.drag!), 0.9).setDepth(-12)));
+    this.tweens.add({ targets: m, alpha: 0, delay: 2500, duration: 2500, onComplete: () => m.destroy() });
+  }
+
+  /** 낮이 밝을수록 아지랑이가, 밤이 어두울수록 별이 보인다 */
+  private updateSky() {
+    if (!this.haze && !this.stars.length) return;
+    const c = this.lit ? this.lights.ambientColor : { r: 1, g: 1, b: 1 };
+    const lum = 0.3 * c.r + 0.59 * c.g + 0.11 * c.b;
+    if (this.haze) this.haze.setAlpha(Phaser.Math.Clamp((lum - 0.7) / 0.2, 0, 1));
+    const night = Phaser.Math.Clamp((0.55 - lum) / 0.3, 0, 1);
+    for (const st of this.stars) st.setAlpha(night * (st.getData('a') as number));
+  }
+
+  /** 맵 속성에 따라 하늘 효과를 만든다 */
+  private makeSky(md: NonNullable<typeof this.map>) {
+    if (propOf(md, 'desert')) {
+      const cam = this.cameras.main;
+      const vw = cam.width / cam.zoom + 40;
+      const vh = cam.height / cam.zoom + 40;
+      const ox = -20 + (cam.width - cam.width / cam.zoom) / 2;
+      const oy = -20 + (cam.height - cam.height / cam.zoom) / 2;
+      const parts: Phaser.GameObjects.GameObject[] = [this.add.rectangle(0, 0, vw, vh, 0xffc868, 0.13).setOrigin(0).setBlendMode(Phaser.BlendModes.ADD)];
+      // 아지랑이: 옅은 빛 띠가 천천히 위로 오르며 흔들린다
+      for (let i = 0; i < 7; i++) {
+        const band = this.add.rectangle(0, vh * (i / 7), vw, 4 + (i % 3) * 2, 0xfff0c8, 0.07).setOrigin(0).setBlendMode(Phaser.BlendModes.ADD);
+        this.tweens.add({ targets: band, y: band.y - vh / 7, duration: 3200 + i * 260, repeat: -1, ease: 'Linear' });
+        this.tweens.add({ targets: band, alpha: 0.16, x: 3, duration: 900 + i * 130, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+        parts.push(band);
+      }
+      this.haze = this.world(this.add.container(ox, oy, parts).setScrollFactor(0).setDepth(9500).setAlpha(0));
+    }
+    if (propOf(md, 'stars')) {
+      // 별: 바닥 타일이 없는 하늘 칸에만
+      const fl = layerOf(md, 'floor') as unknown as { data: number[] } | undefined;
+      for (let ty = 0; ty < md.height; ty++)
+        for (let tx = 0; tx < md.width; tx++) {
+          if (fl?.data[ty * md.width + tx]) continue;
+          for (let k = 0; k < 2; k++) {
+            if (Math.random() < 0.35) continue;
+            const big = Math.random() < 0.15;
+            const st = this.world(this.add.rectangle(tx * TS + Math.random() * TS, ty * TS + Math.random() * TS, big ? 2 : 1, big ? 2 : 1, big ? 0xeef0f4 : 0xbcc1cc).setDepth(-21).setAlpha(0));
+            st.setData('a', 0.5 + Math.random() * 0.5);
+            this.tweens.add({ targets: st, scale: 0.4, duration: 700 + Math.random() * 1400, yoyo: true, repeat: -1, delay: Math.random() * 1500 });
+            this.stars.push(st);
+          }
+        }
     }
   }
 

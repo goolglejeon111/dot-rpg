@@ -32,6 +32,11 @@
    "name": "carry",
    "type": "string",
    "value": "leon"
+  },
+  {
+   "name": "stars",
+   "type": "bool",
+   "value": true
   }
  ],
  "layers": [

@@ -14,6 +14,11 @@
  "nextobjectid": 83,
  "properties": [
   {
+   "name": "desert",
+   "type": "bool",
+   "value": true
+  },
+  {
    "name": "place",
    "type": "string",
    "value": "루바 오아시스"
@@ -4102,7 +4107,7 @@
      "rotation": 0,
      "visible": true,
      "x": 112,
-     "y": 464,
+     "y": 432,
      "width": 0,
      "height": 0,
      "point": true,
@@ -4121,7 +4126,7 @@
      "rotation": 0,
      "visible": true,
      "x": 112,
-     "y": 528,
+     "y": 496,
      "width": 0,
      "height": 0,
      "point": true,
@@ -4140,7 +4145,7 @@
      "rotation": 0,
      "visible": true,
      "x": 112,
-     "y": 592,
+     "y": 624,
      "width": 0,
      "height": 0,
      "point": true,
@@ -4159,7 +4164,7 @@
      "rotation": 0,
      "visible": true,
      "x": 112,
-     "y": 656,
+     "y": 688,
      "width": 0,
      "height": 0,
      "point": true,
@@ -4177,7 +4182,7 @@
      "type": "spawn",
      "rotation": 0,
      "visible": true,
-     "x": 80,
+     "x": 48,
      "y": 560,
      "width": 0,
      "height": 0,

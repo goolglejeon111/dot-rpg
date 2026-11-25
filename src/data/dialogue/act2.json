@@ -76,6 +76,7 @@
         {"speaker":"elysia","expression":"normal","text":"황도보다 남쪽이에요. 칼리고 산맥 쪽이요."},
         {"speaker":"leon","expression":"normal","text":"그 산맥에 뭐가 있지."},
         {"speaker":"elysia","expression":"normal","text":"…없어요. 지도상으로는 아무것도."},
+        {"stage":"a2_write"},
         {"monologue":["그녀는 그날 밤, 측정 결과를 몇 번이고 다시 적었다."]},
         {"monologue":["나는 그 빛이 무엇인지 알지 못했다.","다만, 그 빛이 나를 알고 있다는 느낌만은 지울 수 없었다."]}
       ]
@@ -232,6 +233,7 @@
       "id": "scene6", "title": "장면 6. 수인들의 사정", "place": "오아시스의 감옥", "color": "#141018",
       "nodes": [
         {"monologue":["밤이 되자, 감옥 앞에 장로가 찾아왔다."]},
+        {"stage":"a2_karg_bow"},
         {"monologue":["허리가 굽은, 흰 털의 늙은 늑대.","카르크가 그 곁에서 고개를 숙였다."]},
         {"name":"장로","expression":"normal","text":"제국의 기사여. 무례를 용서하게. 이 아이들은 제국 사람만 보면 이빨부터 드러내지."},
         {"name":"장로","expression":"normal","text":"이 늙은이는 우르샤라 하네. 이 오아시스의 장로지."},
@@ -411,9 +413,10 @@
       "id": "s8_press", "title": "▶ 2. 끝까지 몰아붙인다", "place": "오아시스 입구", "color": "#2c2418", "branch": true,
       "nodes": [
         {"speaker":"leon","expression":"angry","text":"오아시스를 불태우려던 놈이, 신의 이름을 입에 올리지 마라."},
+        {"stage":"a2_kick"},
         {"monologue":["그의 방패를 걷어찼다.","흰 망토가 모래에 처박혔다.","기사들이 보는 앞에서, 그는 무릎을 꿇은 채 일어서지 못했다."]},
         {"speaker":"adrian","expression":"angry","text":"…이 치욕은, 반드시 갚겠습니다."},
-        {"stage":"a2_adrian_leave"},
+        {"stage":"a2_adrian_drag"},
         {"monologue":["그는 흙투성이 망토를 끌며 물러났다."]},
         {"monologue":["뒤를 돌아보지 않았다."]}
       ]

@@ -1245,6 +1245,18 @@ prop('white_cloth', 22, 10, 1, (c) => {
   c.disc(15, 5, 2, (d) => (d < 0.5 ? 'y' : 'Y'));
   c.ellipse(5, 8, 5, 2, (d) => (d < 0.6 ? 'c' : 'd'));
 }, { note: '모래에 반쯤 묻힌 흰 천 (금실 무늬)' });
+prop('notebook', 10, 6, 1, (c) => {
+  c.rect(0, 1, 9, 5, 'V');
+  c.rect(5, 1, 5, 5, 'T');
+  for (let y = 2; y <= 4; y += 2) { c.rect(1, y, 3, y, 'K'); c.rect(7, y, 8, y, 'K'); }
+  c.edge('D');
+}, { note: '엘리시아의 펼친 측정 기록장' });
+prop('shield_down', 24, 12, 1, (c) => {
+  c.ellipse(12, 6, 11, 5, (d) => (d < 0.75 ? 'v' : 'n'));
+  c.ellipse(12, 6, 3, 2, (d) => (d < 0.5 ? 'Y' : 'y'));
+  c.line(5, 6, 19, 6, 'y');
+  c.edge('T');
+}, { note: '모래에 쓰러진 아드리안의 방패' });
 prop('shoes', 14, 8, 1, (c) => {
   c.ellipse(4, 4, 3, 2.2, 'o');
   c.ellipse(10, 4, 3, 2.2, 'o');

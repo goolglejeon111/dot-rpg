@@ -655,7 +655,7 @@ const palm = (c, r) => ({ type: 'prop', name: 'palm', x: cx(c), y: ty(r) + 12, s
   objects.push({ type: 'mob', name: 'mob2', x: cx(24), y: ty(18), sprite: 'sand_crawler', battle: '사막 몹 2' });
   objects.push({ type: 'goal', name: 'goal_rock', x: cx(32), y: ty(12) + 8, r: 56 });
   objects.push({ type: 'arena', name: 'arena', x: 25 * TS, y: 11 * TS, w: 448, h: 288 });
-  MAPS.desert_a = { rows: m.rows(), objects, props: { place: '카심 사막', ambient: DAY, bg: '#c8a464' } };
+  MAPS.desert_a = { rows: m.rows(), objects, props: { desert: true, place: '카심 사막', ambient: DAY, bg: '#c8a464' } };
 }
 
 // ---- 2막-2) 사막의 야영지 (25 x 18): 밤 → 새벽. 바위 그늘, 불 피우지 못한 자리. 동쪽 지평선 ----
@@ -674,7 +674,7 @@ const palm = (c, r) => ({ type: 'prop', name: 'palm', x: cx(c), y: ty(r) + 12, s
   objects.push(spawn('karg', cx(15), ty(9), 'left'));
   const ring = [[8, 6], [14, 6], [7, 11], [16, 11], [10, 13], [13, 13]];
   ring.forEach(([c, r], i) => objects.push(spawn(`w${i + 1}`, cx(c), ty(r), c < 11 ? 'right' : 'left')));
-  MAPS.desert_camp = { rows: m.rows(), objects, props: { place: '사막의 야영지', ambient: NIGHT, bg: '#04060e', carry: 'leon' } };
+  MAPS.desert_camp = { rows: m.rows(), objects, props: { place: '사막의 야영지', ambient: NIGHT, bg: '#04060e', carry: 'leon', stars: true } };
 }
 
 // ---- 2막-3) 루바 오아시스 (50 x 35): 가운데 우물과 푸른 물, 야자수, 흙벽 집, 감옥, 동쪽 출구, 서쪽 입구 ----
@@ -701,7 +701,7 @@ const palm = (c, r) => ({ type: 'prop', name: 'palm', x: cx(c), y: ty(r) + 12, s
   objects.push({ type: 'prop', name: 'campfire', x: cx(25), y: ty(23) + 6, hidden: true });
   objects.push({ type: 'prop', name: 'horse', x: cx(3), y: ty(17) + 12, hidden: true });
   // 성기사단 (서쪽 입구). 앞의 셋은 횃불
-  const pal = [[5, 13], [5, 15], [5, 17], [5, 19], [5, 21], [3, 14], [3, 16], [3, 18], [3, 20], [2, 17]];
+  const pal = [[5, 13], [5, 15], [5, 17], [5, 19], [5, 21], [3, 13], [3, 15], [3, 19], [3, 21], [1, 17]]; // 뒷줄은 말(3, 17)을 가리지 않게
   pal.forEach(([c, r], i) => objects.push(spawn(`p${i + 1}`, cx(c), ty(r), 'right')));
   for (const [c, r] of pal.slice(0, 3)) objects.push({ type: 'light', name: 'paladin_torch', x: cx(c) + 6, y: ty(r) - 26, color: '#ffa048', radius: 90, intensity: 1.3, hidden: true, flicker: true });
   objects.push(spawn('adrian_horse', cx(4), ty(17), 'right'), spawn('adrian_front', cx(7), ty(17), 'right'));
@@ -727,18 +727,18 @@ const palm = (c, r) => ({ type: 'prop', name: 'palm', x: cx(c), y: ty(r) + 12, s
   objects.push({ type: 'goal', name: 'goal_east', x: cx(49), y: ty(17), r: 48 });
   objects.push({ type: 'arena', name: 'arena', x: 18 * TS, y: 13 * TS, w: 448, h: 288 }); // 우물 방어
   objects.push({ type: 'arena', name: 'west', x: 1 * TS, y: 12 * TS, w: 448, h: 288 }); // 성기사단, 아드리안
-  MAPS.oasis = { rows: m.rows(), objects, props: { place: '루바 오아시스', ambient: DAY, bg: '#c8a464' } };
+  MAPS.oasis = { rows: m.rows(), objects, props: { desert: true, place: '루바 오아시스', ambient: DAY, bg: '#c8a464' } };
 }
 
-// ---- 2막-4) 흙벽 감옥 안 (12 x 10): 창살 너머로 오아시스 마당이 조금 보임 ----
+// ---- 2막-4) 흙벽 감옥 안 (12 x 9): 창살 너머로 오아시스 마당이 조금 보임 ----
 {
   const W = 12;
-  const H = 10;
+  const H = 9;
   const m = grid(W, H, 'A');
   m.rect(0, 0, W - 1, 0, 'T');
   m.rect(1, 2, W - 2, 6, 'f');
   m.rect(1, 7, W - 2, 7, 'I');
-  m.rect(0, 8, W - 1, 9, 'y');
+  m.rect(0, 8, W - 1, 8, 'y');
   const objects = [];
   objects.push({ type: 'prop', name: 'straw_bed', x: cx(2) + 6, y: ty(5) + 12 });
   objects.push(wallItem('wall_marks', cx(9), 2 * TS - 6), look('a2_prison_marks', cx(9), ty(2) + 4, TS - 12));
@@ -770,7 +770,7 @@ const palm = (c, r) => ({ type: 'prop', name: 'palm', x: cx(c), y: ty(r) + 12, s
   objects.push(spawn('leon_start', cx(2), ty(7), 'right'), spawn('elysia_start', cx(0), ty(8), 'right'), spawn('karg_start', cx(4), ty(7), 'right'));
   objects.push(spawn('leon_tracks', cx(44), ty(7), 'right'), spawn('elysia_tracks', cx(45), ty(8), 'down'), spawn('karg_tracks', cx(47), ty(7), 'left'));
   objects.push({ type: 'goal', name: 'goal_tracks', x: cx(45), y: ty(7) + 8, r: 44 });
-  MAPS.trade_route = { rows: m.rows(), objects, props: { place: '동쪽 교역로', ambient: DAY, bg: '#c8a464' } };
+  MAPS.trade_route = { rows: m.rows(), objects, props: { desert: true, place: '동쪽 교역로', ambient: DAY, bg: '#c8a464' } };
 }
 
 // ---- 2막-6) 도적 은신처 (30 x 20): 바위 틈 안쪽의 천막과 상자, 묶인 정찰대 ----

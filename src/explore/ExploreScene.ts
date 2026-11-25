@@ -5,6 +5,7 @@ import battlesData from '../data/battle/battles.json';
 import { makeBattleAnims, preloadBattle } from '../battle/assets';
 import { EXP_REWARD, gainOnce, isCapped, levelOf, levelProgress, partyIds } from '../battle/progress';
 import { gameState } from '../game/GameState';
+import type { StoryFxDef } from '../scenes/StoryFx';
 import {
   FLAMES, MAPS, PROPS, TS, findObj, footOf, layerOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf, solidGrid,
   type TiledMap, type TiledObj,
@@ -41,7 +42,8 @@ export interface ActorSpec {
   /** 걷는 빠르기 (없으면 보통 걸음) */
   speed?: number;
 }
-export interface StageDef {
+/** StoryFxDef 칸(꿈, 남의 기억, 막간)은 대화 화면(StoryFx)이 그린다. 맵은 무시 */
+export interface StageDef extends StoryFxDef {
   map?: string;
   focus?: Pt;
   blood?: boolean;

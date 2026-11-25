@@ -18,6 +18,7 @@ export const WALK_SPRITES = [
   'leon', 'serena', 'elysia', 'karg', 'adrian', 'galia', 'bram', 'marcion_hooded', 'mob_royal_knight', 'mob_gnosis',
   'leon_hood', 'mob_citizen', 'sewer_rat', 'sewer_leech', 'imperial_spear', 'imperial_archer', 'pursuit_sword', 'pursuit_shield',
   'mob_paladin', 'mob_wolf', 'ursha', 'wolf_scout', 'wolf_scout_tied', 'bandit_blade', 'bandit_archer', 'sand_crawler', 'desert_scorpion',
+  'ignatius',
 ];
 
 export const fxInfo = (key: string) => FX[key];

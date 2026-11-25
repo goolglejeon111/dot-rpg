@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import type { BattleResult, BattleStart } from '../battle/BattleScene';
 import { STAGE, type ExploreScene, type ExploreStart, type MapHost, type StageDef } from '../explore/ExploreScene';
+import { makeBattleAnims, preloadBattle } from '../battle/assets';
+import { StoryFx } from './StoryFx';
 import { addGuest, clearStory, gainOnce, joinParty, maxLevel, partyIds, unlock, unlockInfo, type Unlock } from '../battle/progress';
 import { characters, stories } from '../game/data';
 import { gameState, type StateData } from '../game/GameState';
@@ -41,6 +43,8 @@ const DIM_MONO = 0x9a9a9a; // 독백 중 (살짝)
 const bodyKey = (id: string) => `${id}_body`;
 const itemKey = (id: string) => `item_${id}`;
 const faceKey = (id: string, e: Expression) => `${id}_face_${e}`;
+/** 장면 ID로 정하는 특별한 장면: 꿈(dream…), 막간(interlude…) */
+const sceneKind = (id?: string) => (id?.startsWith('dream') ? 'dream' : id?.startsWith('interlude') ? 'interlude' : '');
 
 /** 파일이 실제 이미지인지 확인 (없는 파일이면 개발 서버가 HTML을 돌려줄 수 있음) */
 const existsCache = new Map<string, Promise<boolean>>();
@@ -124,6 +128,10 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   private logView?: { root: Phaser.GameObjects.Container; text: Phaser.GameObjects.Text; top: number; min: number };
   /** 장면 전환용 검은 막 (카메라 페이드는 아래층 맵을 덮지 못해서 막을 쓴다) */
   private curtain!: Phaser.GameObjects.Rectangle;
+  /** 꿈에 들어가고 나올 때 하얗게 번지는 막 */
+  private bloom!: Phaser.GameObjects.Rectangle;
+  /** 맵 없이 대화 화면 위에서 하는 연출 (꿈, 남의 기억, 막간) */
+  private fx!: StoryFx;
   /** 아래층 맵 화면(Explore) 상태 */
   private mapState: 'off' | 'loading' | 'on' = 'off';
   /** 물건 살펴보기 독백 */
@@ -187,6 +195,10 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     }
     // 확대해서 보여 줄 아이템 그림 (없으면 보여 주지 않음)
     for (const s of this.story.scenes) for (const n of s.nodes) if ('item' in n && n.item) wanted.push({ key: itemKey(n.item), url: `assets/items/${n.item}.png` });
+    // 남의 기억 컷 그림 (없으면 실루엣)
+    for (const s of this.story.scenes)
+      for (const n of s.nodes)
+        if ('stage' in n) for (const c of STAGE.stages[n.stage]?.memory ?? []) wanted.push({ key: `memory_${c}`, url: `assets/memory/${c}.png` });
     const todo = wanted.filter((w, i) => !this.textures.exists(w.key) && wanted.findIndex((x) => x.key === w.key) === i);
     const found = await Promise.all(todo.map((w) => imageExists(w.url)));
     const toLoad = todo.filter((_, i) => found[i]);
@@ -196,12 +208,19 @@ export class StoryScene extends Phaser.Scene implements MapHost {
         makeBodyPlaceholder(this, bodyKey(id), id);
       }
     }
-    if (toLoad.length === 0) return;
+    // 막간처럼 맵 없이 도트를 세우는 이야기는 도트 그림도 (맵 화면이 아직 안 불렀을 수 있음)
+    const dots = this.story.scenes.some((s) => sceneKind(s.id) === 'interlude');
+    if (dots) preloadBattle(this);
+    for (const w of toLoad) this.load.image(w.key, w.url);
+    if (this.load.list.size === 0) {
+      if (dots) makeBattleAnims(this);
+      return;
+    }
     await new Promise<void>((resolve) => {
-      for (const w of toLoad) this.load.image(w.key, w.url);
       this.load.once(Phaser.Loader.Events.COMPLETE, () => {
         // 스탠딩은 고해상도 그림이라 줄일 때 부드럽게 (게임 전체는 도트용 pixelArt 설정)
         for (const w of toLoad) if (!w.key.startsWith('item_')) this.textures.get(w.key).setFilter(Phaser.Textures.FilterMode.LINEAR);
+        if (dots) makeBattleAnims(this);
         resolve();
       });
       this.load.start();
@@ -213,6 +232,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.cameras.main.setBackgroundColor('rgba(0,0,0,0)');
     this.bg = this.add.rectangle(0, 0, W, H, 0x101018).setOrigin(0);
     this.curtain = this.add.rectangle(0, 0, W, H, 0x000000, 1).setOrigin(0).setDepth(28).setAlpha(0).setVisible(false);
+    this.bloom = this.add.rectangle(0, 0, W, H, 0xfffaf0, 1).setOrigin(0).setDepth(28).setAlpha(0).setVisible(false);
+    this.fx = new StoryFx(this);
     this.placeLabel = this.add
       .text(24, 20, '', { fontFamily: FONT, fontSize: '20px', color: '#cdb88a' })
       .setDepth(9)
@@ -252,6 +273,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
 
     // 독백: 화면 전체를 살짝 덮고 가운데에 문장
     const veil = this.add.rectangle(0, 0, W, H, 0x000000, 0.5).setOrigin(0);
+    // 남의 기억이 번쩍이는 동안은 가림막을 옅게 (하얗게 타 버린 화면이 보이도록)
+    this.fx.onMemory = (on) => veil.setAlpha(on ? 0.18 : 0.5);
     this.monoText = this.add.text(150, 150, '', {
       fontFamily: FONT,
       fontSize: '26px',
@@ -348,29 +371,132 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.mode = 'busy';
     this.clearText();
     const first = !this.entered;
+    const prevKind = first ? '' : sceneKind(this.scene_?.id);
+    const kind = sceneKind(sc.id);
     this.entered = true;
     this.sceneIdx = i;
     this.nodeIdx = Math.min(startNode, sc.nodes.length);
     this.saveHere();
 
     // 이전 장면 인물은 퇴장, 맵과 무대는 이 장면(중간부터면 그 지점)에 맞춘다
-    const swap = () => {
+    const swap = (after: () => void) => {
       for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
       this.bg.setFillStyle(hex(sc.color));
       // 장면 중간부터 시작하면 그 앞에서 바뀐 장소를 따른다
       const moved = sc.nodes.slice(0, this.nodeIdx).filter((n) => 'place' in n).pop();
       this.setPlace(moved && 'place' in moved ? moved.place : sc.place);
-      this.applyMap(this.mapSteps(i, this.nodeIdx), true, () => {
-        this.curtainOut(first ? 500 : 320);
-        this.time.delayedCall(first ? 500 : 400, () => this.runNode());
-      });
+      // 꿈 화면, 막간의 빛줄기·도트 (맵 없이 대화 화면에서)
+      this.fx.clear();
+      this.setDreamLook(kind === 'dream');
+      if (kind === 'dream') this.fx.setDream(sc.color);
+      for (const d of this.mapSteps(i, this.nodeIdx, true)) if (d) this.fx.apply(d, true);
+      this.applyMap(this.mapSteps(i, this.nodeIdx), true, after);
     };
+    const reveal = (ms: number, wait: number) => {
+      this.curtainOut(ms);
+      this.time.delayedCall(wait, () => this.runNode());
+    };
+    const show = () => (kind === 'interlude' ? this.interludeCard(() => reveal(500, 500)) : reveal(first ? 500 : 320, first ? 500 : 400));
+    if (kind === 'dream' && prevKind !== 'dream') return this.dreamIn(first, swap);
+    if (prevKind === 'dream' && kind !== 'dream') return this.dreamOut(swap, show);
     if (first) {
       this.curtain.setVisible(true).setAlpha(1);
-      swap();
+      swap(show);
       return;
     }
-    this.curtainIn(260, swap);
+    this.curtainIn(260, () => swap(show));
+  }
+
+  /**
+   * 꿈에 들어간다: 지금 화면이 흐려지며(0.8초) 하얗게 번진 뒤 꿈 화면이 떠오른다
+   */
+  private dreamIn(first: boolean, swap: (after: () => void) => void) {
+    const fadeIn = () => {
+      this.tweens.add({ targets: this.bloom, alpha: 0, duration: 900, onComplete: () => this.bloom.setVisible(false) });
+      this.time.delayedCall(800, () => this.runNode());
+    };
+    this.tweens.killTweensOf(this.bloom);
+    if (first) {
+      this.bloom.setVisible(true).setAlpha(1);
+      return swap(fadeIn);
+    }
+    // 흐림 (WebGL에서만. 캔버스면 하얗게 번지기만)
+    const cams = [this.cameras.main];
+    if (this.mapState === 'on') cams.push(this.scene.get('Explore').cameras.main);
+    const blurs = cams.map((c) => c.postFX?.addBlur(1, 1, 1, 0));
+    this.tweens.addCounter({
+      from: 0,
+      to: 2.5,
+      duration: 800,
+      onUpdate: (t) => blurs.forEach((b) => b && (b.strength = t.getValue() ?? 0)),
+    });
+    this.bloom.setVisible(true).setAlpha(0);
+    this.tweens.add({
+      targets: this.bloom,
+      alpha: 1,
+      delay: 350,
+      duration: 650,
+      onComplete: () => {
+        cams.forEach((c, k) => blurs[k] && c.postFX?.remove(blurs[k]!));
+        swap(fadeIn);
+      },
+    });
+  }
+
+  /** 꿈에서 나온다: 꿈 화면이 하얗게 번지며 사라지고, 지금 장면이 떠오른다 */
+  private dreamOut(swap: (after: () => void) => void, show: () => void) {
+    this.tweens.killTweensOf(this.bloom);
+    this.bloom.setVisible(true).setAlpha(0);
+    this.tweens.add({
+      targets: this.bloom,
+      alpha: 1,
+      duration: 700,
+      onComplete: () =>
+        swap(() => {
+          // 하얀 막 → 검은 막으로 바꿔 끼우고 평소처럼 페이드 인
+          this.curtain.setVisible(true).setAlpha(0);
+          this.tweens.add({ targets: this.bloom, alpha: 0, duration: 500, onComplete: () => this.bloom.setVisible(false) });
+          this.tweens.add({ targets: this.curtain, alpha: 1, duration: 500, onComplete: show });
+        }),
+    });
+  }
+
+  /** 막간: 검은 화면 가운데 "막간" 1.5초 */
+  private interludeCard(then: () => void) {
+    const t = this.add
+      .text(W / 2, H / 2, '막간', { fontFamily: FONT, fontSize: '44px', color: '#e0c27a', fontStyle: 'bold' })
+      .setOrigin(0.5)
+      .setDepth(29)
+      .setAlpha(0)
+      .setShadow(0, 4, '#000000', 10);
+    this.tweens.chain({
+      targets: t,
+      tweens: [
+        { alpha: 1, duration: 350 },
+        { alpha: 1, duration: 800 },
+        { alpha: 0, duration: 350 },
+      ],
+      onComplete: () => {
+        t.destroy();
+        then();
+      },
+    });
+  }
+
+  /** 꿈속 스탠딩: 세피아를 씌우고 조금 밝고 흐리게 (WebGL에서만) */
+  private setDreamLook(on: boolean) {
+    for (const p of Object.values(this.portraits)) {
+      for (const img of [p.body, p.face]) {
+        const fx = img.preFX;
+        if (!fx) continue;
+        fx.clear();
+        if (!on) continue;
+        const cm = fx.addColorMatrix();
+        cm.sepia();
+        cm.brightness(1.18, true);
+        fx.addBlur(0, 1, 1, 0.6);
+      }
+    }
   }
 
   // ---------- 맵 (아래층 Explore 장면) ----------
@@ -390,8 +516,15 @@ export class StoryScene extends Phaser.Scene implements MapHost {
    * 장면 i의 대사 node 직전까지의 무대 변화 목록 (이어하기·장면 전환에서 맵을 다시 만든다)
    * null = 맵 없음. map이 있는 무대에서 인물을 새로 세운다
    */
-  private mapSteps(i: number, node: number): (StageDef | null)[] {
+  private mapSteps(i: number, node: number, raw = false): (StageDef | null)[] {
     const sc = this.story.scenes[i];
+    if (raw) {
+      // 대화 화면 연출용: 장면 무대와 그 뒤 stage들을 그대로
+      const id = STAGE.scenes[`${this.story.id}:${sc.id}`];
+      const defs: (StageDef | null)[] = [id ? STAGE.stages[id] ?? null : null];
+      for (const n of sc.nodes.slice(0, node)) if ('stage' in n) defs.push(STAGE.stages[n.stage] ?? null);
+      return defs;
+    }
     // 장면 무대: "이야기:장면" 이름이 먼저 (막마다 장면 ID가 겹침), 프롤로그는 장면 ID만으로도
     const first = STAGE.scenes[`${this.story.id}:${sc.id}`] ?? (this.story.id === 'prologue' ? STAGE.scenes[sc.id] : undefined);
     const steps: (StageDef | null)[] = [first ? STAGE.stages[first] ?? null : null];
@@ -577,6 +710,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     } else if ('stage' in node) {
       const d = STAGE.stages[node.stage];
       if (d?.screen) this.screenFx(d.screen);
+      if (d) this.fx.apply(d);
       if (d?.dark) {
         // 맵을 내리고 검은 화면 위에서 이어 간다
         this.mode = 'busy';
@@ -817,6 +951,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.showItem(null);
     // 건너뛴 무대 변화는 바로 적용
     const defs = passed.map((id) => STAGE.stages[id]).filter(Boolean);
+    for (const d of defs) this.fx.apply(d, true);
     const steps = defs.map((d) => (d.dark ? null : d));
     if (steps.some((d) => d === null || d.map)) this.applyMap(steps, true, () => {});
     else if (defs.length && this.mapState !== 'off') this.withMap((m) => defs.forEach((d) => m.applyStage(d, { instant: true })));
@@ -895,7 +1030,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     const c = node.speaker ? characters[node.speaker] : undefined;
     const name = c?.name ?? node.name ?? '';
     if (c) {
-      const side = node.position ?? (c.id === 'leon' ? 'left' : 'right');
+      const side = node.position ?? (c.id === this.leftOf() ? 'left' : 'right');
       this.setPortrait(side, c.id, node.expression ?? 'normal');
       this.highlight(side);
     } else {
@@ -912,6 +1047,12 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.typeText(node.text, (s) => this.lineText.setText(s));
   }
 
+  /** 왼쪽에 서는 인물: 레온. 레온이 없는 장면(막간)은 그 장면의 첫 화자 */
+  private leftOf() {
+    const sp = this.scene_.nodes.map((n) => ('speaker' in n ? n.speaker : undefined)).filter(Boolean);
+    return sp.includes('leon') || !sp.length ? 'leon' : sp[0];
+  }
+
   private showMonoLine(instantLines?: string[]) {
     const node = this.scene_.nodes[this.nodeIdx] as { monologue: string[] };
     this.box.setVisible(false);
@@ -926,6 +1067,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     const before = node.monologue.slice(0, this.monoIdx);
     const line = node.monologue[this.monoIdx];
     this.lastShown = { kind: 'mono', lines: [...before, line] };
+    this.fx.onLine();
     this.backlog.push({ text: line });
     const head = before.length ? `${before.join('\n')}\n` : '';
     this.typeText(line, (s) => this.monoText.setText(head + s));

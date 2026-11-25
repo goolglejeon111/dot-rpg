@@ -328,7 +328,11 @@ export class TitleScene extends Phaser.Scene {
       cols.forEach(([head, rows], c) => {
         const x = 165 + c * 210;
         add(this.add.text(x, 172, head, { fontFamily: FONT, fontSize: '17px', color: '#a89a78' }).setOrigin(0.5));
-        rows.forEach(([label, fn], i) => add(makeButton(this, x, 206 + i * 33, label, fn, { w: 196, h: 30, fontSize: 14, depth: 0 })));
+        // 줄이 많으면 닫기 버튼 위까지 들어가게 촘촘히
+        const step = Math.min(33, Math.floor(330 / Math.max(1, rows.length - 1)));
+        rows.forEach(([label, fn], i) =>
+          add(makeButton(this, x, 206 + i * step, label, fn, { w: 196, h: step - 3, fontSize: step < 30 ? 13 : 14, depth: 0 })),
+        );
       });
     });
   }

@@ -787,6 +787,25 @@ export class StoryScene extends Phaser.Scene implements MapHost {
         center = { x: b.at!.x + ar.w / 2, y: b.at!.y + ar.h / 2 };
       }
     }
+    // 따로 그린 전투장은 쓰지 않는다: 맵이 꺼져 있거나 다른 맵이면, 그 전투의 맵을 띄워 그 위에서 싸운다
+    const arMap = (battlesData as unknown as Record<string, { arena: { map?: string } }>)[b.battle]?.arena.map;
+    if (!center && !b.hpZero && arMap) {
+      this.clearText();
+      for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
+      return this.curtainIn(350, () =>
+        this.withMap((mm) => {
+          if (mm.mapId !== arMap) mm.applyStage({ map: arMap }, { reset: true, instant: true });
+          this.curtainOut(350);
+          const c = mm.battleCenter(b.battle);
+          if (c) mm.lookAt(c.x, c.y, 1, () => undefined);
+          this.time.delayedCall(380, () => {
+            this.scene.launch('Battle', { ...b, map: mm, onEnd: (r: BattleResult) => this.afterBattle(r) } satisfies BattleStart);
+            this.scene.sleep();
+          });
+        }),
+      );
+    }
+    if (!center) console.error(`[story] 맵 위에서 싸울 수 없는 전투: ${b.battle} (battles.json arena.map과 맵의 arena 구역 필요)`);
     if (m && center) {
       this.clearText();
       for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side);

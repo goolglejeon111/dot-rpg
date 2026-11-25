@@ -173,6 +173,64 @@
     "endAt": 0.3,
     "guide": "방패를 든 동안은 정면 공격이 막힙니다. E(오러 찌르기)로 자세를 무너뜨리세요"
   },
+  "_3막": "적 자리, 세레나·갈리아 체력은 임시. allies의 vital = 체력바를 화면 위에 따로, blockLight = 막을 수 없는 빛을 오러로 막음. protect.ring = 발밑 원(룬 결계). bossEnds = 보스가 쓰러지면 남은 적도 사라짐. bgm = 전투 BGM(끝나면 앞의 곡)",
+  "안개 짐승 무리": {
+    "title": "안개 짐승 무리",
+    "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "morwen_edge" },
+    "party": ["leon", "elysia", "karg"],
+    "waves": [
+      [{ "enemy": "mist_beast", "actor": "mb1" }, { "enemy": "mist_beast", "actor": "mb2" }, { "enemy": "mist_beast", "actor": "mb3" }],
+      [{ "enemy": "mist_beast", "x": 400, "y": 80 }, { "enemy": "mist_beast", "x": 410, "y": 200 }, { "enemy": "mist_beast", "x": 300, "y": 260 }]
+    ]
+  },
+  "안개 몹 1": {
+    "title": "안개 짐승",
+    "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "morwen_edge" },
+    "party": ["leon", "elysia", "karg"],
+    "waves": [[{ "enemy": "mist_beast", "x": 360, "y": 110 }, { "enemy": "mist_beast", "x": 380, "y": 200 }]]
+  },
+  "안개 몹 2": {
+    "title": "안개 짐승",
+    "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "morwen_edge" },
+    "party": ["leon", "elysia", "karg"],
+    "waves": [[{ "enemy": "mist_beast", "x": 360, "y": 90 }, { "enemy": "mist_beast", "x": 390, "y": 170 }, { "enemy": "mist_beast", "x": 340, "y": 250 }]]
+  },
+  "마을 습격": {
+    "title": "마을 습격",
+    "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "ruined_village" },
+    "party": ["leon", "elysia", "karg"],
+    "allies": [{ "id": "galia", "x": 336, "y": 80, "blockLight": true }],
+    "protect": { "id": "serena", "name": "세레나", "hp": 200, "def": 2, "sprite": "serena", "radius": 6 },
+    "bgm": "bgm_battle",
+    "waves": [
+      [
+        { "enemy": "gnosis", "actor": "foe2", "x": 300, "y": 40 },
+        { "enemy": "gnosis", "actor": "foe3", "x": 380, "y": 60 },
+        { "enemy": "gnosis", "x": 420, "y": 120 },
+        { "enemy": "paladin", "actor": "foe1", "x": 260, "y": 60 },
+        { "enemy": "paladin", "actor": "foe4", "x": 420, "y": 60 }
+      ],
+      [{ "enemy": "paladin", "x": 300, "y": 60 }, { "enemy": "paladin", "x": 380, "y": 90 }, { "enemy": "paladin", "x": 420, "y": 200 }],
+      [{ "enemy": "gnosis", "x": 260, "y": 70 }, { "enemy": "gnosis", "x": 400, "y": 70 }, { "enemy": "gnosis", "x": 420, "y": 240 }]
+    ],
+    "outcomes": { "fall:serena": { "gameover": true } }
+  },
+  "습격대장": {
+    "title": "습격대장",
+    "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "ruined_village" },
+    "party": ["leon", "elysia", "karg"],
+    "allies": [{ "id": "galia", "x": 272, "y": 0, "vital": true, "blockLight": true }],
+    "protect": { "id": "serena", "name": "세레나", "hp": 200, "def": 2, "sprite": "serena", "radius": 6, "ring": "#a47cff" },
+    "bgm": "bgm_boss_gnosis",
+    "bossEnds": true,
+    "waves": [[{ "enemy": "gnosis_captain", "actor": "raid", "x": 300, "y": 60 }]],
+    "outcomes": {
+      "win": { "next": "r_saved" },
+      "fall:galia": { "next": "r_fallen" },
+      "wipe": { "next": "r_wiped" },
+      "fall:serena": { "gameover": true }
+    }
+  },
   "_cutscene": "체력 0 연출 전투장 (대본의 {\"hpZero\": ...})",
   "hpZero": {
     "arena": { "w": 448, "h": 288, "floor": "corridor", "tint": "#b88686" }

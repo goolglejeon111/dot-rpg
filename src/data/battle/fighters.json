@@ -121,6 +121,13 @@
       "attack": { "chainWindow": 0, "hits": [
         { "mult": 1.0, "range": 30, "arc": 100, "windup": 300, "active": 70, "recover": 500, "step": 4, "fx": "", "cols": [0, 1] }
       ] }
+    },
+    "galia": {
+      "name": "갈리아", "speed": 72, "hp": 260, "atk": 15, "def": 7,
+      "attack": { "chainWindow": 360, "hits": [
+        { "mult": 1.2, "range": 40, "arc": 170, "windup": 220, "active": 90, "recover": 240, "step": 4, "fx": "galia_cleave", "cols": [0, 1], "push": 14 },
+        { "mult": 1.5, "range": 42, "arc": 170, "windup": 240, "active": 90, "recover": 320, "step": 6, "fx": "galia_cleave", "cols": [2, 3], "push": 18, "flipFx": true }
+      ] }
     }
   }
 }

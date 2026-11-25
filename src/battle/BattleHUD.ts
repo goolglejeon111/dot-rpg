@@ -44,6 +44,7 @@ export class BattleHUD extends Phaser.Scene {
   private expText!: Phaser.GameObjects.Text;
   private boss?: { bar: Bar; name: Phaser.GameObjects.Text };
   private guard?: { bar: Bar; name: Phaser.GameObjects.Text };
+  private vital?: { bar: Bar; name: Phaser.GameObjects.Text };
   private timerText!: Phaser.GameObjects.Text;
   private toastText!: Phaser.GameObjects.Text;
   private guideBox!: Phaser.GameObjects.Container;
@@ -331,10 +332,12 @@ export class BattleHUD extends Phaser.Scene {
     // 보스 체력
     const boss = b.enemiesBoss;
     if (boss && !this.boss) {
-      // 위쪽 오른편 (왼쪽 위 파티 칸과 겹치지 않게)
-      const bx = W - 16 - 324 * S;
-      const bar = this.bar(bx, 44, 'boss', 'red_8');
-      const name = this.add.text(bx + 162 * S, 38, boss.def.name, { fontFamily: FONT, fontSize: '19px', color: '#f4dede', fontStyle: 'bold' }).setOrigin(0.5, 1).setShadow(0, 2, '#000', 3);
+      // 위쪽 오른편 (왼쪽 위 파티 칸과 겹치지 않게). 지켜야 할 것·NPC 아군 체력바가 있으면 그 아래 가운데
+      const stack = (b.protectTarget ? 1 : 0) + (b.vitalAlly ? 1 : 0);
+      const bx = stack ? W / 2 - 162 * S : W - 16 - 324 * S;
+      const by = 44 + stack * 48;
+      const bar = this.bar(bx, by, 'boss', 'red_8');
+      const name = this.add.text(bx + 162 * S, by - 6, boss.def.name, { fontFamily: FONT, fontSize: '19px', color: '#f4dede', fontStyle: 'bold' }).setOrigin(0.5, 1).setShadow(0, 2, '#000', 3);
       this.boss = { bar, name };
     }
     if (this.boss) this.setBar(this.boss.bar, boss ? boss.hp / boss.maxHp : 0);
@@ -348,6 +351,17 @@ export class BattleHUD extends Phaser.Scene {
       this.guard = { bar, name };
     }
     if (this.guard) this.setBar(this.guard.bar, pr ? pr.hp / pr.maxHp : 0);
+
+    // 체력바를 따로 보이는 NPC 아군 (지켜야 할 것 아래)
+    const va = b.vitalAlly;
+    if (va && !this.vital) {
+      const vx = W / 2 - 162 * S;
+      const vy = pr ? 92 : 44;
+      const bar = this.bar(vx, vy, 'boss', 'green_8');
+      const name = this.add.text(W / 2, vy - 6, va.def.name, { fontFamily: FONT, fontSize: '17px', color: '#dff4de', fontStyle: 'bold' }).setOrigin(0.5, 1).setShadow(0, 2, '#000', 3);
+      this.vital = { bar, name };
+    }
+    if (this.vital) this.setBar(this.vital.bar, va ? va.hp / va.maxHp : 0);
 
     const tl = b.timeLeft;
     this.timerText.setText(tl === null ? '' : `남은 시간 ${Math.ceil(tl)}`);

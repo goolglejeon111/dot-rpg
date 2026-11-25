@@ -7,6 +7,7 @@ import { FONT, makeButton, type Button } from '../game/ui';
 import { CG_LIST, cgKey, loadCgs } from '../game/cg';
 import { containFit, coverFit, endingKey, loadEndingArt } from '../game/assets';
 import type { StoryStartData } from './StoryScene';
+import stageData from '../data/explore/stage.json';
 
 const W = 960;
 const H = 720;
@@ -274,16 +275,17 @@ export class TitleScene extends Phaser.Scene {
       })],
       ['1막 시험 ▶', () => this.showAct1Menu()],
       ['2막 시험 ▶', () => this.showAct2Menu()],
+      ['3막 시험 ▶', () => this.showAct3Menu()],
       ['엔딩 화면 미리 보기 ▶', () => this.showEndingPreviewMenu()],
     ];
     this.openPanel('개발 시험', (add) => {
-      // 두 줄로 (한 줄에 6개)
+      // 두 줄로 (한 줄에 7개)
       rows.forEach(([label, fn], i) =>
-        add(makeButton(this, W / 2 + (i < 6 ? -170 : 170), 190 + (i % 6) * 52, label, fn, { w: 330, h: 44, fontSize: 15, depth: 0 })),
+        add(makeButton(this, W / 2 + (i < 7 ? -170 : 170), 186 + (i % 7) * 46, label, fn, { w: 330, h: 40, fontSize: 15, depth: 0 })),
       );
       add(
         this.add
-          .text(W / 2, 520, '전투 중: F6 적 전멸 · F7 브람 쓰러뜨리기 · F8 시간 끝 · F9 파티 전멸', { fontFamily: FONT, fontSize: '15px', color: '#888888' })
+          .text(W / 2, 520, '전투 중: F6 적 전멸 · F7 NPC 아군 쓰러뜨리기 · F8 시간 끝 · F9 파티 전멸 · F10 지킬 대상 무너뜨리기', { fontFamily: FONT, fontSize: '15px', color: '#888888' })
           .setOrigin(0.5),
       );
     });
@@ -407,6 +409,93 @@ export class TitleScene extends Phaser.Scene {
         const x = 165 + c * 210;
         add(this.add.text(x, 172, head, { fontFamily: FONT, fontSize: '17px', color: '#a89a78' }).setOrigin(0.5));
         // 줄이 많으면 닫기 버튼 위까지 들어가게 촘촘히
+        const step = Math.min(33, Math.floor(330 / Math.max(1, rows.length - 1)));
+        rows.forEach(([label, fn], i) =>
+          add(makeButton(this, x, 206 + i * step, label, fn, { w: 196, h: step - 3, fontSize: step < 30 ? 13 : 14, depth: 0 })),
+        );
+      });
+    });
+  }
+
+  /**
+   * 3막 시험: 장면, 선택지·결과, 전투, 이동 구간으로 바로 간다.
+   * 2막을 깬 상태(레벨 13, 파티 레온·엘리시아·카르크)에서, 1·2막과 그 지점까지의 3막 노드를 미리 적용한다.
+   * 무대의 once(3막 상처 빛, 룬 깨짐)와 galia_alive도 그 지점에 맞춘다
+   */
+  private showAct3Menu() {
+    const act1 = stories.act1;
+    const act2 = stories.act2;
+    const act3 = stories.act3;
+    if (!act1 || !act2 || !act3) return;
+    const stages = (stageData as unknown as { stages: Record<string, { once?: string; rune?: string }> }).stages;
+    const apply = (n: Record<string, unknown>) => {
+      const p = gameState.progress;
+      if ('unlock' in n) unlock(n.unlock as Unlock);
+      if ('join' in n) joinParty(String(n.join));
+      if ('costume' in n) p.costume[String(n.who ?? 'leon')] = String(n.costume);
+      if ('stage' in n) {
+        const d = stages[String(n.stage)];
+        const keys = [d?.once, d?.rune === 'break' ? 'a3:rune_break' : d?.rune === 'layer' ? 'a3:layered' : undefined];
+        for (const k of keys) if (k && !p.once.includes(k)) p.once.push(k);
+      }
+    };
+    const where = (pred: (n: object) => boolean) => {
+      for (const sc of act3.scenes) {
+        const i = sc.nodes.findIndex(pred);
+        if (i >= 0) return { scene: sc.id, node: i };
+      }
+      return { scene: act3.scenes[0].id, node: 0 };
+    };
+    /** galiaAlive: 장면 8 뒤에서 갈리아가 살아 있는 길(결과 "끝까지 지켜 냄")인지 */
+    const jump = (scene: string, node: number, galiaAlive = false) => {
+      gameState.reset();
+      const p = gameState.progress;
+      p.stage = 'act2';
+      unlock('evade');
+      for (const sc of [...act1.scenes, ...act2.scenes]) {
+        if (sc.branch) continue;
+        for (const n of sc.nodes as unknown as Record<string, unknown>[]) if (!('guest' in n)) apply(n);
+      }
+      p.party = ['leon', 'elysia', 'karg'];
+      p.guests = {};
+      for (const id of p.party) p.exp[id] = 4650;
+      const idx = act3.scenes.findIndex((x) => x.id === scene);
+      const after8 = idx > act3.scenes.findIndex((x) => x.id === 'scene8');
+      for (const sc of act3.scenes) {
+        const toSaved = galiaAlive && sc.id === 'r_saved';
+        if (sc.branch && sc.id !== scene && !toSaved) continue;
+        if (!sc.branch && act3.scenes.indexOf(sc) > idx) break;
+        const end = sc.id === scene ? node : sc.nodes.length;
+        for (const n of sc.nodes.slice(0, end) as unknown as Record<string, unknown>[]) apply(n);
+        if (sc.id === scene) break;
+      }
+      if (after8) gameState.setFlag('galia_alive', galiaAlive);
+      this.go({ story: 'act3', scene, node });
+    };
+    const short = (t: string) => t.replace(/^장면 /, '').replace(/^▶ /, '').replace(/^결과: /, '').slice(0, 14);
+    const choiceAt = (id: string) => {
+      const sc = act3.scenes.find((x) => x.id === id);
+      return Math.max(0, sc?.nodes.findIndex((n) => 'choice' in n || 'choices' in n) ?? 0);
+    };
+    const alive = ['scene10', 'scene10_1'];
+    const battles = ['안개 짐승 무리', '마을 습격', '습격대장'];
+    const segs = ['a3_village', 'a3_forest', 'a3_night', 'a3_night_in'];
+    const cols: [string, [string, () => void][]][] = [
+      ['장면', [
+        ...act3.scenes.filter((sc) => !sc.branch).map((sc): [string, () => void] => [short(sc.title), () => jump(sc.id, 0)]),
+        ...alive.map((id): [string, () => void] => [`${id.replace('scene', '').replace('_', '-')} (갈리아 생존)`, () => jump(id, 0, true)]),
+      ]],
+      ['선택지 · 결과', [
+        ...['scene5', 'scene6_1', 'scene8', 'scene10'].map((id): [string, () => void] => [`${id.replace('scene', '장면 ').replace('_', '-')} 선택지`, () => jump(id, choiceAt(id))]),
+        ...['r_saved', 'r_fallen', 'r_wiped'].map((id): [string, () => void] => [short(act3.scenes.find((x) => x.id === id)?.title ?? id), () => jump(id, 0, id === 'r_saved')]),
+      ]],
+      ['전투', battles.map((b): [string, () => void] => [b, () => { const w = where((n) => (n as { battle?: string }).battle === b); jump(w.scene, w.node); }])],
+      ['이동 구간', segs.map((g): [string, () => void] => [g.replace('a3_', ''), () => { const w = where((n) => (n as { explore?: string }).explore === g); jump(w.scene, w.node); }])],
+    ];
+    this.openPanel('3막 시험', (add) => {
+      cols.forEach(([head, rows], c) => {
+        const x = 165 + c * 210;
+        add(this.add.text(x, 172, head, { fontFamily: FONT, fontSize: '17px', color: '#a89a78' }).setOrigin(0.5));
         const step = Math.min(33, Math.floor(330 / Math.max(1, rows.length - 1)));
         rows.forEach(([label, fn], i) =>
           add(makeButton(this, x, 206 + i * step, label, fn, { w: 196, h: step - 3, fontSize: step < 30 ? 13 : 14, depth: 0 })),

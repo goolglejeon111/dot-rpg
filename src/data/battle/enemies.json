@@ -105,5 +105,22 @@
     "name": "카르크", "sprite": "karg", "hp": 200, "atk": 12, "def": 4, "speed": 96,
     "ai": "rusher",
     "attack": { "range": 26, "windup": 200, "recover": 300, "cooldown": 700, "mult": 1.0, "fx": "hit" }
+  },
+  "_3막": "수치는 모두 임시. fade = every ms마다 ms 동안 흐려짐(맞지 않고 덮치지 않음). bolt.count/spread = 여러 갈래(도). summon = 체력 비율 at 아래마다 enemy count마리. selfDestruct.below 0 = 쓰러질 때 터짐",
+  "mist_beast": {
+    "name": "안개 짐승", "sprite": "mist_beast", "hp": 50, "atk": 12, "def": 2, "speed": 66,
+    "ai": "rusher",
+    "fade": { "every": 3500, "ms": 1500 },
+    "attack": { "range": 26, "windup": 380, "recover": 600, "cooldown": 900, "mult": 1.0, "fx": "hit" }
+  },
+  "gnosis_captain": {
+    "name": "습격대장", "sprite": "raid_captain", "hp": 700, "atk": 16, "def": 5, "speed": 40, "boss": true,
+    "ai": "caster",
+    "keepAway": 70,
+    "recover": 900,
+    "bolt": { "cast": 800, "speed": 170, "mult": 0.9, "cooldown": 1800, "unblockable": true, "count": 3, "spread": 20 },
+    "area": { "every": 3, "cast": 1500, "radius": 60, "mult": 1.6, "breakDamage": 30 },
+    "summon": { "at": [0.7, 0.4], "enemy": "gnosis", "count": 3 },
+    "selfDestruct": { "below": 0, "signal": 1300, "radius": 70, "mult": 2.0, "unblockable": true }
   }
 }

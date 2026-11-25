@@ -1393,7 +1393,7 @@
    "imagewidth": 256,
    "imageheight": 256,
    "columns": 8,
-   "tilecount": 58,
+   "tilecount": 62,
    "tilewidth": 32,
    "tileheight": 32,
    "margin": 0,
@@ -2101,6 +2101,51 @@
        "name": "name",
        "type": "string",
        "value": "rock_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 58,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dry_field"
+      }
+     ]
+    },
+    {
+     "id": 59,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dry_grass"
+      }
+     ]
+    },
+    {
+     "id": 60,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "forest_floor"
+      }
+     ]
+    },
+    {
+     "id": 61,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "ruin_wall"
       },
       {
        "name": "solid",

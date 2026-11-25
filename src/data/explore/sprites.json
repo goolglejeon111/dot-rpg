@@ -688,6 +688,20 @@
       "frames": 3,
       "rate": 3,
       "note": "집에서 오르는 연기 한 줄기"
+    },
+    "village_window": {
+      "file": "assets/explore/village_window.png",
+      "w": 16,
+      "h": 14,
+      "frames": 1,
+      "note": "시골 집 창 (열린 창, wall)"
+    },
+    "village_shutter": {
+      "file": "assets/explore/village_shutter.png",
+      "w": 16,
+      "h": 14,
+      "frames": 1,
+      "note": "시골 집 창 (닫힌 덧문, 처음엔 숨김. 차례로 보이며 창이 닫힘)"
     }
   }
 }

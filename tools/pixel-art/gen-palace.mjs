@@ -1447,6 +1447,20 @@ prop('smoke', 12, 44, 3, (c, i) => {
     c.disc(6 + Math.round(Math.sin((k + i) * 1.3) * 2), y, 2 + (k % 2), k < 3 ? 'V' : 't');
   }
 }, { rate: 3, note: '집에서 오르는 연기 한 줄기' });
+prop('village_window', 16, 14, 1, (c) => {
+  c.rect(0, 0, 15, 13, 'P');
+  c.rect(2, 2, 13, 11, 'k');
+  c.rect(2, 2, 13, 3, 'K');
+  c.rect(7, 2, 8, 11, 'O');
+}, { note: '시골 집 창 (열린 창, wall)' });
+prop('village_shutter', 16, 14, 1, (c) => {
+  c.rect(0, 0, 15, 13, 'P');
+  c.rect(1, 1, 7, 12, (x, y) => (y % 3 === 0 ? 'O' : 'o'));
+  c.rect(8, 1, 14, 12, (x, y) => (y % 3 === 0 ? 'O' : 'o'));
+  c.rect(7, 1, 8, 12, 'P');
+  c.set(6, 6, 'T');
+  c.set(9, 6, 'T');
+}, { note: '시골 집 창 (닫힌 덧문, 처음엔 숨김. 차례로 보이며 창이 닫힘)' });
 
 // ---- 이야기 화면 가운데에 크게 띄우는 아이템 그림 (public/assets/items/) ----
 const ITEMS = []; // { key, cv }

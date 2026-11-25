@@ -1,4 +1,5 @@
 import { senseBeat } from '../game/beat';
+import { playSe } from '../game/sound';
 import Phaser from 'phaser';
 import looksData from '../data/explore/looks.json';
 import stageData from '../data/explore/stage.json';
@@ -105,8 +106,26 @@ export interface StageDef extends StoryFxDef {
   spot?: string[] | null;
   /** aura와 같되 불규칙하게 깜빡인다 */
   flicker?: Record<string, string | null>;
-  /** 인물의 손에서 작은 불씨가 화면 위로 올라가 사라진다 */
-  embers?: { who: string; color: string };
+  /** 인물의 손에서(또는 at 자리에서) 작은 불씨가 화면 위로 올라가 사라진다 */
+  embers?: { who: string; color: string; at?: Pt };
+  /** 안개(맵 속성 fog)를 화면 위에서부터 걷어 낸다 */
+  fog?: 'lift';
+  /** 레온 어깨의 룬: break = 유리처럼 깨지며 크게 터짐, layer = 여러 겹 다시 그림(사이로 빛이 샘) */
+  rune?: 'break' | 'layer';
+  /** 위압: 인물이 이 색으로 번쩍이고 고리가 퍼진다. freeze면 다른 인물이 1초 굳는다 */
+  awe?: { who: string; color: string; freeze?: boolean };
+  /** 화면 채도가 아주 잠깐(ms) 빠진다 */
+  gray?: number;
+  /** 바닥의 붉은 범위 표시 (null이면 지움) */
+  zone?: { at: Pt; r: number } | null;
+  /** 숨긴 물건·빛을 이 순서대로 ms 간격으로 하나씩 켠다 (창 닫힘, 횃불 행렬, 돌무덤) */
+  reveal?: { keys: string[]; ms: number; se?: string };
+  /** 이름(key) 붙은 물건이 잠깐 빛난다 (표식 나무의 칼자국) */
+  shine?: string;
+  /** 효과음 한 번, BGM·환경음 바꾸기(null이면 끔). 대화 화면(StoryScene)이 튼다. 파일이 없으면 무음 */
+  se?: string;
+  bgm?: string | null;
+  amb?: string | null;
   /** 맵 위에 물건 그림을 놓거나(움직이거나) 치운다(null) */
   items?: Record<string, ItemSpec | null>;
   /** 이 무대를 지나면 남기는 기록 (예: a1:seal = 상처를 룬으로 누름) */
@@ -207,13 +226,20 @@ const CARRY: Record<string, { color: number; r: number; intensity: number; pulse
 };
 /** 2막 장면 3의 빛의 기둥을 본 뒤(이 표시가 once에 있으면) 레온 어깨 빛이 1막보다 조금 크고 밝다 */
 export const PILLAR_KEY = 'a2:pillar';
+/** 3막: 2막보다 밝게 시작 / 장면 7에서 룬이 깨짐 / 장면 10에서 룬을 겹쳐 그림 */
+export const A3_KEY = 'a3:start';
+export const RUNE_BREAK_KEY = 'a3:rune_break';
+export const LAYER_KEY = 'a3:layered';
 /** 엘리시아가 룬으로 상처를 누른 뒤 (보랏빛 룬 테두리) */
 export const SEAL_KEY = 'a1:seal';
 /** 상처 빛 점의 자리 (발밑 기준, 왼쪽 어깨). 오른쪽을 보면 어깨가 몸 뒤로 숨는다 */
 const SHOULDER: Record<Dir, [number, number]> = { down: [5, -21], up: [-5, -21], left: [1, -21], right: [-1, -21] };
 function carryOf(id: string) {
   const d = CARRY[id];
-  if (id === 'leon' && gameState.progress.once.includes(PILLAR_KEY)) return { ...d, r: d.r * 1.3, intensity: d.intensity * 1.35 };
+  const once = gameState.progress.once;
+  if (id === 'leon' && once.includes(RUNE_BREAK_KEY) && !once.includes(LAYER_KEY)) return { ...d, r: d.r * 1.8, intensity: d.intensity * 2 };
+  if (id === 'leon' && once.includes(A3_KEY)) return { ...d, r: d.r * 1.5, intensity: d.intensity * 1.6 };
+  if (id === 'leon' && once.includes(PILLAR_KEY)) return { ...d, r: d.r * 1.3, intensity: d.intensity * 1.35 };
   return d;
 }
 /** 맵에서 레온 뒤를 따라 걷는 인물 (임시 동료 포함) */
@@ -275,6 +301,13 @@ export class ExploreScene extends Phaser.Scene {
   private namedLights = new Map<string, { light: Phaser.GameObjects.Light; base: number }[]>();
   private pillarFx?: { bar: Phaser.GameObjects.Rectangle; glow: Phaser.GameObjects.Rectangle; t0: number };
   private veilFx?: Phaser.GameObjects.Rectangle;
+  /** 안개 (맵 속성 fog): 레온 둘레만 또렷한 흰 막 */
+  private fogFx?: { img: Phaser.GameObjects.Image; off: number; k: number };
+  /** 이름(key) 붙은 표식 나무와 지금 빛나는 중인 것 */
+  private marks: { key: string; s: Phaser.GameObjects.Sprite }[] = [];
+  private marksLit = new Set<string>();
+  private zoneFx?: Phaser.GameObjects.Ellipse;
+  private grayFx?: Phaser.FX.ColorMatrix;
   private items = new Map<string, Phaser.GameObjects.Image>();
   /** 레온 왼쪽 어깨의 상처 빛 점과 룬 테두리 */
   private woundG?: Phaser.GameObjects.Graphics;
@@ -443,6 +476,10 @@ export class ExploreScene extends Phaser.Scene {
     this.pillarFx = undefined;
     this.veilFx?.destroy();
     this.veilFx = undefined;
+    this.fogFx = undefined;
+    this.marks = [];
+    this.marksLit.clear();
+    this.zoneFx = undefined;
     this.items.clear();
     this.haze = undefined;
     this.stars = [];
@@ -466,10 +503,11 @@ export class ExploreScene extends Phaser.Scene {
     if (o.type === 'prop') {
       if (!PROPS[o.name]) return;
       const s = this.world(makePropSprite(this, o));
-      if (propOf(o, 'hidden')) {
-        s.setVisible(false);
-        this.named.set(o.name, s);
-      }
+      // 같은 그림이 여럿이면 key로 구별한다
+      const key = String(propOf(o, 'key') ?? o.name);
+      if (propOf(o, 'hidden')) s.setVisible(false);
+      if (propOf(o, 'hidden') || propOf(o, 'key')) this.named.set(key, s);
+      if (o.name === 'mark_tree' && propOf(o, 'key')) this.marks.push({ key, s });
       const fl = FLAMES[o.name];
       const top = f.y - PROPS[o.name].h;
       if (fl) {
@@ -480,7 +518,7 @@ export class ExploreScene extends Phaser.Scene {
         if (propOf(o, 'hidden')) {
           glow.setVisible(false);
           s.on('changevisible', (v: boolean) => glow.setVisible(v));
-          if (l) this.hideLight(o.name, l);
+          if (l) this.hideLight(key, l);
         }
       } else this.lightUp(s);
       const solid = propOf<string>(o, 'solid');
@@ -497,7 +535,7 @@ export class ExploreScene extends Phaser.Scene {
     } else if (o.type === 'light') {
       const color = hex(propOf<string>(o, 'color') ?? '#ffffff');
       const l = this.addLight(o.x, o.y, Number(propOf(o, 'radius') ?? 120), color, Number(propOf(o, 'intensity') ?? 1), !propOf(o, 'flicker'));
-      if (l && propOf(o, 'hidden')) this.hideLight(o.name, l);
+      if (l && propOf(o, 'hidden')) this.hideLight(String(propOf(o, 'key') ?? o.name), l);
       if (propOf(o, 'spill')) {
         // 문틈에서 새는 차가운 흰빛
         const spill = this.world(this.add.ellipse(o.x, o.y + 6, 70, 24, color, 0.3).setDepth(-14).setBlendMode(Phaser.BlendModes.ADD));
@@ -760,15 +798,174 @@ export class ExploreScene extends Phaser.Scene {
     }
     if (def.embers && !instant) this.playEmbers(def.embers);
     for (const [id, it] of Object.entries(def.items ?? {})) this.placeItem(id, it, instant);
+    if (def.fog === 'lift') this.liftFog(instant);
+    if (def.rune) {
+      const k = def.rune === 'break' ? RUNE_BREAK_KEY : LAYER_KEY;
+      if (!gameState.progress.once.includes(k)) gameState.progress.once.push(k);
+      for (const c of this.carry) if (c.id === 'leon') {
+        const d = carryOf('leon');
+        c.base = d.intensity;
+        c.light.radius = d.r;
+      }
+      if (def.rune === 'break' && !instant) this.runeShards();
+    }
+    if (def.awe && !instant) this.playAwe(def.awe);
+    if (def.gray && !instant) this.playGray(def.gray);
+    if (def.zone !== undefined) this.setZone(def.zone);
+    if (def.reveal) this.reveal(def.reveal, instant);
+    if (def.shine && !instant) this.shineProp(def.shine);
+  }
+
+  /** 숨긴 물건·빛을 하나씩 켠다 */
+  private reveal(r: NonNullable<StageDef['reveal']>, instant: boolean) {
+    const on = (k: string) => {
+      const spr = this.named.get(k);
+      spr?.setVisible(true);
+      spr?.emit('changevisible', true);
+      for (const l of this.namedLights.get(k) ?? []) l.light.setVisible(true);
+    };
+    if (instant) return r.keys.forEach(on);
+    r.keys.forEach((k, i) => this.time.delayedCall(i * r.ms, () => {
+      if (!this.map) return;
+      on(k);
+      if (r.se) playSe(this, r.se);
+    }));
+  }
+
+  /** 이름 붙은 물건이 잠깐 하얗게(보랏빛 섞어) 빛난다 */
+  private shineProp(key: string) {
+    const s = this.named.get(key);
+    if (!s || !s.visible) return;
+    const fx = this.world(this.add.sprite(s.x, s.y, s.texture.key, s.frame.name).setOrigin(s.originX, s.originY));
+    fx.setTintFill(0xe8dcff).setAlpha(0).setDepth(s.depth + 0.2).setBlendMode(Phaser.BlendModes.ADD);
+    this.tweens.add({ targets: fx, alpha: 0.45, duration: 350, yoyo: true, hold: 300, onComplete: () => fx.destroy() });
+  }
+
+  /** 표식 나무 가까이(약 60px) 가면 칼자국이 잠깐 밝아진다. 멀어졌다 다시 오면 또 */
+  private updateMarks(leon: Actor) {
+    for (const m of this.marks) {
+      const near = Math.hypot(m.s.x - leon.spr.x, m.s.y - leon.spr.y) < 60;
+      if (near && !this.marksLit.has(m.key)) {
+        this.marksLit.add(m.key);
+        this.shineProp(m.key);
+      } else if (!near) this.marksLit.delete(m.key);
+    }
+  }
+
+  /** 안개: 둘레 반경 약 4타일만 또렷하고 나머지는 흰 막. 텍스처는 한 번만 만든다 */
+  private makeFog(md: NonNullable<typeof this.map>) {
+    const W = 1024;
+    const H = 768;
+    if (!this.textures.exists('fx_fog')) {
+      const t = this.textures.createCanvas('fx_fog', W, H)!;
+      const c = t.getContext();
+      const g = c.createRadialGradient(W / 2, H / 2, TS * 3, W / 2, H / 2, TS * 6);
+      g.addColorStop(0, 'rgba(216,220,220,0)');
+      g.addColorStop(1, 'rgba(216,220,220,1)');
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, H);
+      t.refresh();
+    }
+    const img = this.world(this.add.image(0, 0, 'fx_fog').setDepth(9300).setAlpha(0.88));
+    this.fogFx = { img, off: 0, k: 1 };
+    void md;
+  }
+
+  /** 안개가 레온을 따라다닌다. 레온이 안 보이면(전투 등) 화면 가운데에서 옅게 */
+  private updateFog() {
+    const f = this.fogFx;
+    if (!f) return;
+    const a = this.actors.get('leon');
+    const v = this.cameras.main.worldView;
+    const shown = !!a && a.spr.visible;
+    const x = shown ? a!.spr.x : v.centerX;
+    const y = shown ? a!.spr.y - 12 : v.centerY;
+    f.img.setPosition(x, y + f.off).setAlpha((shown ? 0.88 : 0.5) * f.k);
+  }
+
+  /** 안개가 걷힌다: 막이 아래로 밀려 내려가며(위쪽부터 맑아짐) 사라진다 */
+  private liftFog(instant: boolean) {
+    const f = this.fogFx;
+    if (!f) return;
+    const done = () => {
+      f.img.destroy();
+      if (this.fogFx === f) this.fogFx = undefined;
+    };
+    if (instant) return done();
+    this.tweens.add({ targets: f, off: 420, k: 0, duration: 2600, ease: 'Sine.in', onComplete: done });
+  }
+
+  /** 룬이 유리처럼 깨진다: 어깨에서 보랏빛 조각이 튀고 하얀 빛이 번진다 */
+  private runeShards() {
+    const a = this.actors.get('leon');
+    if (!a) return;
+    const [ox, oy] = SHOULDER[a.facing];
+    const x = a.spr.x + ox;
+    const y = a.spr.y + oy;
+    for (let i = 0; i < 16; i++) {
+      const ang = (i / 16) * Math.PI * 2 + Math.random() * 0.3;
+      const d = 18 + Math.random() * 22;
+      const p = this.world(this.add.rectangle(x, y, 2, 1 + (i % 2), 0xa47cff).setDepth(a.spr.depth + 2).setAngle(Math.random() * 180));
+      this.tweens.add({ targets: p, x: x + Math.cos(ang) * d, y: y + Math.sin(ang) * d + 8, angle: p.angle + 180, alpha: 0, duration: 700 + Math.random() * 300, ease: 'Quad.out', onComplete: () => p.destroy() });
+    }
+    const glow = this.world(this.add.ellipse(x, y, 10, 10, 0xffffff, 0.8).setDepth(a.spr.depth + 1.5).setBlendMode(Phaser.BlendModes.ADD));
+    this.tweens.add({ targets: glow, scale: 5, alpha: 0, duration: 800, ease: 'Quad.out', onComplete: () => glow.destroy() });
+    this.woundFx('flare');
+  }
+
+  /** 위압: 번쩍임과 퍼지는 고리, freeze면 다른 인물이 1초 동안 굳는다 */
+  private playAwe(w: NonNullable<StageDef['awe']>) {
+    const a = this.actors.get(w.who);
+    if (!a) return;
+    this.flashActor(w.who, w.color);
+    const ring = this.world(this.add.ellipse(a.spr.x, a.spr.y - 14, 12, 8).setStrokeStyle(2, hex(w.color), 0.9).setDepth(9200).setBlendMode(Phaser.BlendModes.ADD));
+    this.tweens.add({ targets: ring, scale: 12, alpha: 0, duration: 900, ease: 'Quad.out', onComplete: () => ring.destroy() });
+    if (!w.freeze) return;
+    const others = [...this.actors.values()].filter((o) => o.id !== w.who);
+    for (const o of others) {
+      for (const tw of this.tweens.getTweensOf(o.spr)) tw.pause();
+      o.spr.anims.pause();
+    }
+    this.time.delayedCall(1000, () => {
+      for (const o of others) {
+        for (const tw of this.tweens.getTweensOf(o.spr)) tw.resume();
+        o.spr.anims.resume();
+      }
+    });
+  }
+
+  /** 채도가 빠졌다가(ms 동안) 돌아온다 */
+  private playGray(ms: number) {
+    const cam = this.cameras.main;
+    if (!cam.postFX) return;
+    this.grayFx ??= cam.postFX.addColorMatrix();
+    const fx = this.grayFx;
+    const set = (v: number) => fx.grayscale(v);
+    this.tweens.addCounter({
+      from: 0, to: 0.9, duration: 200, onUpdate: (tw) => set(tw.getValue() ?? 0),
+      onComplete: () => this.tweens.addCounter({ from: 0.9, to: 0, delay: ms, duration: 600, onUpdate: (tw) => set(tw.getValue() ?? 0), onComplete: () => fx.reset() }),
+    });
+  }
+
+  /** 바닥의 붉은 범위 (습격대장의 빛이 떨어질 자리) */
+  private setZone(z: StageDef['zone']) {
+    this.zoneFx?.destroy();
+    this.zoneFx = undefined;
+    const p = z && this.point(z.at);
+    if (!z || !p) return;
+    const e = this.world(this.add.ellipse(p.x, p.y, z.r * 2, z.r * 1.2, 0xff3030, 0.25).setStrokeStyle(1, 0xff5050, 0.8).setDepth(-13).setBlendMode(Phaser.BlendModes.ADD));
+    this.tweens.add({ targets: e, alpha: 0.5, duration: 400, yoyo: true, repeat: -1 });
+    this.zoneFx = e;
   }
 
   /** 불씨: 인물 손에서 화면 위로 */
   private playEmbers(e: NonNullable<StageDef['embers']>) {
     const a = this.actors.get(e.who);
-    if (!a) return;
+    const at = e.at ? this.point(e.at) : a ? { x: a.spr.x, y: a.spr.y - 18 } : null;
+    if (!at) return;
     const top = this.cameras.main.worldView.top - 10;
     for (let i = 0; i < 14; i++) {
-      const p = this.world(this.add.rectangle(a.spr.x + (Math.random() - 0.5) * 8, a.spr.y - 18, 2, 2, hex(e.color)).setDepth(9450).setBlendMode(Phaser.BlendModes.ADD));
+      const p = this.world(this.add.rectangle(at.x + (Math.random() - 0.5) * 8, at.y, 2, 2, hex(e.color)).setDepth(9450).setBlendMode(Phaser.BlendModes.ADD));
       this.tweens.add({
         targets: p, y: top - Math.random() * 30, x: p.x + (Math.random() - 0.5) * 40, alpha: 0,
         delay: i * 140, duration: 2600 + Math.random() * 900, ease: 'Sine.in', onComplete: () => p.destroy(),
@@ -972,8 +1169,10 @@ export class ExploreScene extends Phaser.Scene {
     if (!this.woundG) this.woundG = this.world(this.add.graphics());
     const g = this.woundG.clear().setVisible(true);
     const once = gameState.progress.once;
-    const sealed = once.includes(SEAL_KEY);
-    const big = once.includes(PILLAR_KEY);
+    const broken = once.includes(RUNE_BREAK_KEY) && !once.includes(LAYER_KEY);
+    const layered = once.includes(LAYER_KEY);
+    const sealed = once.includes(SEAL_KEY) && !broken;
+    const big = once.includes(PILLAR_KEY) || once.includes(A3_KEY) || broken;
     const t = this.time.now / 1000;
     const beat = this.sensing
       ? senseBeat(this.game.loop.time)
@@ -985,8 +1184,16 @@ export class ExploreScene extends Phaser.Scene {
     const y = Math.round(a.spr.y + (a.down ? oy + 8 : oy - (a.lift ?? 0)));
     // 오른쪽을 보면 어깨가 몸 뒤라서 그림 뒤로
     g.setDepth(a.spr.depth + (a.facing === 'right' ? -0.1 : 0.1));
-    const lvl = (sealed ? 0.35 + 0.5 * beat : 0.45 + 0.55 * beat) * (big ? 1.2 : 1) + this.woundBoost;
-    if (sealed) {
+    const lvl = (sealed ? 0.35 + 0.5 * beat : 0.45 + 0.55 * beat) * (broken ? 1.6 : big ? 1.2 : 1) + this.woundBoost;
+    if (layered) {
+      // 겹쳐 그린 룬: 고리 세 겹, 그 사이로 하얀 빛이 희미하게 샌다
+      g.fillStyle(0xdde8ff, 0.15 + 0.25 * beat);
+      for (const r of [5, 7]) for (let dy = -r; dy <= r; dy++)
+        for (let dx = -r; dx <= r; dx++) if (Math.round(Math.hypot(dx, dy)) === r && (dx + dy + Math.floor(t * 3)) % 3 === 0) g.fillRect(x + dx, y + dy, 1, 1);
+      g.fillStyle(0xa47cff, Math.min(1, 0.7 + 0.2 * beat + this.woundBoost * 0.3));
+      for (const r of [4, 6, 8]) for (let dy = -r; dy <= r; dy++)
+        for (let dx = -r; dx <= r; dx++) if (Math.round(Math.hypot(dx, dy)) === r) g.fillRect(x + dx, y + dy, 1, 1);
+    } else if (sealed) {
       // 룬 테두리: 점을 둘러싼 보랏빛 고리 (픽셀)
       const r = big ? 4 : 3;
       g.fillStyle(0xa47cff, Math.min(1, 0.7 + 0.2 * beat + this.woundBoost * 0.3));
@@ -1336,6 +1543,8 @@ export class ExploreScene extends Phaser.Scene {
     this.updateCarry();
     this.updateWound();
     this.updateDrift(dt);
+    this.updateFog();
+    if (this.seg && leon && this.marks.length) this.updateMarks(leon);
     for (const sp of this.spots) {
       const a = this.actors.get(sp.id);
       if (a) sp.light.setPosition(a.spr.x, a.spr.y - 20);
@@ -1457,6 +1666,7 @@ export class ExploreScene extends Phaser.Scene {
   /** 맵 속성에 따라 하늘 효과를 만든다 */
   private makeSky(md: NonNullable<typeof this.map>) {
     if (propOf(md, 'drift')) this.makeDrift(md);
+    if (propOf(md, 'fog')) this.makeFog(md);
     if (propOf(md, 'desert')) {
       const cam = this.cameras.main;
       const vw = cam.width / cam.zoom + 40;

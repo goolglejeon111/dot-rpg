@@ -65,6 +65,10 @@ const FLOOR = {
   f: () => 'adobe_floor',
   t: () => 'road',
   j: () => 'rock_floor',
+  // 3막
+  h: () => 'dry_field',
+  l: () => 'dry_grass',
+  p: () => 'forest_floor',
 };
 const WALL = {
   Q: (x, y) => ((x * 3 + y * 7) % 4 === 0 ? 'deep_water2' : 'deep_water'), // 저수조 깊은 물 (벽 레이어라 못 들어감)
@@ -90,6 +94,8 @@ const WALL = {
   Y: () => 'sandstone_top',
   I: () => 'bars',
   J: () => 'rock_wall',
+  // 3막
+  G: () => 'ruin_wall',
 };
 
 /** 맵 한 장을 Tiled JSON으로 */
@@ -789,6 +795,198 @@ const palm = (c, r) => ({ type: 'prop', name: 'palm', x: cx(c), y: ty(r) + 12, s
   objects.push(spawn('leon_scouts', cx(22), ty(11), 'right'), spawn('karg_scouts', cx(23), ty(10), 'right'), spawn('elysia_scouts', cx(21), ty(12), 'right'));
   objects.push({ type: 'arena', name: 'arena', x: 8 * TS, y: 5 * TS, w: 448, h: 288 });
   MAPS.bandit_hideout = { rows: m.rows(), objects, props: { place: '도적 은신처', ambient: '#f2dcb4', bg: '#20180f' } };
+}
+
+// ---------------------------------------------------------------------
+// 3막
+// ---------------------------------------------------------------------
+const PLAIN = '#efe2c0'; // 로웬 평원 낮: 누렇게 마른 색
+const MIST = '#d8dcdc'; // 안개 숲: 희뿌연 낮
+const RUIN_NIGHT = '#2a3050'; // 버려진 마을의 밤
+/** 시골 집: 위 두 줄은 지붕, 아래는 벽 (나무 판자) */
+function shack(m, c0, r0, c1, r1, wall = 'P') {
+  m.rect(c0, r0, c1, r0 + 1, 'R');
+  m.rect(c0, r0 + 2, c1, r1, wall);
+}
+const tree = (c, r, name = 'dark_tree') => ({ type: 'prop', name, x: cx(c), y: ty(r) + 12, solid: '12,8' });
+/** 숨긴 물건 (stage.json의 props에서 key 이름으로 켠다) */
+const hiddenProp = (name, key, x, y, extra = {}) => ({ type: 'prop', name, key, x, y, hidden: true, ...extra });
+
+// ---- 3막-1) 레온의 고향 마을 (45 x 25): 낮. 마른 밭, 흙길, 닫힌 창문의 집들, 우물(전단이 붙은 담벼락), 마을 끝 불 꺼진 대장간 ----
+{
+  const W = 45;
+  const H = 25;
+  const m = grid(W, H, 'l');
+  m.rect(0, 12, W - 1, 13, 't');
+  m.rect(1, 1, 12, 8, 'h');
+  m.rect(1, 17, 14, 23, 'h');
+  m.rect(26, 18, 36, 23, 'h');
+  const houses = [[15, 3, 20, 8], [23, 3, 29, 8], [31, 3, 36, 8], [17, 17, 22, 21], [39, 17, 44, 21]];
+  for (const [c0, r0, c1, r1] of houses) shack(m, c0, r0, c1, r1);
+  shack(m, 38, 3, 44, 7); // 대장간
+  const objects = [];
+  // 창: 열린 창 위에 덧문(처음엔 숨김). 오른쪽 집부터 차례로 닫힌다 (shutter1이 가장 오른쪽)
+  const wins = [[42, 21], [34, 8], [27, 8], [24, 8], [20, 21], [18, 8]];
+  wins.forEach(([c, r], i) => {
+    objects.push(wallItem('village_window', cx(c), r * TS - 4));
+    objects.push(hiddenProp('village_shutter', `shutter${i + 1}`, cx(c), r * TS - 4, { wall: true }));
+  });
+  // 촌장 집 (두 번째 집) 담벼락의 공물 기록판
+  objects.push(wallItem('notice', cx(28), 9 * TS - 2), look('a3_tribute_board', cx(28), ty(9) + 6, ty(8) - 26));
+  // 우물과 전단이 붙은 담벼락
+  objects.push({ type: 'prop', name: 'well', x: cx(24), y: ty(15) + 10, solid: '36,14' });
+  objects.push({ type: 'prop', name: 'stone_wall', x: cx(29), y: ty(15) + 8, solid: '96,10' });
+  objects.push({ type: 'prop', name: 'wanted', x: cx(29), y: ty(15) + 5 });
+  objects.push(look('a3_dry_field', cx(8), ty(9) + 4, ty(8) - 10));
+  // 대장간: 불 꺼진 화덕, 벽의 검 걸이
+  objects.push({ type: 'prop', name: 'forge', x: cx(41), y: ty(9) + 10, solid: '52,14' });
+  objects.push(wallItem('blade_rack', cx(43), 8 * TS - 2), look('a3_forge_blade', cx(43), ty(8) + 8, ty(6) - 4));
+  objects.push(spawn('leon_start', cx(1), ty(12), 'right'), spawn('elysia_start', cx(0), ty(13), 'right'), spawn('karg_start', cx(2), ty(13), 'right'));
+  objects.push(spawn('leon_in', cx(10), ty(12), 'right'), spawn('elysia_in', cx(8), ty(13), 'right'), spawn('karg_in', cx(11), ty(13) + 8, 'right'));
+  objects.push(spawn('view_houses', cx(29), ty(8)));
+  objects.push(spawn('leon_well', cx(28), ty(17), 'up'), spawn('elysia_well', cx(26), ty(17) + 6, 'up'), spawn('karg_well', cx(31), ty(17) + 4, 'up'));
+  objects.push(spawn('leon_door', cx(26), ty(10), 'up'), spawn('elysia_door', cx(24), ty(11), 'up'), spawn('karg_door', cx(28), ty(11) + 4, 'up'));
+  objects.push(spawn('smith', cx(39), ty(9) + 2, 'right'));
+  objects.push(spawn('leon_forge', cx(37), ty(10), 'right'), spawn('elysia_forge', cx(35), ty(10) + 10, 'right'), spawn('karg_forge', cx(36), ty(11) + 8, 'right'));
+  objects.push({ type: 'goal', name: 'goal_forge', x: cx(37), y: ty(10), r: 48 });
+  MAPS.arden_village = { rows: m.rows(), objects, props: { place: '레온의 고향', ambient: PLAIN, bg: '#a08a5c' } };
+}
+
+// ---- 3막-2) 안개 숲 가장자리 (50 x 30): 짙은 흰 안개. 검은 나무 사이로 칼자국 표식 나무 5그루. 위쪽 끝 너머에 버려진 마을 ----
+{
+  const W = 50;
+  const H = 30;
+  const m = grid(W, H, 'p');
+  m.rect(30, 0, W - 1, 3, 'l'); // 숲 너머 버려진 마을 자리
+  const objects = [];
+  // 표식 나무 (조사하지 않아도 가까이 가면 칼자국이 잠깐 밝아진다: 무대가 아니라 맵이 알아서)
+  const marks = [[9, 15], [16, 20], [25, 17], [33, 12], [41, 8]];
+  marks.forEach(([c, r], i) => {
+    objects.push({ ...tree(c, r, 'mark_tree'), key: `mark${i + 1}` });
+    objects.push(spawn(`mark${i + 1}`, cx(c), ty(r) - 20));
+  });
+  // 검은 나무: 표식 길과 전투장을 비워 두고 둘레에
+  const trees = [
+    [1, 2], [5, 4], [10, 2], [15, 5], [20, 3], [25, 6], [28, 2], [2, 9], [6, 11], [13, 10], [19, 9], [22, 13], [28, 10], [37, 5],
+    [1, 15], [1, 21], [17, 15], [20, 24], [24, 27], [29, 22], [30, 16], [36, 18], [38, 13], [44, 13], [47, 9], [46, 17], [42, 21],
+    [35, 25], [40, 27], [48, 24], [26, 24], [45, 4], [33, 3], [12, 27], [6, 28], [18, 28],
+  ];
+  for (const [c, r] of trees) objects.push(tree(c, r));
+  // 숲 너머: 무너진 돌담과 연기 한 줄기 (안개가 걷히면 보임)
+  objects.push({ type: 'prop', name: 'stone_wall', x: cx(35), y: ty(2) + 10 }, { type: 'prop', name: 'stone_wall', x: cx(44), y: ty(1) + 10 });
+  objects.push({ type: 'prop', name: 'smoke', x: cx(40), y: ty(1) });
+  // 조사할 것
+  objects.push({ type: 'prop', name: 'campfire_out', x: cx(13), y: ty(25) + 4 }, look('a3_old_fire', cx(13), ty(25) + 10, ty(24) - 8));
+  objects.push({ type: 'prop', name: 'spirit_stone', x: cx(31), y: ty(22) + 10, solid: '14,8' }, look('a3_spirit_stone', cx(31), ty(23) + 4, ty(21) - 20));
+  // 숨겨진 장소: 표식 길에서 벗어난 안개 깊은 곳
+  objects.push({ type: 'prop', name: 'white_herbs', x: cx(46), y: ty(28) + 6 }, look('a3_hidden_herbs', cx(46), ty(28) + 10, ty(27) - 4));
+  objects.push(spawn('leon_start', cx(5), ty(26), 'up'), spawn('elysia_start', cx(4), ty(27), 'up'), spawn('karg_start', cx(6), ty(27) + 6, 'up'));
+  objects.push(spawn('leon_mark', cx(9), ty(18), 'up'), spawn('elysia_mark', cx(7), ty(19), 'up'), spawn('karg_mark', cx(11), ty(19), 'up'));
+  objects.push(spawn('leon_end', cx(42), ty(5), 'up'), spawn('elysia_end', cx(40), ty(6), 'up'), spawn('karg_end', cx(44), ty(6), 'up'), spawn('view_ruins', cx(40), ty(2)));
+  objects.push({ type: 'mob', name: 'mob1', x: cx(21), y: ty(18), sprite: 'mist_beast', battle: '안개 몹 1' });
+  objects.push({ type: 'mob', name: 'mob2', x: cx(37), y: ty(10), sprite: 'mist_beast', battle: '안개 몹 2' });
+  objects.push({ type: 'goal', name: 'goal_ruins', x: cx(42), y: ty(5), r: 56 });
+  objects.push({ type: 'arena', name: 'arena', x: 2 * TS, y: 16 * TS, w: 448, h: 288 });
+  MAPS.morwen_edge = { rows: m.rows(), objects, props: { place: '안개 숲', ambient: MIST, bg: '#c8cccc', fog: true } };
+}
+
+// ---- 3막-3) 버려진 마을 (40 x 30): 무너진 돌담, 지붕이 내려앉은 집들, 가운데 연기가 오르는 집. 뒤편에 낮은 언덕. 밤과 새벽 ----
+{
+  const W = 40;
+  const H = 30;
+  const m = grid(W, H, 'l');
+  m.rect(0, 0, W - 1, 3, 'p'); // 안개 숲 가장자리
+  m.rect(16, 14, 17, 29, 't');
+  m.rect(4, 22, 30, 22, 't');
+  m.rect(30, 24, 38, 28, 'g'); // 뒤편 낮은 언덕
+  shack(m, 11, 9, 17, 13, 'G'); // 연기가 오르는 집 (무너진 집)
+  m.set(17, 9, 'l').set(16, 9, 'l'); // 지붕이 내려앉은 자리
+  shack(m, 3, 14, 7, 17, 'G');
+  m.rect(6, 14, 7, 15, 'l');
+  shack(m, 30, 7, 36, 10, 'G');
+  m.rect(30, 7, 32, 8, 'l');
+  shack(m, 28, 17, 33, 20, 'G');
+  shack(m, 4, 24, 9, 27, 'G');
+  m.rect(8, 24, 9, 25, 'l');
+  const objects = [];
+  for (const [c, r] of [[1, 1], [6, 2], [11, 1], [22, 2], [27, 1], [34, 2], [38, 1], [3, 6], [37, 13]]) objects.push(tree(c, r));
+  objects.push({ type: 'prop', name: 'smoke', x: cx(15), y: ty(9) });
+  // 무너진 돌담 (세레나가 앉는 돌담은 sit_wall)
+  for (const [c, r] of [[23, 7], [7, 20], [36, 15], [24, 26]]) objects.push({ type: 'prop', name: 'stone_wall', x: cx(c), y: ty(r) + 10, solid: '96,10' });
+  objects.push({ type: 'prop', name: 'stone_wall', x: cx(25), y: ty(18) + 10, solid: '96,10' });
+  objects.push({ type: 'prop', name: 'well_cracked', x: cx(21), y: ty(24) + 10, solid: '36,14' }, look('a3_village_stone', cx(21), ty(25) + 2, ty(23) - 20));
+  // 언덕의 돌무덤 (곁에서 잃음: 돌이 하나씩 쌓이고 마지막에 대검)
+  for (const [i, c] of [[1, 33], [2, 35], [3, 34]]) objects.push(hiddenProp(`cairn${i}`, `grave${i}`, cx(c), ty(26) + (i === 3 ? 0 : 6)));
+  objects.push(hiddenProp('greatsword_planted', 'grave_sword', cx(34), ty(26) - 6));
+  // 안개 속 횃불 (습격): 줄지어 다가오도록 차례로 켠다. torch1~6 = 행렬, torch7~12 = 장면 8에서 늘어나는 것
+  const torches = [[20, 3], [24, 4], [28, 3], [22, 6], [26, 6], [30, 5], [14, 2], [18, 1], [32, 2], [35, 3], [10, 3], [37, 4]];
+  torches.forEach(([c, r], i) => objects.push({ type: 'light', name: `torch${i + 1}`, x: cx(c), y: ty(r), color: '#ffa048', radius: 70, intensity: 1.2, hidden: true, flicker: true }));
+  // 엘리시아의 룬 결계 자리, 하얀 빛이 모이는 손
+  objects.push({ type: 'light', name: 'serena_eyes', x: cx(14), y: ty(14) - 20, color: '#ffb040', radius: 90, intensity: 1.6, hidden: true });
+  // 자리
+  objects.push(spawn('doorway', cx(14), ty(14), 'down'));
+  objects.push(spawn('leon_arrive', cx(16), ty(4), 'down'), spawn('elysia_arrive', cx(15), ty(3), 'down'), spawn('karg_arrive', cx(17), ty(3), 'down'));
+  objects.push(spawn('leon_s3', cx(16), ty(16), 'down'), spawn('galia_behind', cx(16), ty(15) + 4, 'down'), spawn('elysia_s3', cx(14), ty(18), 'up'), spawn('karg_s3', cx(18), ty(18), 'up'));
+  objects.push(spawn('leon_face', cx(16), ty(17), 'up'), spawn('galia_face', cx(16), ty(15) + 2, 'down'));
+  objects.push(spawn('sit_wall', cx(25), ty(18) - 2, 'down'), spawn('leon_wall', cx(25), ty(20), 'up'), spawn('leon_from_house', cx(14), ty(15), 'down'));
+  objects.push(spawn('leon_out', cx(17), ty(16), 'up'), spawn('galia_out', cx(19), ty(15), 'up'), spawn('elysia_out', cx(15), ty(16), 'up'), spawn('karg_out', cx(20), ty(16), 'up'));
+  objects.push(spawn('serena_door', cx(14), ty(14), 'up'), spawn('leon_shield', cx(14), ty(15) + 4, 'up'));
+  objects.push(spawn('captain', cx(23), ty(7) + 10, 'down'), spawn('raid', cx(20), ty(7) + 10, 'down'), spawn('pal_cap_from', cx(24), ty(2), 'down'), spawn('raid_from', cx(21), ty(2), 'down'));
+  for (let i = 0; i < 4; i++) objects.push(spawn(`foe${i + 1}`, cx(18 + i * 2 + (i > 1 ? 4 : 0)), ty(9) + (i % 2) * 14, 'down'), spawn(`foe${i + 1}_from`, cx(18 + i * 2 + (i > 1 ? 4 : 0)), ty(2), 'down'));
+  objects.push(spawn('galia_fight', cx(24), ty(12), 'up'), spawn('pal_a', cx(23), ty(10), 'down'), spawn('pal_b', cx(26), ty(11), 'left'), spawn('pal_c', cx(25), ty(13) + 8, 'up'));
+  objects.push(spawn('leon_flee', cx(16), ty(29), 'down'), spawn('serena_flee', cx(15), ty(29), 'down'), spawn('galia_stand', cx(17), ty(11) + 20, 'up'));
+  objects.push(spawn('galia_kneel', cx(19), ty(15), 'down'), spawn('leon_by_galia', cx(18), ty(16), 'right'), spawn('serena_by_galia', cx(20), ty(16) + 6, 'left'));
+  objects.push(spawn('elysia_by', cx(17), ty(17) + 6, 'up'), spawn('karg_by', cx(21), ty(17), 'up'));
+  objects.push(spawn('leon_grave', cx(33), ty(28), 'up'), spawn('elysia_grave', cx(31), ty(28), 'up'), spawn('karg_grave', cx(36), ty(28), 'up'), spawn('serena_grave', cx(34), ty(28) + 10, 'up'));
+  objects.push({ type: 'arena', name: 'arena', x: 9 * TS, y: 13 * TS, w: 448, h: 288 });
+  MAPS.ruined_village = { rows: m.rows(), objects, props: { place: '버려진 마을', ambient: RUIN_NIGHT, bg: '#0c0e16', stars: true } };
+}
+
+// ---- 3막-4) 무너진 집 안 (14 x 10): 꺼져 가는 화덕, 짚더미, 안쪽 구석, 무너진 지붕 틈 ----
+{
+  const W = 14;
+  const H = 10;
+  const m = grid(W, H, 'G');
+  m.rect(1, 2, W - 2, H - 2, 'k');
+  m.rect(6, 9, 7, 9, 'k'); // 문간
+  m.rect(9, 0, 11, 1, ' '); // 지붕 틈 (밤하늘)
+  const objects = [];
+  objects.push({ type: 'prop', name: 'campfire', x: cx(6) + 16, y: ty(5) + 8, solid: '20,8' });
+  objects.push({ type: 'prop', name: 'straw_bed', x: cx(11), y: ty(3) + 12 });
+  objects.push({ type: 'prop', name: 'folded_cloak', x: cx(9), y: ty(6) + 6 }, look('a3_folded_cloak', cx(9), ty(6) + 10, ty(5) - 4));
+  objects.push({ type: 'light', name: 'roof_gap', x: cx(10), y: ty(2), color: '#8fa8e0', radius: 60, intensity: 0.7 });
+  objects.push(spawn('roof_gap', cx(10), ty(1)));
+  objects.push(spawn('leon_fire', cx(5), ty(5), 'right'), spawn('galia_fire', cx(8) + 8, ty(5), 'left'), spawn('elysia_fire', cx(7), ty(7), 'up'), spawn('karg_fire', cx(7), ty(3) + 8, 'down'));
+  objects.push(spawn('serena_corner', cx(2), ty(2) + 10, 'up'), spawn('serena_stand', cx(2), ty(3), 'right'));
+  objects.push(spawn('elysia_close', cx(3), ty(4), 'left'), spawn('serena_back', cx(1) + 10, ty(3) + 6, 'right'));
+  objects.push(spawn('galia_door', cx(6) + 16, ty(8) + 6, 'down'), spawn('leon_door_talk', cx(6) + 16, ty(7) - 4, 'down'));
+  objects.push(spawn('leon_bed', cx(11), ty(3) + 6, 'up'), spawn('leon_in', cx(6) + 16, ty(8), 'up'));
+  objects.push({ type: 'goal', name: 'goal_fire', x: cx(6) + 16, y: ty(6), r: 40 });
+  MAPS.ruined_house = { rows: m.rows(), objects, props: { place: '무너진 집', ambient: '#6a5a50', bg: '#08080e', stars: true } };
+}
+
+// ---- 3막-5) 사냥꾼의 길, 개울가 (40 x 18): 숲 서쪽 가장자리의 개울. 위로 평원과 먼 산맥. 개울가에 작은 언덕 ----
+{
+  const W = 40;
+  const H = 18;
+  const m = grid(W, H, 'p');
+  m.rect(0, 0, W - 1, 5, 'l'); // 숲 밖 평원
+  m.rect(0, 12, W - 1, 13, 'r'); // 개울
+  m.rect(4, 8, 10, 10, 'g'); // 개울가 언덕
+  const objects = [];
+  objects.push({ type: 'prop', name: 'far_mountains', x: cx(12), y: ty(0) + 12 }, { type: 'prop', name: 'far_mountains', x: cx(30), y: ty(0) + 8 });
+  for (const [c, r] of [[1, 6], [14, 6], [33, 6], [38, 7], [2, 15], [9, 16], [16, 15], [24, 16], [31, 15], [37, 16]]) objects.push(tree(c, r));
+  for (const [i, c] of [[1, 6], [2, 8], [3, 7]]) objects.push(hiddenProp(`cairn${i}`, `grave${i}`, cx(c), ty(9) + (i === 3 ? 0 : 6)));
+  objects.push(hiddenProp('broken_greatsword', 'grave_sword', cx(7), ty(9) - 4));
+  objects.push(spawn('leon_c', cx(18), ty(10), 'down'), spawn('elysia_c', cx(21), ty(10) + 10, 'left'), spawn('karg_c', cx(23), ty(9), 'left'), spawn('serena_c', cx(20), ty(9), 'down'));
+  objects.push(spawn('galia_c', cx(16), ty(9) + 8, 'right'), spawn('galia_wash', cx(26), ty(11), 'down'), spawn('leon_to_galia', cx(24), ty(10), 'right'));
+  objects.push(spawn('karg_away', cx(0), ty(9), 'left'), spawn('karg_back', cx(16), ty(9), 'right'));
+  objects.push(spawn('leon_hill', cx(7), ty(11), 'up'), spawn('elysia_hill', cx(5), ty(11) + 6, 'up'), spawn('karg_hill', cx(9), ty(11) + 6, 'up'), spawn('serena_hill', cx(8), ty(11) + 12, 'up'));
+  objects.push(spawn('serena_alone', cx(30), ty(11), 'down'), spawn('leon_behind', cx(30), ty(9), 'down'), spawn('leon_oath', cx(30) + 18, ty(11), 'left'));
+  objects.push(spawn('serena_oath', cx(22), ty(10), 'right'), spawn('leon_oath2', cx(24), ty(10), 'left'), spawn('galia_oath', cx(23), ty(8) + 8, 'down'));
+  objects.push(spawn('leon_north', cx(20), ty(7), 'up'), spawn('serena_north', cx(18), ty(7), 'up'), spawn('elysia_north', cx(17), ty(8), 'up'), spawn('karg_north', cx(22), ty(8), 'up'), spawn('galia_north', cx(23), ty(7), 'up'));
+  objects.push(spawn('view_mountains', cx(20), ty(2)));
+  MAPS.hunter_creek = { rows: m.rows(), objects, props: { place: '사냥꾼의 길', ambient: '#f2ead6', bg: '#2a3020' } };
 }
 
 // ---------------------------------------------------------------------

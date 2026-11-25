@@ -1,0 +1,3046 @@
+{
+ "compressionlevel": -1,
+ "type": "map",
+ "version": "1.10",
+ "tiledversion": "1.10.2",
+ "orientation": "orthogonal",
+ "renderorder": "right-down",
+ "infinite": false,
+ "width": 40,
+ "height": 18,
+ "tilewidth": 32,
+ "tileheight": 32,
+ "nextlayerid": 5,
+ "nextobjectid": 42,
+ "properties": [
+  {
+   "name": "place",
+   "type": "string",
+   "value": "사냥꾼의 길"
+  },
+  {
+   "name": "ambient",
+   "type": "string",
+   "value": "#f2ead6"
+  },
+  {
+   "name": "bg",
+   "type": "string",
+   "value": "#2a3020"
+  }
+ ],
+ "layers": [
+  {
+   "id": 1,
+   "name": "floor",
+   "type": "tilelayer",
+   "x": 0,
+   "y": 0,
+   "width": 40,
+   "height": 18,
+   "opacity": 1,
+   "visible": true,
+   "data": [
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    60,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    42,
+    42,
+    42,
+    42,
+    42,
+    42,
+    42,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    42,
+    42,
+    42,
+    42,
+    42,
+    42,
+    42,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    42,
+    42,
+    42,
+    42,
+    42,
+    42,
+    42,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    44,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61,
+    61
+   ]
+  },
+  {
+   "id": 2,
+   "name": "walls",
+   "type": "tilelayer",
+   "x": 0,
+   "y": 0,
+   "width": 40,
+   "height": 18,
+   "opacity": 1,
+   "visible": true,
+   "data": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "id": 4,
+   "name": "objects",
+   "type": "objectgroup",
+   "x": 0,
+   "y": 0,
+   "opacity": 1,
+   "visible": true,
+   "draworder": "topdown",
+   "objects": [
+    {
+     "id": 1,
+     "name": "far_mountains",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 304,
+     "y": -28,
+     "width": 192,
+     "height": 56
+    },
+    {
+     "id": 2,
+     "name": "far_mountains",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 880,
+     "y": -32,
+     "width": 192,
+     "height": 56
+    },
+    {
+     "id": 3,
+     "name": "dark_tree",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 24,
+     "y": 140,
+     "width": 48,
+     "height": 80,
+     "properties": [
+      {
+       "name": "solid",
+       "type": "string",
+       "value": "12,8"
+      }
+     ]
+    },
+    {
+     "id": 4,
+     "name": "dark_tree",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 440,
+     "y": 140,
+     "width": 48,
+     "height": 80,
+     "properties": [
+      {
+       "name": "solid",
+       "type": "string",
+       "value": "12,8"
+      }
+     ]
+    },
+    {
+     "id": 5,
+     "name": "dark_tree",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 1048,
+     "y": 140,
+     "width": 48,
+     "height": 80,
+     "properties": [
+      {
+       "name": "solid",
+       "type": "string",
+       "value": "12,8"
+      }
+     ]
+    },
+    {
+     "id": 6,
+     "name": "dark_tree",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 1208,
+     "y": 172,
+     "width": 48,
+     "height": 80,
+     "properties": [
+      {
+       "name": "solid",
+       "type": "string",
+       "value": "12,8"
+      }
+     ]
+    },
+    {
+     "id": 7,
+     "name": "dark_tree",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 56,
+     "y": 428,
+     "width": 48,
+     "height": 80,
+     "properties": [
+      {
+       "name": "solid",
+       "type": "string",
+       "value": "12,8"
+      }
+     ]
+    },
+    {
+     "id": 8,
+     "name": "dark_tree",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 280,
+     "y": 460,
+     "width": 48,
+     "height": 80,
+     "properties": [
+      {
+       "name": "solid",
+       "type": "string",
+       "value": "12,8"
+      }
+     ]
+    },
+    {
+     "id": 9,
+     "name": "dark_tree",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 504,
+     "y": 428,
+     "width": 48,
+     "height": 80,
+     "properties": [
+      {
+       "name": "solid",
+       "type": "string",
+       "value": "12,8"
+      }
+     ]
+    },
+    {
+     "id": 10,
+     "name": "dark_tree",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 760,
+     "y": 460,
+     "width": 48,
+     "height": 80,
+     "properties": [
+      {
+       "name": "solid",
+       "type": "string",
+       "value": "12,8"
+      }
+     ]
+    },
+    {
+     "id": 11,
+     "name": "dark_tree",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 984,
+     "y": 428,
+     "width": 48,
+     "height": 80,
+     "properties": [
+      {
+       "name": "solid",
+       "type": "string",
+       "value": "12,8"
+      }
+     ]
+    },
+    {
+     "id": 12,
+     "name": "dark_tree",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 1176,
+     "y": 460,
+     "width": 48,
+     "height": 80,
+     "properties": [
+      {
+       "name": "solid",
+       "type": "string",
+       "value": "12,8"
+      }
+     ]
+    },
+    {
+     "id": 13,
+     "name": "cairn1",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 193,
+     "y": 288,
+     "width": 30,
+     "height": 22,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "grave1"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 14,
+     "name": "cairn2",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 257,
+     "y": 288,
+     "width": 30,
+     "height": 22,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "grave2"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 15,
+     "name": "cairn3",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 225,
+     "y": 282,
+     "width": 30,
+     "height": 22,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "grave3"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 16,
+     "name": "broken_greatsword",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 233,
+     "y": 270,
+     "width": 14,
+     "height": 30,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "grave_sword"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 17,
+     "name": "leon_c",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 592,
+     "y": 336,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "down"
+      }
+     ]
+    },
+    {
+     "id": 18,
+     "name": "elysia_c",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 688,
+     "y": 346,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "left"
+      }
+     ]
+    },
+    {
+     "id": 19,
+     "name": "karg_c",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 752,
+     "y": 304,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "left"
+      }
+     ]
+    },
+    {
+     "id": 20,
+     "name": "serena_c",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 656,
+     "y": 304,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "down"
+      }
+     ]
+    },
+    {
+     "id": 21,
+     "name": "galia_c",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 528,
+     "y": 312,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "right"
+      }
+     ]
+    },
+    {
+     "id": 22,
+     "name": "galia_wash",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 848,
+     "y": 368,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "down"
+      }
+     ]
+    },
+    {
+     "id": 23,
+     "name": "leon_to_galia",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 784,
+     "y": 336,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "right"
+      }
+     ]
+    },
+    {
+     "id": 24,
+     "name": "karg_away",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 16,
+     "y": 304,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "left"
+      }
+     ]
+    },
+    {
+     "id": 25,
+     "name": "karg_back",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 528,
+     "y": 304,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "right"
+      }
+     ]
+    },
+    {
+     "id": 26,
+     "name": "leon_hill",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 240,
+     "y": 368,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 27,
+     "name": "elysia_hill",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 176,
+     "y": 374,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 28,
+     "name": "karg_hill",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 304,
+     "y": 374,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 29,
+     "name": "serena_hill",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 272,
+     "y": 380,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 30,
+     "name": "serena_alone",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 976,
+     "y": 368,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "down"
+      }
+     ]
+    },
+    {
+     "id": 31,
+     "name": "leon_behind",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 976,
+     "y": 304,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "down"
+      }
+     ]
+    },
+    {
+     "id": 32,
+     "name": "leon_oath",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 994,
+     "y": 368,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "left"
+      }
+     ]
+    },
+    {
+     "id": 33,
+     "name": "serena_oath",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 720,
+     "y": 336,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "right"
+      }
+     ]
+    },
+    {
+     "id": 34,
+     "name": "leon_oath2",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 784,
+     "y": 336,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "left"
+      }
+     ]
+    },
+    {
+     "id": 35,
+     "name": "galia_oath",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 752,
+     "y": 280,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "down"
+      }
+     ]
+    },
+    {
+     "id": 36,
+     "name": "leon_north",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 656,
+     "y": 240,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 37,
+     "name": "serena_north",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 592,
+     "y": 240,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 38,
+     "name": "elysia_north",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 560,
+     "y": 272,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 39,
+     "name": "karg_north",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 720,
+     "y": 272,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 40,
+     "name": "galia_north",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 752,
+     "y": 240,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 41,
+     "name": "view_mountains",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 656,
+     "y": 80,
+     "width": 0,
+     "height": 0,
+     "point": true
+    }
+   ]
+  }
+ ],
+ "tilesets": [
+  {
+   "firstgid": 1,
+   "name": "palace",
+   "image": "../../../public/assets/explore/palace_tiles.png",
+   "imagewidth": 256,
+   "imageheight": 256,
+   "columns": 8,
+   "tilecount": 62,
+   "tilewidth": 32,
+   "tileheight": 32,
+   "margin": 0,
+   "spacing": 0,
+   "tiles": [
+    {
+     "id": 0,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "floor"
+      }
+     ]
+    },
+    {
+     "id": 1,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "floor2"
+      }
+     ]
+    },
+    {
+     "id": 2,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "carpet_top"
+      }
+     ]
+    },
+    {
+     "id": 3,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "carpet_mid"
+      }
+     ]
+    },
+    {
+     "id": 4,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "carpet_bot"
+      }
+     ]
+    },
+    {
+     "id": 5,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "wall_top"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 6,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "wall_up"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 7,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "wall_low"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 8,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "window_up"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 9,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "window_low"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 10,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "stone"
+      }
+     ]
+    },
+    {
+     "id": 11,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "stone2"
+      }
+     ]
+    },
+    {
+     "id": 12,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "wood"
+      }
+     ]
+    },
+    {
+     "id": 13,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "blood1"
+      }
+     ]
+    },
+    {
+     "id": 14,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "blood2"
+      }
+     ]
+    },
+    {
+     "id": 15,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "blood3"
+      }
+     ]
+    },
+    {
+     "id": 16,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "castle_top"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 17,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "castle_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 18,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "castle_moss"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 19,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "castle_base"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 20,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "water"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 21,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "water2"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 22,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "quay"
+      }
+     ]
+    },
+    {
+     "id": 23,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cobble"
+      }
+     ]
+    },
+    {
+     "id": 24,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_floor"
+      }
+     ]
+    },
+    {
+     "id": 25,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_floor2"
+      }
+     ]
+    },
+    {
+     "id": 26,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_edge"
+      }
+     ]
+    },
+    {
+     "id": 27,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_water"
+      }
+     ]
+    },
+    {
+     "id": 28,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_water2"
+      }
+     ]
+    },
+    {
+     "id": 29,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "deep_water"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 30,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "deep_water2"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 31,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_wall_top"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 32,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 33,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cistern_floor"
+      }
+     ]
+    },
+    {
+     "id": 34,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cellar_floor"
+      }
+     ]
+    },
+    {
+     "id": 35,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cellar_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 36,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "mud"
+      }
+     ]
+    },
+    {
+     "id": 37,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "mud_snow"
+      }
+     ]
+    },
+    {
+     "id": 38,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "shack_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 39,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "shack_roof"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 40,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "bridge"
+      }
+     ]
+    },
+    {
+     "id": 41,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "grass"
+      }
+     ]
+    },
+    {
+     "id": 42,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sand"
+      }
+     ]
+    },
+    {
+     "id": 43,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "river"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 44,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "desert"
+      }
+     ]
+    },
+    {
+     "id": 45,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "desert2"
+      }
+     ]
+    },
+    {
+     "id": 46,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dune"
+      }
+     ]
+    },
+    {
+     "id": 47,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sandstone"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 48,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sandstone_top"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 49,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "oasis_water"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 50,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "oasis_grass"
+      }
+     ]
+    },
+    {
+     "id": 51,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "adobe_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 52,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "adobe_roof"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 53,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "adobe_floor"
+      }
+     ]
+    },
+    {
+     "id": 54,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "bars"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 55,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "road"
+      }
+     ]
+    },
+    {
+     "id": 56,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "rock_floor"
+      }
+     ]
+    },
+    {
+     "id": 57,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "rock_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 58,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dry_field"
+      }
+     ]
+    },
+    {
+     "id": 59,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dry_grass"
+      }
+     ]
+    },
+    {
+     "id": 60,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "forest_floor"
+      }
+     ]
+    },
+    {
+     "id": 61,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "ruin_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

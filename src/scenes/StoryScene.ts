@@ -11,7 +11,7 @@ import { makeBodyPlaceholder, PORTRAIT_H, PORTRAIT_W } from '../game/placeholder
 import { save } from '../game/save';
 import { cgKey, loadCgs } from '../game/cg';
 import { senseBeat } from '../game/beat';
-import { playSe } from '../game/sound';
+import { playLoop, playSe } from '../game/sound';
 import { coverFit, endingKey, imageExists, loadEndingArt } from '../game/assets';
 import { FONT, GOLD, hex, makeButton, type Button } from '../game/ui';
 import type {
@@ -431,7 +431,10 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       this.setSense(!!wN && 'wound' in wN && wN.wound === 'sense', true);
       this.setDreamLook(kind === 'dream');
       if (kind === 'dream') this.fx.setDream(sc.color);
-      for (const d of this.mapSteps(i, this.nodeIdx, true)) if (d) this.fx.apply(d, true);
+      for (const d of this.mapSteps(i, this.nodeIdx, true)) if (d) {
+        this.fx.apply(d, true);
+        this.stageSound(d, true);
+      }
       this.applyMap(this.mapSteps(i, this.nodeIdx), true, after);
     };
     const reveal = (ms: number, wait: number) => {
@@ -620,6 +623,13 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   }
 
   /** 화면 전체 효과: 번쩍임(색), 흔들림(세기) */
+  /** 무대의 소리: 효과음 한 번(건너뛸 때는 안 냄), BGM·환경음 바꾸기. 파일이 없으면 무음 */
+  private stageSound(d: { se?: string; bgm?: string | null; amb?: string | null }, instant: boolean) {
+    if (d.se && !instant) void playSe(this, d.se);
+    if (d.bgm !== undefined) void playLoop(this, 'bgm', d.bgm);
+    if (d.amb !== undefined) void playLoop(this, 'amb', d.amb);
+  }
+
   private screenFx(fx: { flash?: string; shake?: number }) {
     if (fx.flash) {
       const c = Phaser.Display.Color.HexStringToColor(fx.flash);
@@ -904,6 +914,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       const d = STAGE.stages[node.stage];
       if (d?.screen) this.screenFx(d.screen);
       if (d) this.fx.apply(d);
+      if (d) this.stageSound(d, false);
       if (d?.dark) {
         // 맵을 내리고 검은 화면 위에서 이어 간다
         this.mode = 'busy';
@@ -1185,7 +1196,10 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     if (sense !== undefined) this.setSense(sense, true);
     // 건너뛴 무대 변화는 바로 적용
     const defs = passed.map((id) => STAGE.stages[id]).filter(Boolean);
-    for (const d of defs) this.fx.apply(d, true);
+    for (const d of defs) {
+      this.fx.apply(d, true);
+      this.stageSound(d, true);
+    }
     const steps = defs.map((d) => (d.dark ? null : d));
     if (steps.some((d) => d === null || d.map)) this.applyMap(steps, true, () => {});
     else if (defs.length && this.mapState !== 'off') this.withMap((m) => defs.forEach((d) => m.applyStage(d, { instant: true })));

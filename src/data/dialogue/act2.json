@@ -1,0 +1,386 @@
+{
+  "id": "act2",
+  "title": "2막: 모래의 길",
+  "source": "docs/대본/2막.md",
+  "endings": {
+    "act2_dead": {"type":"dead","label":"DEAD END","title":"모래에 묻힌 이름","epilogue":"카르크의 시점. 불길이 꺼진 오아시스, 반쯤 무너진 우물 곁에 살아남은 전사들이 모여 앉아 있다. 카르크는 사라진 제국 기사를 떠올리며 \"역시 제국 놈이었군\" 하고 중얼거린다. 열흘 뒤, 정찰을 나간 전사가 모래 속에 묻힌 남색 천 조각을 보았다고 전하지만, 아무도 그것을 주우러 가지 않는다.","hint":"등을 보이면, 돌아갈 길도 함께 사라진다."}
+  },
+  "chapters": {
+    "act3": {"title":"3막으로 이어집니다","finished":"2막 끝"}
+  },
+  "scenes": [
+    {
+      "id": "scene1", "title": "장면 1. 사막 입구", "place": "카심 사막", "color": "#3a2c18",
+      "nodes": [
+        {"monologue":["배에서 내린 지 반나절."]},
+        {"monologue":["풀이 사라지고, 흙이 사라지고.","남은 것은 모래뿐이었다."]},
+        {"speaker":"elysia","expression":"normal","text":"걱정 마요. 카심 사막은 지도로 충분히 봐 뒀으니까."},
+        {"speaker":"leon","expression":"normal","text":"지도로."},
+        {"speaker":"elysia","expression":"normal","text":"네. 마탑 서고에 대륙 지도가 몇 장 있는지 알아요? 서쪽으로 사흘, 그러면 루바 오아시스예요."},
+        {"explore":"a2_desert_walk"},
+        {"monologue":["그 말을 들은 것이, 이틀 전이었다."]},
+        {"speaker":"elysia","expression":"normal","text":"…이상하네요."},
+        {"speaker":"leon","expression":"normal","text":"뭐가."},
+        {"speaker":"elysia","expression":"normal","text":"저 바위. 어제도 봤어요."},
+        {"speaker":"leon","expression":"normal","text":"…."},
+        {"speaker":"elysia","expression":"angry","text":"지도에는 모래 언덕이 움직인다는 말이 없었다고요."},
+        {"speaker":"leon","expression":"normal","text":"그래서 지도가 마탑 서고에 있는 거겠지."},
+        {"speaker":"elysia","expression":"angry","text":"지금 비꼰 거예요?"},
+        {"speaker":"leon","expression":"normal","text":"마음대로 생각해."},
+        {"monologue":["물통은 가벼워지고 있었다.","웃을 수 있는 것도, 오래가지는 않을 것이다."]}
+      ]
+    },
+    {
+      "id": "scene2", "title": "장면 2. 모래 속의 괴물", "place": "카심 사막", "color": "#3a2c18",
+      "nodes": [
+        {"monologue":["발밑의 모래가 꺼졌다."]},
+        {"battle":"모래 괴물 무리"},
+        {"monologue":["마지막 한 마리가 모래 속으로 무너졌을 때.","둘 다, 그 자리에 주저앉았다."]},
+        {"costume":"leon"},
+        {"monologue":["제복을 가리던 갈색 천은, 괴물의 발톱에 찢겨 모래 속으로 사라지고 없었다."]},
+        {"speaker":"elysia","expression":"sad","text":"…마력이, 바닥났어요."},
+        {"speaker":"leon","expression":"normal","text":"나도 더는 못 휘둘러."},
+        {"monologue":["해가 진다.","사막의 밤은, 낮만큼 잔인하게 추웠다."]}
+      ]
+    },
+    {
+      "id": "scene3", "title": "장면 3. 빛의 기둥", "place": "사막의 야영지", "color": "#0c1020",
+      "nodes": [
+        {"monologue":["모닥불도 피우지 못한 밤."]},
+        {"monologue":["엘리시아는 무릎을 끌어안은 채 졸고 있었다.","나는 깨어 있었다.","잠들면, 그날 밤의 침소가 보였다."]},
+        {"monologue":["그때."]},
+        {"monologue":["어깨가, 타올랐다."]},
+        {"speaker":"leon","expression":"surprised","text":"크윽…!"},
+        {"monologue":["엘리시아가 눌러 둔 룬 아래에서, 빛이 날뛰었다.","숨을 쉴 수 없었다.","무언가가 안쪽에서, 이 상처를 향해 손을 뻗고 있었다."]},
+        {"speaker":"elysia","expression":"surprised","text":"기사님? 무슨…!"},
+        {"monologue":["그녀가 고개를 들었다.","나도, 그녀의 시선을 따라갔다."]},
+        {"monologue":["동쪽."]},
+        {"monologue":["지평선 끝, 아득히 먼 곳에서.","하얀 빛의 기둥이, 하늘을 찌르고 있었다."]},
+        {"monologue":["소리는 없었다.","그저 조용히, 밤을 가르고 서 있었다."]},
+        {"speaker":"elysia","expression":"surprised","text":"…같아요. 기사님 상처랑, 같은 파장."},
+        {"speaker":"elysia","expression":"surprised","text":"그런데 크기가… 이건 말도 안 돼요."},
+        {"monologue":["처음이었다.","이 사람의 목소리가, 떨리는 것은."]},
+        {"monologue":["빛의 기둥이 사라진 것은, 숨을 서른 번쯤 쉬었을 때였다."]},
+        {"monologue":["어깨의 통증도, 함께 가라앉았다."]},
+        {"speaker":"leon","expression":"normal","text":"저쪽은."},
+        {"speaker":"elysia","expression":"normal","text":"황도보다 남쪽이에요. 칼리고 산맥 쪽이요."},
+        {"speaker":"leon","expression":"normal","text":"그 산맥에 뭐가 있지."},
+        {"speaker":"elysia","expression":"normal","text":"…없어요. 지도상으로는 아무것도."},
+        {"monologue":["그녀는 그날 밤, 측정 결과를 몇 번이고 다시 적었다."]},
+        {"monologue":["나는 그 빛이 무엇인지 알지 못했다.","다만, 그 빛이 나를 알고 있다는 느낌만은 지울 수 없었다."]}
+      ]
+    },
+    {
+      "id": "scene4", "title": "장면 4. 포로", "place": "사막의 야영지", "color": "#18202c",
+      "nodes": [
+        {"monologue":["새벽."]},
+        {"monologue":["눈을 뜨자, 사방이 창끝이었다."]},
+        {"monologue":["회색 털. 뾰족한 귀. 노란 눈.","늑대의 귀와 꼬리를 가진 전사들이, 우리를 둘러싸고 있었다."]},
+        {"monologue":["그 가운데, 한 사내가 앞으로 나섰다."]},
+        {"speaker":"karg","expression":"angry","text":"제국 놈이군."},
+        {"monologue":["그의 시선이 내 제복에 머물렀다.","남색. 근위기사단의 색."]},
+        {"speaker":"karg","expression":"angry","text":"제국 기사가 우리 사막에서 뭘 하고 있지."},
+        {"speaker":"leon","expression":"normal","text":"지나가는 중이다."},
+        {"speaker":"karg","expression":"smile","text":"지나가? 제국 놈들은 언제나 그렇게 말하지. 지나가면서 우물을 빼앗고, 지나가면서 우리 형제들을 끌고 가."},
+        {"name":"늑대 전사","expression":"normal","text":"카르크. 이놈들, 어떻게 할까?"},
+        {"speaker":"karg","expression":"angry","text":"묶어. 오아시스로 끌고 간다."},
+        {"choices":[{"text":"저항한다","next":"s4_resist","flags":{"act2_scene4_choice":"s4_resist"},"affection":{"karg":-1}},{"text":"순순히 따른다","next":"s4_follow","flags":{"act2_scene4_choice":"s4_follow"}}]}
+      ]
+    },
+    {
+      "id": "s4_resist", "title": "▶ 1. 저항한다", "place": "사막의 야영지", "color": "#18202c", "branch": true,
+      "nodes": [
+        {"speaker":"leon","expression":"angry","text":"끌려갈 생각은 없다."},
+        {"speaker":"karg","expression":"smile","text":"좋아. 그 편이 덜 지루하지."},
+        {"hpZero":"leon","by":"mob_wolf","count":3},
+        {"monologue":["빨랐다."]},
+        {"monologue":["검을 들기도 전에, 그는 이미 내 등 뒤에 있었다.","두 자루의 단검이 목덜미에 닿았다."]},
+        {"speaker":"karg","expression":"angry","text":"이게 제국의 기사라고? 웃기는군."}
+      ]
+    },
+    {
+      "id": "s4_follow", "title": "▶ 2. 순순히 따른다", "place": "사막의 야영지", "color": "#18202c", "branch": true,
+      "nodes": [
+        {"speaker":"leon","expression":"normal","text":"…싸울 생각은 없다."},
+        {"speaker":"karg","expression":"normal","text":"현명하군. 제국 놈치고는."},
+        {"speaker":"elysia","expression":"normal","text":"저도요. 제 손목은 연구에 필요하니까, 살살 묶어 주면 좋겠는데요."},
+        {"speaker":"karg","expression":"angry","text":"마법사는 입도 묶어."}
+      ]
+    },
+    {
+      "id": "scene5", "title": "장면 5. 오아시스의 감옥", "place": "오아시스의 감옥", "color": "#201810",
+      "nodes": [
+        {"monologue":["루바 오아시스."]},
+        {"monologue":["사막 한가운데, 거짓말처럼 푸른 물.","야자수 그늘 아래, 흙벽 집들이 모여 있었다.","그리고 그 한쪽, 창살이 박힌 흙벽 감옥."]},
+        {"explore":"a2_prison"},
+        {"monologue":["엘리시아는 감옥에 들어온 뒤로, 창살 너머의 카르크만 보고 있었다."]},
+        {"speaker":"elysia","expression":"normal","text":"저기요."},
+        {"speaker":"karg","expression":"angry","text":"뭐."},
+        {"speaker":"elysia","expression":"normal","text":"새벽에 우리를 둘러쌀 때요. 발소리 하나 없이 그 거리를 좁혔잖아요. 사람의 다리로는 안 되는 일이에요. 야성이라는 거죠? 피에 흐르는 짐승의 힘."},
+        {"speaker":"karg","expression":"angry","text":"그래서."},
+        {"speaker":"elysia","expression":"normal","text":"깨울 때 체온이 오르나요? 동공 크기는요? 아, 혹시 손톱도…."},
+        {"speaker":"karg","expression":"angry","text":"마법사. 한 마디만 더 하면 그 혀를 뽑아 버린다."},
+        {"speaker":"elysia","expression":"normal","text":"흥미롭네요. 감정이 격해지면 송곳니가 길어지는 것 같은데. 기록해 둬야겠어요."},
+        {"speaker":"karg","expression":"angry","text":"이 계집이…."},
+        {"choices":[{"text":"\"엘리시아, 지금은 그만해.\"","next":"s5_stop_elysia","flags":{"act2_scene5_choice":"s5_stop_elysia"},"affection":{"karg":1,"elysia_leon":-1}},{"text":"\"카르크, 그녀도 악의는 없어.\"","next":"s5_calm_karg","flags":{"act2_scene5_choice":"s5_calm_karg"},"affection":{"elysia_karg":-1}},{"text":"\"그 기록, 그에게 먼저 물어보고 하는 게 어때?\"","next":"s5_ask","flags":{"act2_scene5_choice":"s5_ask"},"affection":{"elysia_karg":1}}]}
+      ]
+    },
+    {
+      "id": "s5_stop_elysia", "title": "▶ 1. 엘리시아를 말린다", "place": "오아시스의 감옥", "color": "#201810", "branch": true,
+      "nodes": [
+        {"speaker":"leon","expression":"normal","text":"엘리시아, 지금은 그만해."},
+        {"speaker":"elysia","expression":"angry","text":"…알았어요."},
+        {"speaker":"karg","expression":"normal","text":"제국 놈이 마법사보단 말이 통하는군."}
+      ]
+    },
+    {
+      "id": "s5_calm_karg", "title": "▶ 2. 카르크를 달랜다", "place": "오아시스의 감옥", "color": "#201810", "branch": true,
+      "nodes": [
+        {"speaker":"leon","expression":"normal","text":"카르크, 그녀도 악의는 없어."},
+        {"speaker":"karg","expression":"angry","text":"악의가 없으면 짐승 취급해도 된다는 건가. 너희 인간들은 늘 그래."},
+        {"speaker":"elysia","expression":"normal","text":"…."}
+      ]
+    },
+    {
+      "id": "s5_ask", "title": "▶ 3. 물어보고 하라고 한다", "place": "오아시스의 감옥", "color": "#201810", "branch": true,
+      "nodes": [
+        {"speaker":"leon","expression":"normal","text":"그 기록, 그에게 먼저 물어보고 하는 게 어때?"},
+        {"speaker":"elysia","expression":"surprised","text":"…물어보라고요?"},
+        {"speaker":"leon","expression":"normal","text":"네 연구라면서. 남의 피를 적으면서 허락도 안 받는 게 마탑 방식이야?"},
+        {"speaker":"elysia","expression":"normal","text":"…."},
+        {"speaker":"elysia","expression":"normal","text":"카르크 씨. 당신의 야성에 대해 기록해도 될까요."},
+        {"speaker":"karg","expression":"surprised","text":"…뭐?"},
+        {"speaker":"karg","expression":"angry","text":"안 돼. 절대 안 돼."},
+        {"speaker":"elysia","expression":"smile","text":"그래도 물어보긴 했으니까요."},
+        {"speaker":"karg","expression":"normal","text":"…이상한 놈들이군."}
+      ]
+    },
+    {
+      "id": "scene5_1", "title": "장면 5-1. 우물을 노리는 것들", "place": "루바 오아시스", "color": "#10141e",
+      "nodes": [
+        {"monologue":["한밤중."]},
+        {"monologue":["비명에 눈을 떴다."]},
+        {"monologue":["창살 너머, 오아시스 한가운데의 우물 쪽에서 불길이 일고 있었다.","모래 속에서, 무언가가 기어 나오고 있었다.","등껍질이 번들거리는 거대한 전갈들."]},
+        {"speaker":"karg","expression":"angry","text":"또 왔군…! 전사들, 우물을 지켜!"},
+        {"monologue":["늑대 전사들이 창을 들고 달려 나갔다.","수가 모자랐다.","전갈은 계속 기어 나왔다."]},
+        {"name":"장로","expression":"normal","text":"카르크. 저들을 풀어 주거라."},
+        {"speaker":"karg","expression":"surprised","text":"장로님! 저건 제국 놈들입니다!"},
+        {"name":"장로","expression":"normal","text":"지금 우물이 무너지면, 제국 놈이고 늑대고 다 같이 말라 죽는다."},
+        {"speaker":"karg","expression":"angry","text":"…젠장."},
+        {"monologue":["빗장이 뽑혔다.","카르크가 내 검을 던져 주었다."]},
+        {"speaker":"karg","expression":"angry","text":"등 뒤에서 수작 부리면, 전갈보다 너부터 죽인다."},
+        {"speaker":"leon","expression":"normal","text":"전갈부터 치우고 말해."},
+        {"speaker":"elysia","expression":"normal","text":"저는요? 제 지팡이도 주시죠."},
+        {"speaker":"karg","expression":"angry","text":"…마법사, 쓸모없으면 바로 다시 가둔다."},
+        {"battle":"우물 방어"},
+        {"monologue":["마지막 전갈의 등껍질이 갈라졌을 때, 동쪽 하늘이 밝아 오고 있었다."]},
+        {"monologue":["우물은 무사했다."]},
+        {"monologue":["늑대 전사 하나가, 피 묻은 손으로 내 어깨를 툭 쳤다.","아무 말도 하지 않았다.","그래도, 그걸로 충분했다."]},
+        {"speaker":"karg","expression":"normal","text":"…다시 들어가."},
+        {"speaker":"elysia","expression":"surprised","text":"감옥에요? 지금?"},
+        {"speaker":"karg","expression":"angry","text":"장로님 명령 없이는 못 풀어 줘. 규칙이야."},
+        {"speaker":"karg","expression":"normal","text":"대신, 문은 안 잠근다."}
+      ]
+    },
+    {
+      "id": "scene6", "title": "장면 6. 수인들의 사정", "place": "오아시스의 감옥", "color": "#141018",
+      "nodes": [
+        {"monologue":["밤이 되자, 감옥 앞에 장로가 찾아왔다."]},
+        {"monologue":["허리가 굽은, 흰 털의 늙은 늑대.","카르크가 그 곁에서 고개를 숙였다."]},
+        {"name":"장로","expression":"normal","text":"제국의 기사여. 무례를 용서하게. 이 아이들은 제국 사람만 보면 이빨부터 드러내지."},
+        {"name":"장로","expression":"normal","text":"이 늙은이는 우르샤라 하네. 이 오아시스의 장로지."},
+        {"speaker":"karg","expression":"angry","text":"장로님, 저놈들은…."},
+        {"name":"우르샤","expression":"normal","text":"카르크. 말을 아끼거라."},
+        {"speaker":"karg","expression":"normal","text":"…예."},
+        {"monologue":["장로는 많은 것을 이야기했다."]},
+        {"monologue":["교역로를 지나는 제국 상인들의 통행세는 해마다 깎이고.","그런데도 수인은 제국의 도시에 들어갈 수 없다는 것.","우물을 지키려다 끌려간 젊은 전사들이, 아직 돌아오지 않았다는 것."]},
+        {"name":"우르샤","expression":"normal","text":"우물을 두른 돌마다 이름을 새겨 두었다네. 돌아오지 않은 아이들의 이름이지."},
+        {"name":"우르샤","expression":"normal","text":"언젠가 돌아오면, 그 돌을 그 아이에게 쥐여 줄 생각이었어. 아직 한 번도, 그러지 못했네."},
+        {"name":"우르샤","expression":"normal","text":"그리고 며칠 전, 또 한 사람의 제국 기사가 이곳을 지나갔다네."},
+        {"speaker":"leon","expression":"surprised","text":"…어떤 사람이었습니까."},
+        {"name":"우르샤","expression":"normal","text":"자네와 같은 남색 옷을 입은 여인이었지. 뺨에 흉터가 있었고."},
+        {"name":"우르샤","expression":"normal","text":"어린 소녀를 데리고 있었네. 소녀는 말이 없었고, 여인은 물만 받아 서쪽으로 떠났지."},
+        {"monologue":["단장님이다."]},
+        {"monologue":["살아 있다.","그리고, 서쪽으로 가고 있다."]},
+        {"speaker":"leon","expression":"normal","text":"…감사합니다, 장로님."},
+        {"name":"우르샤","expression":"normal","text":"고마워할 것 없네. 그 여인은 이 늙은이에게 금화를 내밀지 않았어. 머리를 숙였지."},
+        {"name":"우르샤","expression":"normal","text":"제국 사람 중에서, 그런 사람은 오랜만이었다네."}
+      ]
+    },
+    {
+      "id": "scene6_1", "title": "장면 6-1. 돌아오지 않은 정찰대", "place": "루바 오아시스", "color": "#10141e",
+      "nodes": [
+        {"monologue":["장로의 이야기가 끝나 갈 무렵, 전사 하나가 뛰어 들어왔다."]},
+        {"name":"늑대 전사","expression":"normal","text":"장로님. 동쪽 교역로로 나간 정찰대가, 이틀째 돌아오지 않습니다."},
+        {"name":"우르샤","expression":"normal","text":"…또인가."},
+        {"speaker":"karg","expression":"angry","text":"제가 가겠습니다."},
+        {"name":"우르샤","expression":"normal","text":"혼자는 안 된다. 요즘 교역로엔 전갈만 있는 게 아니야."},
+        {"monologue":["장로의 눈이, 나를 향했다."]},
+        {"name":"우르샤","expression":"normal","text":"제국의 기사여. 부탁 하나 해도 되겠나."},
+        {"speaker":"leon","expression":"normal","text":"…말씀하십시오."},
+        {"name":"우르샤","expression":"normal","text":"카르크와 함께 정찰대를 찾아 주게. 돌아오면, 자네들을 손님으로 대하겠네."},
+        {"speaker":"karg","expression":"angry","text":"장로님!"},
+        {"name":"우르샤","expression":"normal","text":"카르크. 어젯밤 우물을 지킨 건 누구였지?"},
+        {"speaker":"karg","expression":"normal","text":"…."},
+        {"guest":"karg"},
+        {"explore":"a2_oasis"},
+        {"monologue":["동쪽 교역로는, 모래 언덕 사이로 길게 뻗어 있었다."]},
+        {"monologue":["카르크는 앞서 걸으며 한 번도 뒤를 돌아보지 않았다.","엘리시아는 그 뒤에서 모래 위의 발자국을 측정하고 있었다."]},
+        {"explore":"a2_trade_route"},
+        {"speaker":"elysia","expression":"normal","text":"발자국이 여기서 흐트러져요. 싸운 흔적이에요."},
+        {"speaker":"karg","expression":"angry","text":"전갈?"},
+        {"speaker":"elysia","expression":"normal","text":"아뇨. 쇠 장화 자국이에요. 여럿."},
+        {"speaker":"karg","expression":"angry","text":"따라오기만 해. 발목 잡으면 버리고 간다."},
+        {"battle":"교역로 도적"},
+        {"monologue":["도적들의 은신처 안에서, 정찰대를 찾았다."]},
+        {"monologue":["밧줄에 묶인 채였지만, 살아 있었다."]},
+        {"name":"늑대 전사","expression":"sad","text":"카르크…. 도적들이 아니야. 저놈들은 흰 갑옷을 입은 자들한테 우리를 넘기려고 했어."},
+        {"speaker":"karg","expression":"surprised","text":"흰 갑옷?"},
+        {"name":"늑대 전사","expression":"normal","text":"그리고 이상했어. 놈들, 우리 중에서 야성이 강한 자만 골라 묶었어. 약한 애들은 그냥 버리고 갔고."},
+        {"speaker":"karg","expression":"angry","text":"…예전에 끌려간 형제들도, 다 그런 녀석들이었지."},
+        {"name":"늑대 전사","expression":"normal","text":"태양 문양 방패를 든 놈들이 오아시스 쪽으로 오고 있어. 반나절 거리야."},
+        {"monologue":["카르크가 나를 돌아보았다.","처음으로."]},
+        {"speaker":"karg","expression":"angry","text":"…네 친구들이냐."},
+        {"speaker":"leon","expression":"normal","text":"아니. 하지만 아마, 나를 찾으러 오는 거겠지."},
+        {"speaker":"karg","expression":"angry","text":"그럼 서둘러. 놈들보다 먼저 돌아가야 해."},
+        {"monologue":["우리가 오아시스에 닿은 것은, 해가 기울 무렵이었다."]},
+        {"monologue":["그 밤, 아무도 잠들지 않았다."]}
+      ]
+    },
+    {
+      "id": "scene7", "title": "장면 7. 성기사", "place": "오아시스 입구", "color": "#2c2418",
+      "nodes": [
+        {"monologue":["다음 날 아침."]},
+        {"monologue":["오아시스가 소란스러웠다."]},
+        {"monologue":["흰 갑옷. 흰 망토.","태양 문양의 방패를 든 기사들이, 오아시스 입구를 가로막고 서 있었다."]},
+        {"monologue":["그 선두의 사내가, 말에서 내렸다."]},
+        {"speaker":"adrian","expression":"normal","text":"루멘 신성국 성기사단, 아드리안입니다."},
+        {"speaker":"adrian","expression":"normal","text":"반역자 갈리아가 황녀 전하를 데리고 이곳을 지났다는 보고가 있었습니다. 숨겨 준 자를 내놓으십시오."},
+        {"name":"우르샤","expression":"normal","text":"이 교역로는 제국의 땅이 아닐세. 루멘의 기사가 여기서 무엇을 명령한단 말인가."},
+        {"speaker":"adrian","expression":"normal","text":"섭정 헤르만 공작께서 황녀 전하 수색을 위해 교역로의 수색권을 저희에게 맡기셨습니다."},
+        {"name":"우르샤","expression":"normal","text":"…그 여인은 이미 떠났네. 숨긴 것은 없어."},
+        {"speaker":"adrian","expression":"normal","text":"그렇다면 행방을 아는 자를 내놓으십시오. 신의 이름으로 묻는 것입니다."},
+        {"monologue":["그의 시선이, 장로 뒤에 서 있던 나에게 닿았다."]},
+        {"speaker":"adrian","expression":"surprised","text":"…그 제복."},
+        {"speaker":"adrian","expression":"normal","text":"근위기사 레온 경이군요. 시해의 공범."},
+        {"speaker":"adrian","expression":"normal","text":"장로여. 반역자를 숨겨 준 것이 이제 분명해졌습니다. 저 자를 넘기고, 이 오아시스가 신의 뜻에 따르겠다고 맹세하십시오."},
+        {"monologue":["장로가, 지팡이를 짚고 한 걸음 나섰다.","나와 성기사들 사이로."]},
+        {"name":"우르샤","expression":"normal","text":"이 기사는 어젯밤, 우리 아이들을 데리고 돌아온 손님일세."},
+        {"name":"우르샤","expression":"normal","text":"늑대는 손님을 내주지 않네. 신이 아니라, 누가 와서 물어도."},
+        {"speaker":"adrian","expression":"normal","text":"…."},
+        {"speaker":"adrian","expression":"normal","text":"그렇다면, 정화하겠습니다."},
+        {"monologue":["성기사들의 손에, 횃불이 들려 있었다."]},
+        {"monologue":["카르크가 두 자루의 단검을 뽑았다.","늑대 전사들이 창을 들고 그 뒤에 섰다.","수가 너무 적었다."]},
+        {"speaker":"elysia","expression":"normal","text":"기사님. 지금이에요. 다들 저쪽을 보고 있어요."},
+        {"speaker":"elysia","expression":"normal","text":"뒤쪽 야자수 숲으로 빠지면, 아무도 우리를 못 봐요. 저들이 원하는 게 기사님이면, 기사님이 사라지면 그만이잖아요."},
+        {"choices":[{"text":"혼란을 틈타 빠져나간다","next":"s7_flee","flags":{"act2_scene7_choice":"s7_flee"}},{"text":"오아시스에 남아 함께 싸운다","next":"s7_stay","flags":{"act2_scene7_choice":"s7_stay"}}]}
+      ]
+    },
+    {
+      "id": "s7_flee", "title": "▶ 1. 혼란을 틈타 빠져나간다", "place": "카심 사막", "color": "#3a2c18", "branch": true,
+      "nodes": [
+        {"speaker":"leon","expression":"normal","text":"…가자."},
+        {"monologue":["야자수 그늘을 따라 몸을 숙이고 빠져나왔다.","등 뒤에서, 불길이 오르는 소리가 들렸다."]},
+        {"monologue":["돌아보지 않았다."]},
+        {"monologue":["사막은 넓었다.","물통은 가벼웠다.","오아시스로 돌아갈 길은, 불타는 소리와 함께 모래 속에 묻혔다."]},
+        {"monologue":["사흘째.","엘리시아가 먼저 쓰러졌다."]},
+        {"monologue":["입술이 갈라져, 피가 말라붙어 있었다.","마력으로 물을 만들 수 있느냐고 물었을 때, 그녀는 웃었다.","그걸 할 수 있었다면, 마탑은 사막에도 탑을 지었을 거라고."]},
+        {"monologue":["닷새째.","나는 모래를 씹고 있었다.","씹고 있다는 것을 깨달았을 때, 이미 일어설 수 없었다."]},
+        {"monologue":["혀가 부어올라 입천장에 들러붙었다.","눈이 말라, 감아도 따가웠다."]},
+        {"monologue":["하늘이 하얗다.","그날 밤의 빛처럼."]},
+        {"monologue":["그들을 버린 순간.","이 길의 끝도, 함께 정해져 있었다."]},
+        {"ending":"act2_dead"}
+      ]
+    },
+    {
+      "id": "s7_stay", "title": "▶ 2. 오아시스에 남아 함께 싸운다", "place": "오아시스 입구", "color": "#2c2418", "branch": true,
+      "nodes": [
+        {"speaker":"leon","expression":"normal","text":"아니. 남을 거야."},
+        {"speaker":"elysia","expression":"surprised","text":"기사님, 진심이에요?"},
+        {"speaker":"leon","expression":"normal","text":"내가 사라져도, 저들은 숨겨 줬다는 이유로 불을 지를 거야."},
+        {"speaker":"leon","expression":"normal","text":"그리고 단장님이라면, 여기서 등을 보이지 않았을 거야."},
+        {"monologue":["카르크의 옆에 섰다.","그가 나를 흘끗 보았다."]},
+        {"speaker":"karg","expression":"angry","text":"배신하면, 네 목부터 딴다."},
+        {"speaker":"leon","expression":"normal","text":"그 말, 이제 지겹다."},
+        {"speaker":"karg","expression":"smile","text":"…하. 그래."}
+      ]
+    },
+    {
+      "id": "scene8", "title": "장면 8. 오아시스 전투", "place": "오아시스 입구", "color": "#2c2418",
+      "nodes": [
+        {"speaker":"karg","expression":"angry","text":"제국 놈. 저 방패, 정면으로는 안 뚫려."},
+        {"speaker":"karg","expression":"normal","text":"내가 찢는다. 넌 그 틈에 베기나 해."},
+        {"speaker":"leon","expression":"normal","text":"…알았다."},
+        {"battle":"성기사단"},
+        {"monologue":["성기사들이 하나둘 물러났다."]},
+        {"monologue":["남은 것은, 그 한 사람뿐이었다."]},
+        {"speaker":"adrian","expression":"normal","text":"반역자이면서, 이교도를 지키는 겁니까."},
+        {"speaker":"leon","expression":"normal","text":"지키는 데 이유가 필요한가."},
+        {"speaker":"adrian","expression":"normal","text":"…신의 이름으로. 당신을 심판하겠습니다."},
+        {"battle":"아드리안"},
+        {"monologue":["그의 방패가 모래 위로 굴렀다."]},
+        {"monologue":["무릎을 꿇은 성기사.","내 검 끝이, 그의 목에 닿아 있었다."]},
+        {"monologue":["그의 몸을 감싸던 금빛이, 꺼질 듯 깜빡이고 있었다.","지쳐서인지, 다른 이유인지는 알 수 없었다."]},
+        {"speaker":"adrian","expression":"surprised","text":"…빛이, 왜…."},
+        {"choices":[{"text":"검을 거두고 돌려보낸다","next":"s8_spare","flags":{"act2_scene8_choice":"s8_spare"},"affection":{"adrian":1}},{"text":"끝까지 몰아붙인다","next":"s8_press","flags":{"act2_scene8_choice":"s8_press"},"affection":{"adrian":-1}}]}
+      ]
+    },
+    {
+      "id": "s8_spare", "title": "▶ 1. 검을 거두고 돌려보낸다", "place": "오아시스 입구", "color": "#2c2418", "branch": true,
+      "nodes": [
+        {"speaker":"leon","expression":"normal","text":"가라."},
+        {"speaker":"adrian","expression":"surprised","text":"…어째서입니까."},
+        {"speaker":"leon","expression":"normal","text":"너는 명령을 따랐을 뿐이야. 그날 밤 나처럼."},
+        {"speaker":"adrian","expression":"normal","text":"…."},
+        {"speaker":"adrian","expression":"normal","text":"이 빚은, 잊지 않겠습니다."},
+        {"monologue":["그는 방패를 주워 들고, 남은 기사들을 이끌고 사막으로 물러났다."]},
+        {"monologue":["한 번, 뒤를 돌아보았다."]}
+      ]
+    },
+    {
+      "id": "s8_press", "title": "▶ 2. 끝까지 몰아붙인다", "place": "오아시스 입구", "color": "#2c2418", "branch": true,
+      "nodes": [
+        {"speaker":"leon","expression":"angry","text":"오아시스를 불태우려던 놈이, 신의 이름을 입에 올리지 마라."},
+        {"monologue":["그의 방패를 걷어찼다.","흰 망토가 모래에 처박혔다.","기사들이 보는 앞에서, 그는 무릎을 꿇은 채 일어서지 못했다."]},
+        {"speaker":"adrian","expression":"angry","text":"…이 치욕은, 반드시 갚겠습니다."},
+        {"monologue":["그는 흙투성이 망토를 끌며 물러났다."]},
+        {"monologue":["뒤를 돌아보지 않았다."]}
+      ]
+    },
+    {
+      "id": "scene9", "title": "장면 9. 늑대의 맹세", "place": "루바 오아시스", "color": "#2a1810",
+      "nodes": [
+        {"monologue":["불은 번지지 않았다."]},
+        {"monologue":["늑대 전사들은 부서진 울타리를 고치고, 다친 자들을 옮겼다.","내 곁을 지날 때마다, 그들은 고개를 한 번씩 숙였다.","말은 없었다.","그래도 어제와는, 달랐다."]},
+        {"monologue":["해가 질 무렵, 카르크가 다가왔다."]},
+        {"speaker":"karg","expression":"normal","text":"야. 제국 놈."},
+        {"speaker":"leon","expression":"normal","text":"레온이다."},
+        {"speaker":"karg","expression":"angry","text":"알아. 그냥 그렇게 부르기 싫어서 그래."},
+        {"monologue":["그는 한참 동안 말이 없었다."]},
+        {"speaker":"karg","expression":"normal","text":"장로님이 그러더라. 네가 찾는 그 여자 기사, 서쪽의 안개 숲으로 갔을 거라고."},
+        {"speaker":"karg","expression":"normal","text":"사막을 넘어서 아르덴으로 가는 길은, 우리 부족이 제일 잘 알아."},
+        {"speaker":"leon","expression":"normal","text":"…그래서."},
+        {"speaker":"karg","expression":"angry","text":"그래서 같이 간다고. 말귀도 못 알아듣냐."},
+        {"join":"karg"},
+        {"speaker":"leon","expression":"surprised","text":"왜."},
+        {"speaker":"karg","expression":"normal","text":"오늘, 제국 놈이 흰 갑옷들한테 칼을 겨눴어. 우리를 위해서. 그런 건 처음 봤다."},
+        {"speaker":"karg","expression":"angry","text":"그러니까 끝까지 봐야겠어. 네가 진짜 그런 놈인지. 아니면 오늘만 그랬던 건지."},
+        {"speaker":"elysia","expression":"normal","text":"잘됐네요. 표본이 하나 더 늘었어요."},
+        {"speaker":"karg","expression":"angry","text":"마법사. 그 말 한 번만 더 하면…."},
+        {"speaker":"elysia","expression":"smile","text":"하면요?"},
+        {"speaker":"karg","expression":"angry","text":"…제국 놈, 이 여자 원래 이러냐?"},
+        {"speaker":"leon","expression":"normal","text":"원래 이래."},
+        {"monologue":["그날 밤."]},
+        {"monologue":["처음으로 모닥불을 피웠다.","셋이서."]},
+        {"monologue":["불이 사그라들 무렵, 눈을 떴다."]},
+        {"monologue":["엘리시아가 모닥불에서 조금 떨어진 곳에 앉아 있었다.","무릎 위에 작은 종이 한 장.","그 위로, 보랏빛 글씨가 빼곡했다."]},
+        {"monologue":["빛의 기둥을 보던 밤, 몇 번이고 다시 적던 그 측정 결과일까."]},
+        {"monologue":["그녀가 종이를 손바닥에 올려놓았다.","종이가 보랏빛으로 타올라, 작은 불씨가 되어 하늘로 날아올랐다.","위로. 별보다 높은 곳으로."]},
+        {"speaker":"elysia","expression":"normal","text":"…."},
+        {"monologue":["그녀는 불씨가 사라진 하늘을 한참 올려다보았다."]},
+        {"monologue":["나는 다시 눈을 감았다.","묻지 않았다.","강을 따라 내려가던 밤, 그녀가 말한 \"명목\"이라는 말이 떠올랐을 뿐이다."]},
+        {"chapter":"act3"}
+      ]
+    }
+  ]
+}

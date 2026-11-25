@@ -46,7 +46,11 @@
     "act2:scene8": "a2_gate_side",
     "act2:s8_spare": "a2_duel_end",
     "act2:s8_press": "a2_duel_end",
-    "act2:scene9": "a2_dusk"
+    "act2:scene9": "a2_dusk",
+    "act2:dream1": "a2_dream1",
+    "act2:dream2": null,
+    "act2:scene9_1": "a2_fire_night",
+    "act2:interlude2": "a2_cathedral"
   },
   "places": {
     "황제의 침소": { "map": "bedchamber", "stage": "bed_enter" },
@@ -551,7 +555,18 @@
     "a2_night9": {"ambient": "#28305e", "fade": 2500},
     "a2_campfire": {"props": {"campfire": true}, "actors": {"leon": {"walk": "leon_fire", "facing": "right"}, "karg": {"walk": "karg_fire", "facing": "left"}, "elysia": {"walk": "elysia_fire", "facing": "up"}}},
     "a2_apart": {"actors": {"elysia": {"at": "elysia_apart", "facing": "left"}}},
-    "a2_embers": {"embers": {"who": "elysia", "color": "#a47cff"}}
+    "a2_embers": {"embers": {"who": "elysia", "color": "#a47cff"}},
+    "_꿈_막간": "memory·lantern·cloth·sweep·rays·dots·glow는 대화 화면(src/scenes/StoryFx.ts)이 그린다. 꿈(dream…)·막간(interlude…) 장면은 맵 없음. dots의 at·walk는 화면 좌표(960x720), 도트는 3배. line = 바로 뒤 독백 덩어리의 몇 번째 줄(0부터)에서 보일지",
+    "a2_memory": {"memory": ["crown", "wall", "people"]},
+    "a2_memory_end": {"memory": null},
+    "a2_dream1": {"lantern": "on"},
+    "a2_lantern_out": {"lantern": "out"},
+    "a2_cloth": {"cloth": "#1c2a5c"},
+    "a2_sweep": {"sweep": "#1c2a5c", "line": 1},
+    "a2_fire_night": {"map": "oasis", "ambient": "#28305e", "focus": "leon", "props": {"campfire": true}, "actors": {"leon": {"at": "leon_fire", "facing": "right"}, "karg": {"at": "karg_fire", "facing": "left"}, "elysia": {"at": "elysia_fire", "facing": "up"}}},
+    "a2_cathedral": {"rays": true, "dots": {"adrian": {"sprite": "bt_adrian", "frame": 46, "at": [480, 470]}}},
+    "a2_pray_light": {"glow": "adrian", "wait": 1600},
+    "a2_ignatius_in": {"dots": {"ignatius": {"sprite": "ignatius", "at": [1010, 500], "walk": [620, 500], "facing": "left", "speed": 110}}, "wait": 2600}
   },
 
   "segments": {

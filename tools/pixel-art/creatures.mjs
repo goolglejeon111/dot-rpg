@@ -1,4 +1,4 @@
-// 1막 수로 생물: 수로 쥐, 수로 거머리, 수로의 괴물(큰 장어)
+// 1막 수로 생물: 수로 쥐, 수로 거머리, 수로의 괴물(썩은 점액 덩어리)
 // gen-battle.mjs가 불러 필드 걷기 시트(32x40, 5열 x 8행)와 전투 시트를 만든다.
 import { Cv } from './cv.mjs';
 
@@ -134,88 +134,178 @@ function smallBattle(draw) {
 }
 
 // ---------------------------------------------------------------------
-// 수로의 괴물: 물 위로 목을 내민 거대한 장어 (96x96 칸)
+// 수로의 괴물: 하수 찌꺼기가 엉겨 썩은 초록 점액 덩어리 (96x96 칸).
+// 물 위로 몸을 일으켜 아가리로 물고, 점액 촉수로 쓸고, 썩은 점액을 뱉는다.
+// 몸에는 삼킨 뼈가 비치고, 눈은 크기가 제각각인 누런 눈 셋
 // ---------------------------------------------------------------------
-const EEL = ['G', 'Q', 'k'];
+const hash = (i) => {
+  const s = Math.sin(i * 127.1 + 311.7) * 43758.5453;
+  return s - Math.floor(s);
+};
+/** 점액 덩어리 칠하기: 윤곽(Q) → 몸(G) → 젖은 빛(g) 순서로, 빛은 왼쪽 위에서 */
+const h2 = (x, y) => hash(x * 13.7 + y * 71.3);
+function goo(c, blobs) {
+  for (const [x, y, r] of blobs) c.disc(x, y, r, 'Q');
+  for (const [x, y, r] of blobs) c.disc(x - r * 0.15, y - r * 0.15, r * 0.78, (d, px, py) => (h2(px, py) < 0.16 ? 'Q' : 'G'));
+  for (const [x, y, r] of blobs) if (r > 5) c.disc(x - r * 0.38, y - r * 0.4, r * 0.2, 'g');
+  for (const [x, y, r] of blobs) if (r > 7) c.set(x - r * 0.45, y - r * 0.5, 'q');
+}
 function eel(col) {
   const c = new Cv(96, 96);
-  // 물결 (아래)
-  const ripple = (rx, ry) => {
-    c.ellipse(46, 88, rx, ry, (d) => (d > 0.82 ? 'w' : d > 0.6 ? 'a' : 'A'));
+  const ripple = (rx, ry) => c.ellipse(46, 88, rx, ry, (d) => (d > 0.82 ? 'w' : d > 0.6 ? 'a' : 'A'));
+  // 물 위에 뜬 썩은 막
+  const scum = () => {
+    for (let i = 0; i < 9; i++) {
+      const a = hash(i + 40) * Math.PI * 2;
+      c.ellipse(46 + Math.cos(a) * (14 + hash(i) * 14), 88 + Math.sin(a) * 4.5, 3 + hash(i + 9) * 3, 1, i % 3 ? 'G' : 'D');
+    }
   };
   if (col === 10) {
-    // 잠수: 물결만
+    // 잠수: 물결과 올라오는 거품만
     ripple(26, 6);
-    c.ellipse(46, 88, 10, 2, 'W');
+    scum();
+    for (const [x, y] of [[40, 86], [52, 89], [46, 84]]) {
+      c.disc(x, y, 1.6, 'q');
+      c.set(x, y, 'G');
+    }
     return c;
   }
-  ripple(30, 7);
-  // 몸통 곡선: 밑동(46, 88)에서 머리까지
+  ripple(32, 7);
+  scum();
   const pose = {
-    0: { hx: 56, hy: 30, mouth: 0 }, // 서기
-    1: { hx: 44, hy: 22, mouth: 1 }, // 물기 준비 (뒤로 젖힘)
-    2: { hx: 70, hy: 48, mouth: 3 }, // 물기
-    3: { hx: 50, hy: 28, mouth: 0, tail: 1 }, // 꼬리 준비
-    4: { hx: 52, hy: 32, mouth: 0, tail: 2 }, // 꼬리 쓸기
-    5: { hx: 54, hy: 24, mouth: 2 }, // 물 뿜기 준비
-    6: { hx: 56, hy: 30, mouth: 0 },
-    7: { hx: 50, hy: 34, mouth: 1 }, // 맞음
-    8: { hx: 54, hy: 24, mouth: 2 }, // 시전(물 모으기)
-    9: { hx: 50, hy: 60, mouth: 0 }, // 잠수 중
-    11: { hx: 70, hy: 78, mouth: 1, down: true }, // 쓰러짐: 머리를 물 위에 늘어뜨림
+    0: { hx: 54, hy: 32, mouth: 1 }, // 서기
+    1: { hx: 42, hy: 24, mouth: 2 }, // 물기 준비 (뒤로 젖힘)
+    2: { hx: 68, hy: 48, mouth: 4 }, // 물기
+    3: { hx: 48, hy: 30, mouth: 1, tail: 1 }, // 촉수 준비
+    4: { hx: 52, hy: 34, mouth: 2, tail: 2 }, // 촉수 쓸기
+    5: { hx: 52, hy: 26, mouth: 3, spit: 2 }, // 뱉기 준비
+    6: { hx: 55, hy: 31, mouth: 1 },
+    7: { hx: 48, hy: 36, mouth: 2 }, // 맞음
+    8: { hx: 52, hy: 26, mouth: 3, spit: 3 }, // 시전(점액 모으기)
+    9: { hx: 48, hy: 62, mouth: 0 }, // 가라앉는 중
+    11: { hx: 66, hy: 76, mouth: 1, down: true }, // 쓰러짐: 녹아 퍼짐
   }[col];
+  // 촉수: 옆 물속에서 솟는 점액 줄기, 끝에서 방울이 떨어진다
   if (pose.tail) {
-    // 꼬리: 옆 물속에서 솟음
-    const tx = pose.tail === 1 ? 18 : 80;
+    const tx = pose.tail === 1 ? 16 : 80;
+    const blobs = [];
     for (let i = 0; i <= 14; i++) {
       const t = i / 14;
-      c.disc(tx + (pose.tail === 1 ? -t * 6 : t * 10), 88 - t * 30, 4.5 - t * 3, shade(EEL));
+      blobs.push([tx + (pose.tail === 1 ? -t * 6 : t * 10), 88 - t * 32, 6 - t * 3.2]);
     }
-    c.disc(tx + (pose.tail === 1 ? -7 : 12), 56, 2.5, 'Q');
+    goo(c, blobs);
+    const [ex, ey] = blobs[blobs.length - 1];
+    c.line(ex, ey + 3, ex, ey + 9, 'G');
+    c.disc(ex, ey + 10, 1.2, 'g');
   }
   const bx = 46;
   const by = 88;
-  const mx = pose.down ? 62 : bx - 14;
-  const my = pose.down ? 60 : 56;
-  const N = 40;
+  const mx = pose.down ? 60 : bx - 12;
+  const my = pose.down ? 70 : 58;
+  const { hx, hy } = pose;
+  const at = (t) => [
+    (1 - t) * (1 - t) * bx + 2 * (1 - t) * t * mx + t * t * hx,
+    (1 - t) * (1 - t) * by + 2 * (1 - t) * t * my + t * t * hy,
+  ];
+  // 몸통: 밑동은 넓게 퍼지고 위로 갈수록 좁아지는 울퉁불퉁한 기둥
+  const body = [];
+  const N = 22;
+  const base = pose.down ? 12 : 18;
   for (let i = 0; i <= N; i++) {
     const t = i / N;
-    const x = (1 - t) * (1 - t) * bx + 2 * (1 - t) * t * mx + t * t * pose.hx;
-    const y = (1 - t) * (1 - t) * by + 2 * (1 - t) * t * my + t * t * pose.hy;
-    const r = 8.5 - t * 2.5;
-    c.disc(x, y, r, (d) => (d < 0.35 ? 'c' : d < 0.55 ? 'G' : d < 0.85 ? 'Q' : 'k'));
-  }
-  // 등지느러미
-  for (let i = 6; i < N - 4; i += 4) {
-    const t = i / N;
-    const x = (1 - t) * (1 - t) * bx + 2 * (1 - t) * t * mx + t * t * pose.hx;
-    const y = (1 - t) * (1 - t) * by + 2 * (1 - t) * t * my + t * t * pose.hy;
-    c.line(x - 8, y - 2, x - 10, y - 4, 'I');
-  }
-  // 머리
-  const { hx, hy, mouth } = pose;
-  c.ellipse(hx + 2, hy, 11, 7.5, (d) => (d < 0.4 ? 'g' : d < 0.8 ? 'G' : 'Q'));
-  c.ellipse(hx + 9, hy + 1, 5, 4.5, 'G');
-  // 입
-  if (mouth > 0) {
-    const h = mouth * 2;
-    c.rect(hx + 4, hy + 2, hx + 15, hy + 2 + h, 'Z');
-    for (let x = hx + 5; x <= hx + 14; x += 2) {
-      c.set(x, hy + 2, 'v');
-      c.set(x + 1, hy + 2 + h, 'v');
+    const [x, y] = at(t);
+    body.push([x, y, base - t * (base - 11)]);
+    if (i % 3 === 1) {
+      const side = hash(i) > 0.5 ? 1 : -1;
+      body.push([x + side * (base - t * 6) * 0.7, y + 2, 4 + hash(i + 3) * 3]);
     }
-  } else c.line(hx + 4, hy + 3, hx + 14, hy + 3, 'k');
-  // 눈
-  if (col === 11) c.line(hx + 3, hy - 3, hx + 6, hy - 3, 'k');
-  else {
-    c.disc(hx + 4, hy - 3, 1.6, 'y');
-    c.set(hx + 4, hy - 3, 'k');
   }
-  if (col === 5 || col === 8) c.disc(hx + 15, hy + 4, col === 8 ? 3 : 2, (d) => (d < 0.5 ? 'w' : 'a'));
+  if (pose.down) body.push([34, 84, 14], [58, 84, 13]);
+  // 머리 덩어리 (앞쪽으로 늘어진 큰 덩이)
+  body.push([hx + 2, hy - 1, 12], [hx + 10, hy + 2, 9], [hx - 6, hy + 4, 10], [hx + 6, hy + 10, 7], [hx - 2, hy - 8, 6]);
+  goo(c, body);
+  // 썩은 얼룩과 비치는 뼈
+  for (let i = 0; i < 12; i++) {
+    const [x, y] = at(0.05 + i * 0.075);
+    const ex = x - 7 + hash(i + 20) * 14;
+    c.ellipse(ex, y + 1, 2 + hash(i) * 3, 1.5 + hash(i + 2), (d) => (d < 0.5 ? (i % 3 ? 'D' : 'I') : i % 2 ? 'C' : 'Q'));
+  }
+  if (!pose.down) {
+    // 갈비뼈: 몸통 가운데에 비스듬히
+    const [rx, ry] = at(0.3);
+    for (let k = 0; k < 3; k++) c.band(rx + 1, ry - 4 + k * 4, 5, 6, Math.PI * 0.9, Math.PI * 1.9, (tr, ta, px, py) => (h2(px, py) < 0.35 ? 'G' : 'V'), 0.6);
+    // 반쯤 녹은 해골
+    const [sx, sy] = at(0.55);
+    c.disc(sx - 6, sy, 3, (d, px, py) => (h2(px, py) < 0.25 ? 'G' : 'V'));
+    c.set(sx - 7, sy - 1, 'K');
+    c.set(sx - 5, sy - 1, 'K');
+    c.line(sx - 7, sy + 2, sx - 5, sy + 2, 'K');
+  }
+  // 거품
+  for (let i = 0; i < 5; i++) {
+    const [x, y] = at(0.15 + hash(i + 7) * 0.7);
+    const px = x + (hash(i + 11) - 0.5) * 14;
+    c.disc(px, y, 1.3, 'q');
+    c.set(px, y, 'G');
+  }
+  // 아가리: 축 처진 비대칭 입, 삐뚤빼뚤한 이빨, 늘어지는 점액 실
+  const m = pose.mouth;
+  if (m > 0) {
+    const h = 1 + m * 2;
+    const x0 = hx - 2;
+    const x1 = hx + 18;
+    for (let x = x0; x <= x1; x++) {
+      const sag = Math.round(Math.sin(((x - x0) / (x1 - x0)) * Math.PI) * h);
+      c.line(x, hy + 3, x, hy + 3 + sag, 'K');
+      if (sag > 1) c.set(x, hy + 3 + sag, 'Z');
+    }
+    for (let x = x0 + 1; x <= x1 - 1; x += 2) {
+      c.set(x, hy + 3, 'V');
+      if (hash(x) > 0.5) c.set(x, hy + 4, 'V');
+      const sag = Math.round(Math.sin(((x - x0) / (x1 - x0)) * Math.PI) * h);
+      if (sag > 2 && hash(x + 5) > 0.45) c.set(x, hy + 2 + sag, 'V');
+    }
+    // 위아래 턱을 잇는 점액 실
+    if (m >= 2) {
+      c.line(hx + 4, hy + 3, hx + 5, hy + 2 + h, 'G');
+      c.line(hx + 12, hy + 3, hx + 11, hy + 2 + h, 'G');
+    }
+    // 턱에서 떨어지는 점액
+    c.line(hx + 8, hy + 4 + h, hx + 8, hy + 8 + h, 'G');
+    c.set(hx + 8, hy + 9 + h, 'g');
+  } else c.line(hx + 3, hy + 4, hx + 14, hy + 5, 'Q');
+  // 눈: 크기가 제각각인 누런 눈 셋, 가는 세로 동공, 움푹 꺼진 자리
+  const eyes = [[hx + 8, hy - 4, 2.2], [hx - 4, hy - 5, 1.2], at(0.42).concat(1.2), at(0.7).map((v, i) => v + (i ? 2 : 6)).concat(1)];
+  for (const [x, y, r] of eyes) {
+    c.disc(x, y, r + 1, 'Q');
+    if (col === 11 || col === 9) c.line(x - r, y, x + r, y, 'K');
+    else {
+      c.disc(x, y, r, r > 2 ? (d) => (d > 0.75 ? 'x' : 'y') : 'y');
+      c.line(x, y - r + 0.5, x, y + r - 0.5, 'K');
+    }
+  }
+  // 뱉을 점액 덩이
+  if (pose.spit) {
+    c.disc(hx + 17, hy + 6, pose.spit, 'G');
+    c.disc(hx + 16.5, hy + 5.5, pose.spit * 0.5, 'q');
+  }
   c.outline('k');
+  // 몸에서 흘러내리는 방울 (윤곽 밖으로)
+  for (let i = 0; i < 6; i++) {
+    const [x, y] = at(0.25 + i * 0.13);
+    const dx = x + (i % 2 ? 12 : -14) + hash(i) * 2;
+    const len = 3 + Math.round(hash(i + 30) * 6);
+    c.line(dx, y + 4, dx, y + 4 + len, 'Q');
+    c.set(dx, y + 5 + len, 'G');
+  }
+  if (!pose.down)
+    for (const [ox, len] of [[-8, 6], [14, 9], [4, 4]]) {
+      c.line(hx + ox, hy + 10, hx + ox, hy + 10 + len, 'Q');
+      c.set(hx + ox, hy + 11 + len, 'G');
+    }
   // 물결 앞쪽 (몸을 가림)
-  c.ellipse(46, 91, 22, 3, (d) => (d > 0.7 ? 'w' : 'a'));
-  if (col === 7) c.map((ch) => (ch === 'g' ? 'l' : ch));
+  c.ellipse(46, 91, 24, 3, (d) => (d > 0.7 ? 'w' : 'a'));
+  if (col === 7) c.map((ch) => (ch === 'g' || ch === 'q' ? 'l' : ch));
   return c;
 }
 

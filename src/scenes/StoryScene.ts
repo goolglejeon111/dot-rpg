@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import type { BattleResult, BattleStart } from '../battle/BattleScene';
 import { STAGE, type ExploreScene, type ExploreStart, type MapHost, type StageDef } from '../explore/ExploreScene';
 import { makeBattleAnims, preloadBattle } from '../battle/assets';
+import battlesData from '../data/battle/battles.json';
 import { StoryFx } from './StoryFx';
 import { addGuest, clearStory, gainOnce, joinParty, maxLevel, partyIds, unlock, unlockInfo, type Unlock } from '../battle/progress';
 import { characters, stories } from '../game/data';
@@ -608,17 +609,17 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.showLookLine();
   }
 
-  /** 맵 위의 몹 무리와 짧은 전투 (맵에서 벗어난 전투장). 이기면 그 자리 이동으로 */
-  fieldBattle(battle: string, done: () => void) {
+  /** 맵 위의 몹 무리와 짧은 전투. 몹이 있던 자리를 가운데로 그 맵 위에서 싸운다. 이기면 그 자리 이동으로 */
+  fieldBattle(battle: string, done: () => void, pos?: { x: number; y: number }) {
     this.fieldDone = done;
     // 어두운 수로에서 처음 싸울 때: 엘리시아가 빛을 밝힌 뒤 전투 (이후로는 계속 밝다)
     const m = this.mapState === 'on' ? (this.scene.get('Explore') as ExploreScene) : null;
     if (m?.needsLight())
       return this.playTalk('엘리시아', '잠깐만요. 이렇게 깜깜해서야 칼끝도 안 보이겠네요. …빛을 좀 밝혀 둘게요.', () => {
         this.mode = 'busy';
-        m.castLight(() => this.startBattle({ battle }, true));
+        m.castLight(() => this.startBattle({ battle, field: pos }));
       });
-    this.startBattle({ battle }, true);
+    this.startBattle({ battle, field: pos });
   }
 
   private showLookLine() {
@@ -772,12 +773,20 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   // ---------- 전투 ----------
 
   /** 대사창을 닫고 전투 화면으로. 끝나면 결과에 따라 다음 대사·장면·엔딩, 또는 게임 오버 */
-  private startBattle(b: Omit<BattleStart, 'onEnd' | 'map'>, offMap = false) {
+  private startBattle(b: Omit<BattleStart, 'onEnd' | 'map'>) {
     this.mode = 'busy';
     this.toggleAuto(false);
     // 맵이 떠 있으면 화면을 바꾸지 않고, 카메라만 전투장으로 옮겨 그 자리에서 싸운다
-    const m = this.mapState === 'on' && !offMap ? (this.scene.get('Explore') as ExploreScene) : null;
-    const center = m?.battleCenter(b.battle, b.hpZero?.who);
+    const m = this.mapState === 'on' ? (this.scene.get('Explore') as ExploreScene) : null;
+    let center = m?.battleCenter(b.battle, b.hpZero?.who);
+    // 필드 몹: 몹 자리를 가운데로 한 전투장
+    if (m && b.field) {
+      const ar = (battlesData as unknown as Record<string, { arena: { w: number; h: number } }>)[b.battle]?.arena;
+      if (ar) {
+        b = { ...b, at: m.fieldArena(ar.w, ar.h, b.field.x, b.field.y) };
+        center = { x: b.at!.x + ar.w / 2, y: b.at!.y + ar.h / 2 };
+      }
+    }
     if (m && center) {
       this.clearText();
       for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side);

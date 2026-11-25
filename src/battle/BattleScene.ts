@@ -39,6 +39,10 @@ export interface BattleStart {
   hpZero?: { who: string; by: string; count: number };
   /** 지금 떠 있는 맵 화면. 있으면 그 맵 위에서 그대로 싸운다 (화면 전환 없음) */
   map?: ExploreScene;
+  /** 필드 몹 전투: 맵 위 몹이 있던 자리 (맵 좌표). 적이 이 둘레에서 나타난다 */
+  field?: { x: number; y: number };
+  /** 맵 위 전투장의 왼쪽 위 (맵 좌표). 없으면 맵의 arena 구역 */
+  at?: { x: number; y: number };
   onEnd: (r: BattleResult) => void;
 }
 
@@ -456,7 +460,7 @@ export class BattleScene extends Phaser.Scene {
     if (!this.bdef) console.error(`[battle] battles.json에 없는 전투: ${data.battle}`);
     // 맵 화면이 떠 있으면 그 맵 위에서 싸운다 (정해 둔 맵과 같을 때, 또는 체력 0 연출)
     const m = data.map;
-    this.onMap = m?.currentMap && (data.hpZero || !this.bdef?.arena.map || this.bdef.arena.map === m.mapId) ? m : null;
+    this.onMap = m?.currentMap && (data.hpZero || data.at || !this.bdef?.arena.map || this.bdef.arena.map === m.mapId) ? m : null;
     this.lit = false;
     this.carry = null;
   }
@@ -491,7 +495,7 @@ export class BattleScene extends Phaser.Scene {
   private setupMap(m: ExploreScene) {
     const md = m.currentMap!;
     const { w, h } = this.bdef.arena;
-    const ar = !this.start.hpZero && findObj(md, 'arena', this.bdef?.arena.zone);
+    const ar = this.start.at ?? (!this.start.hpZero && findObj(md, 'arena', this.bdef?.arena.zone));
     if (ar) {
       this.ox = ar.x;
       this.oy = ar.y;
@@ -881,11 +885,60 @@ export class BattleScene extends Phaser.Scene {
         return;
       }
       this.pendingSpawns++;
+      let x = s.x ?? this.bdef.arena.w / 2;
+      let y = s.y ?? this.bdef.arena.h / 2;
+      // 필드 몹: 몹이 있던 자리 둘레, 레온 반대쪽으로 부채꼴
+      const fp = this.start.field && this.onMap ? { x: this.start.field.x - this.ox, y: this.start.field.y - this.oy } : null;
+      if (fp) {
+        const l = this.party[0];
+        const base = l ? Math.atan2(fp.y - l.y, fp.x - l.x) : 0;
+        const a0 = base + (k - (wave.length - 1) / 2) * 0.75;
+        // 막힌 쪽이면 각도를 조금씩 돌려 가며 빈자리를 찾는다 (레온 바로 옆은 피함)
+        let found = false;
+        for (let i = 0; i < 12 && !found; i++) {
+          const a = a0 + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 0.35;
+          for (const r of [44, 60, 30]) {
+            const px = fp.x + Math.cos(a) * r;
+            const py = fp.y + Math.sin(a) * r;
+            if (l && Math.hypot(px - l.x, py - l.y) < 36) continue;
+            if (this.isFree(px, py)) {
+              x = px;
+              y = py;
+              found = true;
+              break;
+            }
+          }
+        }
+        if (!found) {
+          x = fp.x + Math.cos(a0) * 44;
+          y = fp.y + Math.sin(a0) * 44;
+        }
+      }
+      ({ x, y } = this.freeSpot(x, y));
       this.time.delayedCall(400 + k * 220, () => {
         this.pendingSpawns--;
-        if (!this.ended) this.spawnEnemy(s.enemy, s.x ?? this.bdef.arena.w / 2, s.y ?? this.bdef.arena.h / 2);
+        if (!this.ended) this.spawnEnemy(s.enemy, x, y);
       });
     });
+  }
+
+  /** 맵 위 전투에서 (x, y)가 벽·물에 막혔으면 전투장 안의 가장 가까운 빈자리로 */
+  private isFree(x: number, y: number) {
+    const b = this.bounds;
+    return x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1 && !this.onMap?.solidAt(x + this.ox, y + this.oy);
+  }
+
+  private freeSpot(x: number, y: number) {
+    const ok = (px: number, py: number) => this.isFree(px, py);
+    if (!this.onMap || ok(x, y)) return { x, y };
+    for (let r = 8; r <= 200; r += 8)
+      for (let i = 0; i < 16; i++) {
+        const a = (i / 16) * Math.PI * 2;
+        const px = x + Math.cos(a) * r;
+        const py = y + Math.sin(a) * r;
+        if (ok(px, py)) return { x: px, y: py };
+      }
+    return { x, y };
   }
 
   /** 체력 0 연출: who 주위를 공격자들이 둘러싸고 차례로 찌른다 */
@@ -2409,7 +2462,7 @@ export class BattleScene extends Phaser.Scene {
 
   // ---- 수로의 괴물 ----
 
-  /** 물속에서 머리만 내민 채 움직이지 않는다. 물기 / 꼬리 쓸기 / 물 뿜기, 체력이 반 아래면 잠수 */
+  /** 물속에서 머리만 내민 채 움직이지 않는다. 물기 / 촉수 쓸기 / 점액 뱉기, 체력이 반 아래면 잠수 */
   private eelAI(e: Fighter, dt: number) {
     const ed = e.enemy!;
     if (e.dived) {
@@ -2482,7 +2535,7 @@ export class BattleScene extends Phaser.Scene {
       }
       this.eelPose(e, 4);
     } else {
-      // 물 뿜기: 가장 가까운 인물 쪽으로 물줄기 여럿
+      // 점액 뱉기: 가장 가까운 인물 쪽으로 썩은 점액 여럿
       const t = foes.sort((a, b) => Math.hypot(a.x - e.x, a.y - e.y) - Math.hypot(b.x - e.x, b.y - e.y))[0];
       if (t) {
         const sp = ed.spray!;
@@ -2491,7 +2544,7 @@ export class BattleScene extends Phaser.Scene {
         const base = Math.atan2(t.y - BODY - hy, t.x - hx);
         for (let i = 0; i < sp.count; i++) {
           const a = base + (i - (sp.count - 1) / 2) * 0.22;
-          this.shoot(e, hx, hy, Math.cos(a) * sp.speed, Math.sin(a) * sp.speed, 'light_bolt', Math.round(e.atk * sp.mult), false, 0x80c8ff);
+          this.shoot(e, hx, hy, Math.cos(a) * sp.speed, Math.sin(a) * sp.speed, 'light_bolt', Math.round(e.atk * sp.mult), false, 0x8cb05a);
         }
       }
       this.eelPose(e, 5);

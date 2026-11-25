@@ -25,7 +25,7 @@ export interface MapHost {
   /** 행인의 한 줄 대사 (이름표만). 다 읽으면 done */
   playTalk(name: string, text: string, done: () => void): void;
   /** 맵 위의 몹 무리와 짧은 전투. 이기면 done(true), 지면 Story가 게임 오버를 처리 */
-  fieldBattle(battle: string, done: () => void): void;
+  fieldBattle(battle: string, done: () => void, at?: { x: number; y: number }): void;
 }
 export interface ExploreStart {
   host: MapHost;
@@ -947,6 +947,14 @@ export class ExploreScene extends Phaser.Scene {
     return ar ? { x: ar.x + ar.width / 2, y: ar.y + ar.height / 2 } : null;
   }
 
+  /** 몹 자리(x, y)를 가운데로 하는 w x h 전투장의 왼쪽 위 (맵 밖으로 나가지 않게) */
+  fieldArena(w: number, h: number, x: number, y: number) {
+    return {
+      x: Math.round(Phaser.Math.Clamp(x - w / 2, 0, Math.max(0, this.mapW - w))),
+      y: Math.round(Phaser.Math.Clamp(y - h / 2, 0, Math.max(0, this.mapH - h))),
+    };
+  }
+
   /** 카메라를 (x, y)로 옮기고 ms 뒤 done */
   lookAt(x: number, y: number, ms: number, done: () => void) {
     const cam = this.cameras.main;
@@ -1090,12 +1098,16 @@ export class ExploreScene extends Phaser.Scene {
     this.reading = true;
     this.pose(leon);
     this.prompt.setVisible(false);
+    // 맵 위 몹 그림은 숨기고, 그 자리에서 전투의 적이 나타난다
+    for (const s of hit.sprs) s.setVisible(false);
     this.host.fieldBattle(hit.battle, () => {
       for (const s of hit.sprs) s.destroy();
+      // 맵 위에서 싸우느라 카메라가 전투장에 가 있었으면 다시 레온을 따라간다
+      this.cameras.main.startFollow(leon.spr, true, 0.15, 0.15, 0, 20);
       this.reading = false;
       this.lockUntil = this.time.now + 300;
       this.refreshHud();
-    });
+    }, { x: hit.x, y: hit.y });
   }
 
   private move(a: Actor, dt: number) {

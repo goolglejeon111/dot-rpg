@@ -11,7 +11,7 @@
  "tilewidth": 32,
  "tileheight": 32,
  "nextlayerid": 5,
- "nextobjectid": 83,
+ "nextobjectid": 84,
  "properties": [
   {
    "name": "place",
@@ -3386,6 +3386,25 @@
     },
     {
      "id": 36,
+     "name": "goal_door",
+     "type": "goal",
+     "rotation": 0,
+     "visible": true,
+     "x": 464,
+     "y": 472,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "r",
+       "type": "int",
+       "value": 40
+      }
+     ]
+    },
+    {
+     "id": 37,
      "name": "leon_arrive",
      "type": "spawn",
      "rotation": 0,
@@ -3404,7 +3423,7 @@
      ]
     },
     {
-     "id": 37,
+     "id": 38,
      "name": "elysia_arrive",
      "type": "spawn",
      "rotation": 0,
@@ -3423,7 +3442,7 @@
      ]
     },
     {
-     "id": 38,
+     "id": 39,
      "name": "karg_arrive",
      "type": "spawn",
      "rotation": 0,
@@ -3442,7 +3461,7 @@
      ]
     },
     {
-     "id": 39,
+     "id": 40,
      "name": "leon_s3",
      "type": "spawn",
      "rotation": 0,
@@ -3461,7 +3480,7 @@
      ]
     },
     {
-     "id": 40,
+     "id": 41,
      "name": "galia_behind",
      "type": "spawn",
      "rotation": 0,
@@ -3480,7 +3499,7 @@
      ]
     },
     {
-     "id": 41,
+     "id": 42,
      "name": "elysia_s3",
      "type": "spawn",
      "rotation": 0,
@@ -3499,7 +3518,7 @@
      ]
     },
     {
-     "id": 42,
+     "id": 43,
      "name": "karg_s3",
      "type": "spawn",
      "rotation": 0,
@@ -3518,7 +3537,7 @@
      ]
     },
     {
-     "id": 43,
+     "id": 44,
      "name": "leon_face",
      "type": "spawn",
      "rotation": 0,
@@ -3537,7 +3556,7 @@
      ]
     },
     {
-     "id": 44,
+     "id": 45,
      "name": "galia_face",
      "type": "spawn",
      "rotation": 0,
@@ -3556,7 +3575,7 @@
      ]
     },
     {
-     "id": 45,
+     "id": 46,
      "name": "sit_wall",
      "type": "spawn",
      "rotation": 0,
@@ -3575,7 +3594,7 @@
      ]
     },
     {
-     "id": 46,
+     "id": 47,
      "name": "leon_wall",
      "type": "spawn",
      "rotation": 0,
@@ -3594,7 +3613,7 @@
      ]
     },
     {
-     "id": 47,
+     "id": 48,
      "name": "leon_from_house",
      "type": "spawn",
      "rotation": 0,
@@ -3613,7 +3632,7 @@
      ]
     },
     {
-     "id": 48,
+     "id": 49,
      "name": "leon_out",
      "type": "spawn",
      "rotation": 0,
@@ -3632,7 +3651,7 @@
      ]
     },
     {
-     "id": 49,
+     "id": 50,
      "name": "galia_out",
      "type": "spawn",
      "rotation": 0,
@@ -3651,7 +3670,7 @@
      ]
     },
     {
-     "id": 50,
+     "id": 51,
      "name": "elysia_out",
      "type": "spawn",
      "rotation": 0,
@@ -3670,7 +3689,7 @@
      ]
     },
     {
-     "id": 51,
+     "id": 52,
      "name": "karg_out",
      "type": "spawn",
      "rotation": 0,
@@ -3689,7 +3708,7 @@
      ]
     },
     {
-     "id": 52,
+     "id": 53,
      "name": "serena_door",
      "type": "spawn",
      "rotation": 0,
@@ -3708,7 +3727,7 @@
      ]
     },
     {
-     "id": 53,
+     "id": 54,
      "name": "leon_shield",
      "type": "spawn",
      "rotation": 0,
@@ -3727,7 +3746,7 @@
      ]
     },
     {
-     "id": 54,
+     "id": 55,
      "name": "captain",
      "type": "spawn",
      "rotation": 0,
@@ -3746,7 +3765,7 @@
      ]
     },
     {
-     "id": 55,
+     "id": 56,
      "name": "raid",
      "type": "spawn",
      "rotation": 0,
@@ -3765,7 +3784,7 @@
      ]
     },
     {
-     "id": 56,
+     "id": 57,
      "name": "pal_cap_from",
      "type": "spawn",
      "rotation": 0,
@@ -3784,7 +3803,7 @@
      ]
     },
     {
-     "id": 57,
+     "id": 58,
      "name": "raid_from",
      "type": "spawn",
      "rotation": 0,
@@ -3803,7 +3822,7 @@
      ]
     },
     {
-     "id": 58,
+     "id": 59,
      "name": "foe1",
      "type": "spawn",
      "rotation": 0,
@@ -3822,7 +3841,7 @@
      ]
     },
     {
-     "id": 59,
+     "id": 60,
      "name": "foe1_from",
      "type": "spawn",
      "rotation": 0,
@@ -3841,7 +3860,7 @@
      ]
     },
     {
-     "id": 60,
+     "id": 61,
      "name": "foe2",
      "type": "spawn",
      "rotation": 0,
@@ -3860,7 +3879,7 @@
      ]
     },
     {
-     "id": 61,
+     "id": 62,
      "name": "foe2_from",
      "type": "spawn",
      "rotation": 0,
@@ -3879,7 +3898,7 @@
      ]
     },
     {
-     "id": 62,
+     "id": 63,
      "name": "foe3",
      "type": "spawn",
      "rotation": 0,
@@ -3898,7 +3917,7 @@
      ]
     },
     {
-     "id": 63,
+     "id": 64,
      "name": "foe3_from",
      "type": "spawn",
      "rotation": 0,
@@ -3917,7 +3936,7 @@
      ]
     },
     {
-     "id": 64,
+     "id": 65,
      "name": "foe4",
      "type": "spawn",
      "rotation": 0,
@@ -3936,7 +3955,7 @@
      ]
     },
     {
-     "id": 65,
+     "id": 66,
      "name": "foe4_from",
      "type": "spawn",
      "rotation": 0,
@@ -3955,7 +3974,7 @@
      ]
     },
     {
-     "id": 66,
+     "id": 67,
      "name": "galia_fight",
      "type": "spawn",
      "rotation": 0,
@@ -3974,7 +3993,7 @@
      ]
     },
     {
-     "id": 67,
+     "id": 68,
      "name": "pal_a",
      "type": "spawn",
      "rotation": 0,
@@ -3993,7 +4012,7 @@
      ]
     },
     {
-     "id": 68,
+     "id": 69,
      "name": "pal_b",
      "type": "spawn",
      "rotation": 0,
@@ -4012,7 +4031,7 @@
      ]
     },
     {
-     "id": 69,
+     "id": 70,
      "name": "pal_c",
      "type": "spawn",
      "rotation": 0,
@@ -4031,7 +4050,7 @@
      ]
     },
     {
-     "id": 70,
+     "id": 71,
      "name": "leon_flee",
      "type": "spawn",
      "rotation": 0,
@@ -4050,7 +4069,7 @@
      ]
     },
     {
-     "id": 71,
+     "id": 72,
      "name": "serena_flee",
      "type": "spawn",
      "rotation": 0,
@@ -4069,7 +4088,7 @@
      ]
     },
     {
-     "id": 72,
+     "id": 73,
      "name": "galia_stand",
      "type": "spawn",
      "rotation": 0,
@@ -4088,7 +4107,7 @@
      ]
     },
     {
-     "id": 73,
+     "id": 74,
      "name": "galia_kneel",
      "type": "spawn",
      "rotation": 0,
@@ -4107,7 +4126,7 @@
      ]
     },
     {
-     "id": 74,
+     "id": 75,
      "name": "leon_by_galia",
      "type": "spawn",
      "rotation": 0,
@@ -4126,7 +4145,7 @@
      ]
     },
     {
-     "id": 75,
+     "id": 76,
      "name": "serena_by_galia",
      "type": "spawn",
      "rotation": 0,
@@ -4145,7 +4164,7 @@
      ]
     },
     {
-     "id": 76,
+     "id": 77,
      "name": "elysia_by",
      "type": "spawn",
      "rotation": 0,
@@ -4164,7 +4183,7 @@
      ]
     },
     {
-     "id": 77,
+     "id": 78,
      "name": "karg_by",
      "type": "spawn",
      "rotation": 0,
@@ -4183,7 +4202,7 @@
      ]
     },
     {
-     "id": 78,
+     "id": 79,
      "name": "leon_grave",
      "type": "spawn",
      "rotation": 0,
@@ -4202,7 +4221,7 @@
      ]
     },
     {
-     "id": 79,
+     "id": 80,
      "name": "elysia_grave",
      "type": "spawn",
      "rotation": 0,
@@ -4221,7 +4240,7 @@
      ]
     },
     {
-     "id": 80,
+     "id": 81,
      "name": "karg_grave",
      "type": "spawn",
      "rotation": 0,
@@ -4240,7 +4259,7 @@
      ]
     },
     {
-     "id": 81,
+     "id": 82,
      "name": "serena_grave",
      "type": "spawn",
      "rotation": 0,
@@ -4259,7 +4278,7 @@
      ]
     },
     {
-     "id": 82,
+     "id": 83,
      "name": "arena",
      "type": "arena",
      "rotation": 0,

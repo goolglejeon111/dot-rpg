@@ -223,7 +223,18 @@ export class StoryFx {
     const g = this.s.add.graphics();
     g.fillStyle(BURN_INK, 0.92);
     const cx = W / 2;
-    if (name.includes('crown')) {
+    if (name.includes('back')) {
+      // 금관을 쓴 사람의 뒷모습 (얼굴은 보이지 않음): 어깨·머리 위에 관
+      const foot = 620;
+      g.fillPoints([new Phaser.Geom.Point(cx - 170, foot), new Phaser.Geom.Point(cx - 150, 430), new Phaser.Geom.Point(cx - 70, 390), new Phaser.Geom.Point(cx + 70, 390), new Phaser.Geom.Point(cx + 150, 430), new Phaser.Geom.Point(cx + 170, foot)], true);
+      g.fillRect(cx - 34, 340, 68, 60);
+      g.fillEllipse(cx, 290, 150, 170);
+      const y = 190;
+      g.fillPoints(
+        [{ x: cx - 70, y: y + 40 }, { x: cx - 78, y: y - 14 }, { x: cx - 40, y: y + 12 }, { x: cx - 22, y: y - 34 }, { x: cx, y: y + 4 }, { x: cx + 22, y: y - 34 }, { x: cx + 40, y: y + 12 }, { x: cx + 78, y: y - 14 }, { x: cx + 70, y: y + 40 }].map((p) => new Phaser.Geom.Point(p.x, p.y)),
+        true,
+      );
+    } else if (name.includes('crown')) {
       const y = 300;
       g.fillPoints(
         [

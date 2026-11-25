@@ -925,6 +925,7 @@ const hiddenProp = (name, key, x, y, extra = {}) => ({ type: 'prop', name, key, 
   objects.push({ type: 'light', name: 'serena_eyes', x: cx(14), y: ty(14) - 20, color: '#ffb040', radius: 90, intensity: 1.6, hidden: true });
   // 자리
   objects.push(spawn('doorway', cx(14), ty(14), 'down'));
+  objects.push({ type: 'goal', name: 'goal_door', x: cx(14), y: ty(14) + 8, r: 40 });
   objects.push(spawn('leon_arrive', cx(16), ty(4), 'down'), spawn('elysia_arrive', cx(15), ty(3), 'down'), spawn('karg_arrive', cx(17), ty(3), 'down'));
   objects.push(spawn('leon_s3', cx(16), ty(16), 'down'), spawn('galia_behind', cx(16), ty(15) + 4, 'down'), spawn('elysia_s3', cx(14), ty(18), 'up'), spawn('karg_s3', cx(18), ty(18), 'up'));
   objects.push(spawn('leon_face', cx(16), ty(17), 'up'), spawn('galia_face', cx(16), ty(15) + 2, 'down'));

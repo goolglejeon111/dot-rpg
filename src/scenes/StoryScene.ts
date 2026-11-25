@@ -624,7 +624,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
 
   /** 화면 전체 효과: 번쩍임(색), 흔들림(세기) */
   /** 무대의 소리: 효과음 한 번(건너뛸 때는 안 냄), BGM·환경음 바꾸기. 파일이 없으면 무음 */
-  private stageSound(d: { se?: string; bgm?: string | null; amb?: string | null }, instant: boolean) {
+  private stageSound(d: { se?: string; bgm?: string | null; amb?: string | null; edge?: string | null }, instant: boolean) {
+    if (d.edge !== undefined) this.setEdge(d.edge, instant);
     if (d.se && !instant) void playSe(this, d.se);
     if (d.bgm !== undefined) void playLoop(this, 'bgm', d.bgm);
     if (d.amb !== undefined) void playLoop(this, 'amb', d.amb);
@@ -731,6 +732,23 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.cgView = this.add.container(0, 0, [black, img]).setDepth(4).setAlpha(instant ? 1 : 0);
     if (!instant) this.tweens.add({ targets: this.cgView, alpha: 1, duration: 600 });
     if (this.mono.visible) this.veil.setAlpha(this.veilAlpha());
+  }
+
+  /** 화면 가장자리를 한 색으로 물들여 둔다 (회상: 어둡게, 과거: 옅은 주황). null이면 걷음 */
+  private edgeFx?: Phaser.GameObjects.Image;
+  private setEdge(color: string | null, instant: boolean) {
+    const old = this.edgeFx;
+    this.edgeFx = undefined;
+    if (old) {
+      this.tweens.killTweensOf(old);
+      if (instant) old.destroy();
+      else this.tweens.add({ targets: old, alpha: 0, duration: 600, onComplete: () => old.destroy() });
+    }
+    if (!color) return;
+    this.makeEdgeTextures();
+    const e = this.add.image(0, 0, 'edge_all').setOrigin(0).setDepth(26).setTint(Number.parseInt(color.slice(1), 16)).setAlpha(instant ? 0.8 : 0);
+    if (!instant) this.tweens.add({ targets: e, alpha: 0.8, duration: 700 });
+    this.edgeFx = e;
   }
 
   /** 화면 가장자리 빛 그림: 사방(edge_all), 왼쪽만(edge_left) */
@@ -1231,6 +1249,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     // slow: 자동 진행이면 다 나온 뒤 1초 더 머문다
     this.extraWait = slow ? 1000 : 0;
     if (big && target) target.setFontSize(Math.round(1.6 * (this.mono.visible ? 26 : 25)));
+    target?.setAlpha(fx.includes('faint') ? 0.5 : 1);
     const delay = slow ? save.settings.textDelay * 3 : save.settings.textDelay;
     const chars = Array.from(text);
     const go = () => {

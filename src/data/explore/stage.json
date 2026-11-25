@@ -50,7 +50,36 @@
     "act2:dream1": "a2_dream1",
     "act2:dream2": null,
     "act2:scene9_1": "a2_fire_night",
-    "act2:interlude2": "a2_cathedral"
+    "act2:interlude2": "a2_cathedral",
+    "act3:scene1": "a3_s1",
+    "act3:scene2": "a3_s2",
+    "act3:scene3": "a3_s3",
+    "act3:scene4": "a3_s4",
+    "act3:scene5": "a3_s4",
+    "act3:s5_guilt": "a3_s5b",
+    "act3:s5_deny": "a3_s5b",
+    "act3:s5_silent": "a3_s5b",
+    "act3:scene6": "a3_s6",
+    "act3:scene6_1": "a3_s61",
+    "act3:s61_resent": "a3_s61b",
+    "act3:s61_words": "a3_s61b",
+    "act3:s61_stand": "a3_s61b",
+    "act3:scene6_2": "a3_s61b",
+    "act3:scene6_3": "a3_s63",
+    "act3:scene6_4": "a3_s64",
+    "act3:scene7": "a3_s7",
+    "act3:scene8": "a3_s8",
+    "act3:s8_leave": "a3_s8b",
+    "act3:s8_stay": "a3_s8b",
+    "act3:scene9": "a3_s9",
+    "act3:r_fallen": "a3_fallen",
+    "act3:scene9_1": "a3_s91",
+    "act3:r_saved": "a3_saved",
+    "act3:r_wiped": "a3_wiped",
+    "act3:scene10": "a3_s10",
+    "act3:s10_share": "a3_s10",
+    "act3:s10_why": "a3_s10",
+    "act3:scene10_1": "a3_s10b"
   },
   "places": {
     "황제의 침소": { "map": "bedchamber", "stage": "bed_enter" },
@@ -368,10 +397,20 @@
       "actors": {
         "leon": { "at": "leon_start", "facing": "right" },
         "elysia": { "at": "elysia_start", "facing": "right" },
-        "c1": { "sprite": "mob_citizen", "at": [562,322], "facing": "right" },
-        "c2": { "sprite": "mob_citizen", "at": [530,318], "facing": "right" },
-        "sp1": { "sprite": "imperial_spear", "at": "sp1", "facing": "left", "compare": "left" },
-        "sp2": { "sprite": "imperial_spear", "at": "sp2", "facing": "left", "compare": "left" },
+        "c1": { "sprite": "mob_citizen", "at": [562, 322], "facing": "right" },
+        "c2": { "sprite": "mob_citizen", "at": [530, 318], "facing": "right" },
+        "sp1": {
+          "sprite": "imperial_spear",
+          "at": "sp1",
+          "facing": "left",
+          "compare": "left"
+        },
+        "sp2": {
+          "sprite": "imperial_spear",
+          "at": "sp2",
+          "facing": "left",
+          "compare": "left"
+        },
         "sp3": { "sprite": "imperial_spear", "at": "sp3", "facing": "left" },
         "sp4": { "sprite": "imperial_spear", "at": "sp4", "facing": "left" },
         "ar1": { "sprite": "imperial_archer", "at": "ar1", "facing": "left" },
@@ -497,82 +536,1431 @@
     "a1_boat_dim": { "ambient": "#161c38", "city": 0.55 },
     "a1_boat_night": { "ambient": "#2a3560", "city": 0.15 },
     "a1_boat_dawn": { "ambient": "#ffc890", "city": 0, "dawnBand": true },
-    "a2_s1": {"map": "desert_a", "focus": "leon", "actors": {"leon": {"at": "leon_start", "facing": "right"}, "elysia": {"at": "elysia_start", "facing": "right"}}},
-    "a2_rock": {"map": "desert_a", "focus": "leon", "actors": {"leon": {"at": "leon_rock", "facing": "up"}, "elysia": {"at": "elysia_rock", "facing": "up"}}},
-    "a2_collapse": {"screen": {"shake": 0.008}},
-    "a2_sunset": {"from": "#ff9a50", "ambient": "#28305e", "fade": 7000},
-    "a2_camp": {"map": "desert_camp", "ambient": "#28305e", "focus": "leon", "actors": {"leon": {"at": "leon_camp", "facing": "right"}, "elysia": {"at": "elysia_camp", "facing": "left"}}},
-    "a2_pillar": {"pillar": "rise"},
-    "a2_pillar_end": {"pillar": "fade"},
-    "a2_write": {"actors": {"elysia": {"pose": "kneel", "write": true}}},
-    "a2_dawn": {"map": "desert_camp", "ambient": "#8094c8", "focus": "leon", "actors": {"leon": {"at": "leon_camp", "facing": "right"}, "elysia": {"at": "elysia_camp", "facing": "left", "pose": "stand", "write": false}}},
-    "a2_wolves": {"actors": {"w1": {"sprite": "mob_wolf", "at": "w1"}, "w2": {"sprite": "mob_wolf", "at": "w2"}, "w3": {"sprite": "mob_wolf", "at": "w3"}, "w4": {"sprite": "mob_wolf", "at": "w4"}, "w5": {"sprite": "mob_wolf", "at": "w5"}, "w6": {"sprite": "mob_wolf", "at": "w6"}}},
-    "a2_karg": {"actors": {"karg": {"at": [592,304], "walk": "karg", "facing": "left"}}},
-    "a2_ring": {"map": "desert_camp", "ambient": "#8094c8", "focus": "leon", "actors": {"leon": {"at": "leon_camp", "facing": "right"}, "elysia": {"at": "elysia_camp", "facing": "left", "pose": "stand", "write": false}, "w1": {"sprite": "mob_wolf", "at": "w1"}, "w2": {"sprite": "mob_wolf", "at": "w2"}, "w3": {"sprite": "mob_wolf", "at": "w3"}, "w4": {"sprite": "mob_wolf", "at": "w4"}, "w5": {"sprite": "mob_wolf", "at": "w5"}, "w6": {"sprite": "mob_wolf", "at": "w6"}, "karg": {"at": "karg", "facing": "left"}}},
-    "a2_oasis_view": {"map": "oasis", "ambient": "#fff2d6", "focus": [816,400]},
-    "a2_oasis_pan": {"focus": [544,912]},
-    "a2_prison_in": {"map": "oasis_prison", "focus": "leon", "actors": {"leon": {"at": "leon_start", "facing": "down"}, "elysia": {"at": "elysia_bars", "facing": "down"}, "karg": {"at": "karg_out", "facing": "up"}}},
-    "a2_prison_talk": {"map": "oasis_prison", "focus": "leon", "actors": {"leon": {"at": "leon_bars", "facing": "down"}, "elysia": {"at": "elysia_bars", "facing": "down"}, "karg": {"at": "karg_out", "facing": "up"}}},
-    "a2_prison_bars": {"actors": {"leon": {"walk": "leon_bars", "facing": "down"}}},
-    "a2_well_night": {"map": "oasis", "ambient": "#28305e", "focus": [816,560], "props": {"well_fire": true}, "actors": {"karg": {"at": "karg_well", "facing": "left"}, "wolf_a": {"sprite": "mob_wolf", "at": "wolf_a", "facing": "left"}, "wolf_b": {"sprite": "mob_wolf", "at": "wolf_b", "facing": "down"}}},
-    "a2_scream": {"screen": {"shake": 0.005}},
-    "a2_scorpions": {"actors": {"sc1": {"sprite": "desert_scorpion", "at": "sc1", "facing": "right", "emerge": true}, "sc2": {"sprite": "desert_scorpion", "at": "sc2", "facing": "left", "emerge": true}, "sc3": {"sprite": "desert_scorpion", "at": "sc3", "facing": "up", "emerge": true}}},
-    "a2_release": {"focus": "leon", "actors": {"leon": {"at": "prison_door", "walk": "leon_well", "facing": "right"}, "elysia": {"at": "prison_door", "walk": "elysia_well", "facing": "right"}}},
-    "a2_well_dawn": {"ambient": "#a0a8d0", "fade": 3000, "props": {"well_fire": false}, "actors": {"sc1": null, "sc2": null, "sc3": null}},
-    "a2_pat": {"actors": {"wolf_a": {"sprite": "mob_wolf", "walk": [740,656], "facing": "left"}}},
-    "a2_prison_night": {"map": "oasis_prison", "ambient": "#4a4a78", "focus": "leon", "actors": {"leon": {"at": "leon_bars", "facing": "down"}, "elysia": {"at": "elysia_bars", "facing": "down"}, "ursha": {"sprite": "ursha", "at": "ursha_out", "facing": "up"}, "karg": {"at": "karg_side", "facing": "up"}}},
-    "a2_runner": {"actors": {"runner": {"sprite": "mob_wolf", "at": [376,296], "walk": [280,296], "facing": "left", "speed": 110}}},
-    "a2_karg_bow": {"actors": {"karg": {"nod": true}}},
-    "a2_oasis_night": {"map": "oasis", "ambient": "#28305e", "focus": "leon", "actors": {"leon": {"at": "leon_night", "facing": "up"}, "elysia": {"at": "elysia_night", "facing": "up"}, "karg": {"at": "karg_night", "facing": "up"}}},
-    "a2_route": {"map": "trade_route", "ambient": "#fff2d6", "from": "#8094c8", "fade": 45000, "focus": "leon", "actors": {"leon": {"at": "leon_start", "facing": "right"}, "elysia": {"at": "elysia_start", "facing": "right"}, "karg": {"at": "karg_start", "facing": "right"}}},
-    "a2_tracks": {"ambient": "#fff2d6", "focus": "leon", "actors": {"leon": {"walk": "leon_tracks", "facing": "right"}, "elysia": {"walk": "elysia_tracks", "facing": "down"}, "karg": {"walk": "karg_tracks", "facing": "left"}}},
-    "a2_hideout": {"map": "bandit_hideout", "focus": "leon", "actors": {"leon": {"at": "leon_start", "facing": "right"}, "elysia": {"at": "elysia_start", "facing": "right"}, "karg": {"at": "karg_start", "facing": "right"}, "sc1": {"sprite": "wolf_scout_tied", "at": "sc1", "facing": "left"}, "sc2": {"sprite": "wolf_scout_tied", "at": "sc2", "facing": "left"}, "sc3": {"sprite": "wolf_scout_tied", "at": "sc3", "facing": "left"}}},
-    "a2_scouts": {"focus": "leon", "actors": {"leon": {"walk": "leon_scouts", "facing": "right"}, "karg": {"walk": "karg_scouts", "facing": "right"}, "elysia": {"walk": "elysia_scouts", "facing": "right"}}},
-    "a2_untie": {"actors": {"sc1": {"sprite": "wolf_scout", "at": "sc1", "facing": "left"}, "sc2": {"sprite": "wolf_scout", "at": "sc2", "facing": "left"}, "sc3": {"sprite": "wolf_scout", "at": "sc3", "facing": "left"}}},
-    "a2_back": {"map": "oasis", "ambient": "#ffb070", "focus": "leon", "actors": {"leon": {"at": "leon_w", "facing": "left"}, "elysia": {"at": "elysia_w", "facing": "left"}, "karg": {"at": "karg_w", "facing": "left"}}},
-    "a2_black": {"dark": true},
-    "a2_gate": {"map": "oasis", "ambient": "#fff2d6", "focus": [304,560], "props": {"horse": true}, "actors": {"leon": {"at": "leon_w", "facing": "left"}, "elysia": {"at": "elysia_w", "facing": "left"}, "karg": {"at": "karg_w", "facing": "left"}, "ursha": {"sprite": "ursha", "at": "ursha_w", "facing": "left"}, "wolf1": {"sprite": "mob_wolf", "at": "wolf1", "facing": "left"}, "wolf2": {"sprite": "mob_wolf", "at": "wolf2", "facing": "left"}, "wolf3": {"sprite": "mob_wolf", "at": "wolf3", "facing": "left"}, "p1": {"sprite": "mob_paladin", "at": "p1", "facing": "right"}, "p2": {"sprite": "mob_paladin", "at": "p2", "facing": "right"}, "p3": {"sprite": "mob_paladin", "at": "p3", "facing": "right"}, "p4": {"sprite": "mob_paladin", "at": "p4", "facing": "right"}, "p5": {"sprite": "mob_paladin", "at": "p5", "facing": "right"}, "p6": {"sprite": "mob_paladin", "at": "p6", "facing": "right"}, "p7": {"sprite": "mob_paladin", "at": "p7", "facing": "right"}, "p8": {"sprite": "mob_paladin", "at": "p8", "facing": "right"}, "p9": {"sprite": "mob_paladin", "at": "p9", "facing": "right"}, "p10": {"sprite": "mob_paladin", "at": "p10", "facing": "right"}, "adrian": {"at": [112,572], "facing": "right", "lift": 22}}},
-    "a2_dismount": {"actors": {"adrian": {"hop": "adrian_horse", "walk": "adrian_front", "facing": "right"}}},
-    "a2_ursha_step": {"actors": {"ursha": {"sprite": "ursha", "walk": "ursha_mid", "facing": "left", "speed": 24}}},
-    "a2_torches": {"props": {"paladin_torch": true}, "screen": {"flash": "#ffb060"}},
-    "a2_flee": {"map": "oasis", "ambient": "#fff2d6", "focus": "leon", "props": {"well_fire": false}, "actors": {"leon": {"at": "leon_w", "walk": "palms_back", "facing": "right", "speed": 70}, "elysia": {"at": "elysia_w", "walk": "palms_back", "facing": "right", "speed": 70}}},
-    "a2_flee_fire": {"props": {"well_fire": true}},
-    "a2_flee_desert": {"map": "desert_a", "ambient": "#fff2d6", "focus": "leon", "actors": {"leon": {"at": "leon_rock", "facing": "down"}, "elysia": {"at": "elysia_rock", "facing": "down"}}},
-    "a2_white1": {"veil": {"color": "#ffffff", "alpha": 0.18, "ms": 2500}},
-    "a2_white2": {"veil": {"color": "#ffffff", "alpha": 0.35, "ms": 2500}, "actors": {"elysia": {"pose": "down"}}},
-    "a2_white3": {"veil": {"color": "#ffffff", "alpha": 0.55, "ms": 2500}, "actors": {"leon": {"pose": "down"}}},
-    "a2_white4": {"veil": {"color": "#ffffff", "alpha": 0.8, "ms": 2500}},
-    "a2_white5": {"veil": {"color": "#ffffff", "alpha": 1, "ms": 2500}},
-    "a2_gate_torch": {"map": "oasis", "ambient": "#fff2d6", "focus": [304,560], "props": {"horse": true, "paladin_torch": true}, "actors": {"leon": {"at": "leon_w", "facing": "left"}, "elysia": {"at": "elysia_w", "facing": "left"}, "karg": {"at": "karg_w", "facing": "left"}, "ursha": {"sprite": "ursha", "at": "ursha_mid", "facing": "left"}, "wolf1": {"sprite": "mob_wolf", "at": "wolf1", "facing": "left"}, "wolf2": {"sprite": "mob_wolf", "at": "wolf2", "facing": "left"}, "wolf3": {"sprite": "mob_wolf", "at": "wolf3", "facing": "left"}, "p1": {"sprite": "mob_paladin", "at": "p1", "facing": "right"}, "p2": {"sprite": "mob_paladin", "at": "p2", "facing": "right"}, "p3": {"sprite": "mob_paladin", "at": "p3", "facing": "right"}, "p4": {"sprite": "mob_paladin", "at": "p4", "facing": "right"}, "p5": {"sprite": "mob_paladin", "at": "p5", "facing": "right"}, "p6": {"sprite": "mob_paladin", "at": "p6", "facing": "right"}, "p7": {"sprite": "mob_paladin", "at": "p7", "facing": "right"}, "p8": {"sprite": "mob_paladin", "at": "p8", "facing": "right"}, "p9": {"sprite": "mob_paladin", "at": "p9", "facing": "right"}, "p10": {"sprite": "mob_paladin", "at": "p10", "facing": "right"}, "adrian": {"at": "adrian_front", "facing": "right", "lift": 0}}},
-    "a2_stand": {"actors": {"leon": {"walk": "leon_side", "facing": "left"}}},
-    "a2_gate_side": {"map": "oasis", "ambient": "#fff2d6", "focus": [304,560], "props": {"horse": true, "paladin_torch": true}, "actors": {"leon": {"at": "leon_side", "facing": "left"}, "elysia": {"at": "elysia_w", "facing": "left"}, "karg": {"at": "karg_w", "facing": "left"}, "ursha": {"sprite": "ursha", "at": "ursha_w", "facing": "left"}, "wolf1": {"sprite": "mob_wolf", "at": "wolf1", "facing": "left"}, "wolf2": {"sprite": "mob_wolf", "at": "wolf2", "facing": "left"}, "wolf3": {"sprite": "mob_wolf", "at": "wolf3", "facing": "left"}, "p1": {"sprite": "mob_paladin", "at": "p1", "facing": "right"}, "p2": {"sprite": "mob_paladin", "at": "p2", "facing": "right"}, "p3": {"sprite": "mob_paladin", "at": "p3", "facing": "right"}, "p4": {"sprite": "mob_paladin", "at": "p4", "facing": "right"}, "p5": {"sprite": "mob_paladin", "at": "p5", "facing": "right"}, "p6": {"sprite": "mob_paladin", "at": "p6", "facing": "right"}, "p7": {"sprite": "mob_paladin", "at": "p7", "facing": "right"}, "p8": {"sprite": "mob_paladin", "at": "p8", "facing": "right"}, "p9": {"sprite": "mob_paladin", "at": "p9", "facing": "right"}, "p10": {"sprite": "mob_paladin", "at": "p10", "facing": "right"}, "adrian": {"at": "adrian_front", "facing": "right", "lift": 0}}},
-    "a2_retreat": {"props": {"paladin_torch": false}, "actors": {"p1": {"pose": "stand", "walk": [-24,432], "facing": "left", "speed": 46, "leave": true}, "p2": {"pose": "stand", "walk": [-24,496], "facing": "left", "speed": 52, "leave": true}, "p3": {"pose": "stand", "walk": [-24,560], "facing": "left", "speed": 58, "leave": true}, "p4": {"pose": "stand", "walk": [-24,624], "facing": "left", "speed": 46, "leave": true}, "p5": {"pose": "stand", "walk": [-24,688], "facing": "left", "speed": 52, "leave": true}, "p6": {"pose": "stand", "walk": [-24,432], "facing": "left", "speed": 58, "leave": true}, "p7": {"pose": "stand", "walk": [-24,496], "facing": "left", "speed": 46, "leave": true}, "p8": {"pose": "stand", "walk": [-24,560], "facing": "left", "speed": 52, "leave": true}, "p9": {"pose": "stand", "walk": [-24,624], "facing": "left", "speed": 58, "leave": true}, "p10": {"pose": "stand", "walk": [-24,688], "facing": "left", "speed": 46, "leave": true}}},
-    "a2_duel": {"ambient": "#6a6478", "fade": 1200, "spot": ["leon", "adrian"], "focus": [256,528], "actors": {"leon": {"walk": "leon_duel", "facing": "left"}, "adrian": {"walk": "adrian_duel", "facing": "right"}, "ursha": null}},
-    "a2_kneel": {"actors": {"adrian": {"at": "adrian_duel", "pose": "kneel", "facing": "right"}, "leon": {"at": "leon_duel", "facing": "left"}}, "items": {"shield": {"key": "shield_down", "at": [214,524], "to": [176,546], "ms": 800}}},
-    "a2_flicker": {"flicker": {"adrian": "#ffd870"}},
-    "a2_kick": {"actors": {"leon": {"walk": [236,528], "facing": "left", "speed": 90}}, "items": {"shield": {"key": "shield_down", "to": [140,604], "ms": 650, "delay": 380}}},
-    "a2_duel_end": {"map": "oasis", "ambient": "#6a6478", "spot": ["leon", "adrian"], "focus": [256,528], "props": {"horse": true}, "actors": {"leon": {"at": "leon_duel", "facing": "left"}, "adrian": {"at": "adrian_duel", "pose": "kneel", "facing": "right"}, "elysia": {"at": "elysia_w", "facing": "left"}, "karg": {"at": "karg_w", "facing": "left"}, "wolf1": {"sprite": "mob_wolf", "at": "wolf1", "facing": "left"}, "wolf2": {"sprite": "mob_wolf", "at": "wolf2", "facing": "left"}}, "items": {"shield": {"key": "shield_down", "at": [176,546]}}},
-    "a2_adrian_leave": {"ambient": "#fff2d6", "fade": 1500, "spot": null, "flicker": {"adrian": null}, "actors": {"adrian": {"pose": "stand", "walk": "adrian_away", "facing": "left", "speed": 40}}, "items": {"shield": null}},
-    "a2_adrian_drag": {"ambient": "#fff2d6", "fade": 1500, "spot": null, "flicker": {"adrian": null}, "actors": {"adrian": {"pose": "stand", "walk": "adrian_away", "facing": "left", "speed": 30, "drag": "#b8ad98"}}},
-    "a2_look_back": {"actors": {"adrian": {"facing": "right"}}, "items": {"shield": null}},
-    "a2_dusk": {"map": "oasis", "ambient": "#ffb070", "focus": "leon", "actors": {"leon": {"at": "leon_dusk", "facing": "right"}, "elysia": {"at": "elysia_dusk", "facing": "right"}}},
-    "a2_bow": {"actors": {"wp1": {"sprite": "mob_wolf", "at": "wp1_from", "walk": "wp1_to", "facing": "left", "speed": 40, "nod": true}, "wp2": {"sprite": "mob_wolf", "at": "wp2_from", "walk": "wp2_to", "facing": "left", "speed": 36, "nod": true}, "wp3": {"sprite": "mob_wolf", "at": "wp3_from", "walk": "wp3_to", "facing": "left", "speed": 44, "nod": true}}},
-    "a2_karg_come": {"actors": {"wp1": null, "wp2": null, "wp3": null, "karg": {"at": [976,624], "walk": "karg_dusk", "facing": "left"}}},
-    "a2_night9": {"ambient": "#28305e", "fade": 2500},
-    "a2_campfire": {"props": {"campfire": true}, "actors": {"leon": {"walk": "leon_fire", "facing": "right", "pose": "kneel"}, "karg": {"walk": "karg_fire", "facing": "left", "pose": "kneel"}, "elysia": {"walk": "elysia_fire", "facing": "up", "pose": "kneel"}}},
-    "a2_apart": {"actors": {"elysia": {"at": "elysia_apart", "facing": "left", "pose": "kneel"}}},
-    "a2_embers": {"embers": {"who": "elysia", "color": "#a47cff"}},
+    "a2_s1": {
+      "map": "desert_a",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_start", "facing": "right" },
+        "elysia": { "at": "elysia_start", "facing": "right" }
+      }
+    },
+    "a2_rock": {
+      "map": "desert_a",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_rock", "facing": "up" },
+        "elysia": { "at": "elysia_rock", "facing": "up" }
+      }
+    },
+    "a2_collapse": { "screen": { "shake": 0.008 } },
+    "a2_sunset": { "from": "#ff9a50", "ambient": "#28305e", "fade": 7000 },
+    "a2_camp": {
+      "map": "desert_camp",
+      "ambient": "#28305e",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_camp", "facing": "right" },
+        "elysia": { "at": "elysia_camp", "facing": "left" }
+      }
+    },
+    "a2_pillar": { "pillar": "rise" },
+    "a2_pillar_end": { "pillar": "fade" },
+    "a2_write": { "actors": { "elysia": { "pose": "kneel", "write": true } } },
+    "a2_dawn": {
+      "map": "desert_camp",
+      "ambient": "#8094c8",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_camp", "facing": "right" },
+        "elysia": {
+          "at": "elysia_camp",
+          "facing": "left",
+          "pose": "stand",
+          "write": false
+        }
+      }
+    },
+    "a2_wolves": {
+      "actors": {
+        "w1": { "sprite": "mob_wolf", "at": "w1" },
+        "w2": { "sprite": "mob_wolf", "at": "w2" },
+        "w3": { "sprite": "mob_wolf", "at": "w3" },
+        "w4": { "sprite": "mob_wolf", "at": "w4" },
+        "w5": { "sprite": "mob_wolf", "at": "w5" },
+        "w6": { "sprite": "mob_wolf", "at": "w6" }
+      }
+    },
+    "a2_karg": {
+      "actors": { "karg": { "at": [592, 304], "walk": "karg", "facing": "left" } }
+    },
+    "a2_ring": {
+      "map": "desert_camp",
+      "ambient": "#8094c8",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_camp", "facing": "right" },
+        "elysia": {
+          "at": "elysia_camp",
+          "facing": "left",
+          "pose": "stand",
+          "write": false
+        },
+        "w1": { "sprite": "mob_wolf", "at": "w1" },
+        "w2": { "sprite": "mob_wolf", "at": "w2" },
+        "w3": { "sprite": "mob_wolf", "at": "w3" },
+        "w4": { "sprite": "mob_wolf", "at": "w4" },
+        "w5": { "sprite": "mob_wolf", "at": "w5" },
+        "w6": { "sprite": "mob_wolf", "at": "w6" },
+        "karg": { "at": "karg", "facing": "left" }
+      }
+    },
+    "a2_oasis_view": { "map": "oasis", "ambient": "#fff2d6", "focus": [816, 400] },
+    "a2_oasis_pan": { "focus": [544, 912] },
+    "a2_prison_in": {
+      "map": "oasis_prison",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_start", "facing": "down" },
+        "elysia": { "at": "elysia_bars", "facing": "down" },
+        "karg": { "at": "karg_out", "facing": "up" }
+      }
+    },
+    "a2_prison_talk": {
+      "map": "oasis_prison",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_bars", "facing": "down" },
+        "elysia": { "at": "elysia_bars", "facing": "down" },
+        "karg": { "at": "karg_out", "facing": "up" }
+      }
+    },
+    "a2_prison_bars": { "actors": { "leon": { "walk": "leon_bars", "facing": "down" } } },
+    "a2_well_night": {
+      "map": "oasis",
+      "ambient": "#28305e",
+      "focus": [816, 560],
+      "props": { "well_fire": true },
+      "actors": {
+        "karg": { "at": "karg_well", "facing": "left" },
+        "wolf_a": { "sprite": "mob_wolf", "at": "wolf_a", "facing": "left" },
+        "wolf_b": { "sprite": "mob_wolf", "at": "wolf_b", "facing": "down" }
+      }
+    },
+    "a2_scream": { "screen": { "shake": 0.005 } },
+    "a2_scorpions": {
+      "actors": {
+        "sc1": {
+          "sprite": "desert_scorpion",
+          "at": "sc1",
+          "facing": "right",
+          "emerge": true
+        },
+        "sc2": {
+          "sprite": "desert_scorpion",
+          "at": "sc2",
+          "facing": "left",
+          "emerge": true
+        },
+        "sc3": {
+          "sprite": "desert_scorpion",
+          "at": "sc3",
+          "facing": "up",
+          "emerge": true
+        }
+      }
+    },
+    "a2_release": {
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "prison_door", "walk": "leon_well", "facing": "right" },
+        "elysia": { "at": "prison_door", "walk": "elysia_well", "facing": "right" }
+      }
+    },
+    "a2_well_dawn": {
+      "ambient": "#a0a8d0",
+      "fade": 3000,
+      "props": { "well_fire": false },
+      "actors": { "sc1": null, "sc2": null, "sc3": null }
+    },
+    "a2_pat": {
+      "actors": {
+        "wolf_a": { "sprite": "mob_wolf", "walk": [740, 656], "facing": "left" }
+      }
+    },
+    "a2_prison_night": {
+      "map": "oasis_prison",
+      "ambient": "#4a4a78",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_bars", "facing": "down" },
+        "elysia": { "at": "elysia_bars", "facing": "down" },
+        "ursha": { "sprite": "ursha", "at": "ursha_out", "facing": "up" },
+        "karg": { "at": "karg_side", "facing": "up" }
+      }
+    },
+    "a2_runner": {
+      "actors": {
+        "runner": {
+          "sprite": "mob_wolf",
+          "at": [376, 296],
+          "walk": [280, 296],
+          "facing": "left",
+          "speed": 110
+        }
+      }
+    },
+    "a2_karg_bow": { "actors": { "karg": { "nod": true } } },
+    "a2_oasis_night": {
+      "map": "oasis",
+      "ambient": "#28305e",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_night", "facing": "up" },
+        "elysia": { "at": "elysia_night", "facing": "up" },
+        "karg": { "at": "karg_night", "facing": "up" }
+      }
+    },
+    "a2_route": {
+      "map": "trade_route",
+      "ambient": "#fff2d6",
+      "from": "#8094c8",
+      "fade": 45000,
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_start", "facing": "right" },
+        "elysia": { "at": "elysia_start", "facing": "right" },
+        "karg": { "at": "karg_start", "facing": "right" }
+      }
+    },
+    "a2_tracks": {
+      "ambient": "#fff2d6",
+      "focus": "leon",
+      "actors": {
+        "leon": { "walk": "leon_tracks", "facing": "right" },
+        "elysia": { "walk": "elysia_tracks", "facing": "down" },
+        "karg": { "walk": "karg_tracks", "facing": "left" }
+      }
+    },
+    "a2_hideout": {
+      "map": "bandit_hideout",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_start", "facing": "right" },
+        "elysia": { "at": "elysia_start", "facing": "right" },
+        "karg": { "at": "karg_start", "facing": "right" },
+        "sc1": { "sprite": "wolf_scout_tied", "at": "sc1", "facing": "left" },
+        "sc2": { "sprite": "wolf_scout_tied", "at": "sc2", "facing": "left" },
+        "sc3": { "sprite": "wolf_scout_tied", "at": "sc3", "facing": "left" }
+      }
+    },
+    "a2_scouts": {
+      "focus": "leon",
+      "actors": {
+        "leon": { "walk": "leon_scouts", "facing": "right" },
+        "karg": { "walk": "karg_scouts", "facing": "right" },
+        "elysia": { "walk": "elysia_scouts", "facing": "right" }
+      }
+    },
+    "a2_untie": {
+      "actors": {
+        "sc1": { "sprite": "wolf_scout", "at": "sc1", "facing": "left" },
+        "sc2": { "sprite": "wolf_scout", "at": "sc2", "facing": "left" },
+        "sc3": { "sprite": "wolf_scout", "at": "sc3", "facing": "left" }
+      }
+    },
+    "a2_back": {
+      "map": "oasis",
+      "ambient": "#ffb070",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_w", "facing": "left" },
+        "elysia": { "at": "elysia_w", "facing": "left" },
+        "karg": { "at": "karg_w", "facing": "left" }
+      }
+    },
+    "a2_black": { "dark": true },
+    "a2_gate": {
+      "map": "oasis",
+      "ambient": "#fff2d6",
+      "focus": [304, 560],
+      "props": { "horse": true },
+      "actors": {
+        "leon": { "at": "leon_w", "facing": "left" },
+        "elysia": { "at": "elysia_w", "facing": "left" },
+        "karg": { "at": "karg_w", "facing": "left" },
+        "ursha": { "sprite": "ursha", "at": "ursha_w", "facing": "left" },
+        "wolf1": { "sprite": "mob_wolf", "at": "wolf1", "facing": "left" },
+        "wolf2": { "sprite": "mob_wolf", "at": "wolf2", "facing": "left" },
+        "wolf3": { "sprite": "mob_wolf", "at": "wolf3", "facing": "left" },
+        "p1": { "sprite": "mob_paladin", "at": "p1", "facing": "right" },
+        "p2": { "sprite": "mob_paladin", "at": "p2", "facing": "right" },
+        "p3": { "sprite": "mob_paladin", "at": "p3", "facing": "right" },
+        "p4": { "sprite": "mob_paladin", "at": "p4", "facing": "right" },
+        "p5": { "sprite": "mob_paladin", "at": "p5", "facing": "right" },
+        "p6": { "sprite": "mob_paladin", "at": "p6", "facing": "right" },
+        "p7": { "sprite": "mob_paladin", "at": "p7", "facing": "right" },
+        "p8": { "sprite": "mob_paladin", "at": "p8", "facing": "right" },
+        "p9": { "sprite": "mob_paladin", "at": "p9", "facing": "right" },
+        "p10": { "sprite": "mob_paladin", "at": "p10", "facing": "right" },
+        "adrian": { "at": [112, 572], "facing": "right", "lift": 22 }
+      }
+    },
+    "a2_dismount": {
+      "actors": {
+        "adrian": { "hop": "adrian_horse", "walk": "adrian_front", "facing": "right" }
+      }
+    },
+    "a2_ursha_step": {
+      "actors": {
+        "ursha": {
+          "sprite": "ursha",
+          "walk": "ursha_mid",
+          "facing": "left",
+          "speed": 24
+        }
+      }
+    },
+    "a2_torches": { "props": { "paladin_torch": true }, "screen": { "flash": "#ffb060" } },
+    "a2_flee": {
+      "map": "oasis",
+      "ambient": "#fff2d6",
+      "focus": "leon",
+      "props": { "well_fire": false },
+      "actors": {
+        "leon": { "at": "leon_w", "walk": "palms_back", "facing": "right", "speed": 70 },
+        "elysia": {
+          "at": "elysia_w",
+          "walk": "palms_back",
+          "facing": "right",
+          "speed": 70
+        }
+      }
+    },
+    "a2_flee_fire": { "props": { "well_fire": true } },
+    "a2_flee_desert": {
+      "map": "desert_a",
+      "ambient": "#fff2d6",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_rock", "facing": "down" },
+        "elysia": { "at": "elysia_rock", "facing": "down" }
+      }
+    },
+    "a2_white1": { "veil": { "color": "#ffffff", "alpha": 0.18, "ms": 2500 } },
+    "a2_white2": {
+      "veil": { "color": "#ffffff", "alpha": 0.35, "ms": 2500 },
+      "actors": { "elysia": { "pose": "down" } }
+    },
+    "a2_white3": {
+      "veil": { "color": "#ffffff", "alpha": 0.55, "ms": 2500 },
+      "actors": { "leon": { "pose": "down" } }
+    },
+    "a2_white4": { "veil": { "color": "#ffffff", "alpha": 0.8, "ms": 2500 } },
+    "a2_white5": { "veil": { "color": "#ffffff", "alpha": 1, "ms": 2500 } },
+    "a2_gate_torch": {
+      "map": "oasis",
+      "ambient": "#fff2d6",
+      "focus": [304, 560],
+      "props": { "horse": true, "paladin_torch": true },
+      "actors": {
+        "leon": { "at": "leon_w", "facing": "left" },
+        "elysia": { "at": "elysia_w", "facing": "left" },
+        "karg": { "at": "karg_w", "facing": "left" },
+        "ursha": { "sprite": "ursha", "at": "ursha_mid", "facing": "left" },
+        "wolf1": { "sprite": "mob_wolf", "at": "wolf1", "facing": "left" },
+        "wolf2": { "sprite": "mob_wolf", "at": "wolf2", "facing": "left" },
+        "wolf3": { "sprite": "mob_wolf", "at": "wolf3", "facing": "left" },
+        "p1": { "sprite": "mob_paladin", "at": "p1", "facing": "right" },
+        "p2": { "sprite": "mob_paladin", "at": "p2", "facing": "right" },
+        "p3": { "sprite": "mob_paladin", "at": "p3", "facing": "right" },
+        "p4": { "sprite": "mob_paladin", "at": "p4", "facing": "right" },
+        "p5": { "sprite": "mob_paladin", "at": "p5", "facing": "right" },
+        "p6": { "sprite": "mob_paladin", "at": "p6", "facing": "right" },
+        "p7": { "sprite": "mob_paladin", "at": "p7", "facing": "right" },
+        "p8": { "sprite": "mob_paladin", "at": "p8", "facing": "right" },
+        "p9": { "sprite": "mob_paladin", "at": "p9", "facing": "right" },
+        "p10": { "sprite": "mob_paladin", "at": "p10", "facing": "right" },
+        "adrian": { "at": "adrian_front", "facing": "right", "lift": 0 }
+      }
+    },
+    "a2_stand": { "actors": { "leon": { "walk": "leon_side", "facing": "left" } } },
+    "a2_gate_side": {
+      "map": "oasis",
+      "ambient": "#fff2d6",
+      "focus": [304, 560],
+      "props": { "horse": true, "paladin_torch": true },
+      "actors": {
+        "leon": { "at": "leon_side", "facing": "left" },
+        "elysia": { "at": "elysia_w", "facing": "left" },
+        "karg": { "at": "karg_w", "facing": "left" },
+        "ursha": { "sprite": "ursha", "at": "ursha_w", "facing": "left" },
+        "wolf1": { "sprite": "mob_wolf", "at": "wolf1", "facing": "left" },
+        "wolf2": { "sprite": "mob_wolf", "at": "wolf2", "facing": "left" },
+        "wolf3": { "sprite": "mob_wolf", "at": "wolf3", "facing": "left" },
+        "p1": { "sprite": "mob_paladin", "at": "p1", "facing": "right" },
+        "p2": { "sprite": "mob_paladin", "at": "p2", "facing": "right" },
+        "p3": { "sprite": "mob_paladin", "at": "p3", "facing": "right" },
+        "p4": { "sprite": "mob_paladin", "at": "p4", "facing": "right" },
+        "p5": { "sprite": "mob_paladin", "at": "p5", "facing": "right" },
+        "p6": { "sprite": "mob_paladin", "at": "p6", "facing": "right" },
+        "p7": { "sprite": "mob_paladin", "at": "p7", "facing": "right" },
+        "p8": { "sprite": "mob_paladin", "at": "p8", "facing": "right" },
+        "p9": { "sprite": "mob_paladin", "at": "p9", "facing": "right" },
+        "p10": { "sprite": "mob_paladin", "at": "p10", "facing": "right" },
+        "adrian": { "at": "adrian_front", "facing": "right", "lift": 0 }
+      }
+    },
+    "a2_retreat": {
+      "props": { "paladin_torch": false },
+      "actors": {
+        "p1": {
+          "pose": "stand",
+          "walk": [-24, 432],
+          "facing": "left",
+          "speed": 46,
+          "leave": true
+        },
+        "p2": {
+          "pose": "stand",
+          "walk": [-24, 496],
+          "facing": "left",
+          "speed": 52,
+          "leave": true
+        },
+        "p3": {
+          "pose": "stand",
+          "walk": [-24, 560],
+          "facing": "left",
+          "speed": 58,
+          "leave": true
+        },
+        "p4": {
+          "pose": "stand",
+          "walk": [-24, 624],
+          "facing": "left",
+          "speed": 46,
+          "leave": true
+        },
+        "p5": {
+          "pose": "stand",
+          "walk": [-24, 688],
+          "facing": "left",
+          "speed": 52,
+          "leave": true
+        },
+        "p6": {
+          "pose": "stand",
+          "walk": [-24, 432],
+          "facing": "left",
+          "speed": 58,
+          "leave": true
+        },
+        "p7": {
+          "pose": "stand",
+          "walk": [-24, 496],
+          "facing": "left",
+          "speed": 46,
+          "leave": true
+        },
+        "p8": {
+          "pose": "stand",
+          "walk": [-24, 560],
+          "facing": "left",
+          "speed": 52,
+          "leave": true
+        },
+        "p9": {
+          "pose": "stand",
+          "walk": [-24, 624],
+          "facing": "left",
+          "speed": 58,
+          "leave": true
+        },
+        "p10": {
+          "pose": "stand",
+          "walk": [-24, 688],
+          "facing": "left",
+          "speed": 46,
+          "leave": true
+        }
+      }
+    },
+    "a2_duel": {
+      "ambient": "#6a6478",
+      "fade": 1200,
+      "spot": ["leon", "adrian"],
+      "focus": [256, 528],
+      "actors": {
+        "leon": { "walk": "leon_duel", "facing": "left" },
+        "adrian": { "walk": "adrian_duel", "facing": "right" },
+        "ursha": null
+      }
+    },
+    "a2_kneel": {
+      "actors": {
+        "adrian": { "at": "adrian_duel", "pose": "kneel", "facing": "right" },
+        "leon": { "at": "leon_duel", "facing": "left" }
+      },
+      "items": {
+        "shield": { "key": "shield_down", "at": [214, 524], "to": [176, 546], "ms": 800 }
+      }
+    },
+    "a2_flicker": { "flicker": { "adrian": "#ffd870" } },
+    "a2_kick": {
+      "actors": { "leon": { "walk": [236, 528], "facing": "left", "speed": 90 } },
+      "items": {
+        "shield": { "key": "shield_down", "to": [140, 604], "ms": 650, "delay": 380 }
+      }
+    },
+    "a2_duel_end": {
+      "map": "oasis",
+      "ambient": "#6a6478",
+      "spot": ["leon", "adrian"],
+      "focus": [256, 528],
+      "props": { "horse": true },
+      "actors": {
+        "leon": { "at": "leon_duel", "facing": "left" },
+        "adrian": { "at": "adrian_duel", "pose": "kneel", "facing": "right" },
+        "elysia": { "at": "elysia_w", "facing": "left" },
+        "karg": { "at": "karg_w", "facing": "left" },
+        "wolf1": { "sprite": "mob_wolf", "at": "wolf1", "facing": "left" },
+        "wolf2": { "sprite": "mob_wolf", "at": "wolf2", "facing": "left" }
+      },
+      "items": { "shield": { "key": "shield_down", "at": [176, 546] } }
+    },
+    "a2_adrian_leave": {
+      "ambient": "#fff2d6",
+      "fade": 1500,
+      "spot": null,
+      "flicker": { "adrian": null },
+      "actors": {
+        "adrian": {
+          "pose": "stand",
+          "walk": "adrian_away",
+          "facing": "left",
+          "speed": 40
+        }
+      },
+      "items": { "shield": null }
+    },
+    "a2_adrian_drag": {
+      "ambient": "#fff2d6",
+      "fade": 1500,
+      "spot": null,
+      "flicker": { "adrian": null },
+      "actors": {
+        "adrian": {
+          "pose": "stand",
+          "walk": "adrian_away",
+          "facing": "left",
+          "speed": 30,
+          "drag": "#b8ad98"
+        }
+      }
+    },
+    "a2_look_back": {
+      "actors": { "adrian": { "facing": "right" } },
+      "items": { "shield": null }
+    },
+    "a2_dusk": {
+      "map": "oasis",
+      "ambient": "#ffb070",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_dusk", "facing": "right" },
+        "elysia": { "at": "elysia_dusk", "facing": "right" }
+      }
+    },
+    "a2_bow": {
+      "actors": {
+        "wp1": {
+          "sprite": "mob_wolf",
+          "at": "wp1_from",
+          "walk": "wp1_to",
+          "facing": "left",
+          "speed": 40,
+          "nod": true
+        },
+        "wp2": {
+          "sprite": "mob_wolf",
+          "at": "wp2_from",
+          "walk": "wp2_to",
+          "facing": "left",
+          "speed": 36,
+          "nod": true
+        },
+        "wp3": {
+          "sprite": "mob_wolf",
+          "at": "wp3_from",
+          "walk": "wp3_to",
+          "facing": "left",
+          "speed": 44,
+          "nod": true
+        }
+      }
+    },
+    "a2_karg_come": {
+      "actors": {
+        "wp1": null,
+        "wp2": null,
+        "wp3": null,
+        "karg": { "at": [976, 624], "walk": "karg_dusk", "facing": "left" }
+      }
+    },
+    "a2_night9": { "ambient": "#28305e", "fade": 2500 },
+    "a2_campfire": {
+      "props": { "campfire": true },
+      "actors": {
+        "leon": { "walk": "leon_fire", "facing": "right", "pose": "kneel" },
+        "karg": { "walk": "karg_fire", "facing": "left", "pose": "kneel" },
+        "elysia": { "walk": "elysia_fire", "facing": "up", "pose": "kneel" }
+      }
+    },
+    "a2_apart": {
+      "actors": { "elysia": { "at": "elysia_apart", "facing": "left", "pose": "kneel" } }
+    },
+    "a2_embers": { "embers": { "who": "elysia", "color": "#a47cff" } },
     "_꿈_막간": "memory·lantern·cloth·sweep·rays·dots·glow는 대화 화면(src/scenes/StoryFx.ts)이 그린다. 꿈(dream…)·막간(interlude…) 장면은 맵 없음. dots의 at·walk는 화면 좌표(960x720), 도트는 3배. line = 바로 뒤 독백 덩어리의 몇 번째 줄(0부터)에서 보일지",
-    "a2_memory": {"memory": ["crown", "wall", "people"]},
-    "a2_memory_end": {"memory": null},
-    "a2_dream1": {"lantern": "on"},
-    "a2_lantern_out": {"lantern": "out"},
-    "a2_cloth": {"cloth": "#1c2a5c"},
-    "a2_sweep": {"sweep": "#1c2a5c", "line": 1},
-    "a2_fire_night": {"map": "oasis", "ambient": "#28305e", "focus": "leon", "props": {"campfire": true}, "actors": {"leon": {"at": "leon_fire", "facing": "right", "pose": "kneel"}, "karg": {"at": "karg_fire", "facing": "left", "pose": "kneel"}, "elysia": {"at": "elysia_fire", "facing": "up", "pose": "kneel"}}},
-    "a2_cathedral": {"rays": true, "dots": {"adrian": {"sprite": "bt_adrian", "frame": 46, "at": [480, 470]}}},
-    "a2_pray_light": {"glow": "adrian", "wait": 1600},
-    "a2_ignatius_in": {"dots": {"ignatius": {"sprite": "ignatius", "at": [1010, 500], "walk": [620, 500], "facing": "left", "speed": 110}}, "wait": 2600}
+    "a2_memory": { "memory": ["crown", "wall", "people"] },
+    "a2_memory_end": { "memory": null },
+    "a2_dream1": { "lantern": "on" },
+    "a2_lantern_out": { "lantern": "out" },
+    "a2_cloth": { "cloth": "#1c2a5c" },
+    "a2_sweep": { "sweep": "#1c2a5c", "line": 1 },
+    "a2_fire_night": {
+      "map": "oasis",
+      "ambient": "#28305e",
+      "focus": "leon",
+      "props": { "campfire": true },
+      "actors": {
+        "leon": { "at": "leon_fire", "facing": "right", "pose": "kneel" },
+        "karg": { "at": "karg_fire", "facing": "left", "pose": "kneel" },
+        "elysia": { "at": "elysia_fire", "facing": "up", "pose": "kneel" }
+      }
+    },
+    "a2_cathedral": {
+      "rays": true,
+      "dots": { "adrian": { "sprite": "bt_adrian", "frame": 46, "at": [480, 470] } }
+    },
+    "a2_pray_light": { "glow": "adrian", "wait": 1600 },
+    "a2_ignatius_in": {
+      "dots": {
+        "ignatius": {
+          "sprite": "ignatius",
+          "at": [1010, 500],
+          "walk": [620, 500],
+          "facing": "left",
+          "speed": 110
+        }
+      },
+      "wait": 2600
+    },
+    "a3_s1": {
+      "map": "arden_village",
+      "focus": "leon",
+      "once": "a3:start",
+      "bgm": "bgm_hometown",
+      "amb": "amb_wind",
+      "actors": {
+        "leon": { "at": "leon_start", "walk": "leon_in", "facing": "right" },
+        "elysia": { "at": "elysia_start", "walk": "elysia_in", "facing": "right" },
+        "karg": { "at": "karg_start", "walk": "karg_in", "facing": "right" }
+      }
+    },
+    "a3_shutters": {
+      "focus": "view_houses",
+      "reveal": {
+        "keys": ["shutter1", "shutter2", "shutter3", "shutter4", "shutter5", "shutter6"],
+        "ms": 450,
+        "se": "se_shutter"
+      }
+    },
+    "a3_well": {
+      "focus": "leon_well",
+      "actors": {
+        "leon": { "walk": "leon_well", "facing": "up" },
+        "elysia": { "walk": "elysia_well", "facing": "up" },
+        "karg": { "walk": "karg_well", "facing": "up" }
+      }
+    },
+    "a3_door": {
+      "focus": "leon_door",
+      "actors": {
+        "leon": { "walk": "leon_door", "facing": "up" },
+        "elysia": { "walk": "elysia_door", "facing": "up" },
+        "karg": { "walk": "karg_door", "facing": "up" }
+      }
+    },
+    "a3_forge": {
+      "focus": [1232, 330],
+      "actors": {
+        "leon": { "at": "leon_forge", "facing": "right" },
+        "elysia": { "at": "elysia_forge", "facing": "right" },
+        "karg": { "at": "karg_forge", "facing": "right" },
+        "smith": {
+          "sprite": "blacksmith",
+          "at": "smith",
+          "facing": "left",
+          "pose": "kneel"
+        }
+      }
+    },
+    "a3_turn": { "actors": { "leon": { "facing": "left", "nod": true } } },
+    "a3_s2": {
+      "map": "morwen_edge",
+      "focus": "leon",
+      "once": "a3:start",
+      "bgm": "bgm_mist",
+      "amb": null,
+      "actors": {
+        "leon": { "at": "leon_start", "facing": "right" },
+        "elysia": { "at": "elysia_start", "facing": "right" },
+        "karg": { "at": "karg_start", "facing": "right" }
+      }
+    },
+    "a3_mark1": {
+      "focus": "mark1",
+      "actors": {
+        "leon": { "walk": "leon_mark", "facing": "up" },
+        "elysia": { "walk": "elysia_mark", "facing": "up" },
+        "karg": { "walk": "karg_mark", "facing": "up" }
+      }
+    },
+    "a3_mark1_shine": { "focus": "mark1", "shine": "mark1" },
+    "a3_recall": { "edge": "#000000" },
+    "a3_recall_end": { "edge": null },
+    "a3_beasts": {
+      "focus": "leon",
+      "screen": { "shake": 0.003 },
+      "actors": {
+        "karg": { "facing": "right" },
+        "mb1": { "sprite": "mist_beast", "at": [420, 560], "facing": "left" },
+        "mb2": { "sprite": "mist_beast", "at": [440, 640], "facing": "left" },
+        "mb3": { "sprite": "mist_beast", "at": [380, 500], "facing": "left" }
+      }
+    },
+    "a3_beasts_gone": { "actors": { "mb1": null, "mb2": null, "mb3": null } },
+    "a3_forest_end": {
+      "focus": "leon_end",
+      "actors": {
+        "leon": { "at": "leon_end", "facing": "up" },
+        "elysia": { "at": "elysia_end", "facing": "up" },
+        "karg": { "at": "karg_end", "facing": "up" }
+      }
+    },
+    "a3_fog_lift": { "fog": "lift", "focus": "view_ruins" },
+    "a3_s3": {
+      "map": "ruined_village",
+      "ambient": "#b8b4c0",
+      "focus": "leon_s3",
+      "once": "a3:start",
+      "actors": {
+        "leon": { "at": "leon_arrive", "walk": "leon_s3", "facing": "down" },
+        "elysia": { "at": "elysia_arrive", "walk": "elysia_s3", "facing": "up" },
+        "karg": { "at": "karg_arrive", "walk": "karg_s3", "facing": "up" }
+      }
+    },
+    "a3_blade": {
+      "focus": "leon_s3",
+      "wait": 300,
+      "bgm": null,
+      "se": "se_blade_touch",
+      "actors": {
+        "leon": { "at": "leon_s3", "facing": "down" },
+        "elysia": { "at": "elysia_s3", "facing": "up" },
+        "karg": { "at": "karg_s3", "facing": "up" },
+        "galia": { "at": "galia_behind", "facing": "down" }
+      }
+    },
+    "a3_draw": {
+      "flash": { "who": "karg", "color": "#ffffff" },
+      "aura": { "elysia": "#a47cff" }
+    },
+    "a3_draw_off": { "aura": { "elysia": null } },
+    "a3_recall_night": { "memory": ["prologue_corridor", "prologue_bedchamber"] },
+    "a3_recall_night_end": { "memory": null },
+    "a3_serena_door": {
+      "focus": [496, 500],
+      "actors": { "serena": { "at": "serena_door", "facing": "right" } }
+    },
+    "a3_smile": { "bgm": "bgm_galia" },
+    "a3_s4": {
+      "map": "ruined_house",
+      "focus": [224, 170],
+      "once": "a3:start",
+      "actors": {
+        "leon": { "at": "leon_fire", "facing": "right", "pose": "kneel" },
+        "galia": { "at": "galia_fire", "facing": "left", "pose": "kneel" },
+        "elysia": { "at": "elysia_fire", "facing": "up", "pose": "kneel" },
+        "karg": { "at": "karg_fire", "facing": "down", "pose": "kneel" },
+        "serena": { "at": "serena_back", "facing": "up", "pose": "kneel" }
+      }
+    },
+    "a3_bell": { "se": "se_bell" },
+    "a3_serena_up": {
+      "actors": { "serena": { "at": "serena_stand", "facing": "right", "pose": "stand" } }
+    },
+    "a3_unhood": { "bgm": "bgm_serena" },
+    "a3_s5b": {
+      "map": "ruined_house",
+      "focus": [224, 170],
+      "once": "a3:start",
+      "actors": {
+        "leon": { "at": "leon_fire", "facing": "right", "pose": "kneel" },
+        "galia": { "at": "galia_fire", "facing": "left", "pose": "kneel" },
+        "elysia": { "at": "elysia_fire", "facing": "up", "pose": "kneel" },
+        "karg": { "at": "karg_fire", "facing": "down", "pose": "kneel" },
+        "serena": { "at": "serena_stand", "facing": "right" }
+      }
+    },
+    "a3_turn_away": { "actors": { "serena": { "facing": "up" } } },
+    "a3_hood_back": {
+      "actors": { "serena": { "walk": "serena_back", "facing": "up", "pose": "kneel" } }
+    },
+    "a3_bow": { "actors": { "leon": { "nod": true } } },
+    "a3_s6": {
+      "map": "ruined_village",
+      "ambient": "#2a3050",
+      "focus": "leon",
+      "once": "a3:start",
+      "bgm": null,
+      "actors": {
+        "leon": { "at": "leon_from_house", "facing": "down" },
+        "elysia": { "at": "elysia_out", "facing": "down" },
+        "karg": { "at": "karg_out", "facing": "down" }
+      }
+    },
+    "a3_house_in": {
+      "map": "ruined_house",
+      "focus": "leon",
+      "actors": {
+        "leon": { "at": "leon_in", "facing": "up" },
+        "elysia": { "at": [192, 284], "facing": "up" },
+        "karg": { "at": [256, 284], "facing": "up" },
+        "galia": { "at": "galia_fire", "facing": "left", "pose": "kneel" },
+        "serena": { "at": "serena_corner", "facing": "down", "pose": "kneel" }
+      }
+    },
+    "a3_s6_fire": {
+      "focus": [200, 170],
+      "actors": {
+        "leon": { "at": "leon_fire", "facing": "right", "pose": "kneel" },
+        "elysia": { "at": "elysia_fire", "facing": "up", "pose": "kneel" },
+        "karg": { "at": "karg_fire", "facing": "down", "pose": "kneel" },
+        "galia": { "at": "galia_fire", "facing": "left", "pose": "kneel" },
+        "serena": { "at": "serena_corner", "facing": "down", "pose": "kneel" }
+      }
+    },
+    "a3_elysia_close": {
+      "actors": {
+        "elysia": { "walk": "elysia_close", "facing": "left", "pose": "stand" }
+      }
+    },
+    "a3_serena_step": {
+      "actors": {
+        "serena": { "walk": "serena_back", "facing": "right", "pose": "stand" }
+      }
+    },
+    "a3_laugh": { "bgm": "bgm_camp" },
+    "a3_s61": {
+      "map": "ruined_village",
+      "ambient": "#2a3050",
+      "focus": [816, 620],
+      "once": "a3:start",
+      "bgm": null,
+      "amb": "amb_night",
+      "actors": {
+        "serena": { "at": "sit_wall", "facing": "up", "pose": "kneel", "lift": 10 },
+        "leon": { "at": "leon_from_house", "walk": "leon_wall", "facing": "up" }
+      }
+    },
+    "a3_s61b": {
+      "map": "ruined_village",
+      "ambient": "#2a3050",
+      "focus": [816, 620],
+      "once": "a3:start",
+      "bgm": null,
+      "amb": "amb_night",
+      "actors": {
+        "serena": { "at": "sit_wall", "facing": "up", "pose": "kneel", "lift": 10 },
+        "leon": { "at": "leon_wall", "facing": "up" }
+      }
+    },
+    "a3_stand_by": { "actors": { "leon": { "walk": [860, 660], "facing": "up" } } },
+    "a3_s63": {
+      "map": "ruined_house",
+      "ambient": "#4a3c38",
+      "focus": [224, 250],
+      "once": "a3:start",
+      "amb": null,
+      "actors": {
+        "elysia": { "at": "elysia_fire", "facing": "up", "pose": "down" },
+        "karg": { "at": "karg_fire", "facing": "down", "pose": "down" },
+        "serena": { "at": "serena_corner", "facing": "down", "pose": "down" },
+        "leon": { "at": "leon_door_talk", "facing": "down" },
+        "galia": { "at": "galia_door", "facing": "left" }
+      }
+    },
+    "a3_galia_stop": { "actors": { "galia": { "facing": "up" } } },
+    "a3_past": { "edge": "#ff9a40" },
+    "a3_past_end": { "edge": null },
+    "a3_s64": {
+      "map": "ruined_house",
+      "ambient": "#3a3040",
+      "focus": "roof_gap",
+      "once": "a3:start",
+      "actors": {
+        "elysia": { "at": "elysia_fire", "facing": "up", "pose": "down" },
+        "karg": { "at": "karg_fire", "facing": "down", "pose": "down" },
+        "serena": { "at": "serena_corner", "facing": "down", "pose": "down" },
+        "leon": { "at": "leon_bed", "facing": "up", "pose": "down" },
+        "galia": { "at": "galia_door", "facing": "down" }
+      }
+    },
+    "a3_ember": { "embers": { "who": "leon", "color": "#a47cff", "at": "roof_gap" } },
+    "a3_s7": {
+      "map": "ruined_house",
+      "ambient": "#2a2430",
+      "focus": "leon",
+      "once": "a3:start",
+      "actors": {
+        "elysia": { "at": "elysia_fire", "facing": "up", "pose": "down" },
+        "karg": { "at": "karg_fire", "facing": "down", "pose": "down" },
+        "serena": { "at": "serena_corner", "facing": "down", "pose": "down" },
+        "leon": { "at": "leon_bed", "facing": "up", "pose": "down" },
+        "galia": { "at": "galia_door", "facing": "down" }
+      }
+    },
+    "a3_s7_hurt": { "actors": { "leon": { "pose": "kneel" } } },
+    "a3_wake": {
+      "actors": {
+        "leon": { "pose": "stand", "facing": "down" },
+        "elysia": { "pose": "stand" },
+        "karg": { "pose": "stand", "facing": "down" },
+        "serena": { "pose": "stand" },
+        "galia": { "facing": "up" }
+      }
+    },
+    "a3_out": {
+      "map": "ruined_village",
+      "ambient": "#141826",
+      "focus": [624, 380],
+      "actors": {
+        "leon": { "at": "leon_out", "facing": "up" },
+        "galia": { "at": "galia_out", "facing": "up" },
+        "elysia": { "at": "elysia_out", "facing": "up" },
+        "karg": { "at": "karg_out", "facing": "up" },
+        "serena": { "at": "serena_door", "facing": "up" }
+      }
+    },
+    "a3_torches": {
+      "focus": [752, 260],
+      "reveal": {
+        "keys": ["torch8", "torch7", "torch11", "torch9", "torch1", "torch2", "torch3", "torch10", "torch12", "torch4", "torch5", "torch6"],
+        "ms": 220
+      },
+      "actors": {
+        "foe1": {
+          "sprite": "mob_paladin",
+          "at": "foe1_from",
+          "walk": "foe1",
+          "facing": "down",
+          "speed": 36
+        },
+        "foe2": {
+          "sprite": "mob_gnosis",
+          "at": "foe2_from",
+          "walk": "foe2",
+          "facing": "down",
+          "speed": 39
+        },
+        "foe3": {
+          "sprite": "mob_gnosis",
+          "at": "foe3_from",
+          "walk": "foe3",
+          "facing": "down",
+          "speed": 42
+        },
+        "foe4": {
+          "sprite": "mob_paladin",
+          "at": "foe4_from",
+          "walk": "foe4",
+          "facing": "down",
+          "speed": 45
+        },
+        "pal_cap": {
+          "sprite": "paladin_captain",
+          "at": "pal_cap_from",
+          "walk": "captain",
+          "facing": "down",
+          "speed": 34
+        }
+      }
+    },
+    "a3_raid_in": {
+      "actors": {
+        "raid": {
+          "sprite": "raid_captain",
+          "at": "raid_from",
+          "walk": "raid",
+          "facing": "down",
+          "speed": 40
+        }
+      }
+    },
+    "a3_gray": { "gray": 700 },
+    "a3_after_raid": { "screen": { "flash": "#ffffff", "shake": 0.004 } },
+    "a3_aim": {
+      "focus": [560, 380],
+      "props": {
+        "torch1": true,
+        "torch2": true,
+        "torch3": true,
+        "torch4": true,
+        "torch5": true,
+        "torch6": true,
+        "torch7": true,
+        "torch8": true,
+        "torch9": true,
+        "torch10": true,
+        "torch11": true,
+        "torch12": true
+      },
+      "flash": { "who": "raid", "color": "#ffffff" },
+      "zone": { "at": "serena_door", "r": 26 },
+      "actors": {
+        "leon": { "at": "leon_out", "facing": "up" },
+        "elysia": { "at": "elysia_out", "facing": "up" },
+        "karg": { "at": "karg_out", "facing": "up" },
+        "serena": { "at": "serena_door", "facing": "up" },
+        "raid": { "sprite": "raid_captain", "at": "raid", "facing": "down" },
+        "pal_cap": { "sprite": "paladin_captain", "at": "captain", "facing": "down" },
+        "galia": { "at": "galia_fight", "facing": "right" },
+        "pal_a": { "sprite": "mob_paladin", "at": "pal_a", "facing": "down" },
+        "pal_b": { "sprite": "mob_paladin", "at": "pal_b", "facing": "left" },
+        "pal_c": { "sprite": "mob_paladin", "at": "pal_c", "facing": "left" },
+        "foe1": null,
+        "foe4": null,
+        "foe2": { "sprite": "mob_gnosis", "at": "foe2", "facing": "down" },
+        "foe3": { "sprite": "mob_gnosis", "at": "foe3", "facing": "down" }
+      }
+    },
+    "a3_dash": {
+      "actors": { "leon": { "walk": "leon_shield", "facing": "up", "speed": 170 } }
+    },
+    "a3_rune_break": {
+      "rune": "break",
+      "se": "se_rune_break",
+      "screen": { "flash": "#ffffff" },
+      "zone": null
+    },
+    "a3_memory": { "memory": ["crown", "crown_back"], "se": "se_memory_flash" },
+    "a3_memory_turn": { "memory": ["crown_back"] },
+    "a3_memory_cut": { "memory": null, "actors": { "leon": { "pose": "kneel" } } },
+    "a3_stand_up": { "actors": { "leon": { "pose": "stand" } } },
+    "a3_awe": {
+      "props": { "serena_eyes": true },
+      "awe": { "who": "serena", "color": "#ffb040", "freeze": true },
+      "se": "se_awe",
+      "screen": { "flash": "#ff8a40" },
+      "actors": {
+        "foe2": { "walk": [520, 420], "facing": "left", "speed": 24 },
+        "foe3": { "walk": [560, 440], "facing": "left", "speed": 24 }
+      }
+    },
+    "a3_karg_cut": {
+      "props": { "serena_eyes": false },
+      "actors": {
+        "karg": { "walk": [600, 450], "facing": "up", "speed": 220 },
+        "foe2": { "pose": "down" },
+        "foe3": { "pose": "down" }
+      }
+    },
+    "a3_s8": {
+      "map": "ruined_village",
+      "ambient": "#141826",
+      "focus": [528, 420],
+      "once": "a3:start",
+      "props": {
+        "torch1": true,
+        "torch2": true,
+        "torch3": true,
+        "torch4": true,
+        "torch5": true,
+        "torch6": true
+      },
+      "actors": {
+        "leon": { "at": "leon_shield", "facing": "up" },
+        "serena": { "at": "serena_door", "facing": "up" },
+        "galia": { "at": "galia_stand", "facing": "up" },
+        "elysia": { "at": "elysia_out", "facing": "up" },
+        "karg": { "at": "karg_out", "facing": "up" },
+        "raid": {
+          "sprite": "raid_captain",
+          "at": "raid",
+          "walk": "raid_from",
+          "facing": "up",
+          "leave": true,
+          "speed": 50
+        }
+      }
+    },
+    "a3_more_torches": {
+      "reveal": {
+        "keys": ["torch7", "torch8", "torch9", "torch10", "torch11", "torch12"],
+        "ms": 600
+      }
+    },
+    "a3_grip": { "actors": { "galia": { "facing": "up", "nod": true } } },
+    "a3_bgm_stop": { "bgm": null },
+    "a3_s8b": {
+      "map": "ruined_village",
+      "ambient": "#141826",
+      "focus": [528, 420],
+      "once": "a3:start",
+      "props": {
+        "torch1": true,
+        "torch2": true,
+        "torch3": true,
+        "torch4": true,
+        "torch5": true,
+        "torch6": true,
+        "torch7": true,
+        "torch8": true,
+        "torch9": true,
+        "torch10": true,
+        "torch11": true,
+        "torch12": true
+      },
+      "actors": {
+        "leon": { "at": "leon_shield", "facing": "up" },
+        "serena": { "at": "serena_door", "facing": "up" },
+        "galia": { "at": "galia_stand", "facing": "up" },
+        "elysia": { "at": "elysia_out", "facing": "up" },
+        "karg": { "at": "karg_out", "facing": "up" }
+      }
+    },
+    "a3_flee": {
+      "focus": "leon",
+      "actors": {
+        "leon": { "walk": "leon_flee", "facing": "down", "speed": 120 },
+        "serena": { "walk": "serena_flee", "facing": "down", "speed": 120 },
+        "elysia": { "walk": [560, 940], "facing": "down", "speed": 120 },
+        "karg": { "walk": [600, 940], "facing": "down", "speed": 120 }
+      }
+    },
+    "a3_fog_galia": {
+      "focus": "galia_stand",
+      "veil": { "color": "#d8dcdc", "alpha": 0.85, "ms": 2200 }
+    },
+    "a3_clash": { "se": "se_clash" },
+    "a3_ward": { "aura": { "serena": "#a47cff" } },
+    "a3_s9": {
+      "map": "hunter_creek",
+      "ambient": "#f2ead6",
+      "focus": "leon_c",
+      "once": "a3:start",
+      "bgm": null,
+      "amb": null,
+      "actors": {
+        "leon": { "at": "leon_c", "facing": "down" },
+        "elysia": { "at": "elysia_c", "facing": "left" },
+        "karg": { "at": "karg_c", "facing": "left" },
+        "serena": { "at": "serena_c", "facing": "down", "pose": "kneel" }
+      }
+    },
+    "a3_dusk": { "ambient": "#e8a070", "fade": 2500 },
+    "a3_night9": {
+      "ambient": "#2a3050",
+      "fade": 2000,
+      "from": "#e8a070",
+      "actors": { "karg": { "facing": "left" } }
+    },
+    "a3_karg_go": {
+      "ambient": "#5a6a90",
+      "fade": 2500,
+      "from": "#2a3050",
+      "actors": { "karg": { "walk": "karg_away", "facing": "left", "leave": true } }
+    },
+    "a3_karg_back": {
+      "focus": "karg_back",
+      "actors": {
+        "karg": {
+          "at": "karg_away",
+          "walk": "karg_back",
+          "facing": "right",
+          "speed": 40
+        }
+      }
+    },
+    "a3_creek_grave": {
+      "focus": [240, 330],
+      "actors": {
+        "leon": { "walk": "leon_hill", "facing": "down" },
+        "elysia": { "walk": "elysia_hill", "facing": "down" },
+        "karg": { "walk": "karg_hill", "facing": "down" },
+        "serena": { "walk": "serena_hill", "facing": "down", "pose": "stand" }
+      },
+      "reveal": { "keys": ["grave_sword", "grave1", "grave2", "grave3"], "ms": 700 }
+    },
+    "a3_fallen": {
+      "map": "ruined_village",
+      "ambient": "#141826",
+      "focus": [624, 500],
+      "once": "a3:start",
+      "props": {
+        "torch1": true,
+        "torch2": true,
+        "torch3": true,
+        "torch4": true,
+        "torch5": true,
+        "torch6": true,
+        "torch7": true,
+        "torch8": true,
+        "torch9": true,
+        "torch10": true,
+        "torch11": true,
+        "torch12": true
+      },
+      "actors": {
+        "leon": { "at": "leon_by_galia", "facing": "right" },
+        "galia": { "at": "galia_kneel", "facing": "down", "pose": "kneel" },
+        "serena": { "at": "serena_by_galia", "facing": "left" },
+        "elysia": { "at": "elysia_by", "facing": "up" },
+        "karg": { "at": "karg_by", "facing": "up" },
+        "raid": { "sprite": "raid_captain", "at": "raid", "facing": "down" }
+      }
+    },
+    "a3_raid_flee": {
+      "screen": { "flash": "#ffffff" },
+      "actors": {
+        "raid": { "walk": "raid_from", "facing": "up", "leave": true, "speed": 60 }
+      }
+    },
+    "a3_scatter": {
+      "props": {
+        "torch1": false,
+        "torch2": false,
+        "torch3": false,
+        "torch4": false,
+        "torch5": false,
+        "torch6": false,
+        "torch7": false,
+        "torch8": false,
+        "torch9": false,
+        "torch10": false,
+        "torch11": false,
+        "torch12": false
+      }
+    },
+    "a3_galia_light": { "flicker": { "galia": "#ffffff" } },
+    "a3_sword_drop": {
+      "se": "se_sword_drop",
+      "flicker": { "galia": null },
+      "actors": { "galia": { "pose": "down" } }
+    },
+    "a3_bury": {
+      "focus": [1104, 860],
+      "actors": {
+        "galia": null,
+        "leon": { "walk": "leon_grave", "facing": "up" },
+        "elysia": { "walk": "elysia_grave", "facing": "up" },
+        "karg": { "walk": "karg_grave", "facing": "up" },
+        "serena": { "walk": "serena_grave", "facing": "up" }
+      }
+    },
+    "a3_cairn": { "reveal": { "keys": ["grave1", "grave2", "grave3"], "ms": 800 } },
+    "a3_plant": { "reveal": { "keys": ["grave_sword"], "ms": 0 } },
+    "a3_leave_village": {
+      "map": "hunter_creek",
+      "ambient": "#e8a070",
+      "focus": "leon_c",
+      "bgm": null,
+      "actors": {
+        "leon": { "at": "leon_c", "facing": "right" },
+        "elysia": { "at": "elysia_c", "facing": "left" },
+        "karg": { "at": "karg_c", "facing": "left" },
+        "serena": { "at": "serena_c", "facing": "down" }
+      }
+    },
+    "a3_s91": {
+      "map": "hunter_creek",
+      "ambient": "#1c2440",
+      "focus": "serena_alone",
+      "once": "a3:start",
+      "bgm": null,
+      "props": { "grave1": true, "grave2": true, "grave3": true, "grave_sword": true },
+      "actors": {
+        "serena": { "at": "serena_alone", "facing": "down", "pose": "kneel" },
+        "leon": { "at": "leon_behind", "facing": "down" },
+        "elysia": { "at": "elysia_c", "facing": "left", "pose": "down" },
+        "karg": { "at": "karg_c", "facing": "left", "pose": "down" }
+      }
+    },
+    "a3_predawn": { "ambient": "#3a4a78", "fade": 6000, "from": "#1c2440" },
+    "a3_kneel_oath": {
+      "bgm": "bgm_oath",
+      "actors": { "leon": { "walk": "leon_oath", "facing": "left", "pose": "kneel" } }
+    },
+    "a3_sword_plant": { "se": "se_sword_plant" },
+    "a3_wipe_eyes": { "actors": { "serena": { "nod": true } } },
+    "a3_saved": {
+      "map": "ruined_village",
+      "ambient": "#141826",
+      "focus": [600, 380],
+      "once": "a3:start",
+      "props": {
+        "torch1": true,
+        "torch2": true,
+        "torch3": true,
+        "torch4": true,
+        "torch5": true,
+        "torch6": true,
+        "torch7": true,
+        "torch8": true,
+        "torch9": true,
+        "torch10": true,
+        "torch11": true,
+        "torch12": true
+      },
+      "actors": {
+        "leon": { "at": "leon_shield", "facing": "up" },
+        "serena": { "at": "serena_door", "facing": "up" },
+        "galia": { "at": "galia_stand", "facing": "up" },
+        "elysia": { "at": "elysia_out", "facing": "up" },
+        "karg": { "at": "karg_out", "facing": "up" },
+        "raid": { "sprite": "raid_captain", "at": "raid", "facing": "down" }
+      }
+    },
+    "a3_raid_burn": { "flicker": { "raid": "#ffffff" } },
+    "a3_raid_burst": {
+      "screen": { "flash": "#ffffff", "shake": 0.008 },
+      "flicker": { "raid": null },
+      "actors": { "raid": null }
+    },
+    "a3_saved_creek": {
+      "map": "hunter_creek",
+      "ambient": "#3a4a78",
+      "focus": [700, 330],
+      "bgm": null,
+      "actors": {
+        "leon": { "at": "leon_c", "facing": "right" },
+        "elysia": { "at": "elysia_c", "facing": "left" },
+        "karg": { "at": "karg_c", "facing": "left" },
+        "serena": { "at": "serena_c", "facing": "down" },
+        "galia": { "at": "galia_wash", "facing": "down", "pose": "kneel" }
+      }
+    },
+    "a3_galia_call": {
+      "actors": {
+        "galia": { "pose": "stand", "facing": "left" },
+        "leon": { "walk": "leon_to_galia", "facing": "right" }
+      }
+    },
+    "a3_before_serena": {
+      "actors": {
+        "leon": { "walk": "leon_oath2", "facing": "left" },
+        "serena": { "walk": "serena_oath", "facing": "right" },
+        "galia": { "walk": "galia_oath", "facing": "down" }
+      }
+    },
+    "a3_kneel_oath2": { "bgm": "bgm_oath", "actors": { "leon": { "pose": "kneel" } } },
+    "a3_galia_nod": { "actors": { "serena": { "facing": "up" }, "galia": { "nod": true } } },
+    "a3_wiped": {
+      "map": "ruined_village",
+      "ambient": "#141826",
+      "focus": [528, 400],
+      "once": "a3:start",
+      "props": {
+        "torch1": true,
+        "torch2": true,
+        "torch3": true,
+        "torch4": true,
+        "torch5": true,
+        "torch6": true,
+        "torch7": true,
+        "torch8": true,
+        "torch9": true,
+        "torch10": true,
+        "torch11": true,
+        "torch12": true
+      },
+      "veil": { "color": "#000000", "alpha": 0.5, "ms": 1500 },
+      "actors": {
+        "leon": { "at": "leon_shield", "facing": "up", "pose": "kneel" },
+        "serena": {
+          "at": "serena_door",
+          "walk": "raid_from",
+          "facing": "up",
+          "speed": 40,
+          "leave": true
+        },
+        "raid": {
+          "sprite": "raid_captain",
+          "at": "raid",
+          "walk": "raid_from",
+          "facing": "up",
+          "speed": 40,
+          "leave": true
+        }
+      }
+    },
+    "a3_white": { "screen": { "flash": "#ffffff" } },
+    "a3_s10": {
+      "map": "hunter_creek",
+      "ambient": "#f2ead6",
+      "focus": "leon_c",
+      "once": "a3:start",
+      "bgm": null,
+      "props": {
+        "grave1": "!galia_alive",
+        "grave2": "!galia_alive",
+        "grave3": "!galia_alive",
+        "grave_sword": "!galia_alive"
+      },
+      "actors": {
+        "leon": { "at": "leon_c", "facing": "right", "pose": "kneel" },
+        "elysia": { "at": [620, 336], "facing": "left" },
+        "karg": { "at": "karg_c", "facing": "left" },
+        "serena": { "at": "serena_c", "facing": "down" },
+        "galia": { "at": "galia_c", "facing": "right", "if": "galia_alive" }
+      }
+    },
+    "a3_layer": { "rune": "layer", "flash": { "who": "leon", "color": "#a47cff" } },
+    "a3_s10b": {
+      "map": "hunter_creek",
+      "ambient": "#f2ead6",
+      "focus": "leon_c",
+      "once": "a3:start",
+      "bgm": null,
+      "props": {
+        "grave1": "!galia_alive",
+        "grave2": "!galia_alive",
+        "grave3": "!galia_alive",
+        "grave_sword": "!galia_alive"
+      },
+      "actors": {
+        "leon": { "at": "leon_c", "facing": "right" },
+        "elysia": { "at": [620, 336], "facing": "left" },
+        "karg": { "at": "karg_c", "facing": "left" },
+        "serena": { "at": "serena_c", "facing": "down" },
+        "galia": { "at": "galia_c", "facing": "right", "if": "galia_alive" }
+      }
+    },
+    "a3_north": {
+      "focus": "view_mountains",
+      "actors": {
+        "leon": { "walk": "leon_north", "facing": "up" },
+        "serena": { "walk": "serena_north", "facing": "up" },
+        "elysia": { "walk": "elysia_north", "facing": "up" },
+        "karg": { "walk": "karg_north", "facing": "up" },
+        "galia": { "walk": "galia_north", "facing": "up", "if": "galia_alive" }
+      }
+    },
+    "a3_karg_side": {
+      "focus": "leon_north",
+      "actors": { "karg": { "walk": [690, 244], "facing": "left" } }
+    }
   },
 
   "segments": {
@@ -666,9 +2054,62 @@
       "hint": "갈대밭 왼쪽 끝의 배를 F로",
       "after": "a1_boat"
     },
-    "a2_desert_walk": {"map": "desert_a", "looks": ["a2_bones", "a2_rock_arrow"], "goal": "goal_rock", "hint": "넓은 사막을 걸어 큰 바위로", "after": "a2_rock"},
-    "a2_prison": {"map": "oasis_prison", "looks": ["a2_prison_marks"], "goal": "goal_bars", "hint": "창살 앞으로", "follow": false, "after": "a2_prison_bars"},
-    "a2_oasis": {"map": "oasis", "looks": ["a2_well_names", "a2_toll_notice", "a2_empty_hut"], "goal": "goal_east", "hint": "오아시스 동쪽 출구로", "after": "a2_route"},
-    "a2_trade_route": {"map": "trade_route", "looks": ["a2_white_cloth", "a2_hidden_cache"], "goal": "goal_tracks", "hint": "교역로를 따라 동쪽으로", "after": "a2_tracks"}
+    "a2_desert_walk": {
+      "map": "desert_a",
+      "looks": ["a2_bones", "a2_rock_arrow"],
+      "goal": "goal_rock",
+      "hint": "넓은 사막을 걸어 큰 바위로",
+      "after": "a2_rock"
+    },
+    "a2_prison": {
+      "map": "oasis_prison",
+      "looks": ["a2_prison_marks"],
+      "goal": "goal_bars",
+      "hint": "창살 앞으로",
+      "follow": false,
+      "after": "a2_prison_bars"
+    },
+    "a2_oasis": {
+      "map": "oasis",
+      "looks": ["a2_well_names", "a2_toll_notice", "a2_empty_hut"],
+      "goal": "goal_east",
+      "hint": "오아시스 동쪽 출구로",
+      "after": "a2_route"
+    },
+    "a2_trade_route": {
+      "map": "trade_route",
+      "looks": ["a2_white_cloth", "a2_hidden_cache"],
+      "goal": "goal_tracks",
+      "hint": "교역로를 따라 동쪽으로",
+      "after": "a2_tracks"
+    },
+    "a3_village": {
+      "map": "arden_village",
+      "looks": ["a3_tribute_board", "a3_dry_field", "a3_forge_blade"],
+      "goal": "goal_forge",
+      "hint": "마을 끝 대장간으로",
+      "after": "a3_forge"
+    },
+    "a3_forest": {
+      "map": "morwen_edge",
+      "looks": ["a3_old_fire", "a3_spirit_stone", "a3_hidden_herbs"],
+      "goal": "goal_ruins",
+      "hint": "칼자국 표식을 따라",
+      "after": "a3_forest_end"
+    },
+    "a3_night": {
+      "map": "ruined_village",
+      "looks": ["a3_village_stone"],
+      "goal": "goal_door",
+      "hint": "무너진 집으로",
+      "after": "a3_house_in"
+    },
+    "a3_night_in": {
+      "map": "ruined_house",
+      "looks": ["a3_folded_cloak"],
+      "goal": "goal_fire",
+      "hint": "화덕 앞으로",
+      "after": "a3_s6_fire"
+    }
   }
 }

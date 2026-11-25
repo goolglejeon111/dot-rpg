@@ -28,7 +28,8 @@ export interface Effects {
 }
 
 /** 강조 문장: big = 화면 가운데에 크게, slow = 한 글자씩 느리게(다 나온 뒤 잠깐 머묾), shake = 나타날 때 글자와 화면이 흔들림 */
-export type Emphasis = 'big' | 'slow' | 'shake';
+/** faint = 글자 색만 옅게 (다른 사람의 목소리처럼) */
+export type Emphasis = 'big' | 'slow' | 'shake' | 'faint';
 /** 강조 하나 또는 여러 개를 겹쳐서 */
 export type EmphasisStyle = Emphasis | Emphasis[];
 

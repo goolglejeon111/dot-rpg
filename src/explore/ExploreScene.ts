@@ -38,6 +38,8 @@ export interface ExploreStart {
 type Dir = 'down' | 'left' | 'right' | 'up';
 type Pt = string | number[];
 export interface ActorSpec {
+  /** 이 플래그가 참일 때만 세운다 ('!이름'이면 거짓일 때만). 예: galia_alive */
+  if?: string;
   at?: Pt;
   walk?: Pt;
   facing?: string;
@@ -77,8 +79,8 @@ export interface StageDef extends StoryFxDef {
   blood?: boolean;
   /** 대사창을 잠깐 내리고 이만큼(ms) 무대만 보여 준 뒤 다음 대사로 */
   wait?: number;
-  /** 처음엔 숨긴 물건(hidden prop)을 보이게(true)/숨기게(false). 이미 주운 것은 계속 숨김 */
-  props?: Record<string, boolean>;
+  /** 처음엔 숨긴 물건(hidden prop)을 보이게(true)/숨기게(false). 이미 주운 것은 계속 숨김. 글자면 플래그 조건('galia_alive', '!galia_alive') */
+  props?: Record<string, boolean | string>;
   actors?: Record<string, ActorSpec | null>;
   /** 인물 그림이 위에서 떨어져 물에 빠지는 모습을 한 번 보여 준다 */
   fall?: { sprite: string; from: Pt; to: Pt; ms?: number };
@@ -124,6 +126,8 @@ export interface StageDef extends StoryFxDef {
   shine?: string;
   /** 효과음 한 번, BGM·환경음 바꾸기(null이면 끔). 대화 화면(StoryScene)이 튼다. 파일이 없으면 무음 */
   se?: string;
+  /** 화면 가장자리를 이 색으로 물들여 둔다 (대화 화면이 그림, null이면 걷음) */
+  edge?: string | null;
   bgm?: string | null;
   amb?: string | null;
   /** 맵 위에 물건 그림을 놓거나(움직이거나) 치운다(null) */
@@ -242,6 +246,8 @@ function carryOf(id: string) {
   if (id === 'leon' && once.includes(PILLAR_KEY)) return { ...d, r: d.r * 1.3, intensity: d.intensity * 1.35 };
   return d;
 }
+/** 무대의 플래그 조건: 'galia_alive'는 참일 때, '!galia_alive'는 거짓일 때 */
+const flagOk = (c: string) => (c.startsWith('!') ? !gameState.getFlag(c.slice(1)) : !!gameState.getFlag(c));
 /** 맵에서 레온 뒤를 따라 걷는 인물 (임시 동료 포함) */
 const walkers = () => (gameState.progress.party?.length ? gameState.progress.party : ['leon']);
 type Box = { x0: number; y0: number; x1: number; y1: number };
@@ -762,13 +768,15 @@ export class ExploreScene extends Phaser.Scene {
     if (!this.map) return;
     if (reset) for (const id of [...this.actors.keys()]) if (!this.npcs.has(id)) this.removeActor(id);
     if (def.blood !== undefined) this.blood?.setVisible(def.blood);
-    for (const [name, on] of Object.entries(def.props ?? {})) {
+    for (const [name, v] of Object.entries(def.props ?? {})) {
+      const on = typeof v === 'string' ? flagOk(v) : v;
       const spr = this.named.get(name);
       spr?.setVisible(on && !this.seen(name));
       spr?.emit('changevisible', on && !this.seen(name));
       for (const l of this.namedLights.get(name) ?? []) l.light.setVisible(on);
     }
     for (const [id, spec] of Object.entries(def.actors ?? {})) {
+      if (spec?.if && !flagOk(spec.if)) continue;
       if (spec === null) this.removeActor(id);
       else this.placeActor(id, spec, instant);
     }

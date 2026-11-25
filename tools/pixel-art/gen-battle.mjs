@@ -713,6 +713,9 @@ const BATTLE_CHARS = [
   { id: 'mob_paladin', lunge: true }, // 성기사: 몸에 창 (쓰러짐 칸 = 기절)
   { id: 'bandit_blade', weapon: 'dagger', dual: true },
   { id: 'bandit_archer', lunge: true },
+  // 3막
+  { id: 'raid_captain', cast: { ramp: ['l', 'v', 'V'], out: 'T', hand: { down: [27, 27], right: [23, 24], up: [5, 27] } } }, // 습격대장 (빛 손바닥)
+  { id: 'paladin_captain', lunge: true },
 ];
 
 const VIEWS = ['down', 'left', 'right', 'up'];

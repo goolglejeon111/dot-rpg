@@ -995,6 +995,48 @@ tile('rock_wall', (c) => {
   c.map((ch) => ({ r: 'd', t: 'D', T: 'C', R: 'C' })[ch] ?? ch);
 }, { solid: true, note: '바위 틈 벽' });
 
+// ---- 3막 타일: 마른 밭, 마른 풀, 안개 숲 바닥, 무너진 돌담 ----
+tile('dry_field', (c) => {
+  const rnd = rng(131);
+  c.rect(0, 0, 31, 31, 'D');
+  for (let y = 2; y < 32; y += 6) {
+    c.rect(0, y, 31, y, 'C');
+    c.rect(0, y + 1, 31, y + 1, 'd');
+  }
+  // 말라 죽어 누운 밀대
+  for (let k = 0; k < 9; k++) {
+    const x = rnd() * 28;
+    const y = rnd() * 30;
+    c.line(x, y, x + 3, y + (rnd() < 0.5 ? 1 : -1), rnd() < 0.6 ? 'Y' : 'c');
+  }
+}, { note: '갈라진 마른 밭과 누운 밀대' });
+tile('dry_grass', (c) => {
+  const rnd = rng(133);
+  c.rect(0, 0, 31, 31, 'd');
+  for (let k = 0; k < 30; k++) {
+    const x = rnd() * 31;
+    const y = 1 + rnd() * 30;
+    c.set(x, y, rnd() < 0.5 ? 'c' : 'Y');
+    c.set(x, y - 1, rnd() < 0.3 ? 'D' : 'c');
+  }
+}, { note: '초겨울 누렇게 마른 풀' });
+tile('forest_floor', (c) => {
+  const rnd = rng(135);
+  c.rect(0, 0, 31, 31, 'Q');
+  for (let k = 0; k < 22; k++) c.set(rnd() * 31, rnd() * 31, rnd() < 0.4 ? 'G' : rnd() < 0.7 ? 'K' : 'T');
+  for (let k = 0; k < 3; k++) {
+    const x = rnd() * 26;
+    const y = rnd() * 28;
+    c.line(x, y, x + 5, y + 2, 'k');
+  }
+}, { note: '안개 숲의 검은 흙과 이끼' });
+tile('ruin_wall', (c) => {
+  bigStones(c, 137);
+  c.map((ch) => ({ r: 't', t: 'T', T: 'R', R: 'k' })[ch] ?? ch);
+  for (let k = 0; k < 6; k++) c.set(3 + k * 5, 2 + (k % 3) * 9, 'G');
+  c.rect(0, 0, 31, 1, 'R');
+}, { solid: true, note: '무너진 돌담 (이끼 낀 회색 돌)' });
+
 // ---- 1막 물건 ----
 prop('scorch', 28, 30, 1, (c) => {
   // 벽에 줄지어 찍힌 하얀 손바닥 자국
@@ -1302,6 +1344,109 @@ prop('torch_stand', 12, 40, 2, (c, i) => {
   c.rect(3, 9, 8, 12, 'O');
   c.ellipse(5.5, 5 - i, 3, 4 + i, (d) => (d < 0.4 ? 'y' : d < 0.8 ? 'Y' : 'x'));
 }, { rate: 6, note: '세워 둔 횃불 (불빛 오브젝트와 함께)' });
+
+// ---- 3막 물건 ----
+/** 검은 나무: 곧은 줄기, 앙상한 가지. marks면 줄기에 칼자국(세로 셋, 가로 하나) */
+function darkTree(c, seed, marks) {
+  const rnd = rng(seed);
+  c.rect(20, 18, 27, 79, (x) => (x <= 21 ? 'R' : x >= 26 ? 'k' : 'K'));
+  c.rect(17, 74, 30, 79, (x) => (x <= 18 ? 'K' : 'k'));
+  for (let k = 0; k < 7; k++) {
+    const y = 4 + k * 6 + rnd() * 3;
+    const left = k % 2 === 0;
+    c.line(left ? 21 : 26, y + 8, left ? 4 + rnd() * 8 : 36 + rnd() * 8, y, 'k', 2);
+    c.line(left ? 10 : 38, y + 2, left ? 6 : 44, y - 4, 'K');
+  }
+  c.line(23, 18, 22, 0, 'K', 3);
+  if (marks) {
+    for (const x of [21, 23, 25]) c.rect(x, 40, x, 50, 'v');
+    c.rect(20, 45, 26, 45, 'v');
+    for (const x of [21, 23, 25]) c.set(x, 51, 'V');
+  }
+}
+prop('dark_tree', 48, 80, 1, (c) => darkTree(c, 141, false), { note: '안개 숲의 검은 나무' });
+prop('mark_tree', 48, 80, 1, (c) => darkTree(c, 143, true), { note: '칼자국 표식이 있는 나무 (세로 셋, 가로 하나)' });
+prop('forge', 56, 48, 1, (c) => {
+  // 불 꺼진 화덕 (돌 아궁이) + 모루
+  c.rect(2, 10, 33, 47, (x, y) => ((x + y * 3) % 7 === 0 ? 'R' : 'T'));
+  c.rect(2, 10, 33, 12, 't');
+  c.rect(8, 28, 27, 44, 'k');
+  c.rect(10, 38, 25, 44, (x) => (x % 4 === 0 ? 'T' : 'K'));
+  c.rect(40, 30, 53, 34, 'L');
+  c.rect(40, 30, 53, 30, 'm');
+  c.rect(44, 35, 49, 47, 'R');
+  c.rect(42, 45, 51, 47, 'R');
+  c.edge('k');
+}, { note: '불 꺼진 대장간 화덕과 모루' });
+prop('blade_rack', 24, 32, 1, (c) => {
+  c.rect(2, 4, 21, 6, 'O');
+  c.rect(11, 6, 12, 28, (x) => (x === 11 ? 'l' : 'M'));
+  c.rect(8, 22, 15, 23, 'Y');
+  c.rect(11, 24, 12, 31, 'O');
+  c.edge('P');
+}, { note: '벽에 걸린, 날을 세우다 만 검 (wall)' });
+prop('spirit_stone', 20, 44, 1, (c) => {
+  c.rect(4, 2, 15, 43, (x) => (x <= 5 ? 't' : x >= 14 ? 'R' : 'T'));
+  c.rect(5, 0, 14, 2, 'T');
+  for (let y = 8; y < 36; y += 5) c.rect(7, y, 12, y, 'R');
+  for (const [x, y] of [[4, 10], [5, 22], [14, 30], [6, 38], [13, 14]]) c.rect(x, y, x + 2, y + 2, 'G');
+  c.edge('k');
+}, { note: '이끼에 덮인 돌기둥 (글자인지 무늬인지 모를 새김)' });
+prop('white_herbs', 28, 12, 1, (c) => {
+  for (const x of [3, 8, 13, 18, 23]) {
+    c.line(x, 11, x + 1, 5, 'G');
+    c.disc(x + 1, 4, 1.6, 'v');
+    c.set(x + 1, 4, 'y');
+  }
+}, { note: '안개 속에 무리 지어 핀 하얀 꽃' });
+prop('greatsword_planted', 14, 44, 1, (c) => {
+  c.rect(5, 12, 8, 43, (x) => (x <= 6 ? 'l' : 'M'));
+  c.rect(1, 9, 12, 11, 'X');
+  c.rect(5, 0, 8, 8, 'P');
+  c.edge('L');
+}, { note: '땅에 꽂은 갈리아의 대검' });
+prop('broken_greatsword', 14, 30, 1, (c) => {
+  c.rect(5, 12, 8, 29, (x) => (x <= 6 ? 'l' : 'M'));
+  c.line(5, 12, 8, 15, 'L');
+  c.rect(1, 9, 12, 11, 'X');
+  c.rect(5, 0, 8, 8, 'P');
+  c.edge('L');
+}, { note: '부러진 대검' });
+for (const [i, n] of [[1, 3], [2, 6], [3, 9]]) {
+  prop(`cairn${i}`, 30, 22, 1, (c) => {
+    const spots = [[8, 17], [20, 17], [14, 18], [11, 12], [18, 12], [14, 7], [6, 19], [23, 19], [15, 3]];
+    for (const [x, y] of spots.slice(0, n)) c.ellipse(x, y, 5, 3.4, (d) => (d < 0.45 ? 'r' : d < 0.8 ? 't' : 'T'));
+    c.outline('R');
+  }, { note: `돌무더기 (${i}단계)` });
+}
+prop('folded_cloak', 18, 8, 1, (c) => {
+  c.rect(0, 1, 17, 7, 'n');
+  c.rect(0, 1, 17, 2, 'b');
+  c.rect(0, 6, 17, 7, 'N');
+  c.set(3, 4, 'Y');
+  c.edge('B');
+}, { note: '반으로 접힌 남색 근위기사단 망토' });
+prop('stone_wall', 96, 28, 1, (c) => {
+  for (let x = 0; x < 96; x += 10) {
+    const top = 6 + ((x * 7) % 9);
+    c.rect(x, top, x + 9, 27, (xx, yy) => ((xx + yy) % 6 === 0 ? 'R' : yy === top ? 't' : 'T'));
+  }
+  c.edge('k');
+}, { note: '무너진 낮은 돌담 (위에 앉을 수 있음)' });
+prop('far_mountains', 192, 56, 1, (c) => {
+  for (const [px, h, w] of [[30, 48, 40], [80, 54, 52], [140, 44, 40], [175, 36, 28]]) {
+    for (let y = 55 - h; y < 56; y++) {
+      const half = ((y - (55 - h)) / h) * w;
+      c.rect(px - half, y, px + half, y, y < 55 - h * 0.6 ? 'v' : (y + px) % 5 === 0 ? 'V' : 'T');
+    }
+  }
+}, { note: '멀리 보이는 눈 덮인 산맥 (장면 10-1)' });
+prop('smoke', 12, 44, 3, (c, i) => {
+  for (let k = 0; k < 6; k++) {
+    const y = 40 - k * 7;
+    c.disc(6 + Math.round(Math.sin((k + i) * 1.3) * 2), y, 2 + (k % 2), k < 3 ? 'V' : 't');
+  }
+}, { rate: 3, note: '집에서 오르는 연기 한 줄기' });
 
 // ---- 이야기 화면 가운데에 크게 띄우는 아이템 그림 (public/assets/items/) ----
 const ITEMS = []; // { key, cv }

@@ -62,7 +62,11 @@
       "bars",
       "road",
       "rock_floor",
-      "rock_wall"
+      "rock_wall",
+      "dry_field",
+      "dry_grass",
+      "forest_floor",
+      "ruin_wall"
     ],
     "solid": [
       "wall_top",
@@ -90,7 +94,8 @@
       "adobe_wall",
       "adobe_roof",
       "bars",
-      "rock_wall"
+      "rock_wall",
+      "ruin_wall"
     ],
     "wade": [
       "sewer_water",
@@ -154,7 +159,11 @@
       "bars": "감옥 창살 (너머가 보이는 흙빛)",
       "road": "교역로 (다져진 흙과 수레바퀴 자국)",
       "rock_floor": "바위 틈 은신처 바닥",
-      "rock_wall": "바위 틈 벽"
+      "rock_wall": "바위 틈 벽",
+      "dry_field": "갈라진 마른 밭과 누운 밀대",
+      "dry_grass": "초겨울 누렇게 마른 풀",
+      "forest_floor": "안개 숲의 검은 흙과 이끼",
+      "ruin_wall": "무너진 돌담 (이끼 낀 회색 돌)"
     }
   },
   "props": {
@@ -573,6 +582,112 @@
       "frames": 2,
       "rate": 6,
       "note": "세워 둔 횃불 (불빛 오브젝트와 함께)"
+    },
+    "dark_tree": {
+      "file": "assets/explore/dark_tree.png",
+      "w": 48,
+      "h": 80,
+      "frames": 1,
+      "note": "안개 숲의 검은 나무"
+    },
+    "mark_tree": {
+      "file": "assets/explore/mark_tree.png",
+      "w": 48,
+      "h": 80,
+      "frames": 1,
+      "note": "칼자국 표식이 있는 나무 (세로 셋, 가로 하나)"
+    },
+    "forge": {
+      "file": "assets/explore/forge.png",
+      "w": 56,
+      "h": 48,
+      "frames": 1,
+      "note": "불 꺼진 대장간 화덕과 모루"
+    },
+    "blade_rack": {
+      "file": "assets/explore/blade_rack.png",
+      "w": 24,
+      "h": 32,
+      "frames": 1,
+      "note": "벽에 걸린, 날을 세우다 만 검 (wall)"
+    },
+    "spirit_stone": {
+      "file": "assets/explore/spirit_stone.png",
+      "w": 20,
+      "h": 44,
+      "frames": 1,
+      "note": "이끼에 덮인 돌기둥 (글자인지 무늬인지 모를 새김)"
+    },
+    "white_herbs": {
+      "file": "assets/explore/white_herbs.png",
+      "w": 28,
+      "h": 12,
+      "frames": 1,
+      "note": "안개 속에 무리 지어 핀 하얀 꽃"
+    },
+    "greatsword_planted": {
+      "file": "assets/explore/greatsword_planted.png",
+      "w": 14,
+      "h": 44,
+      "frames": 1,
+      "note": "땅에 꽂은 갈리아의 대검"
+    },
+    "broken_greatsword": {
+      "file": "assets/explore/broken_greatsword.png",
+      "w": 14,
+      "h": 30,
+      "frames": 1,
+      "note": "부러진 대검"
+    },
+    "cairn1": {
+      "file": "assets/explore/cairn1.png",
+      "w": 30,
+      "h": 22,
+      "frames": 1,
+      "note": "돌무더기 (1단계)"
+    },
+    "cairn2": {
+      "file": "assets/explore/cairn2.png",
+      "w": 30,
+      "h": 22,
+      "frames": 1,
+      "note": "돌무더기 (2단계)"
+    },
+    "cairn3": {
+      "file": "assets/explore/cairn3.png",
+      "w": 30,
+      "h": 22,
+      "frames": 1,
+      "note": "돌무더기 (3단계)"
+    },
+    "folded_cloak": {
+      "file": "assets/explore/folded_cloak.png",
+      "w": 18,
+      "h": 8,
+      "frames": 1,
+      "note": "반으로 접힌 남색 근위기사단 망토"
+    },
+    "stone_wall": {
+      "file": "assets/explore/stone_wall.png",
+      "w": 96,
+      "h": 28,
+      "frames": 1,
+      "note": "무너진 낮은 돌담 (위에 앉을 수 있음)"
+    },
+    "far_mountains": {
+      "file": "assets/explore/far_mountains.png",
+      "w": 192,
+      "h": 56,
+      "frames": 1,
+      "note": "멀리 보이는 눈 덮인 산맥 (장면 10-1)"
+    },
+    "smoke": {
+      "file": "assets/explore/smoke.png",
+      "w": 12,
+      "h": 44,
+      "frames": 3,
+      "rate": 3,
+      "note": "집에서 오르는 연기 한 줄기"
     }
   }
 }

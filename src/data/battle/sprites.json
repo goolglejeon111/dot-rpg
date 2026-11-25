@@ -1087,6 +1087,18 @@
       "h": 48,
       "columns": 12
     },
+    "raid_captain": {
+      "file": "assets/battle/chars/raid_captain.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "paladin_captain": {
+      "file": "assets/battle/chars/paladin_captain.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
     "sewer_rat": {
       "file": "assets/battle/chars/sewer_rat.png",
       "w": 48,
@@ -1113,6 +1125,12 @@
     },
     "desert_scorpion": {
       "file": "assets/battle/chars/desert_scorpion.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "mist_beast": {
+      "file": "assets/battle/chars/mist_beast.png",
       "w": 48,
       "h": 48,
       "columns": 12

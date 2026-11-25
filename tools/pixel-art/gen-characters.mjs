@@ -1109,6 +1109,33 @@ export const CHARS = [
     outfit: { ramp: R.brown, lower: 'tunic', collar: 'D', belt: ['X', 'Z'], cuff: 'D' },
     props: ['bow'],
   },
+  // ---- 3막 ----
+  {
+    id: 'serena_hood', kind: 'npc', legs: { K: 'v', k: 'V', L: 'T', M: 'v' }, // 세레나 두건 모습: 갈색 두건과 망토, 흰 드레스 자락
+    hood: R.leather, eye: 'x', pose: 'clasp', smile: false,
+    cape: R.leather,
+    outfit: { ramp: R.white, lower: 'robe', collar: 'o', cuff: 'x', hem: 'x' },
+  },
+  {
+    id: 'blacksmith', kind: 'npc', legs: { K: 'O', k: 'P', L: 'C', M: 'D' }, // 대장장이 노인: 흰 머리와 수염, 가죽 앞치마
+    hair: { ramp: ['v', 'V', 't', 'T'], style: 'short' }, brow: 'V', stoop: true,
+    beard: ['v', 'V', 't', 'T'],
+    outfit: { ramp: R.brown, sleeve: R.skin, lower: 'tunic', lowerRamp: R.leather, belt: ['O', 'P'], cuff: 'S' },
+  },
+  {
+    id: 'paladin_captain', kind: 'mob', name: '성기사 대장', legs: { K: 'm', k: 'M', L: 'L', M: 'l' }, // 성기사 + 금장식(금 깃털, 금 장갑, 흰 망토)
+    helmet: { plume: ['y', 'Y', 'O'] }, gloves: 'Y',
+    cape: R.white,
+    outfit: { ramp: R.silver, lower: 'tunic', cuff: 'Y' },
+    decor: ['armor', 'tabard', 'cross', 'pauldrons'], crossColor: 'y',
+    props: ['spear'],
+  },
+  {
+    id: 'raid_captain', kind: 'mob', name: '습격대장', legs: { K: 'k', k: 'k' }, // 가면을 쓴 사제: 검은 두건, 흰 가면, 희게 빛나는 손과 팔뚝 문양
+    hood: R.black, eye: 'k',
+    outfit: { ramp: R.black, lower: 'robe', belt: ['k', 'R'], cuff: 'l' },
+    decor: ['whiteMask', 'armMark', 'glowHand'],
+  },
 ];
 
 // 인물 하나만 쓰는 장식
@@ -1195,6 +1222,25 @@ Object.assign(DECOR, {
     // 훈장 (붉은 끈, 은 별)
     g.set(12, 21, 'x');
     g.set(12, 22, 'm');
+  },
+  /** 습격대장의 흰 가면 (눈구멍만 검게) */
+  whiteMask(g, c, v) {
+    if (v === 'up') return;
+    if (v === 'right') {
+      g.rect(19, 10, 23, 15, (x, y) => (x === 19 ? 'V' : 'v'));
+      g.set(21, 12, 'k');
+      return;
+    }
+    g.ellipse(15.5, 12.5, 4.8, 4, (x, y) => (x >= 18 ? 'V' : 'v'));
+    g.set(13, 12, 'k');
+    g.set(18, 12, 'k');
+    g.rect(15, 15, 16, 15, 'V');
+  },
+  /** 팔뚝에 새긴 문양 (희게 빛남) */
+  armMark(g, c, v) {
+    if (v === 'up') return;
+    const xs = v === 'right' ? [17] : [6, 25];
+    for (const x of xs) for (let y = 23; y <= 27; y += 2) g.set(x, y, 'l');
   },
   raggedHem(g, c, v) {
     for (let x = 4; x <= 27; x++) if (x % 3 === 0) g.set(x, 34, '.');

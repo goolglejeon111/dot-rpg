@@ -456,6 +456,40 @@ function scorpionBattle() {
   return frames;
 }
 
+// ---------------------------------------------------------------------
+// 3막 안개 짐승: 안개처럼 흰 털의 네발짐승. 등이 굽고 머리를 낮춤, 붉은 눈
+// ---------------------------------------------------------------------
+const MIST = ['v', 'V', 't'];
+function mistBeast(view, step = 0) {
+  const c = new Cv(32, 40);
+  const v = view === 'left' ? 'right' : view;
+  const leg = [0, 1, 0, -1][step % 4];
+  if (v === 'right') {
+    // 옆: 긴 몸통, 낮은 머리, 늘어진 꼬리털
+    for (const [x, ph] of [[9, leg], [13, -leg], [20, -leg], [24, leg]]) c.rect(x, 31, x + 1, 37 + (ph > 0 ? 0 : 1) - Math.abs(ph), 'T');
+    c.ellipse(16, 27, 10, 5.2, shade(MIST));
+    c.ellipse(13, 23.5, 6, 3, shade(MIST));
+    c.disc(26, 28, 3.6, shade(MIST));
+    c.line(28, 28, 30, 30, 'V');
+    c.set(27, 27, 'X');
+    c.line(6, 25, 3, 29, 'V');
+    c.line(5, 26, 2, 31, 't');
+  } else {
+    // 앞·뒤: 어깨를 웅크린 몸, 앞다리 둘
+    for (const [x, ph] of [[11, leg], [19, -leg]]) c.rect(x, 31, x + 1, 37 - Math.abs(ph), 'T');
+    c.ellipse(15.5, 27, 8, 6, shade(MIST));
+    c.ellipse(15.5, 22, 6.5, 3.5, shade(MIST));
+    if (v === 'down') {
+      c.disc(15.5, 29, 3.6, shade(['v', 'v', 'V']));
+      c.set(14, 28, 'X');
+      c.set(17, 28, 'X');
+      c.line(15, 32, 16, 32, 'T');
+    } else c.line(15, 30, 16, 36, 'V');
+  }
+  c.outline('T');
+  return view === 'left' ? c.flipX() : c;
+}
+
 /** gen-battle.mjs가 쓰는 목록 */
 export const CREATURES = {
   sewer_rat: { walk: walkSheet(rat), battle: smallBattle(rat), cell: 48 },
@@ -463,4 +497,5 @@ export const CREATURES = {
   sewer_eel: { walk: null, battle: eelBattle(), cell: 96 },
   sand_crawler: { walk: walkSheet((v, i) => crawler(v, i, 0)), battle: crawlerBattle(), cell: 48 },
   desert_scorpion: { walk: walkSheet(scorpion), battle: scorpionBattle(), cell: 48 },
+  mist_beast: { walk: walkSheet(mistBeast), battle: smallBattle(mistBeast), cell: 48 },
 };

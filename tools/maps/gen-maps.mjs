@@ -67,6 +67,7 @@ const FLOOR = {
   j: () => 'rock_floor',
 };
 const WALL = {
+  Q: (x, y) => ((x * 3 + y * 7) % 4 === 0 ? 'deep_water2' : 'deep_water'), // 저수조 깊은 물 (벽 레이어라 못 들어감)
   '#': () => 'wall_top',
   '^': () => 'wall_up',
   v: () => 'wall_low',
@@ -490,10 +491,10 @@ const npc = (name, x, y, sprite, facing, talk) => ({ type: 'npc', name, x, y, sp
       const d = Math.hypot((x - 14.5) / 13.5, (y - 12) / 9.5);
       if (d <= 1) m.set(x, y, 'i');
       const w = Math.hypot((x - 14.5) / 9.5, (y - 7) / 4.4);
-      if (w <= 1) m.set(x, y, 'o');
+      if (w <= 1) m.set(x, y, 'Q');
     }
   // 물 아래 가장자리
-  for (let x = 1; x < W - 1; x++) for (let y = 4; y < 21; y++) if (m.g[y][x] === 'i' && m.g[y - 1][x] === 'o') m.g[y - 1][x] = 'o';
+  for (let x = 1; x < W - 1; x++) for (let y = 4; y < 21; y++) if (m.g[y][x] === 'i' && m.g[y - 1][x] === 'Q') m.g[y - 1][x] = 'Q';
   m.rect(0, 17, 6, 19, 'i'); // 들어오는 길
   m.rect(23, 4, 28, 6, 'i'); // 사다리 앞
   faces(m);

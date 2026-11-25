@@ -2579,7 +2579,9 @@ export class BattleScene extends Phaser.Scene {
       this.pendingSpawns++;
       this.time.delayedCall(500 + i * 250, () => {
         this.pendingSpawns--;
-        if (!this.ended) this.spawnEnemy('sewer_leech', x, y);
+        // 깊은 물에서는 못 움직이므로 가장 가까운 물가로
+        const p = this.freeSpot(x, y);
+        if (!this.ended) this.spawnEnemy('sewer_leech', p.x, p.y);
       });
     }
   }

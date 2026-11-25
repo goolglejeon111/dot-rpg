@@ -781,6 +781,18 @@ function sewerWater(c, seed) {
 }
 tile('sewer_water', (c) => sewerWater(c, 51), { wade: true, note: '수로 물 (걸어 들어가면 몸이 1/3 잠기고 느려짐)' });
 tile('sewer_water2', (c) => sewerWater(c, 53), { wade: true, note: '수로 물 (다른 물결)' });
+/** 저수조 가운데의 깊은 물: 물결이 드물고 반짝임 없음. 들어갈 수 없음 */
+function deepWater(c, seed) {
+  const rnd = rng(seed);
+  c.rect(0, 0, 31, 31, 'k');
+  for (let i = 0; i < 4; i++) {
+    const x = rnd() * 24;
+    const y = 2 + rnd() * 28;
+    c.rect(x, y, x + 3 + rnd() * 5, y, 'W');
+  }
+}
+tile('deep_water', (c) => deepWater(c, 61), { solid: true, note: '저수조 깊은 물 (들어갈 수 없음)' });
+tile('deep_water2', (c) => deepWater(c, 63), { solid: true, note: '저수조 깊은 물 (다른 물결)' });
 /** 수로 벽돌 (위에서 본 벽 윗면, 앞면) */
 tile('sewer_wall_top', (c) => {
   c.rect(0, 0, 31, 31, 'K');

@@ -2267,7 +2267,7 @@ export class BattleScene extends Phaser.Scene {
         if (ed.block && Math.random() < 0.4) {
           e.state = 'guard';
           e.poseUntil = this.now + ed.block.ms;
-          e.aiCd = ed.block.ms + 300;
+          e.aiCd = 300; // 방패를 든 동안은 AI가 쉰다 (poseUntil까지)
           e.extra.push(this.fx('adrian_block', e.x, e.y - BODY, { loop: true }));
           return;
         }

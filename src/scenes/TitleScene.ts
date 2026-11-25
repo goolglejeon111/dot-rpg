@@ -4,7 +4,8 @@ import { allEndings, FIRST_STORY, stories } from '../game/data';
 import { freshProgress, gameState } from '../game/GameState';
 import { AUTO_SPEEDS, save, TEXT_SPEEDS } from '../game/save';
 import { FONT, makeButton, type Button } from '../game/ui';
-import { CG_LIST, cgKey, fitCg, loadCgs } from '../game/cg';
+import { CG_LIST, cgKey, loadCgs } from '../game/cg';
+import { containFit, coverFit, endingKey, loadEndingArt } from '../game/assets';
 import type { StoryStartData } from './StoryScene';
 
 const W = 960;
@@ -132,13 +133,26 @@ export class TitleScene extends Phaser.Scene {
     });
   }
 
-  /** CG 한 장을 화면 가득. 누르거나 키를 누르면 닫힘 */
+  /** CG 한 장을 화면 가득 */
   private viewCg(id: string) {
+    this.viewImage(cgKey(id));
+  }
+
+  /** 그림 한 장을 화면 가득. 한 번 더 누르거나 ESC로 닫힘 (ESC가 뒤의 창까지 닫지 않게) */
+  private viewImage(key: string) {
+    const kb = this.input.keyboard!;
+    kb.removeAllListeners('keydown-ESC');
     const back = this.add.rectangle(0, 0, W, H, 0x000000, 1).setOrigin(0).setDepth(60).setInteractive();
-    const img = fitCg(this.add.image(0, 0, cgKey(id)), W, H).setDepth(61);
-    const close = () => (back.destroy(), img.destroy());
+    const img = coverFit(this.add.image(0, 0, key), W, H).setDepth(61);
+    const close = () => {
+      if (!back.active) return;
+      back.destroy();
+      img.destroy();
+      kb.removeAllListeners('keydown-ESC');
+      kb.once('keydown-ESC', () => this.closePanel());
+    };
     back.once('pointerdown', close);
-    this.input.keyboard!.once('keydown', close);
+    kb.once('keydown-ESC', close);
   }
 
   /** 엔딩 목록: 본 엔딩은 이름과 "보상 받기", 못 본 엔딩은 ???와 힌트 한 줄 */
@@ -162,7 +176,7 @@ export class TitleScene extends Phaser.Scene {
         }
         const claimed = save.hasReward(e.id);
         add(
-          makeButton(this, W - 230, y, claimed ? '다시 보기' : '보상 받기', () => this.openReward(e.id), {
+          makeButton(this, W - 230, y, claimed ? '다시 보기' : '보상 받기', () => void this.openReward(e.id), {
             w: 130, h: 40, fontSize: 17, depth: 0, fill: claimed ? [0x1d1a2c, 0x3d3560] : [0x4a3a10, 0x6a5420],
           }),
         );
@@ -171,9 +185,10 @@ export class TitleScene extends Phaser.Scene {
   }
 
   /** 엔딩 보상: 경험치(배드·데드만, 한 번), 일러스트(없으면 임시 화면), 짧은 후일담(없으면 빈칸) */
-  private openReward(id: string) {
+  private async openReward(id: string) {
     const e = allEndings().find((x) => x.id === id);
     if (!e) return;
+    await loadEndingArt(this, [id]);
     const exp = e.type === 'dead' || e.type === 'bad' ? EXP_REWARD.ending(id) : 0;
     let note = '';
     const first = !save.hasReward(id);
@@ -191,12 +206,16 @@ export class TitleScene extends Phaser.Scene {
     if (!exp) note ||= '트루·히든엔딩은 일러스트와 후일담만 열립니다';
 
     this.openPanel(`${e.label}: ${e.title}`, (add) => {
-      // 일러스트 (아직 없으면 임시 화면)
-      add(this.add.rectangle(W / 2, 290, 520, 220, 0x221a26).setStrokeStyle(2, 0x6a5a7a));
-      add(this.add.text(W / 2, 290, '엔딩 일러스트\n(준비 중)', { fontFamily: FONT, fontSize: '20px', color: '#776a86', align: 'center' }).setOrigin(0.5));
+      // 일러스트 (4:3 작게, 누르면 크게). 아직 없으면 임시 화면
+      const frame = this.add.rectangle(W / 2, 290, 282, 213, 0x221a26).setStrokeStyle(2, 0x6a5a7a);
+      add(frame);
+      if (this.textures.exists(endingKey(id))) {
+        frame.setStrokeStyle(2, 0xcdb88a).setInteractive({ useHandCursor: true }).on('pointerdown', () => this.viewImage(endingKey(id)));
+        add(containFit(this.add.image(W / 2, 290, endingKey(id)), 276, 207));
+      } else add(this.add.text(W / 2, 290, '엔딩 일러스트\n(준비 중)', { fontFamily: FONT, fontSize: '20px', color: '#776a86', align: 'center' }).setOrigin(0.5));
       add(
         this.add
-          .text(W / 2, 430, e.epilogue ?? '', { fontFamily: FONT, fontSize: '18px', color: '#dddddd', align: 'center', wordWrap: { width: 560, useAdvancedWrap: true } })
+          .text(W / 2, 410, e.epilogue ?? '', { fontFamily: FONT, fontSize: '18px', color: '#dddddd', align: 'center', wordWrap: { width: 560, useAdvancedWrap: true } })
           .setOrigin(0.5, 0),
       );
       add(this.add.text(W / 2, 520, note, { fontFamily: FONT, fontSize: '18px', color: first && exp ? '#e0c27a' : '#999999' }).setOrigin(0.5));
@@ -209,6 +228,20 @@ export class TitleScene extends Phaser.Scene {
   }
 
   // ---------- 개발 시험 (npm run dev 일 때만) ----------
+
+  /** 엔딩 화면 미리 보기: 엔딩을 골라 그 엔딩 화면만 띄운다 (저장 기록 없음) */
+  private showEndingPreviewMenu() {
+    const list = Object.entries(stories).flatMap(([sid, st]) => Object.keys(st.endings).map((id) => ({ sid, id, title: st.endings[id].title })));
+    this.openPanel('엔딩 화면 미리 보기', (add) => {
+      list.forEach((e, i) =>
+        add(
+          makeButton(this, W / 2 + (i < 6 ? -170 : 170), 190 + (i % 6) * 52, `${e.id}`, () => this.go({ story: e.sid, previewEnding: e.id }), {
+            w: 330, h: 44, fontSize: 16, depth: 0,
+          }),
+        ),
+      );
+    });
+  }
 
   private showDevMenu() {
     const pro = stories[FIRST_STORY];
@@ -235,12 +268,16 @@ export class TitleScene extends Phaser.Scene {
       })],
       ['1막 시험 ▶', () => this.showAct1Menu()],
       ['2막 시험 ▶', () => this.showAct2Menu()],
+      ['엔딩 화면 미리 보기 ▶', () => this.showEndingPreviewMenu()],
     ];
     this.openPanel('개발 시험', (add) => {
-      rows.forEach(([label, fn], i) => add(makeButton(this, W / 2, 180 + i * 46, label, fn, { w: 420, h: 42, fontSize: 18, depth: 0 })));
+      // 두 줄로 (한 줄에 6개)
+      rows.forEach(([label, fn], i) =>
+        add(makeButton(this, W / 2 + (i < 6 ? -170 : 170), 190 + (i % 6) * 52, label, fn, { w: 330, h: 44, fontSize: 15, depth: 0 })),
+      );
       add(
         this.add
-          .text(W / 2, 548, '전투 중: F6 적 전멸 · F7 브람 쓰러뜨리기 · F8 시간 끝 · F9 파티 전멸', { fontFamily: FONT, fontSize: '15px', color: '#888888' })
+          .text(W / 2, 520, '전투 중: F6 적 전멸 · F7 브람 쓰러뜨리기 · F8 시간 끝 · F9 파티 전멸', { fontFamily: FONT, fontSize: '15px', color: '#888888' })
           .setOrigin(0.5),
       );
     });

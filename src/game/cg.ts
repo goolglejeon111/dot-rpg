@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { FONT } from './ui';
+import { imageExists } from './assets';
 
 /**
  * 이벤트 CG (막마다 1장). 그림 파일은 public/assets/cg/{id}.png (4:3).
@@ -14,18 +15,6 @@ export const cgKey = (id: string) => `cg_${id}`;
 const CG_W = 960;
 const CG_H = 720;
 
-/** 파일이 실제 이미지인지 확인 (없는 파일이면 개발 서버가 HTML을 돌려줄 수 있음) */
-const existsCache = new Map<string, Promise<boolean>>();
-function imageExists(url: string): Promise<boolean> {
-  let p = existsCache.get(url);
-  if (!p) {
-    p = fetch(url, { method: 'HEAD' })
-      .then((r) => r.ok && (r.headers.get('content-type') ?? '').startsWith('image/'))
-      .catch(() => false);
-    existsCache.set(url, p);
-  }
-  return p;
-}
 
 /** 임시 그림: 위아래로 어두워지는 판, 가는 금테, 가운데 제목 */
 function makeCgPlaceholder(scene: Phaser.Scene, id: string) {

@@ -10,6 +10,7 @@ import { gameState, type StateData } from '../game/GameState';
 import { makeBodyPlaceholder, PORTRAIT_H, PORTRAIT_W } from '../game/placeholders';
 import { save } from '../game/save';
 import { cgKey, fitCg, loadCgs } from '../game/cg';
+import { coverFit, endingKey, imageExists, loadEndingArt } from '../game/assets';
 import { FONT, GOLD, hex, makeButton, type Button } from '../game/ui';
 import type {
   ChoiceOption,
@@ -32,6 +33,8 @@ export interface StoryStartData {
   node?: number;
   /** 이야기를 다 본 저장에서 이어하기: 막 전환 화면부터 */
   finished?: boolean;
+  /** 개발 시험: 이 엔딩 화면만 바로 띄운다 (저장 기록 없음) */
+  previewEnding?: string;
   /** 필드에서 열었을 때 돌아갈 장면 키 (없으면 끝나고 타이틀로) */
   returnTo?: string;
 }
@@ -55,18 +58,6 @@ const faceKey = (id: string, e: Expression) => `${id}_face_${e}`;
 /** 장면 ID로 정하는 특별한 장면: 꿈(dream…), 막간(interlude…) */
 const sceneKind = (id?: string) => (id?.startsWith('dream') ? 'dream' : id?.startsWith('interlude') ? 'interlude' : '');
 
-/** 파일이 실제 이미지인지 확인 (없는 파일이면 개발 서버가 HTML을 돌려줄 수 있음) */
-const existsCache = new Map<string, Promise<boolean>>();
-function imageExists(url: string): Promise<boolean> {
-  let p = existsCache.get(url);
-  if (!p) {
-    p = fetch(url, { method: 'HEAD' })
-      .then((r) => r.ok && (r.headers.get('content-type') ?? '').startsWith('image/'))
-      .catch(() => false);
-    existsCache.set(url, p);
-  }
-  return p;
-}
 
 interface Portrait {
   container: Phaser.GameObjects.Container;
@@ -205,6 +196,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     const cgs: string[] = [];
     for (const s of this.story.scenes) for (const n of s.nodes) if ('cg' in n && n.cg) cgs.push(n.cg);
     await loadCgs(this, cgs);
+    // 엔딩 일러스트 (없으면 붉은 화면)
+    await loadEndingArt(this, Object.keys(this.story.endings));
     const wanted: { key: string; url: string }[] = [];
     for (const id of ids) {
       const c = characters[id];
@@ -338,6 +331,13 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     });
     this.input.keyboard!.on('keydown', (ev: KeyboardEvent) => this.onKey(ev));
 
+    if (this.start.previewEnding) {
+      this.box.setAlpha(0);
+      this.nameBox.setAlpha(0);
+      this.mono.setAlpha(0);
+      this.showEnding(this.start.previewEnding, true);
+      return;
+    }
     if (this.start.finished) {
       this.showChapter(Object.keys(this.story.chapters)[0] ?? '');
       return;
@@ -1561,15 +1561,15 @@ export class StoryScene extends Phaser.Scene implements MapHost {
 
   // ---------- 엔딩, 막 전환 ----------
 
-  private showEnding(id: string) {
+  private showEnding(id: string, preview = false) {
     this.mode = 'end';
     this.toggleAuto(false);
     const def = this.story.endings[id];
     if (!def) console.error(`[story] 없는 엔딩 id: ${id}`);
-    save.markEnding(id);
-    this.lastChoice ??= this.findChoicePoint();
+    if (!preview) save.markEnding(id);
+    if (!preview) this.lastChoice ??= this.findChoicePoint();
     // 이어하기는 엔딩 갈래를 다시 보지 않도록 선택지가 있던 곳부터
-    if (this.lastChoice) {
+    if (this.lastChoice && !preview) {
       const sc = this.story.scenes[this.lastChoice.scene];
       save.setCheckpoint({ story: this.story.id, scene: sc.id, node: this.lastChoice.node, ...this.lastChoice.state });
     }
@@ -1588,13 +1588,46 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     const toTitle = makeButton(this, W / 2, H / 2 + 158, '타이틀로', () => this.leave(), {
       w: 320, h: 54, fontSize: 22, fill: [0x2a0c0c, 0x5a1a1a], stroke: 0xc05050, depth: 31,
     });
-    back.setEnabled(!!this.lastChoice);
+    back.setEnabled(!!this.lastChoice && !preview);
     const texts = [label, title, back, toTitle];
     texts.forEach((t) => t.setAlpha(0));
-    this.overlay = this.add.container(0, 0, [shade, ...texts]).setDepth(30);
     this.tweens.add({ targets: [this.box, this.nameBox, this.mono], alpha: 0, duration: 500 });
+    // 엔딩 일러스트가 있으면: 그림이 1초에 서서히 → 2초 그림만 → 아래 1/3 어두운 띠 위에 글자와 버튼
+    if (this.textures.exists(endingKey(id))) {
+      const art = coverFit(this.add.image(0, 0, endingKey(id)), W, H).setAlpha(0);
+      const band = this.add.image(0, H, this.bandTexture()).setOrigin(0, 1).setAlpha(0);
+      // 글자와 버튼을 아래 1/3로
+      const top = (H * 2) / 3;
+      label.setFontSize(22).setY(top + 18);
+      title.setFontSize(40).setY(top + 62);
+      back.setPosition(W / 2 - 170, H - 62);
+      toTitle.setPosition(W / 2 + 170, H - 62);
+      this.overlay = this.add.container(0, 0, [art, band, ...texts]).setDepth(30);
+      this.tweens.add({ targets: art, alpha: 1, duration: 1000 });
+      this.tweens.add({ targets: band, alpha: 1, duration: 600, delay: 3000 });
+      this.tweens.add({ targets: texts, alpha: 1, duration: 700, delay: 3300 });
+      return;
+    }
+    this.overlay = this.add.container(0, 0, [shade, ...texts]).setDepth(30);
     this.tweens.add({ targets: shade, alpha: 0.92, duration: 900 });
     this.tweens.add({ targets: texts, alpha: 1, duration: 700, delay: 700 });
+  }
+
+  /** 엔딩 그림 아래 1/3에 까는 띠: 위는 투명, 아래로 갈수록 짙은 검정 */
+  private bandTexture() {
+    const key = 'ending_band';
+    if (this.textures.exists(key)) return key;
+    const h = Math.round(H / 3);
+    const tex = this.textures.createCanvas(key, W, h)!;
+    const ctx = tex.getContext();
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(0.35, 'rgba(0,0,0,0.6)');
+    g.addColorStop(1, 'rgba(0,0,0,0.92)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, h);
+    tex.refresh();
+    return key;
   }
 
   /**

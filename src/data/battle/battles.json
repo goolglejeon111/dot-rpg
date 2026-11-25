@@ -115,6 +115,64 @@
     "guide": "R을 누르고 있으면 시간이 느려집니다. 마우스로 동료를 가리키고 R을 떼면 합동 기술",
     "guideTouch": "R 버튼을 누른 채 동료 쪽으로 밀었다 떼세요"
   },
+  "모래 괴물 무리": {
+    "title": "모래 괴물", "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "desert_a" },
+    "party": ["leon", "elysia"],
+    "waves": [
+      [{ "enemy": "sand_crawler", "x": 380, "y": 90 }, { "enemy": "sand_crawler", "x": 400, "y": 200 }, { "enemy": "sand_crawler", "x": 80, "y": 230 }],
+      [{ "enemy": "sand_crawler", "x": 60, "y": 80 }, { "enemy": "sand_crawler", "x": 224, "y": 260 }, { "enemy": "sand_crawler", "x": 400, "y": 140 }]
+    ]
+  },
+  "사막 몹 1": {
+    "title": "모래 괴물", "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "desert_a" },
+    "party": ["leon", "elysia"],
+    "waves": [[{ "enemy": "sand_crawler", "x": 360, "y": 110 }, { "enemy": "sand_crawler", "x": 380, "y": 200 }]]
+  },
+  "사막 몹 2": {
+    "title": "모래 괴물", "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "desert_a" },
+    "party": ["leon", "elysia"],
+    "waves": [[{ "enemy": "sand_crawler", "x": 360, "y": 90 }, { "enemy": "sand_crawler", "x": 390, "y": 170 }, { "enemy": "sand_crawler", "x": 340, "y": 250 }]]
+  },
+  "우물 방어": {
+    "title": "우물 방어", "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "oasis" },
+    "party": ["leon", "elysia"],
+    "allies": [{ "id": "karg", "x": 336, "y": 208 }, { "id": "mob_wolf", "actor": "wolf_a", "x": 304, "y": 272 }, { "id": "mob_wolf", "actor": "wolf_b", "x": 176, "y": 80 }],
+    "protect": { "id": "well", "name": "우물", "hp": 260, "def": 2, "prop": "well", "crack": "ex_well_cracked", "radius": 18 },
+    "waves": [
+      [{ "enemy": "desert_scorpion", "actor": "sc1" }, { "enemy": "desert_scorpion", "actor": "sc2" }, { "enemy": "desert_scorpion", "actor": "sc3" }, { "enemy": "desert_scorpion", "x": 40, "y": 60 }],
+      [{ "enemy": "desert_scorpion", "x": 30, "y": 140 }, { "enemy": "desert_scorpion", "x": 40, "y": 220 }, { "enemy": "desert_scorpion", "x": 410, "y": 60 }, { "enemy": "desert_scorpion", "x": 420, "y": 140 }],
+      [{ "enemy": "desert_scorpion", "x": 30, "y": 100 }, { "enemy": "desert_scorpion", "x": 420, "y": 100 }, { "enemy": "desert_scorpion", "x": 200, "y": 275 }, { "enemy": "desert_scorpion", "x": 260, "y": 275 }]
+    ],
+    "outcomes": { "fall:well": { "gameover": true } }
+  },
+  "교역로 도적": {
+    "title": "교역로 도적", "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "bandit_hideout" },
+    "party": ["leon", "elysia", "karg"],
+    "waves": [
+      [{ "enemy": "bandit_blade", "x": 330, "y": 100 }, { "enemy": "bandit_blade", "x": 350, "y": 160 }, { "enemy": "bandit_blade", "x": 330, "y": 220 }, { "enemy": "bandit_archer", "x": 420, "y": 70 }, { "enemy": "bandit_archer", "x": 420, "y": 250 }],
+      [{ "enemy": "bandit_blade", "x": 380, "y": 120 }, { "enemy": "bandit_blade", "x": 380, "y": 200 }, { "enemy": "bandit_archer", "x": 430, "y": 160 }]
+    ],
+    "guide": "3: 카르크로 교체"
+  },
+  "성기사단": {
+    "title": "성기사단", "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "oasis", "zone": "west" },
+    "party": ["leon", "elysia", "karg"],
+    "allies": [{ "id": "mob_wolf", "actor": "wolf1", "x": 400, "y": 60 }, { "id": "mob_wolf", "actor": "wolf2", "x": 420, "y": 260 }, { "id": "mob_wolf", "actor": "wolf3", "x": 440, "y": 120 }],
+    "waves": [
+      [{ "enemy": "paladin", "actor": "p1" }, { "enemy": "paladin", "actor": "p2" }, { "enemy": "paladin", "actor": "p3" }, { "enemy": "paladin", "actor": "p4" }],
+      [{ "enemy": "paladin", "actor": "p6" }, { "enemy": "paladin", "actor": "p7" }, { "enemy": "paladin", "actor": "p8" }],
+      [{ "enemy": "paladin", "actor": "p5" }, { "enemy": "paladin", "actor": "p9" }, { "enemy": "paladin", "actor": "p10" }]
+    ],
+    "comboStart": 50,
+    "comboGuide": "R을 누른 채 카르크를 가리키고 떼면 합동 기술 「찢고 베기」"
+  },
+  "아드리안": {
+    "title": "아드리안", "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "oasis", "zone": "west" },
+    "party": ["leon"],
+    "waves": [[{ "enemy": "adrian_boss", "actor": "adrian" }]],
+    "endAt": 0.3,
+    "guide": "방패를 든 동안은 정면 공격이 막힙니다. E(오러 찌르기)로 자세를 무너뜨리세요"
+  },
   "_cutscene": "체력 0 연출 전투장 (대본의 {\"hpZero\": ...})",
   "hpZero": {
     "arena": { "w": 448, "h": 288, "floor": "corridor", "tint": "#b88686" }

@@ -70,6 +70,8 @@ interface MoveDef {
   parryWindow?: number;
   regen?: number;
   fx?: string;
+  /** 대시: 연달아 쓸 수 있는 횟수 (하나씩 cooldown 뒤에 다시 참) */
+  charges?: number;
 }
 
 interface FighterDef {
@@ -102,7 +104,7 @@ interface EnemyDef {
   def: number;
   speed: number;
   boss?: boolean;
-  ai: 'rusher' | 'caster' | 'eel';
+  ai: 'rusher' | 'caster' | 'eel' | 'burrow' | 'knight';
   /** 쓰러지면 사라지지 않고 기절한 모습으로 남음 (제국 병사, 추격 기사) */
   faint?: boolean;
   /** 쓰러지면 물속으로 가라앉음 (수로의 괴물) */
@@ -111,7 +113,8 @@ interface EnemyDef {
   tail?: { every: number; cast: number; radius: number; mult: number; breakDamage: number };
   spray?: { cast: number; speed: number; mult: number; count: number };
   dive?: { below: number; leech: number; maxMs: number };
-  attack?: { range: number; windup: number; recover: number; cooldown: number; mult: number; fx: string };
+  /** hits = 한 번에 몇 번 베는지 (도적의 단검 두 번 베기) */
+  attack?: { range: number; windup: number; recover: number; cooldown: number; mult: number; fx: string; hits?: number };
   selfDestruct?: { below: number; signal: number; radius: number; mult: number; unblockable: boolean };
   keepAway?: number;
   bolt?: { cast: number; speed: number; mult: number; cooldown: number; unblockable?: boolean; fx?: string; tint?: string };
@@ -119,6 +122,21 @@ interface EnemyDef {
   blink?: { cooldown: number; distance: number };
   /** 시전 뒤 멈춰 서 있는 시간 (이때 때리기 쉽다) */
   recover?: number;
+  /** 정면에서 받는 피해 배율 (사막 전갈의 등껍질) */
+  shell?: number;
+  /**
+   * 방패로 정면 공격을 막는다. always = 서 있거나 걸을 때 늘 (성기사), stance = 방패를 든 동안만 (아드리안).
+   * 막을 수 없는 공격(오러 찌르기 등)을 정면에 맞으면 자세가 무너져 stagger ms 동안 휘청인다
+   */
+  shield?: { mode: 'always' | 'stance'; stagger: number };
+  /** 모래 속(무적)으로 다가가 range 안에서 튀어나와 문다(emerge ms 뒤). 그 뒤 open ms 동안 드러난 채 서 있다 */
+  burrow?: { range: number; emerge: number; mult: number; open: number };
+  /** 기사: 방패 돌진 (windup 뒤 ms 동안 곧게 달려듦, 막을 수 없음) */
+  charge?: { windup: number; ms: number; speed: number; mult: number; cooldown: number };
+  /** 기사: 방패 들고 버티기 */
+  block?: { ms: number };
+  /** 기사: 체력이 at 아래면 한 번 치유의 빛 (cast ms, 최대 체력의 amount만큼 회복) */
+  heal?: { at: number; cast: number; amount: number };
 }
 
 /** 전투 튜토리얼 한 단계. goal: hit(적을 벰) block(막기) parry(튕겨 내기) dodge(붉은 범위 피하기) free(자유) */
@@ -158,7 +176,8 @@ interface BattleDef {
   arena: { w: number; h: number; floor: string; tint: string; map?: string; /** 한 맵에 전투장이 여럿이면 그 이름 (없으면 첫 arena) */ zone?: string };
   party?: string[];
   start?: Record<string, number[]>;
-  allies?: { id: string; x: number; y: number }[];
+  /** actor = 맵에 서 있던 그 인물이 싸운다 (같은 아군이 여럿일 때) */
+  allies?: { id: string; x: number; y: number; actor?: string }[];
   /** actor = 맵에 서 있던 인물 ID. 그 인물이 그 자리에서 그대로 싸운다 (x, y 대신) */
   waves?: { enemy: string; x?: number; y?: number; actor?: string }[][];
   outcomes?: Record<string, OutcomeAction>;
@@ -182,6 +201,8 @@ interface BattleDef {
   guideTouch?: string;
   /** 안내를 이 기술을 쓸 때까지 띄워 둔다 */
   guideUntil?: 'skill';
+  /** 보스 체력이 이 비율 이하가 되면 쓰러뜨리지 않고 무릎 꿇린 채 끝 (결과 finisher, 자동 연출 없음) */
+  endAt?: number;
 }
 
 /** 인물별 스킬·궁극기 동작 (없는 것은 "준비 중") */
@@ -190,6 +211,8 @@ const MOVES: Record<string, Fighter['move']> = {
   'leon:ult': 'oath',
   'elysia:skill': 'rune',
   'elysia:ult': 'overload',
+  'karg:skill': 'fang',
+  'karg:ult': 'frenzy',
 };
 
 type State =
@@ -240,7 +263,7 @@ export class Fighter {
   invulnUntil = 0;
   // 적 AI
   aiCd = 0;
-  castKind: 'bolt' | 'area' | 'bite' | 'tail' | 'spray' | '' = '';
+  castKind: 'bolt' | 'area' | 'bite' | 'tail' | 'spray' | 'charge' | 'heal' | '' = '';
   castTaken = 0;
   attacks = 0;
   blinkCd = 0;
@@ -250,8 +273,20 @@ export class Fighter {
   recoverUntil = 0;
   // 스킬·궁극기
   skillCd = 0;
-  move: '' | 'thrust' | 'oath' | 'rune' | 'overload' | 'combo' = '';
+  move: '' | 'thrust' | 'oath' | 'rune' | 'overload' | 'combo' | 'fang' | 'frenzy' = '';
   moveCol = 0;
+  /** 여러 번 베는 기술의 몇 번째 */
+  moveStep = 0;
+  /** 대시를 쓴 때 (카르크) */
+  dashUsed: number[] = [];
+  /** 각성 (늑대의 피): 끝나는 때, 원래 빠르기, 몸을 두른 이펙트 */
+  buffUntil = 0;
+  baseSpeed = 0;
+  buffFx?: Phaser.GameObjects.Sprite;
+  // 기사 (아드리안)
+  healed = false;
+  chargeX = 0;
+  chargeY = 0;
   moveHit = new Set<Fighter>();
   /** 전투장 밖에 서 있던 맵 인물이 전투장 안으로 걸어 들어오는 중 */
   walkUntil = 0;
@@ -632,9 +667,9 @@ export class BattleScene extends Phaser.Scene {
       if (!d) continue;
       const f = new Fighter(a.id, a.id, 'ally', d);
       Object.assign(f, { hp: d.hp, maxHp: d.hp, atk: d.atk, defense: d.def, speed: d.speed });
-      const at = this.actorAt(a.id);
+      const at = this.actorAt(a.actor ?? a.id);
       this.spawn(f, at?.x ?? a.x, at?.y ?? a.y);
-      if (at) this.takeActor(f, a.id, at.facing);
+      if (at) this.takeActor(f, a.actor ?? a.id, at.facing);
     }
     if (b.protect) this.spawnProtect(b.protect);
     this.spawnWave(0);
@@ -775,13 +810,25 @@ export class BattleScene extends Phaser.Scene {
       atk: e.atk,
       def: e.def,
       attack: e.attack
-        ? { chainWindow: 0, hits: [{ mult: e.attack.mult, range: e.attack.range, arc: 110, windup: e.attack.windup, active: 60, recover: e.attack.recover, step: 4, fx: '', cols: [0, 1] }] }
+        ? {
+            chainWindow: 0,
+            hits: Array.from({ length: e.attack.hits ?? 1 }, (_, i) => ({
+              mult: e.attack!.mult, range: e.attack!.range, arc: 110, windup: i ? Math.round(e.attack!.windup * 0.5) : e.attack!.windup, active: 60,
+              recover: e.attack!.recover, step: 4, fx: e.attack!.fx === 'hit' ? '' : e.attack!.fx, cols: i % 2 ? [2, 3] : [0, 1],
+            })),
+          }
         : undefined,
     };
     const f = new Fighter(key, e.sprite, 'enemy', d, e);
     Object.assign(f, { hp: e.hp, maxHp: e.hp, atk: e.atk, defense: e.def, speed: e.speed });
     f.aiCd = 600 + Math.random() * 600;
     this.spawn(f, x, y);
+    // 모래 괴물은 모래 속에서 시작
+    if (e.burrow) {
+      f.dived = true;
+      if (!quiet) this.fx('dust_land', x, y - 4, { depth: y + 1 });
+      return f;
+    }
     // 나타날 때 빛 (맵에 서 있던 인물이 그대로 싸우면 없음)
     if (!quiet) this.fx('gnosis_vanish', x, y - BODY, { depth: y + 1, alpha: 0.8 });
     return f;
@@ -1077,6 +1124,7 @@ export class BattleScene extends Phaser.Scene {
     const ev = f.def.evade;
     if (!ev) return;
     if (ev.type === 'blink') return this.blink(f);
+    if (ev.type === 'dash') return this.dash(f);
     if (ev.type !== 'guard') return this.notices.push({ kind: 'toast', text: `${ev.name}: 아직 준비 중인 동작입니다` });
     if (this.now < f.guardCd || f.stamina < 10) return;
     if (f.state !== 'idle' && f.state !== 'move' && !(f.state === 'attack' && this.now >= f.chainUntil - f.def.attack!.chainWindow)) return;
@@ -1123,6 +1171,38 @@ export class BattleScene extends Phaser.Scene {
     this.overloadUse(f, 'blink');
   }
 
+  /** 대시 (카르크): 바라보는 쪽으로 빠르게. charges번까지 연달아, 쓴 것은 하나씩 cooldown 뒤에 다시 참. 잠깐 맞지 않음 */
+  private dash(f: Fighter) {
+    const ev = f.def.evade!;
+    if (f.airborne || (f.state !== 'idle' && f.state !== 'move' && f.state !== 'attack')) return;
+    f.dashUsed = f.dashUsed.filter((t) => this.now - t < (ev.cooldown ?? 3000));
+    if (f.dashUsed.length >= (ev.charges ?? 1)) return;
+    f.dashUsed.push(this.now);
+    const [vx, vy] = dirVec(f.facing);
+    for (let i = 0; i < 14; i++) this.moveBy(f, vx * 4, vy * 4);
+    const ang = Math.atan2(vy, vx);
+    this.fx(ev.fx ?? 'karg_dash', f.x, f.y - BODY, { angle: ang, depth: f.y + 2, flipY: Math.cos(ang) < -0.01 });
+    f.invulnUntil = this.now + 200;
+    f.state = 'idle';
+    f.combo = -1;
+  }
+
+  /** 각성 (늑대의 피): ms 동안 빠르기 1.35배, 공격 1.5배, 모든 공격이 막기·방패를 찢음 */
+  private startBuff(f: Fighter, ms: number) {
+    if (this.now >= f.buffUntil) f.baseSpeed = f.speed;
+    f.speed = f.baseSpeed * 1.35;
+    f.buffUntil = this.now + ms;
+    f.buffFx?.destroy();
+    f.buffFx = this.fx(f.def.ult?.fx ?? 'karg_frenzy', f.x, f.y - BODY, { loop: true, depth: f.y + 1, alpha: 0.85 });
+  }
+
+  private endBuff(f: Fighter) {
+    f.speed = f.baseSpeed;
+    f.buffUntil = 0;
+    f.buffFx?.destroy();
+    f.buffFx = undefined;
+  }
+
   /** 과부하: 마법을 쓸 때마다 오르고, 가득 찬 채로 쓰면 체력이 깎인다 (1 아래로는 안 내려감) */
   private overloadUse(f: Fighter, what: 'bolt' | 'blink' | 'skill') {
     const o = f.def.gauge?.overload;
@@ -1164,6 +1244,7 @@ export class BattleScene extends Phaser.Scene {
     f.stateT = 0;
     f.hitDone = false;
     f.combo = -1;
+    f.moveStep = 0;
     f.moveHit.clear();
     if (kind === 'rune') this.overloadUse(f, 'skill');
   }
@@ -1249,6 +1330,56 @@ export class BattleScene extends Phaser.Scene {
         if (t > WIND + 1200) this.endMove(f);
         return;
       }
+      case 'fang': {
+        // 송곳니: 달려들며 베고, 그 자리에서 두 번 더 벤 뒤 뒤로 빠진다. 막기·방패를 찢음
+        const WIND = 60;
+        const DASH = 160;
+        const CUT = 90;
+        if (t < WIND) return void (f.moveCol = 4);
+        if (t < WIND + DASH) {
+          f.moveCol = 5;
+          const sp = 300 * (dt / 1000);
+          this.moveBy(f, f.aimX * sp, f.aimY * sp);
+          for (const e of this.foesOf(f)) {
+            if (f.moveHit.has(e) || Math.hypot(e.x - f.x, e.y - f.y) > 24 + e.radius) continue;
+            f.moveHit.add(e);
+            this.damage(e, f, f.atk * 1.0, { unblockable: true, push: 2 });
+          }
+          return;
+        }
+        const k = Math.floor((t - WIND - DASH) / CUT);
+        if (k < 2) {
+          f.moveCol = k ? 3 : 1;
+          if (f.moveStep <= k) {
+            f.moveStep = k + 1;
+            this.fx(f.def.skill?.fx ?? 'karg_fang', f.x + f.aimX * 14, f.y - BODY + f.aimY * 8, { depth: f.y + 3 });
+            for (const e of this.foesOf(f)) {
+              if (Math.hypot(e.x - f.x, e.y - f.y) <= 30 + e.radius) this.damage(e, f, f.atk * 0.7, { unblockable: true, push: 2 });
+            }
+          }
+          return;
+        }
+        if (t < WIND + DASH + CUT * 2 + 180) {
+          f.moveCol = 0;
+          const sp = 240 * (dt / 1000);
+          this.moveBy(f, -f.aimX * sp, -f.aimY * sp);
+          return;
+        }
+        this.endMove(f);
+        return;
+      }
+      case 'frenzy': {
+        // 늑대의 피: 잠깐 웅크렸다가 각성 (8초)
+        if (t < 400) return void (f.moveCol = Math.floor(t / 100) % 2 ? 9 : 8);
+        if (!f.hitDone) {
+          f.hitDone = true;
+          this.cameras.main.flash(160, 200, 90, 60);
+          this.startBuff(f, 8000);
+        }
+        f.moveCol = 9;
+        if (t > 650) this.endMove(f);
+        return;
+      }
       case 'combo':
         // 합동 기술은 시간 예약으로 움직인다. 혹시 남으면 풀어 줌
         if (t > 3000) this.endMove(f);
@@ -1300,17 +1431,83 @@ export class BattleScene extends Phaser.Scene {
       const c = combos.combos.find((k) => k.pair.includes(f.id) && k.pair.includes(pick.id));
       if (!c) return toast(`${pick.def.name}와(과)는 합동 기술이 없습니다`);
       if (pick.state === 'fainted' || f.state === 'fainted') return toast(`${pick.def.name}은(는) 기절해 있습니다`);
-      if (c.name !== '룬의 검') return toast(`${c.name}: 아직 준비 중인 기술입니다`);
+      if (c.name !== '룬의 검' && c.name !== '찢고 베기') return toast(`${c.name}: 아직 준비 중인 기술입니다`);
       const leon = f.id === 'leon' ? f : pick;
-      const ely = f.id === 'leon' ? pick : f;
-      this.runeSword(leon, ely, f);
+      const mate = f.id === 'leon' ? pick : f;
+      if (c.name === '찢고 베기') this.fangCombo(leon, mate, f);
+      else this.runeSword(leon, mate, f);
     }
   }
 
   /** 합동 기술 「룬의 검」: 엘리시아의 룬이 앞 일직선의 적을 묶고, 레온이 오러로 그 줄을 꿰뚫는다 */
   private runeSword(leon: Fighter, ely: Fighter, by: Fighter) {
+    this.lineCombo(leon, ely, by, '룬의 검', (inLine, ax, ay) => {
+      const marks: Phaser.GameObjects.Sprite[] = [];
+      for (let i = 0; i < 3; i++) {
+        const d = 40 + i * 70;
+        marks.push(this.fx('elysia_rune', leon.x + ax * d, leon.y + ay * d, { loop: true, depth: -5, scale: 0.8, alpha: 0.9 }));
+      }
+      for (const e of this.foesOf(leon).filter(inLine)) {
+        if (e.state === 'cast') this.endCast(e);
+        if (e.state === 'attack') e.combo = -1;
+        e.state = 'stagger';
+        e.stunUntil = this.now + 1500;
+      }
+      return () => {
+        ely.moveCol = 9;
+        return () => {
+          for (const m of marks) this.tweens.add({ targets: m, alpha: 0, duration: 300, onComplete: () => m.destroy() });
+        };
+      };
+    });
+  }
+
+  /** 합동 기술 「찢고 베기」: 카르크가 앞 일직선을 달려 나가며 막기·방패를 찢고, 레온이 오러로 그 줄을 꿰뚫는다 */
+  private fangCombo(leon: Fighter, karg: Fighter, by: Fighter) {
+    this.lineCombo(leon, karg, by, '찢고 베기', (inLine, ax, ay) => {
+      const targets = this.foesOf(leon).filter(inLine);
+      // 레온 옆에서 줄을 따라 달려 나간다
+      karg.x = leon.x;
+      karg.y = leon.y;
+      this.moveBy(karg, -ay * 14, ax * 10);
+      karg.facing = leon.facing;
+      karg.aimX = ax;
+      karg.aimY = ay;
+      karg.moveCol = 5;
+      for (let i = 0; i < 36; i++) this.moveBy(karg, ax * 4, ay * 4);
+      const ang = Math.atan2(ay, ax);
+      this.fx('karg_dash', karg.x, karg.y - BODY, { angle: ang, depth: karg.y + 2, flipY: Math.cos(ang) < -0.01 });
+      for (const e of targets) {
+        if (e.state === 'cast') this.endCast(e);
+        if (e.state === 'guard') this.clearExtra(e);
+        e.combo = -1;
+        this.fx(karg.def.skill?.fx ?? 'karg_fang', e.x, e.y - BODY, { depth: e.y + 3 });
+        this.damage(e, karg, karg.atk * 1.2, { unblockable: true, push: 0 });
+        if (e.alive && e.state !== 'kneel') {
+          e.state = 'stagger';
+          e.stunUntil = this.now + 1500;
+        }
+      }
+      return () => {
+        karg.moveCol = 0;
+        return () => {};
+      };
+    });
+  }
+
+  /**
+   * 일직선 합동 기술: bind = 동료가 앞 줄의 적을 묶는다 (레온이 찌를 때 부르는 함수를 돌려주고, 그 함수는 정리 함수를 돌려줌).
+   * 0.5초 뒤 레온이 그 줄을 꿰뚫는다. 처음 쓸 때는 두 사람 얼굴이 잠깐 화면을 가로지른다
+   */
+  private lineCombo(
+    leon: Fighter,
+    mate: Fighter,
+    by: Fighter,
+    name: string,
+    bind: (inLine: (e: Fighter) => boolean, ax: number, ay: number) => () => () => void,
+  ) {
     this.comboGauge = 0;
-    for (const p of [leon, ely]) {
+    for (const p of [leon, mate]) {
       if (p.state === 'guard') this.endGuard(p);
       p.state = 'skill';
       p.move = 'combo';
@@ -1324,7 +1521,7 @@ export class BattleScene extends Phaser.Scene {
     leon.facing = by.facing;
     leon.aimX = ax;
     leon.aimY = ay;
-    ely.facing = dirOf(leon.x + ax * 80 - ely.x, leon.y + ay * 80 - ely.y);
+    mate.facing = dirOf(leon.x + ax * 80 - mate.x, leon.y + ay * 80 - mate.y);
     const LEN = 210;
     const inLine = (e: Fighter) => {
       const dx = e.x - leon.x;
@@ -1333,22 +1530,10 @@ export class BattleScene extends Phaser.Scene {
       return along > -12 && along < LEN && Math.abs(-dx * ay + dy * ax) < 26;
     };
     const go = () => {
-      // 1) 룬으로 묶기
-      const marks: Phaser.GameObjects.Sprite[] = [];
-      for (let i = 0; i < 3; i++) {
-        const d = 40 + i * 70;
-        marks.push(this.fx('elysia_rune', leon.x + ax * d, leon.y + ay * d, { loop: true, depth: -5, scale: 0.8, alpha: 0.9 }));
-      }
-      for (const e of this.foesOf(leon).filter(inLine)) {
-        if (e.state === 'cast') this.endCast(e);
-        if (e.state === 'attack') e.combo = -1;
-        e.state = 'stagger';
-        e.stunUntil = this.now + 1500;
-      }
-      // 2) 레온이 줄을 따라 꿰뚫음
+      const onStrike = bind(inLine, ax, ay);
       this.time.delayedCall(500, () => {
         if (this.ended) return;
-        ely.moveCol = 9;
+        const cleanup = onStrike();
         leon.moveCol = 5;
         const sx = leon.x;
         const sy = leon.y;
@@ -1359,20 +1544,20 @@ export class BattleScene extends Phaser.Scene {
         this.fx('leon_thrust', sx, sy - BODY, { angle: ang, depth: sy + 3, flipY: Math.cos(ang) < -0.01, scale: Math.max(1, fl / 70) });
         this.cameras.main.shake(240, 0.01);
         this.cameras.main.flash(180, 220, 200, 255);
-        for (const e of targets) this.damage(e, leon, leon.atk * 3 + ely.atk, { unblockable: true, heavy: true, area: true, push: 12, from: { x: sx, y: sy } });
+        for (const e of targets) this.damage(e, leon, leon.atk * 3 + mate.atk, { unblockable: true, heavy: true, area: true, push: 12, from: { x: sx, y: sy } });
         this.time.delayedCall(450, () => {
-          for (const m of marks) this.tweens.add({ targets: m, alpha: 0, duration: 300, onComplete: () => m.destroy() });
+          cleanup();
           this.endMove(leon);
-          this.endMove(ely);
+          this.endMove(mate);
         });
       });
     };
-    // 처음 쓸 때는 두 사람 얼굴이 잠깐 화면을 가로지른다
     const once = gameState.progress.once;
-    if (!once.includes('cutin:룬의 검')) {
-      once.push('cutin:룬의 검');
+    const key = `cutin:${name}`;
+    if (!once.includes(key)) {
+      once.push(key);
       this.frozen = true;
-      this.notices.push({ kind: 'cutin', text: `${leon.id},${ely.id},룬의 검` });
+      this.notices.push({ kind: 'cutin', text: `${leon.id},${mate.id},${name}` });
       this.time.delayedCall(1100, () => {
         this.frozen = false;
         go();
@@ -1454,7 +1639,8 @@ export class BattleScene extends Phaser.Scene {
       if (d > h.range + 8 + t.radius + (t.enemy?.ai === 'eel' ? 18 : 0)) continue;
       const da = Math.abs(Phaser.Math.Angle.Wrap(Math.atan2(dy, dx) - ang));
       if (d > 10 && da > Phaser.Math.DegToRad(h.arc / 2)) continue;
-      hit = this.damage(t, f, f.atk * h.mult, { heavy: h.heavy, push: h.push ?? (h.heavy ? 10 : 4) }) || hit;
+      const buff = this.now < f.buffUntil;
+      hit = this.damage(t, f, f.atk * h.mult * (buff ? 1.5 : 1), { heavy: h.heavy, push: h.push ?? (h.heavy ? 10 : 4), unblockable: buff }) || hit;
     }
     if (hit && h.heavy) this.cameras.main.shake(90, 0.003);
   }
@@ -1474,12 +1660,38 @@ export class BattleScene extends Phaser.Scene {
     o: { heavy?: boolean; push?: number; unblockable?: boolean; area?: boolean; from?: { x: number; y: number }; raw?: boolean; tick?: boolean } = {},
   ): boolean {
     if (!t.targetable || this.ended) return false;
+    if (this.finishing && this.bdef.endAt && t.team === 'enemy') return false;
     if (this.now < t.invulnUntil && !o.raw) return false;
     if (t.airborne && !o.area && !o.raw) return false; // 점프 중에는 땅 위 공격이 닿지 않음 (넓은 범위 공격은 맞음)
     const from = o.from ?? (src ? { x: src.x, y: src.y } : { x: t.x, y: t.y - 1 });
 
+    // 적의 방패·등껍질 (정면에서 온 공격). 넓은 범위 공격과 룬의 지속 피해는 그대로
+    let broke = false;
+    const ed = t.enemy;
+    if (ed && (ed.shield || ed.shell) && !o.raw && !o.tick && !o.area) {
+      const fx = from.x - t.x;
+      const fy = from.y - t.y;
+      const fl = Math.hypot(fx, fy) || 1;
+      const front = (fx / fl) * t.aimX + (fy / fl) * t.aimY > 0.3;
+      const sh = ed.shield;
+      const up = !!sh && (sh.mode === 'always' ? t.state === 'idle' || t.state === 'move' : t.state === 'guard');
+      if (front && up) {
+        if (!o.unblockable) {
+          this.fx('block', t.x + (fx / fl) * 10, t.y - BODY + (fy / fl) * 6, { depth: t.y + 5, flipX: fx > 0 });
+          return false;
+        }
+        // 막을 수 없는 공격: 자세가 무너진다
+        broke = true;
+        this.word('break', t);
+        this.fx('guard_break', t.x, t.y - BODY, { depth: t.y + 5 });
+        this.clearExtra(t);
+        t.state = 'stagger';
+        t.stunUntil = this.now + sh!.stagger;
+      } else if (front && ed.shell) amount *= ed.shell;
+    }
+
     // 막기
-    if (t.state === 'guard' && !o.raw) {
+    if (t.state === 'guard' && !o.raw && t.team !== 'enemy') {
       const fx = from.x - t.x;
       const fy = from.y - t.y;
       const fl = Math.hypot(fx, fy) || 1;
@@ -1566,8 +1778,16 @@ export class BattleScene extends Phaser.Scene {
       this.startFinisher(t);
       return true;
     }
+    // 쓰러뜨리지 않고 끝나는 보스
+    const endAt = this.bdef.endAt;
+    if (endAt && t.enemy?.boss && !this.finishing && t.hp <= t.maxHp * endAt) {
+      t.hp = Math.max(1, t.hp);
+      this.kneelEnd(t);
+      return true;
+    }
     // 보스도 강한 베기(3타째)에는 잠깐 휘청인다
     if (t.enemy?.boss && o.heavy && t.state !== 'cast' && t.hp > 0) {
+      if (t.state === 'guard') this.clearExtra(t);
       t.state = 'stagger';
       t.stunUntil = this.now + 450;
     }
@@ -1587,7 +1807,7 @@ export class BattleScene extends Phaser.Scene {
       if (t.team === 'enemy') this.kill(t, src);
       else if (t.team === 'party') this.faint(t);
       else this.allyFall(t);
-    } else if (t.state !== 'prep' && t.state !== 'cast' && t.state !== 'skill' && !t.enemy?.boss) {
+    } else if (!broke && t.state !== 'prep' && t.state !== 'cast' && t.state !== 'skill' && !t.enemy?.boss) {
       // 맞으면 하던 것이 끊김
       if (t.state === 'guard') this.endGuard(t);
       t.state = 'hurt';
@@ -1750,6 +1970,7 @@ export class BattleScene extends Phaser.Scene {
   private updateFighter(f: Fighter, dt: number) {
     if (!f.alive) return;
     if (f.protect) return f.state === 'fainted' ? undefined : this.updateProtect(f, dt);
+    if (f.buffUntil && this.now >= f.buffUntil) this.endBuff(f);
     // 룬 결계 안의 적은 느려진다
     if (f.team === 'enemy' && this.runes.some((r) => this.inRune(f, r))) dt *= 0.5;
     // 전투장 안으로 걸어 들어오는 중
@@ -1791,6 +2012,8 @@ export class BattleScene extends Phaser.Scene {
         return this.updateCast(f, dt);
       case 'skill':
         return this.updateMove(f, dt);
+      case 'kneel':
+        return;
     }
     if (this.cutscene) return;
     if (f.team === 'enemy') this.enemyAI(f, dt);
@@ -1853,6 +2076,9 @@ export class BattleScene extends Phaser.Scene {
     } else if (f.id === 'elysia') {
       if (ultOk && (near(100) >= 2 || this.enemiesBoss)) return use('ult');
       if (skillOk && near(60) >= 1) return use('skill');
+    } else if (f.id === 'karg') {
+      if (ultOk && (near(90) >= 2 || this.enemiesBoss)) return use('ult');
+      if (skillOk && d > 20 && d < 80 && Math.random() < 0.03) return use('skill');
     }
     return false;
   }
@@ -1860,6 +2086,8 @@ export class BattleScene extends Phaser.Scene {
   private enemyAI(e: Fighter, dt: number) {
     const ed = e.enemy!;
     if (ed.ai === 'eel') return this.eelAI(e, dt);
+    if (ed.ai === 'burrow') return this.burrowAI(e, dt);
+    if (ed.ai === 'knight') return this.knightAI(e, dt);
     const t = this.targetOf(e);
     if (!t) {
       e.state = 'idle';
@@ -1886,7 +2114,11 @@ export class BattleScene extends Phaser.Scene {
         e.state = 'idle';
         if (e.aiCd <= 0) {
           e.aiCd = a.cooldown + Math.random() * 500;
+          e.attacks++;
+          // 몇 번에 한 번 붉은 범위 공격 (사막 전갈의 꼬리 찌르기)
+          if (ed.area && e.attacks % ed.area.every === 0) return this.startArea(e, t.x, t.y);
           this.startHit(e, 0);
+          if ((a.hits ?? 1) > 1) e.queued = true;
         }
       }
       return;
@@ -1942,9 +2174,196 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
+  /** 붉은 범위 공격 준비: (x, y)에 예고를 깔고 시전 */
+  private startArea(e: Fighter, x: number, y: number) {
+    const ar = e.enemy!.area!;
+    e.state = 'cast';
+    e.stateT = 0;
+    e.castKind = 'area';
+    e.castTaken = 0;
+    const warn = this.fx('warn_area', x, y, { loop: true, depth: -5 });
+    warn.setScale(ar.radius / 46).setAlpha(0.9);
+    e.area = { x, y, r: ar.radius, warn };
+  }
+
+  // ---- 모래 괴물 ----
+
+  /** 모래 속(무적)으로 다가가 튀어나와 물고, 잠깐 드러난 채 서 있다가(틈) 다시 숨는다 */
+  private burrowAI(e: Fighter, dt: number) {
+    const b = e.enemy!.burrow!;
+    const t = this.targetOf(e);
+    if (!t) return void (e.state = 'idle');
+    const dx = t.x - e.x;
+    const dy = t.y - e.y;
+    const d = Math.hypot(dx, dy) || 1;
+    e.aimX = dx / d;
+    e.aimY = dy / d;
+    e.facing = dirOf(dx, dy);
+    if (!e.dived) {
+      e.state = 'idle';
+      if (this.now >= e.diveUntil) {
+        e.dived = true;
+        this.fx('dust_land', e.x, e.y - 4, { depth: e.y + 1 });
+      }
+      return;
+    }
+    e.aiCd -= dt;
+    if (d > b.range + t.radius) {
+      e.state = 'move';
+      this.moveBy(e, (dx / d) * e.speed * (dt / 1000), (dy / d) * e.speed * (dt / 1000));
+      return;
+    }
+    if (e.aiCd > 0) return void (e.state = 'idle');
+    e.dived = false;
+    e.state = 'cast';
+    e.castKind = 'bite';
+    e.stateT = 0;
+    this.fx('dust_land', e.x, e.y - 4, { depth: e.y + 1 });
+  }
+
+  private updateBurrowCast(e: Fighter, dt: number) {
+    const b = e.enemy!.burrow!;
+    e.stateT += dt;
+    if (e.stateT < b.emerge) return;
+    for (const t of this.foesOf(e)) {
+      if (Math.hypot(t.x - e.x, t.y - e.y) <= b.range + 6 + t.radius) this.damage(t, e, e.atk * b.mult, { push: 8 });
+    }
+    e.state = 'idle';
+    e.castKind = '';
+    e.diveUntil = this.now + b.open;
+    e.aiCd = 300 + Math.random() * 400;
+  }
+
+  // ---- 기사 (아드리안) ----
+
+  /** 방패 돌진(멀 때), 베기 / 방패 들고 버티기(가까울 때). 체력이 heal.at 아래면 한 번 치유의 빛 */
+  private knightAI(e: Fighter, dt: number) {
+    const ed = e.enemy!;
+    const t = this.targetOf(e);
+    if (!t) return void (e.state = 'idle');
+    const dx = t.x - e.x;
+    const dy = t.y - e.y;
+    const d = Math.hypot(dx, dy) || 1;
+    e.aimX = dx / d;
+    e.aimY = dy / d;
+    e.facing = dirOf(dx, dy);
+    if (e.state === 'guard') {
+      if (this.now >= e.poseUntil) {
+        e.state = 'idle';
+        this.clearExtra(e);
+      }
+      return;
+    }
+    e.aiCd -= dt;
+    if (ed.heal && !e.healed && e.hp <= e.maxHp * ed.heal.at) {
+      e.healed = true;
+      return this.startKnightCast(e, 'heal');
+    }
+    if (this.now < e.recoverUntil) return void (e.state = 'idle');
+    const reach = (ed.attack?.range ?? 30) + t.radius;
+    if (e.aiCd <= 0) {
+      if (ed.charge && d > 80) return this.startKnightCast(e, 'charge');
+      if (d <= reach + 10) {
+        if (ed.block && Math.random() < 0.4) {
+          e.state = 'guard';
+          e.poseUntil = this.now + ed.block.ms;
+          e.aiCd = ed.block.ms + 300;
+          e.extra.push(this.fx('adrian_block', e.x, e.y - BODY, { loop: true }));
+          return;
+        }
+        e.aiCd = (ed.attack?.cooldown ?? 1000) + Math.random() * 400;
+        this.startHit(e, 0);
+        if ((ed.attack?.hits ?? 1) > 1) e.queued = true;
+        return;
+      }
+    }
+    if (d > reach - 4) {
+      e.state = 'move';
+      this.moveBy(e, (dx / d) * e.speed * (dt / 1000), (dy / d) * e.speed * (dt / 1000));
+    } else e.state = 'idle';
+  }
+
+  private startKnightCast(e: Fighter, kind: 'charge' | 'heal') {
+    const ed = e.enemy!;
+    e.state = 'cast';
+    e.castKind = kind;
+    e.stateT = 0;
+    e.hitDone = false;
+    e.moveHit.clear();
+    if (kind === 'charge') {
+      e.chargeX = e.aimX;
+      e.chargeY = e.aimY;
+      return;
+    }
+    // 치유의 빛: 금빛 원이 반쯤 차오르다가 깜빡이며 꺼진다
+    const s = this.fx('adrian_heal', e.x, e.y - BODY, { loop: true, depth: e.y + 2 });
+    e.extra.push(s);
+    this.time.delayedCall(ed.heal!.cast * 0.5, () => {
+      if (!s.active) return;
+      s.anims.pause();
+      this.tweens.add({ targets: s, alpha: 0.1, duration: 70, yoyo: true, repeat: 4, onComplete: () => s.destroy() });
+    });
+  }
+
+  private updateKnightCast(e: Fighter, dt: number) {
+    const ed = e.enemy!;
+    e.stateT += dt;
+    const t = e.stateT;
+    if (e.castKind === 'heal') {
+      const h = ed.heal!;
+      if (t < h.cast) return;
+      e.hp = Math.min(e.maxHp, e.hp + Math.round(e.maxHp * h.amount));
+      this.endCast(e);
+      e.state = 'idle';
+      e.castKind = '';
+      e.aiCd = 600;
+      return;
+    }
+    // 방패 돌진: 방패를 앞세워 잠깐 버틴 뒤 곧게 달려든다 (막을 수 없음. 옆으로 피한다)
+    const c = ed.charge!;
+    e.aimX = e.chargeX;
+    e.aimY = e.chargeY;
+    if (t < c.windup) return;
+    if (!e.hitDone) {
+      e.hitDone = true;
+      e.extra.push(this.fx('adrian_charge', e.x, e.y - BODY, { loop: true, angle: Math.atan2(e.chargeY, e.chargeX) }));
+    }
+    if (t < c.windup + c.ms) {
+      const sp = c.speed * (dt / 1000);
+      this.moveBy(e, e.chargeX * sp, e.chargeY * sp);
+      for (const f of this.foesOf(e)) {
+        if (e.moveHit.has(f) || Math.hypot(f.x - e.x, f.y - e.y) > 22 + f.radius) continue;
+        e.moveHit.add(f);
+        this.damage(f, e, e.atk * c.mult, { unblockable: true, heavy: true, push: 18 });
+      }
+      return;
+    }
+    this.endCast(e);
+    e.state = 'idle';
+    e.castKind = '';
+    e.aiCd = c.cooldown + Math.random() * 400;
+    e.recoverUntil = this.now + 600;
+  }
+
+  /** 체력이 endAt 아래로 내려간 보스: 쓰러뜨리지 않고 무릎 꿇린 채 전투를 끝낸다 */
+  private kneelEnd(e: Fighter) {
+    this.finishing = true;
+    this.endCast(e);
+    for (const p of this.projectiles) p.s.destroy();
+    this.projectiles = [];
+    e.state = 'kneel';
+    e.stunUntil = Infinity;
+    this.cameras.main.flash(250, 255, 255, 255);
+    this.cameras.main.shake(200, 0.006);
+    this.time.delayedCall(300, () => (this.frozen = true));
+    this.time.delayedCall(1600, () => this.finish('finisher'));
+  }
+
   private updateCast(e: Fighter, dt: number) {
     const ed = e.enemy!;
     if (ed.ai === 'eel') return this.updateEelCast(e, dt);
+    if (ed.ai === 'burrow') return this.updateBurrowCast(e, dt);
+    if (ed.ai === 'knight') return this.updateKnightCast(e, dt);
     e.stateT += dt;
     const cast = e.castKind === 'area' ? ed.area!.cast : ed.bolt!.cast;
     // 범위 공격은 일정 피해를 받으면 끊긴다
@@ -2401,6 +2820,14 @@ export class BattleScene extends Phaser.Scene {
       if (hasWalk && s.texture.key !== f.spriteKey) s.setTexture(f.spriteKey, row * 5);
     };
     if (f.enemy?.ai === 'eel') return this.renderEel(f, setBt);
+    // 모래 괴물: 숨은 동안 10열, 튀어나오는 중 8 → 9열
+    if (f.enemy?.burrow && (f.dived || f.state === 'cast')) {
+      setBt(f.dived ? 10 : f.stateT < f.enemy.burrow.emerge / 2 ? 8 : 9);
+      f.shadow.setVisible(false);
+      f.hpBar?.frame.setVisible(false);
+      f.hpBar?.fill.setVisible(false);
+      return;
+    }
     if (!hasWalk && (f.state === 'idle' || f.state === 'move')) return setBt(0);
     switch (f.state) {
       case 'skill':
@@ -2423,7 +2850,8 @@ export class BattleScene extends Phaser.Scene {
         break;
       case 'prep':
       case 'cast':
-        setBt(Math.floor(this.now / 150) % 2 ? 9 : 8);
+        // 기사의 방패 돌진은 방패를 앞세운 모습
+        setBt(f.castKind === 'charge' ? 6 : Math.floor(this.now / 150) % 2 ? 9 : 8);
         break;
       case 'kneel':
       case 'revive':
@@ -2447,7 +2875,8 @@ export class BattleScene extends Phaser.Scene {
     }
     // 무적(일어난 직후) 깜빡임, 막을 수 없는 공격 준비 중엔 붉게
     s.setAlpha(this.now < f.invulnUntil ? (Math.floor(this.now / 80) % 2 ? 0.5 : 1) : 1);
-    if (f.state === 'prep' && f.enemy?.selfDestruct) s.setTint(Math.floor(this.now / 120) % 2 ? 0xff9a9a : 0xffffff);
+    const charging = f.state === 'cast' && f.castKind === 'charge' && f.stateT < (f.enemy?.charge?.windup ?? 0);
+    if ((f.state === 'prep' && f.enemy?.selfDestruct) || charging) s.setTint(Math.floor(this.now / 120) % 2 ? 0xff9a9a : 0xffffff);
     else s.clearTint();
     f.glow?.setPosition(f.x, f.y - 22 - f.z).setDepth(f.y + 1);
     f.signal?.setPosition(f.x, f.y - BODY).setDepth(f.y + 2);
@@ -2457,7 +2886,11 @@ export class BattleScene extends Phaser.Scene {
         sp.setPosition(f.x, f.y - BODY - f.z).setRotation(Math.atan2(f.aimY, f.aimX)).setDepth(f.y + (f.aimY < -0.5 ? -1 : 2));
       } else if (sp.anims?.currentAnim?.key === 'fx_stun') sp.setPosition(f.x, f.y - 14).setDepth(f.y + 2);
       else if (sp.anims?.currentAnim?.key === 'fx_light_cast') sp.setPosition(f.x + f.aimX * 10, f.y - BODY - 2).setDepth(f.y + 3);
+      else if (sp.anims?.currentAnim?.key === 'fx_adrian_block' || sp.anims?.currentAnim?.key === 'fx_adrian_charge') {
+        sp.setPosition(f.x, f.y - BODY).setRotation(Math.atan2(f.aimY, f.aimX)).setDepth(f.y + (f.aimY < -0.5 ? -1 : 2));
+      } else if (sp.anims?.currentAnim?.key === 'fx_adrian_heal') sp.setPosition(f.x, f.y - BODY).setDepth(f.y + 2);
     }
+    f.buffFx?.setPosition(f.x, f.y - BODY - f.z).setDepth(f.y + 1);
     if (f.hpBar) {
       const show = f.hp < f.maxHp && f.state !== 'prep';
       f.hpBar.frame.setVisible(show).setPosition(Math.round(f.x), Math.round(f.y - 44 - f.z)).setDepth(10000);

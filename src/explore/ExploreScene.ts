@@ -939,9 +939,9 @@ export class ExploreScene extends Phaser.Scene {
       const a = this.actors.get(who);
       return a ? { x: a.spr.x, y: a.spr.y - 30 } : null;
     }
-    const def = (battlesData as unknown as Record<string, { arena: { map?: string } }>)[battle];
+    const def = (battlesData as unknown as Record<string, { arena: { map?: string; zone?: string } }>)[battle];
     if (!def?.arena.map || def.arena.map !== this.mapId) return null;
-    const ar = findObj(this.map, 'arena');
+    const ar = findObj(this.map, 'arena', def.arena.zone);
     return ar ? { x: ar.x + ar.width / 2, y: ar.y + ar.height / 2 } : null;
   }
 

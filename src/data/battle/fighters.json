@@ -106,6 +106,21 @@
         { "mult": 1.0, "range": 30, "arc": 120, "windup": 160, "active": 70, "recover": 260, "step": 3, "fx": "leon_slash1", "cols": [0, 1], "fxTint": "warm" },
         { "mult": 1.0, "range": 30, "arc": 120, "windup": 160, "active": 70, "recover": 420, "step": 3, "fx": "leon_slash2", "cols": [2, 3], "fxTint": "warm" }
       ] }
+    },
+    "karg": {
+      "name": "카르크", "speed": 96, "hp": 160, "atk": 11, "def": 4,
+      "attack": { "chainWindow": 260, "hits": [
+        { "mult": 0.6, "range": 26, "arc": 110, "windup": 50, "active": 50, "recover": 70, "step": 3, "fx": "karg_slash", "cols": [0, 1] },
+        { "mult": 0.6, "range": 26, "arc": 110, "windup": 50, "active": 50, "recover": 70, "step": 3, "fx": "karg_slash", "cols": [2, 3], "flipFx": true },
+        { "mult": 0.7, "range": 26, "arc": 110, "windup": 50, "active": 50, "recover": 70, "step": 3, "fx": "karg_slash", "cols": [0, 1] },
+        { "mult": 0.9, "range": 30, "arc": 120, "windup": 80, "active": 60, "recover": 180, "step": 6, "fx": "karg_slash", "cols": [4, 5], "flipFx": true }
+      ] }
+    },
+    "mob_wolf": {
+      "name": "늑대 전사", "speed": 80, "hp": 120, "atk": 9, "def": 3,
+      "attack": { "chainWindow": 0, "hits": [
+        { "mult": 1.0, "range": 30, "arc": 100, "windup": 300, "active": 70, "recover": 500, "step": 4, "fx": "", "cols": [0, 1] }
+      ] }
     }
   }
 }

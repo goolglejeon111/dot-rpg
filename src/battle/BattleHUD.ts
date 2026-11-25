@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import combos from '../data/battle/combos.json';
 import { FONT, makeButton } from '../game/ui';
+import { eyeImage } from '../game/cutin';
 import type { BattleScene, Fighter, VirtualInput } from './BattleScene';
 import { isCapped, isGuest, isUnlocked, levelOf, levelProgress, maxLevel, type Unlock } from './progress';
 
@@ -494,17 +495,21 @@ export class BattleHUD extends Phaser.Scene {
     this.tweens.add({ targets: t, alpha: 0, delay: 900, duration: 200, onComplete: () => t.destroy() });
   }
 
-  /** 궁극기 컷인: 가운데 띠 하나에 얼굴과 기술 이름이 0.6초 스친다 (전투는 계속) */
+  /** 궁극기 컷인 0.5초: 화면 가운데를 가로지르는 띠에 그 인물의 눈매 (스탠딩 그림에서), 기술 이름은 띠 아래 끝에 작게 */
   private ultCut(text: string) {
     const [id, name] = text.split(',');
-    const y = H / 2 - 40;
-    const bg = this.add.rectangle(0, y, W, 96, 0x000000, 0.7).setOrigin(0, 0.5).setDepth(35).setScale(1, 0);
-    const face = this.add.image(W / 2 - 220, y, `ui_face_${id}`, 0).setScale(S * 2.4).setDepth(36).setAlpha(0);
-    const t = this.add.text(W / 2 + 40, y, name ?? '', { fontFamily: FONT, fontSize: '30px', color: '#f3e7c4', fontStyle: 'bold' }).setOrigin(0, 0.5).setShadow(0, 2, '#000', 4).setDepth(37).setAlpha(0);
-    this.tweens.add({ targets: bg, scaleY: 1, duration: 90, ease: 'Quad.out' });
-    this.tweens.add({ targets: face, alpha: 1, x: face.x + 40, duration: 200, ease: 'Quad.out' });
-    this.tweens.add({ targets: t, alpha: 1, x: t.x - 20, duration: 200, delay: 60, ease: 'Quad.out' });
-    this.tweens.add({ targets: [bg, face, t], alpha: 0, delay: 520, duration: 140, onComplete: () => (bg.destroy(), face.destroy(), t.destroy()) });
+    const bandH = 140;
+    const eyes = eyeImage(this, id, W, bandH);
+    if (!eyes) return;
+    const parts: Phaser.GameObjects.GameObject[] = [this.add.rectangle(-W / 2, 0, W, bandH, 0x08060c, 1).setOrigin(0, 0.5), eyes];
+    parts.push(
+      this.add.rectangle(-W / 2, -bandH / 2, W, 3, 0xcdb88a).setOrigin(0, 0.5),
+      this.add.rectangle(-W / 2, bandH / 2, W, 3, 0xcdb88a).setOrigin(0, 0.5),
+      this.add.text(W / 2 - 30, bandH / 2 - 10, name ?? '', { fontFamily: FONT, fontSize: '18px', color: '#f3e7c4', fontStyle: 'bold' }).setOrigin(1, 1).setShadow(0, 2, '#000', 4),
+    );
+    const band = this.add.container(W + W / 2, H / 2 - 40, parts).setDepth(36);
+    this.tweens.add({ targets: band, x: W / 2, duration: 100, ease: 'Quad.out' });
+    this.tweens.add({ targets: band, x: -W / 2, duration: 100, delay: 400, ease: 'Quad.in', onComplete: () => band.destroy() });
   }
 
   /** 파티 전멸: 데드엔딩처럼 화면이 붉게 어두워지고 GAME OVER */

@@ -9,13 +9,16 @@ import { characters, stories } from '../game/data';
 import { gameState, type StateData } from '../game/GameState';
 import { makeBodyPlaceholder, PORTRAIT_H, PORTRAIT_W } from '../game/placeholders';
 import { save } from '../game/save';
-import { cgKey, fitCg, loadCgs } from '../game/cg';
+import { cgKey, loadCgs } from '../game/cg';
+import { senseBeat } from '../game/beat';
+import { playSe } from '../game/sound';
 import { coverFit, endingKey, imageExists, loadEndingArt } from '../game/assets';
 import { FONT, GOLD, hex, makeButton, type Button } from '../game/ui';
 import type {
   ChoiceOption,
   CutinNode,
   Emphasis,
+  EmphasisStyle,
   Expression,
   LineNode,
   Side,
@@ -47,10 +50,8 @@ const SIDE_X: Record<Side, number> = { left: 255, right: 705 };
 const DIM_SPEAK = 0x5c5c5c; // 듣는 사람
 const DIM_MONO = 0x9a9a9a; // 독백 중 (살짝)
 
-/** 컷인에 쓰는 눈매 자리 (스탠딩 그림 너비·높이에 대한 비율). 없으면 기본값 */
-const EYES: Record<string, { x: number; y: number }> = { adrian: { x: 0.5, y: 0.103 } };
-const EYE_DEFAULT = { x: 0.5, y: 0.11 };
-const EYE_PLACEHOLDER = { x: 0.5, y: 0.23 };
+/** 강조는 하나(문자열) 또는 여러 개(배열) */
+const fxList = (s?: EmphasisStyle): Emphasis[] => (!s ? [] : Array.isArray(s) ? s : [s]);
 
 const bodyKey = (id: string) => `${id}_body`;
 const itemKey = (id: string) => `item_${id}`;
@@ -140,6 +141,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   private veil!: Phaser.GameObjects.Rectangle;
   /** 강조 문장 slow: 다 나온 뒤 이만큼 머문다 */
   private holdMs = 0;
+  /** 강조 slow: 자동 진행일 때 다 나온 뒤 더 머무는 시간 */
+  private extraWait = 0;
   /** 맵 없이 대화 화면 위에서 하는 연출 (꿈, 남의 기억, 막간) */
   private fx!: StoryFx;
   /** 아래층 맵 화면(Explore) 상태 */
@@ -705,15 +708,16 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     if (old) {
       this.tweens.killTweensOf(old);
       if (instant) old.destroy();
-      else this.tweens.add({ targets: old, alpha: 0, duration: 500, onComplete: () => old.destroy() });
+      else this.tweens.add({ targets: old, alpha: 0, duration: 600, onComplete: () => old.destroy() });
     }
+    // 그림 파일이 없으면 CG 없이 진행
     if (!id || !this.textures.exists(cgKey(id))) return;
     save.markCg(id);
     for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, instant);
     const black = this.add.rectangle(0, 0, W, H, 0x000000, 1).setOrigin(0);
-    const img = fitCg(this.add.image(0, 0, cgKey(id)), W, H);
+    const img = coverFit(this.add.image(0, 0, cgKey(id)), W, H);
     this.cgView = this.add.container(0, 0, [black, img]).setDepth(4).setAlpha(instant ? 1 : 0);
-    if (!instant) this.tweens.add({ targets: this.cgView, alpha: 1, duration: 700 });
+    if (!instant) this.tweens.add({ targets: this.cgView, alpha: 1, duration: 600 });
     if (this.mono.visible) this.veil.setAlpha(this.veilAlpha());
   }
 
@@ -746,8 +750,14 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   private woundReact(mode: 'flicker' | 'flare' | 'sense' | 'off') {
     if (mode === 'sense' || mode === 'off') return this.setSense(mode === 'sense');
     if (this.mapState === 'on') (this.scene.get('Explore') as ExploreScene).woundFx(mode);
-    if (mode !== 'flare') return;
-    // 크게 맥박: 화면 가장자리가 하얗게 번졌다 걷힌다 (효과음 se_wound_pulse 자리)
+    if (mode === 'flicker') {
+      // 화면 왼쪽 가장자리가 아주 희미하게 한 번 밝아진다 (소리 없음)
+      const f = this.add.image(0, 0, 'edge_left').setOrigin(0).setDepth(27).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
+      this.tweens.add({ targets: f, alpha: 0.22, duration: 300, yoyo: true, hold: 120, ease: 'Sine.inOut', onComplete: () => f.destroy() });
+      return;
+    }
+    // 크게 맥박: 화면 가장자리가 하얗게 번졌다 걷힌다
+    void playSe(this, 'se_wound_pulse');
     const e = this.add.image(0, 0, 'edge_all').setOrigin(0).setDepth(27).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
     this.tweens.add({
       targets: e, alpha: 1, duration: 140, ease: 'Quad.out',
@@ -760,55 +770,72 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     if (this.mapState === 'on') (this.scene.get('Explore') as ExploreScene).woundFx(on ? 'sense' : 'off');
     if (on === !!this.senseFx) return;
     if (on) {
+      // 2초마다 맥박 (맵의 어깨 빛과 같은 시계)
       const e = this.add.image(0, 0, 'edge_left').setOrigin(0).setDepth(27).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
       this.senseFx = e;
-      this.tweens.add({ targets: e, alpha: { from: 0.06, to: 0.38 }, duration: 523, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+      this.events.on(Phaser.Scenes.Events.UPDATE, this.senseTick, this);
       return;
     }
     const e = this.senseFx!;
     this.senseFx = undefined;
+    this.events.off(Phaser.Scenes.Events.UPDATE, this.senseTick, this);
     this.tweens.killTweensOf(e);
     if (instant) e.destroy();
     else this.tweens.add({ targets: e, alpha: 0, duration: 600, onComplete: () => e.destroy() });
   }
 
+  private senseTick() {
+    this.senseFx?.setAlpha(0.04 + 0.32 * senseBeat(this.game.loop.time));
+  }
+
   /**
-   * 컷인: 화면 가운데를 가로지르는 띠에 인물의 눈매를 크게 (0.8초). 스탠딩 그림의 눈 부분을 잘라 쓴다
+   * 컷인: 화면 가운데를 가로지르는 띠(180px)가 0.15초에 미끄러져 들어와 0.5초 머문 뒤 반대쪽으로 빠진다.
+   * 띠 안에는 스탠딩 그림의 눈 부분을 크게 (자리는 characters.json의 cutin). 그림이나 자리가 없으면 생략
    */
   private showCutin(n: CutinNode, done: () => void) {
+    const key = bodyKey(n.cutin);
+    const eye = characters[n.cutin]?.cutin;
+    // 회색 실루엣(임시 그림)이거나 눈 자리가 없으면 생략
+    if (!eye || !this.textures.exists(key) || this.textures.get(key).getSourceImage().width === PORTRAIT_W) return done();
     this.mode = 'busy';
     this.clearText();
-    const cy = H / 2 - 40;
-    const bandH = 150;
-    const parts: Phaser.GameObjects.GameObject[] = [this.add.rectangle(0, 0, W, bandH, 0x08060c, 0.94).setOrigin(0, 0.5)];
-    const key = bodyKey(n.cutin);
-    let img: Phaser.GameObjects.Image | undefined;
-    if (this.textures.exists(key)) {
-      img = this.add.image(0, 0, key).setOrigin(0, 0);
-      const tw = img.width;
-      const th = img.height;
-      const eye = tw === PORTRAIT_W ? EYE_PLACEHOLDER : EYES[n.cutin] ?? EYE_DEFAULT;
-      const cw = tw * 0.4;
-      const k = W / cw;
-      const ch = bandH / k;
-      const x0 = eye.x * tw - cw / 2;
-      const y0 = eye.y * th - ch / 2;
-      img.setCrop(x0, y0, cw, ch).setScale(k).setPosition(-x0 * k, -bandH / 2 - y0 * k);
-      if (n.tint === 'gold') img.setTint(0xffd27a, 0xffd27a, 0xff9a5a, 0xff9a5a);
-      parts.push(img);
+    const bandH = 180;
+    const cy = H / 2;
+    const dim = this.add.rectangle(0, 0, W, H, 0x000000, 1).setOrigin(0).setDepth(19).setAlpha(0);
+    const parts: Phaser.GameObjects.GameObject[] = [this.add.rectangle(0, 0, W, bandH, 0x08060c, 1).setOrigin(0, 0.5)];
+    // 눈 자리를 띠 가운데에: 보이는 부분만 잘라서 키운다
+    const k = eye.scale;
+    const cw = W / k;
+    const ch = bandH / k;
+    const img = this.add.image(0, 0, key).setOrigin(0, 0);
+    const x0 = eye.x - cw / 2;
+    const y0 = eye.y - ch / 2;
+    img.setCrop(x0, y0, cw, ch).setScale(k).setPosition(-x0 * k, -bandH / 2 - y0 * k);
+    parts.push(img);
+    if (n.tint === 'gold') {
+      // 붉은 금빛 눈매와 번쩍임
+      img.setTint(0xffd27a, 0xffd27a, 0xff8a50, 0xff8a50);
+      const flash = this.add.rectangle(0, 0, W, bandH, 0xffe2a0, 1).setOrigin(0, 0.5).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0);
+      parts.push(flash);
+      this.tweens.add({ targets: flash, alpha: { from: 0.85, to: 0 }, duration: 380, delay: 170, ease: 'Quad.out' });
     }
     parts.push(this.add.rectangle(0, -bandH / 2, W, 3, GOLD).setOrigin(0, 0.5), this.add.rectangle(0, bandH / 2, W, 3, GOLD).setOrigin(0, 0.5));
-    const band = this.add.container(0, cy, parts).setDepth(20).setScale(1, 0);
-    const cap = n.caption
-      ? this.add.text(W - 50, cy + bandH / 2 + 30, n.caption, { fontFamily: FONT, fontSize: '26px', color: '#f3e7c4', fontStyle: 'bold' }).setOrigin(1, 0.5).setShadow(0, 2, '#000', 6).setDepth(20).setAlpha(0)
-      : undefined;
-    this.tweens.add({ targets: band, scaleY: 1, duration: 120, ease: 'Quad.out' });
-    if (img) this.tweens.add({ targets: img, x: img.x - 60, duration: 800, ease: 'Linear' });
-    if (cap) this.tweens.add({ targets: cap, alpha: 1, x: cap.x - 16, duration: 220, delay: 100 });
+    if (n.caption) {
+      parts.push(
+        this.add
+          .text(W - 36, bandH / 2 - 14, n.caption, { fontFamily: FONT, fontSize: '17px', color: '#f3e7c4' })
+          .setOrigin(1, 1)
+          .setShadow(0, 2, '#000', 4),
+      );
+    }
+    const band = this.add.container(W, cy, parts).setDepth(20);
+    this.tweens.add({ targets: dim, alpha: 0.45, duration: 150 });
+    this.tweens.add({ targets: band, x: 0, duration: 150, ease: 'Quad.out' });
     this.time.delayedCall(650, () => {
-      this.tweens.add({ targets: [band, cap].filter(Boolean), alpha: 0, duration: 170, onComplete: () => (band.destroy(), cap?.destroy()) });
+      this.tweens.add({ targets: band, x: -W, duration: 150, ease: 'Quad.in', onComplete: () => band.destroy() });
+      this.tweens.add({ targets: dim, alpha: 0, duration: 150, onComplete: () => dim.destroy() });
     });
-    this.time.delayedCall(830, done);
+    this.time.delayedCall(800, done);
   }
 
   private lookNext() {
@@ -1182,21 +1209,32 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.mode = 'typing';
     this.render = render;
     const slow = fx.includes('slow');
-    this.holdMs = slow ? 900 : 0;
-    if (fx.includes('shake')) this.shakeText(target);
-    const delay = slow ? Math.max(90, save.settings.textDelay * 3) : save.settings.textDelay;
-    if (delay <= 0) return this.completeTyping();
-    render('');
+    const big = fx.includes('big');
+    // big: 다 나온 뒤 0.3초 정적 (그동안 넘길 수 없음)
+    this.holdMs = big ? 300 : 0;
+    // slow: 자동 진행이면 다 나온 뒤 1초 더 머문다
+    this.extraWait = slow ? 1000 : 0;
+    if (big && target) target.setFontSize(Math.round(1.6 * (this.mono.visible ? 26 : 25)));
+    const delay = slow ? save.settings.textDelay * 3 : save.settings.textDelay;
     const chars = Array.from(text);
-    this.typeTimer = this.time.addEvent({
+    const go = () => {
+      if (this.full !== text || this.mode !== 'typing') return;
+      if (fx.includes('shake')) this.shakeText(target);
+      if (delay <= 0) return this.completeTyping();
+      this.typeTimer = this.time.addEvent({
       delay,
       loop: true,
-      callback: () => {
-        this.shown++;
-        render(chars.slice(0, this.shown).join(''));
-        if (this.shown >= chars.length) this.completeTyping();
-      },
-    });
+        callback: () => {
+          this.shown++;
+          render(chars.slice(0, this.shown).join(''));
+          if (this.shown >= chars.length) this.completeTyping();
+        },
+      });
+    };
+    render('');
+    // big: 나타나기 전 0.3초 정적
+    if (big) this.typeTimer = this.time.delayedCall(300, go);
+    else go();
   }
 
   private render: (s: string) => void = () => {};
@@ -1207,7 +1245,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.render(this.full);
     if (!this.looking) save.markRead(this.readKey());
     if (this.holdMs > 0) {
-      // 강조 slow: 다 나온 뒤 잠깐 머문다 (그동안은 넘길 수 없음)
+      // 강조 big: 다 나온 뒤 잠깐 정적 (그동안은 넘길 수 없음)
       const ms = this.holdMs;
       this.holdMs = 0;
       this.mode = 'busy';
@@ -1227,7 +1265,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   private scheduleNext() {
     this.waitTimer?.remove();
     if (this.mode !== 'waiting' || this.overlay || this.logView || !this.auto || this.looking) return;
-    const delay = save.settings.autoDelay + Array.from(this.full).length * 25;
+    const delay = save.settings.autoDelay + Array.from(this.full).length * 25 + this.extraWait;
     this.waitTimer = this.time.delayedCall(delay, () => {
       if (this.mode === 'waiting' && !this.overlay && !this.logView) this.advance();
     });
@@ -1241,15 +1279,17 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.lineText.setText('');
     this.bigText.setText('');
     this.holdMs = 0;
+    this.extraWait = 0;
   }
 
-  /** 강조 shake: 글자와 화면이 짧게 흔들린다 */
+  /** 강조 shake: 글자와 화면이 0.25초 흔들린다 */
   private shakeText(target?: Phaser.GameObjects.Text) {
-    this.screenFx({ shake: 0.006 });
+    this.cameras.main.shake(250, 0.006);
+    if (this.mapState === 'on') this.scene.get('Explore').cameras.main.shake(250, 0.006);
     if (!target) return;
     const x0 = target.x;
     this.tweens.killTweensOf(target);
-    this.tweens.add({ targets: target, x: x0 + 5, duration: 35, yoyo: true, repeat: 4, onComplete: () => target.setX(x0) });
+    this.tweens.add({ targets: target, x: x0 + 5, duration: 25, yoyo: true, repeat: 4, onComplete: () => target.setX(x0) });
   }
 
   private showLine(node: LineNode, instant = false) {
@@ -1275,7 +1315,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       return;
     }
     this.backlog.push({ name, text: node.text });
-    const fx = node.emphasis ?? [];
+    const fx = fxList(node.emphasis);
     if (fx.includes('big')) {
       this.lineText.setText('');
       this.typeText(node.text, (s) => this.bigText.setText(s), fx, this.bigText);
@@ -1289,7 +1329,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   }
 
   private showMonoLine(instantLines?: string[]) {
-    const node = this.scene_.nodes[this.nodeIdx] as { monologue: string[]; emphasis?: Record<string, Emphasis[]> };
+    const node = this.scene_.nodes[this.nodeIdx] as { monologue: string[]; emphasis?: Record<string, EmphasisStyle> };
     this.box.setVisible(false);
     this.nameBox.setVisible(false);
     this.mono.setVisible(true);
@@ -1307,7 +1347,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.fx.onLine();
     this.backlog.push({ text: line });
     const head = before.length ? `${before.join('\n')}\n` : '';
-    const fx = node.emphasis?.[line] ?? [];
+    const fx = fxList(node.emphasis?.[this.monoIdx]);
     if (fx.includes('big')) {
       // 크게: 앞 줄은 그대로 두고 이 줄만 화면 가운데에
       this.monoText.setText(before.join('\n'));
@@ -1567,6 +1607,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     const def = this.story.endings[id];
     if (!def) console.error(`[story] 없는 엔딩 id: ${id}`);
     if (!preview) save.markEnding(id);
+    this.showCg(null);
+    this.setSense(false);
     if (!preview) this.lastChoice ??= this.findChoicePoint();
     // 이어하기는 엔딩 갈래를 다시 보지 않도록 선택지가 있던 곳부터
     if (this.lastChoice && !preview) {
@@ -1639,6 +1681,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.toggleAuto(false);
     this.showItem(null);
     const def = this.story.chapters[id];
+    this.showCg(null);
+    this.setSense(false);
     const before = maxLevel();
     clearStory(this.story.id); // 다음 구간이 열려 최대 레벨이 오른다
     const after = maxLevel();

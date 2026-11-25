@@ -109,16 +109,18 @@ export class TitleScene extends Phaser.Scene {
     this.menu.forEach((b) => b.setVisible(true));
   }
 
-  /** CG 회상: 한 번 본 이벤트 CG는 작은 그림, 못 본 것은 ???. 누르면 크게 */
+  /** CG 회상: 한 번 본 이벤트 CG는 작은 그림, 못 본 것은 ?. 누르면 크게 */
   private async showCgs() {
     await loadCgs(this, CG_LIST.filter((c) => save.hasCg(c.id)).map((c) => c.id));
     const seen = CG_LIST.filter((c) => save.hasCg(c.id)).length;
     this.openPanel(`CG 회상 (${seen}/${CG_LIST.length})`, (add) => {
-      const TW = 240;
-      const TH = 180;
+      // 4:3 작은 그림을 한 줄에 넷씩
+      const TW = 148;
+      const TH = 111;
+      const GAP = 16;
       CG_LIST.forEach((c, i) => {
-        const x = 200 + (i % 2) * 300 + TW / 2 + 30;
-        const y = 210 + Math.floor(i / 2) * 230 + TH / 2;
+        const x = W / 2 - (4 * TW + 3 * GAP) / 2 + TW / 2 + (i % 4) * (TW + GAP);
+        const y = 250 + Math.floor(i / 4) * 170;
         const got = save.hasCg(c.id) && this.textures.exists(cgKey(c.id));
         const frame = this.add.rectangle(x, y, TW + 6, TH + 6, 0x0c0a14).setStrokeStyle(2, got ? 0xcdb88a : 0x444444);
         add(frame);
@@ -127,8 +129,12 @@ export class TitleScene extends Phaser.Scene {
           img.setScale(Math.min(TW / img.width, TH / img.height));
           add(img);
           frame.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.viewCg(c.id));
-        } else add(this.add.text(x, y, '???', { fontFamily: FONT, fontSize: '28px', color: '#555555' }).setOrigin(0.5));
-        add(this.add.text(x, y + TH / 2 + 20, got ? c.title : '???', { fontFamily: FONT, fontSize: '18px', color: got ? '#dddddd' : '#666666' }).setOrigin(0.5));
+        } else add(this.add.text(x, y, '?', { fontFamily: FONT, fontSize: '32px', color: '#555555' }).setOrigin(0.5));
+        add(
+          this.add
+            .text(x, y + TH / 2 + 10, got ? c.title : '?', { fontFamily: FONT, fontSize: '14px', color: got ? '#dddddd' : '#666666', align: 'center', wordWrap: { width: TW + 10, useAdvancedWrap: true } })
+            .setOrigin(0.5, 0),
+        );
       });
     });
   }

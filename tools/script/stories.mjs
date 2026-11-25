@@ -59,6 +59,18 @@ export const STORIES = [
       // 레온이 해자로 떨어지는 모습을 한 번 보여 주고 독백으로
       { scene: 'choice_window', before: '떨어진다.', node: { stage: 'moat_dive' } },
       { scene: 'choice_window', before: '틈으로 몸을 밀어 넣는다.', node: { place: '지하 수로' } },
+      // 추가 연출 (docs/claude_code/연출_추가.md의 프롤로그 표)
+      { scene: 'scene3', before: '닿았다.', node: { cutin: 'leon' } },
+      { scene: 'scene3', before: '팔 하나가, 허공을 돌았다.', node: { cg: 'prologue_arm' } },
+      { scene: 'scene3', before: '…오러인가. 이 몸에 흠을 낸 것은, 네가 처음이다.', node: { cg: null } },
+    ],
+    // 강조 문장: line = 독백 안의 아무 줄이나 대사, style = big / slow / shake 또는 그 배열
+    emphasis: [
+      { scene: 'scene3', line: '닿았다.', style: 'big' },
+      { scene: 'scene3', line: '세계가 하얗게 지워진다.', style: 'slow' },
+      { scene: 'choice_surrender', line: '조사는 없었다.', style: 'slow' },
+      { scene: 'choice_surrender', line: '재판은 없었다.', style: 'slow' },
+      { scene: 'choice_surrender', line: '칼날이 떨어졌다.', style: ['big', 'slow'] },
     ],
     // 대본(docs)은 그대로 두고 게임에서만 줄이거나 빼는 독백. from = 독백 덩어리 전체, to = 바꿀 줄 (빈 배열 = 뺌)
     monoEdits: [
@@ -282,10 +294,10 @@ export const STORIES = [
       { scene: 'interlude2', before: '빛이시여.', node: { stage: 'a2_pray_light' } },
       { scene: 'interlude2', before: '아드리안.', node: { stage: 'a2_ignatius_in' } },
     ],
-    // 강조 문장: line = 독백 안의 아무 줄이나 대사, fx = big(크게 가운데) / slow(한 글자씩 느리게) / shake(흔들림)
+    // 강조 문장: line = 독백 안의 아무 줄이나 대사, style = big(크게 가운데) / slow(한 글자씩 느리게) / shake(흔들림) 또는 그 배열
     emphasis: [
-      { scene: 'scene3', line: '그리고 한순간.', fx: ['slow'] },
-      { scene: 'scene3', line: '하얀 빛의 기둥이, 하늘을 찌르고 있었다.', fx: ['big'] },
+      { scene: 'scene3', line: '그리고 한순간.', style: 'slow' },
+      { scene: 'scene3', line: '하얀 빛의 기둥이, 하늘을 찌르고 있었다.', style: 'big' },
     ],
     endingExtras: {
       act2_dead: { hint: '등을 보이면, 돌아갈 길도 함께 사라진다.' },

@@ -56,5 +56,39 @@ for (const cfg of STORIES) {
   }
   console.log(`[${cfg.id}] 대본 ${a.length}줄 / 데이터 ${b.length}줄 → ${diff ? `다른 줄 ${diff}개` : '모두 같음'}`);
   bad += diff;
+
+  // 추가 연출(컷인, 이벤트 CG, 상처 반응)과 강조 문장이 stories.mjs에 적은 자리에 그대로 들어갔는지
+  const same = (x, y) => JSON.stringify(x) === JSON.stringify(y);
+  const isLine = (n) => n.monologue || n.text !== undefined || n.choices;
+  let fxBad = 0;
+  const fxIns = (cfg.inserts ?? []).filter((i) => ['cutin', 'cg', 'wound'].some((k) => k in i.node));
+  for (const ins of fxIns) {
+    const sc = data.scenes.find((s) => s.id === ins.scene);
+    const at = sc?.nodes.findIndex((n) => n.monologue?.[0] === ins.before || n.text === ins.before) ?? -1;
+    let ok = false;
+    for (let k = at - 1; k >= 0 && !isLine(sc.nodes[k]); k--) if (same(sc.nodes[k], ins.node)) ok = true;
+    if (at < 0 || !ok) {
+      fxBad++;
+      console.log(`  연출이 빠짐: ${ins.scene} / ${ins.before} / ${JSON.stringify(ins.node)}`);
+    }
+  }
+  for (const e of cfg.emphasis ?? []) {
+    const sc = data.scenes.find((s) => s.id === e.scene);
+    const n = sc?.nodes.find((x) => x.monologue?.includes(e.line) || x.text === e.line);
+    const got = !n ? undefined : n.text === e.line ? n.emphasis : n.emphasis?.[n.monologue.indexOf(e.line)];
+    if (!same(got, e.style)) {
+      fxBad++;
+      console.log(`  강조가 다름: ${e.scene} / ${e.line} / 설정 ${JSON.stringify(e.style)} / 데이터 ${JSON.stringify(got)}`);
+    }
+  }
+  // 데이터에만 있는 연출·강조 (설정에서 지웠는데 변환을 안 했을 때)
+  const fxCount = data.scenes.flatMap((s) => s.nodes).filter((n) => 'cutin' in n || 'cg' in n || 'wound' in n).length;
+  const emCount = data.scenes.flatMap((s) => s.nodes).reduce((c, n) => c + (n.emphasis ? (n.text !== undefined ? 1 : Object.keys(n.emphasis).length) : 0), 0);
+  if (fxCount !== fxIns.length || emCount !== (cfg.emphasis ?? []).length) {
+    fxBad++;
+    console.log(`  연출 수가 다름: 설정 ${fxIns.length}개·강조 ${(cfg.emphasis ?? []).length}개 / 데이터 ${fxCount}개·강조 ${emCount}개`);
+  }
+  console.log(`[${cfg.id}] 추가 연출 ${fxIns.length}개 · 강조 ${(cfg.emphasis ?? []).length}개 → ${fxBad ? `다른 곳 ${fxBad}개` : '모두 같음'}`);
+  bad += fxBad;
 }
 if (bad) process.exitCode = 1;

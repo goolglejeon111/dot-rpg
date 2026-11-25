@@ -6,6 +6,8 @@ export interface CharacterDef {
   id: string;
   name: string;
   expressions: Expression[];
+  /** 컷인 눈매: 스탠딩 그림({id}_body.png)에서 두 눈 사이 가운데 좌표(픽셀)와 띠 안에서 키울 배율. 없으면 컷인 생략 */
+  cutin?: { x: number; y: number; scale: number };
 }
 
 export interface Condition {
@@ -25,6 +27,8 @@ export interface Effects {
 
 /** 강조 문장: big = 화면 가운데에 크게, slow = 한 글자씩 느리게(다 나온 뒤 잠깐 머묾), shake = 나타날 때 글자와 화면이 흔들림 */
 export type Emphasis = 'big' | 'slow' | 'shake';
+/** 강조 하나 또는 여러 개를 겹쳐서 */
+export type EmphasisStyle = Emphasis | Emphasis[];
 
 /** 대사. speaker(인물 ID)가 있으면 스탠딩을 보여 주고, name만 있으면 이름표만 */
 export interface LineNode extends Effects {
@@ -34,21 +38,21 @@ export interface LineNode extends Effects {
   /** 생략하면 레온은 왼쪽, 나머지는 오른쪽 */
   position?: Side;
   text: string;
-  emphasis?: Emphasis[];
+  emphasis?: EmphasisStyle;
 }
 
 /** 독백 덩어리(한 화면). 줄은 누를 때마다 하나씩 나타난다 */
 export interface MonologueNode {
   monologue: string[];
-  /** 줄(글 그대로) → 강조 */
-  emphasis?: Record<string, Emphasis[]>;
+  /** 줄 번호(0부터) → 강조 */
+  emphasis?: Record<string, EmphasisStyle>;
 }
 
-/** 컷인: 화면 가운데를 가로지르는 띠에 인물의 눈매 (0.8초). caption = 띠 아래 글, tint = 눈매 색(gold 등) */
+/** 컷인: 화면 가운데를 가로지르는 띠에 인물의 눈매 (0.8초). caption = 띠 아래 끝 글, tint gold = 붉은 금빛 눈매와 번쩍임 */
 export interface CutinNode {
   cutin: string;
   caption?: string;
-  tint?: string;
+  tint?: 'gold';
 }
 
 /** 이벤트 CG: 대사창 뒤 화면 전체 그림 (null이면 닫기). 장면이 바뀌면 저절로 닫힌다 */

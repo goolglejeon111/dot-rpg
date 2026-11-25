@@ -6,6 +6,8 @@ import combos from '../data/battle/combos.json';
 import levels from '../data/battle/levels.json';
 import { gameState } from '../game/GameState';
 import { save } from '../game/save';
+import { loadOptional } from '../game/assets';
+import { hasCutin } from '../game/cutin';
 import { fxInfo, makeBattleAnims, preloadBattle } from './assets';
 import { EXP_REWARD, gainExp, gainOnce, isUnlocked, levelOf, partyIds, statsOf, type LevelUp, type Unlock } from './progress';
 import { MAPS, findObj, footOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf } from '../explore/mapData';
@@ -554,6 +556,8 @@ export class BattleScene extends Phaser.Scene {
 
   create() {
     makeBattleAnims(this);
+    // 궁극기 컷인에 쓸 스탠딩 (있는 그림만, 이미 불러온 것은 그대로)
+    void loadOptional(this, partyIds().map((id) => ({ key: `${id}_body`, url: `assets/portraits/${id}_body.png` })));
     const { w, h, tint } = this.bdef.arena;
     this.bounds = { x0: 12, x1: w - 12, y0: 50, y1: h - 6 };
     const cam = this.cameras.main;
@@ -1318,8 +1322,12 @@ export class BattleScene extends Phaser.Scene {
       if (me && this.bdef.guideUntil === 'skill') this.notices.push({ kind: 'guideOff', text: '' });
     } else {
       f.gauge = 0;
-      // 궁극기 짧은 컷인 (설정에서 끌 수 있음). 전투는 멈추지 않는다
-      if (save.settings.ultCutin) this.notices.push({ kind: 'ultcut', text: `${f.id},${m.name}` });
+      // 궁극기 컷인 0.5초 (설정에서 끌 수 있음). 그동안 전투는 멈춘다. 스탠딩 그림이 없는 인물은 컷인 없이 바로
+      if (save.settings.ultCutin && hasCutin(this, f.id) && !this.frozen) {
+        this.frozen = true;
+        this.notices.push({ kind: 'ultcut', text: `${f.id},${m.name}` });
+        this.time.delayedCall(500, () => (this.frozen = false));
+      }
     }
     if (me) [f.aimX, f.aimY] = dirVec(f.facing);
     f.state = 'skill';

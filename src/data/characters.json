@@ -1,19 +1,19 @@
 {
   "characters": [
-    { "id": "leon", "name": "레온", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
-    { "id": "serena", "name": "세레나", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
-    { "id": "elysia", "name": "엘리시아", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
-    { "id": "karg", "name": "카르크", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
-    { "id": "adrian", "name": "아드리안", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
-    { "id": "galia", "name": "갈리아", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "leon", "name": "레온", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 488, "y": 157, "scale": 2.2 } },
+    { "id": "serena", "name": "세레나", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 518, "y": 165, "scale": 2.2 } },
+    { "id": "elysia", "name": "엘리시아", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 363, "y": 175, "scale": 2.2 } },
+    { "id": "karg", "name": "카르크", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 552, "y": 172, "scale": 2.2 } },
+    { "id": "adrian", "name": "아드리안", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 516, "y": 137, "scale": 2.2 } },
+    { "id": "galia", "name": "갈리아", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 534, "y": 180, "scale": 2.2 } },
     { "id": "aldric", "name": "알드릭 황제", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
-    { "id": "ignatius", "name": "이그나티우스", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
-    { "id": "marcion", "name": "마르키온", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
-    { "id": "herman", "name": "헤르만 공작", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
-    { "id": "cassius", "name": "카시우스", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
-    { "id": "bram", "name": "브람", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
-    { "id": "oswald", "name": "오스발트", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
-    { "id": "marcion_hooded", "name": "침입자", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "ignatius", "name": "이그나티우스", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 534, "y": 262, "scale": 2.2 } },
+    { "id": "marcion", "name": "마르키온", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 610, "y": 193, "scale": 2.2 } },
+    { "id": "herman", "name": "헤르만 공작", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 486, "y": 150, "scale": 2.2 } },
+    { "id": "cassius", "name": "카시우스", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 510, "y": 277, "scale": 2.2 } },
+    { "id": "bram", "name": "브람", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 528, "y": 157, "scale": 2.2 } },
+    { "id": "oswald", "name": "오스발트", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 513, "y": 140, "scale": 2.2 } },
+    { "id": "marcion_hooded", "name": "침입자", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 603, "y": 192, "scale": 2.2 } },
     { "id": "imperial_guard", "name": "근위병", "expressions": ["normal", "smile", "angry", "sad", "surprised"] }
   ]
 }

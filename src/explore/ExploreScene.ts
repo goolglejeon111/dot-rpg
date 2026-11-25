@@ -1,3 +1,4 @@
+import { senseBeat } from '../game/beat';
 import Phaser from 'phaser';
 import looksData from '../data/explore/looks.json';
 import stageData from '../data/explore/stage.json';
@@ -576,9 +577,8 @@ export class ExploreScene extends Phaser.Scene {
 
   /** 빛의 기둥의 맥박 (0~1) */
   private pillarBeat() {
-    const p = this.pillarFx;
-    if (!p) return 0;
-    return Math.max(0, Math.sin(((this.time.now - p.t0) / 1000) * 3)) ** 2;
+    if (!this.pillarFx) return 0;
+    return senseBeat(this.game.loop.time);
   }
 
   /** 빛의 기둥: 화면 오른쪽 끝, 아래에서 위로 솟았다가(rise) 위에서부터 사라진다(fade). 소리 없음 */
@@ -976,7 +976,7 @@ export class ExploreScene extends Phaser.Scene {
     const big = once.includes(PILLAR_KEY);
     const t = this.time.now / 1000;
     const beat = this.sensing
-      ? Math.max(0, Math.sin(t * 6)) ** 2
+      ? senseBeat(this.game.loop.time)
       : this.pillarFx
         ? this.pillarBeat()
         : Math.max(0, Math.sin(t * 2.4)) ** 3;
@@ -1005,7 +1005,7 @@ export class ExploreScene extends Phaser.Scene {
 
   /**
    * 상처 반응 (대본의 wound): flicker = 희미하게 한 번, flare = 크게 맥박치며 번쩍,
-   * sense = 계속 빠르게 맥박 (off까지)
+   * sense = 2초마다 맥박 (off까지, 화면 왼쪽 가장자리와 같은 박자)
    */
   woundFx(mode: 'flicker' | 'flare' | 'sense' | 'off') {
     if (mode === 'sense' || mode === 'off') return void (this.sensing = mode === 'sense');

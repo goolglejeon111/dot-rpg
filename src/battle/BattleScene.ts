@@ -155,7 +155,7 @@ interface ProtectDef {
 interface BattleDef {
   title?: string;
   /** map: 맵 파일(src/data/maps) 이름. 그 맵의 arena 구역을 전투장 바닥으로 쓴다 */
-  arena: { w: number; h: number; floor: string; tint: string; map?: string };
+  arena: { w: number; h: number; floor: string; tint: string; map?: string; /** 한 맵에 전투장이 여럿이면 그 이름 (없으면 첫 arena) */ zone?: string };
   party?: string[];
   start?: Record<string, number[]>;
   allies?: { id: string; x: number; y: number }[];
@@ -434,7 +434,7 @@ export class BattleScene extends Phaser.Scene {
   /** 프롤로그 도트 맵의 arena 구역을 그대로 전투장으로 (벽에 걸린 물건 포함, 밤빛으로 어둡게) */
   private drawMapArena(id: string, tint: number) {
     const md = MAPS[id];
-    const ar = md && findObj(md, 'arena');
+    const ar = md && findObj(md, 'arena', this.bdef?.arena.zone);
     if (!ar) return console.error(`[battle] 맵 ${id}에 arena 구역이 없습니다`);
     makeMapAnims(this);
     const { tm, ts } = makeTilemap(this, id);
@@ -456,7 +456,7 @@ export class BattleScene extends Phaser.Scene {
   private setupMap(m: ExploreScene) {
     const md = m.currentMap!;
     const { w, h } = this.bdef.arena;
-    const ar = !this.start.hpZero && findObj(md, 'arena');
+    const ar = !this.start.hpZero && findObj(md, 'arena', this.bdef?.arena.zone);
     if (ar) {
       this.ox = ar.x;
       this.oy = ar.y;
@@ -651,7 +651,7 @@ export class BattleScene extends Phaser.Scene {
     let y = p.y ?? this.bdef.arena.h / 2;
     const mapId = this.onMap?.mapId ?? this.bdef.arena.map;
     const md = mapId ? MAPS[mapId] : undefined;
-    const ar = md && findObj(md, 'arena');
+    const ar = md && findObj(md, 'arena', this.bdef?.arena.zone);
     const o = p.prop && md ? objectsOf(md).find((k) => k.type === 'prop' && k.name === p.prop) : undefined;
     if (o && ar) {
       const ft = footOf(o);

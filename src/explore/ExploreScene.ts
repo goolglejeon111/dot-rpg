@@ -62,6 +62,22 @@ export interface StageDef {
   dark?: boolean;
   /** 화면 전체 효과: 번쩍임 색, 흔들림 세기 */
   screen?: { flash?: string; shake?: number };
+  /** ambient를 이만큼(ms)에 걸쳐 천천히 바꾼다 (없으면 바로) */
+  fade?: number;
+  /** fade를 이 색에서 시작한다 (해 질 녘: 주황 → 남색) */
+  from?: string;
+  /** 레온 어깨 상처 빛이 한 번 크게 맥박친다 */
+  pulse?: boolean;
+  /** 화면 오른쪽 끝의 가늘고 하얀 빛의 기둥: rise = 아래에서 위로 솟음, fade = 위에서부터 사라짐 */
+  pillar?: 'rise' | 'fade';
+  /** 화면 전체를 한 색으로 덮어 간다 (하얗게 바램 등). alpha 0이면 걷어 냄 */
+  veil?: { color: string; alpha: number; ms?: number };
+  /** 이 인물들 둘레만 밝게 남기는 빛 (null이면 끔) */
+  spot?: string[] | null;
+  /** aura와 같되 불규칙하게 깜빡인다 */
+  flicker?: Record<string, string | null>;
+  /** 인물의 손에서 작은 불씨가 화면 위로 올라가 사라진다 */
+  embers?: { who: string; color: string };
 }
 export interface SegmentDef {
   map: string;
@@ -106,6 +122,8 @@ interface Actor {
   shadow: Phaser.GameObjects.Ellipse;
   facing: Dir;
   down: boolean;
+  /** 무릎 꿇음 (전투 그림의 무릎 칸) */
+  kneel?: boolean;
   walking: boolean;
 }
 interface Lookable {
@@ -133,6 +151,15 @@ const CARRY: Record<string, { color: number; r: number; intensity: number; pulse
   leon: { color: 0xeef4ff, r: 96, intensity: 1.5, pulse: true },
   elysia: { color: 0xa47cff, r: 128, intensity: 1.6, pulse: false },
 };
+/** 2막 장면 3의 빛의 기둥을 본 뒤(이 표시가 once에 있으면) 레온 어깨 빛이 1막보다 조금 크고 밝다 */
+export const PILLAR_KEY = 'a2:pillar';
+function carryOf(id: string) {
+  const d = CARRY[id];
+  if (id === 'leon' && gameState.progress.once.includes(PILLAR_KEY)) return { ...d, r: d.r * 1.3, intensity: d.intensity * 1.35 };
+  return d;
+}
+/** 맵에서 레온 뒤를 따라 걷는 인물 (임시 동료 포함) */
+const walkers = () => (gameState.progress.party?.length ? gameState.progress.party : ['leon']);
 type Box = { x0: number; y0: number; x1: number; y1: number };
 
 /**
@@ -185,6 +212,12 @@ export class ExploreScene extends Phaser.Scene {
   private mobs: Mob[] = [];
   private npcs = new Set<string>();
   private auras = new Map<string, Phaser.GameObjects.Sprite>();
+  /** 처음엔 꺼 둔 불빛 (숨긴 불꽃 물건, hidden 빛). 무대의 props로 켠다 */
+  private namedLights = new Map<string, { light: Phaser.GameObjects.Light; base: number }[]>();
+  private pillarFx?: { bar: Phaser.GameObjects.Rectangle; glow: Phaser.GameObjects.Rectangle; t0: number };
+  private veilFx?: Phaser.GameObjects.Rectangle;
+  private spots: { id: string; light: Phaser.GameObjects.Light }[] = [];
+  private blinking = new Set<string>();
   private onEnd?: () => void;
   private lookables: Lookable[] = [];
   private near: Lookable | null = null;
@@ -328,9 +361,16 @@ export class ExploreScene extends Phaser.Scene {
     this.lights2 = [];
     if (this.lit) for (const c of this.carry) this.lights.removeLight(c.light);
     this.carry = [];
+    if (this.lit) for (const sp of this.spots) this.lights.removeLight(sp.light);
+    this.spots = [];
+    this.namedLights.clear();
+    this.pillarFx = undefined;
+    this.veilFx?.destroy();
+    this.veilFx = undefined;
     this.mobs = [];
     this.npcs.clear();
     this.auras.clear();
+    this.blinking.clear();
     this.blood = undefined;
     this.tilemap?.destroy();
     this.tilemap = undefined;
@@ -351,9 +391,14 @@ export class ExploreScene extends Phaser.Scene {
       const top = f.y - PROPS[o.name].h;
       if (fl) {
         // 불꽃은 조명을 받지 않고 그대로 밝게, 주변을 비춘다
-        this.addLight(f.x, top + fl.top, fl.radius, 0xffa048, fl.intensity);
+        const l = this.addLight(f.x, top + fl.top, fl.radius, 0xffa048, fl.intensity);
         const glow = this.world(this.add.ellipse(f.x, top + fl.top + 1, 24, 20, 0xffb060, 0.22).setDepth(s.depth + 0.1).setBlendMode(Phaser.BlendModes.ADD));
         this.tweens.add({ targets: glow, alpha: 0.42, duration: 300 + Math.random() * 200, yoyo: true, repeat: -1 });
+        if (propOf(o, 'hidden')) {
+          glow.setVisible(false);
+          s.on('changevisible', (v: boolean) => glow.setVisible(v));
+          if (l) this.hideLight(o.name, l);
+        }
       } else this.lightUp(s);
       const solid = propOf<string>(o, 'solid');
       if (solid) {
@@ -368,7 +413,8 @@ export class ExploreScene extends Phaser.Scene {
       this.boxes.push({ x0: o.x - 10, y0: o.y - 8, x1: o.x + 10, y1: o.y });
     } else if (o.type === 'light') {
       const color = hex(propOf<string>(o, 'color') ?? '#ffffff');
-      this.addLight(o.x, o.y, Number(propOf(o, 'radius') ?? 120), color, Number(propOf(o, 'intensity') ?? 1), true);
+      const l = this.addLight(o.x, o.y, Number(propOf(o, 'radius') ?? 120), color, Number(propOf(o, 'intensity') ?? 1), !propOf(o, 'flicker'));
+      if (l && propOf(o, 'hidden')) this.hideLight(o.name, l);
       if (propOf(o, 'spill')) {
         // 문틈에서 새는 차가운 흰빛
         const spill = this.world(this.add.ellipse(o.x, o.y + 6, 70, 24, color, 0.3).setDepth(-14).setBlendMode(Phaser.BlendModes.ADD));
@@ -402,13 +448,15 @@ export class ExploreScene extends Phaser.Scene {
 
   /** 맵이 어두우면(dark) 인물이 빛을 들고 다닌다. 엘리시아가 있으면 지팡이 빛, 없으면 레온의 상처 빛 */
   private updateCarry() {
-    if (!this.lit || !this.map || !propOf(this.map, 'dark')) return;
-    const want = this.actors.has('elysia') ? 'elysia' : this.actors.has('leon') ? 'leon' : null;
+    if (!this.lit || !this.map) return;
+    const only = propOf<string>(this.map, 'carry');
+    if (!propOf(this.map, 'dark') && !only) return;
+    const want = only ? (this.actors.has(only) ? only : null) : this.actors.has('elysia') ? 'elysia' : this.actors.has('leon') ? 'leon' : null;
     if (this.carry[0]?.id !== want) {
       for (const c of this.carry) this.lights.removeLight(c.light);
       this.carry = [];
       if (want) {
-        const d = CARRY[want];
+        const d = carryOf(want);
         this.carry.push({ id: want, light: this.lights.addLight(0, 0, d.r, d.color, d.intensity), base: d.intensity, pulse: d.pulse });
       }
     }
@@ -416,7 +464,10 @@ export class ExploreScene extends Phaser.Scene {
       const a = this.actors.get(c.id);
       const p = c.at ?? (a && a.spr.visible ? { x: a.spr.x, y: a.spr.y - 24 } : null);
       if (p) c.light.setPosition(p.x, p.y);
-      if (c.pulse) {
+      if (c.pulse && this.pillarFx && c.id === 'leon') {
+        // 빛의 기둥과 같은 박자로
+        c.light.intensity = c.base * (0.8 + 0.9 * this.pillarBeat());
+      } else if (c.pulse) {
         const t = this.time.now / 1000;
         c.light.intensity = c.base * (0.75 + 0.25 * Math.max(0, Math.sin(t * 2.4)) ** 3 + 0.05 * Math.sin(t * 7));
       }
@@ -431,20 +482,105 @@ export class ExploreScene extends Phaser.Scene {
   /** 지금 빛을 든 인물 (전투 장면이 같은 빛을 따라 단다) */
   carrier() {
     const c = this.carry[0];
-    return c ? { id: c.id, ...CARRY[c.id] } : null;
+    return c ? { id: c.id, ...carryOf(c.id) } : null;
   }
 
   /** 상처 빛이 한 번 크게 번쩍 */
   pulseWound() {
     const c = this.carry.find((x) => x.id === 'leon');
     if (!c) return;
-    this.tweens.addCounter({ from: 3.2, to: 1, duration: 700, ease: 'Quad.out', onUpdate: (tw) => (c.base = CARRY.leon.intensity * tw.getValue()!) });
+    this.tweens.addCounter({ from: 3.2, to: 1, duration: 700, ease: 'Quad.out', onUpdate: (tw) => (c.base = carryOf('leon').intensity * tw.getValue()!) });
+  }
+
+  /** 빛의 기둥의 맥박 (0~1) */
+  private pillarBeat() {
+    const p = this.pillarFx;
+    if (!p) return 0;
+    return Math.max(0, Math.sin(((this.time.now - p.t0) / 1000) * 3)) ** 2;
+  }
+
+  /** 빛의 기둥: 화면 오른쪽 끝, 아래에서 위로 솟았다가(rise) 위에서부터 사라진다(fade). 소리 없음 */
+  private playPillar(mode: 'rise' | 'fade') {
+    const cam = this.cameras.main;
+    if (mode === 'rise') {
+      if (this.pillarFx) return;
+      const v = cam.worldView;
+      const x = v.right - 14;
+      const bar = this.world(this.add.rectangle(x, v.bottom, 3, v.height, 0xffffff, 0.95).setOrigin(0.5, 1).setDepth(9400).setBlendMode(Phaser.BlendModes.ADD));
+      const glow = this.world(this.add.rectangle(x, v.bottom, 11, v.height, 0xdde8ff, 0.28).setOrigin(0.5, 1).setDepth(9399).setBlendMode(Phaser.BlendModes.ADD));
+      bar.scaleY = 0;
+      glow.scaleY = 0;
+      this.pillarFx = { bar, glow, t0: this.time.now };
+      this.tweens.add({ targets: [bar, glow], scaleY: 1, duration: 1600, ease: 'Cubic.out' });
+      this.tweens.add({ targets: glow, alpha: 0.12, duration: 1047, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    } else {
+      const p = this.pillarFx;
+      if (!gameState.progress.once.includes(PILLAR_KEY)) gameState.progress.once.push(PILLAR_KEY);
+      // 어깨 빛을 새 크기로
+      for (const c of this.carry) if (c.id === 'leon') {
+        const d = carryOf('leon');
+        c.base = d.intensity;
+        c.light.radius = d.r;
+      }
+      if (!p) return;
+      // 위에서부터 사라짐: 아래를 기준점으로 둔 채 키를 줄인다
+      this.tweens.add({
+        targets: [p.bar, p.glow], scaleY: 0, duration: 1400, ease: 'Cubic.in',
+        onComplete: () => {
+          p.bar.destroy();
+          p.glow.destroy();
+          if (this.pillarFx === p) this.pillarFx = undefined;
+        },
+      });
+    }
+  }
+
+  /** 화면을 한 색으로 덮어 간다 */
+  private playVeil(v: NonNullable<StageDef['veil']>) {
+    const cam = this.cameras.main;
+    if (!this.veilFx) {
+      this.veilFx = this.world(this.add.rectangle(0, 0, 10, 10, hex(v.color), 0).setOrigin(0).setScrollFactor(0).setDepth(9600));
+      this.veilFx.setSize(cam.width / cam.zoom + 40, cam.height / cam.zoom + 40).setPosition(-20 + (cam.width - cam.width / cam.zoom) / 2, -20 + (cam.height - cam.height / cam.zoom) / 2);
+    }
+    this.veilFx.fillColor = hex(v.color);
+    this.tweens.add({ targets: this.veilFx, fillAlpha: v.alpha, duration: v.ms ?? 1500, ease: 'Sine.inOut' });
+  }
+
+  /** ambient를 천천히 바꾼다 */
+  private fadeAmbient(to: string, ms: number, start?: string) {
+    if (!this.lit) return;
+    const from = Phaser.Display.Color.ValueToColor(start ? hex(start) : this.curAmbient());
+    const dst = Phaser.Display.Color.ValueToColor(hex(to));
+    this.tweens.addCounter({
+      from: 0, to: 100, duration: ms,
+      onUpdate: (tw) => {
+        const c = Phaser.Display.Color.Interpolate.ColorWithColor(from, dst, 100, tw.getValue() ?? 0);
+        this.lights.setAmbientColor(Phaser.Display.Color.GetColor(c.r, c.g, c.b));
+      },
+    });
+  }
+
+  /** 이 인물들 둘레만 밝게 (둘만의 결투) */
+  private setSpots(ids: string[] | null) {
+    if (!this.lit) return;
+    for (const sp of this.spots) this.lights.removeLight(sp.light);
+    this.spots = (ids ?? []).map((id) => ({ id, light: this.lights.addLight(0, 0, 90, 0xfff4dc, 1.6) }));
   }
 
   private addLight(x: number, y: number, r: number, color: number, intensity: number, steady = false) {
-    if (!this.lit) return;
+    if (!this.lit) return null;
     const light = this.lights.addLight(x, y, r, color, intensity);
-    this.lights2.push({ light, base: steady ? -1 : intensity, r, color });
+    const l = { light, base: steady ? -1 : intensity, r, color };
+    this.lights2.push(l);
+    return l;
+  }
+
+  /** 처음엔 꺼 두는 빛 (이름으로 켠다) */
+  private hideLight(name: string, l: { light: Phaser.GameObjects.Light; base: number }) {
+    const list = this.namedLights.get(name) ?? [];
+    list.push({ light: l.light, base: l.base < 0 ? l.light.intensity : l.base });
+    this.namedLights.set(name, list);
+    l.light.setVisible(false);
   }
 
   /** 횃불·촛불 일렁임 */
@@ -506,14 +642,30 @@ export class ExploreScene extends Phaser.Scene {
     if (!this.map) return;
     if (reset) for (const id of [...this.actors.keys()]) if (!this.npcs.has(id)) this.removeActor(id);
     if (def.blood !== undefined) this.blood?.setVisible(def.blood);
-    for (const [name, on] of Object.entries(def.props ?? {})) this.named.get(name)?.setVisible(on && !this.seen(name));
+    for (const [name, on] of Object.entries(def.props ?? {})) {
+      const spr = this.named.get(name);
+      spr?.setVisible(on && !this.seen(name));
+      spr?.emit('changevisible', on && !this.seen(name));
+      for (const l of this.namedLights.get(name) ?? []) l.light.setVisible(on);
+    }
     for (const [id, spec] of Object.entries(def.actors ?? {})) {
       if (spec === null) this.removeActor(id);
       else this.placeActor(id, spec, instant);
     }
     this.focus(def.focus ?? (reset ? 'leon' : undefined), instant);
     if (def.fall && !instant) this.playFall(def.fall);
-    if (def.ambient && this.lit) this.lights.setAmbientColor(hex(def.ambient));
+    if (def.ambient && this.lit) {
+      if (def.fade && !instant) this.fadeAmbient(def.ambient, def.fade, def.from);
+      else this.lights.setAmbientColor(hex(def.ambient));
+    }
+    if (def.pulse && !instant) this.pulseWound();
+    if (def.pillar === 'rise' && !instant) this.playPillar('rise');
+    if (def.pillar === 'fade') this.playPillar('fade');
+    if (def.veil) {
+      if (instant && this.veilFx) this.veilFx.fillAlpha = def.veil.alpha;
+      else this.playVeil(instant ? { ...def.veil, ms: 1 } : def.veil);
+    }
+    if (def.spot !== undefined) this.setSpots(def.spot);
     if (def.flash && !instant) {
       const a = this.actors.get(def.flash.who);
       if (a) {
@@ -523,6 +675,26 @@ export class ExploreScene extends Phaser.Scene {
       }
     }
     for (const [id, color] of Object.entries(def.aura ?? {})) this.setAura(id, color);
+    for (const [id, color] of Object.entries(def.flicker ?? {})) {
+      this.setAura(id, color);
+      if (color) this.blinking.add(id);
+      else this.blinking.delete(id);
+    }
+    if (def.embers && !instant) this.playEmbers(def.embers);
+  }
+
+  /** 불씨: 인물 손에서 화면 위로 */
+  private playEmbers(e: NonNullable<StageDef['embers']>) {
+    const a = this.actors.get(e.who);
+    if (!a) return;
+    const top = this.cameras.main.worldView.top - 10;
+    for (let i = 0; i < 14; i++) {
+      const p = this.world(this.add.rectangle(a.spr.x + (Math.random() - 0.5) * 8, a.spr.y - 18, 2, 2, hex(e.color)).setDepth(9450).setBlendMode(Phaser.BlendModes.ADD));
+      this.tweens.add({
+        targets: p, y: top - Math.random() * 30, x: p.x + (Math.random() - 0.5) * 40, alpha: 0,
+        delay: i * 140, duration: 2600 + Math.random() * 900, ease: 'Sine.in', onComplete: () => p.destroy(),
+      });
+    }
   }
 
   /** 인물 둘레의 옅은 빛 테두리 (엘리시아의 변장 마법) */
@@ -599,8 +771,9 @@ export class ExploreScene extends Phaser.Scene {
       a.spr.setPosition(at.x, at.y);
     }
     if (spec.facing) a.facing = spec.facing as Dir;
-    if (spec.pose === 'down') a.down = true;
-    else if (spec.pose === 'stand') a.down = false;
+    if (spec.pose === 'down') [a.down, a.kneel] = [true, false];
+    else if (spec.pose === 'kneel') [a.down, a.kneel] = [true, true];
+    else if (spec.pose === 'stand') [a.down, a.kneel] = [false, false];
     const to = this.point(spec.walk);
     if (to) {
       const dx = to.x - a.spr.x;
@@ -631,7 +804,7 @@ export class ExploreScene extends Phaser.Scene {
     if (a.walking) return;
     a.spr.anims.stop();
     const row = DIRS.indexOf(a.facing);
-    if (a.down && this.textures.exists(`bt_${a.key}`)) a.spr.setTexture(`bt_${a.key}`, row * 12 + 11).setOrigin(0.5, 0.86);
+    if (a.down && this.textures.exists(`bt_${a.key}`)) a.spr.setTexture(`bt_${a.key}`, row * 12 + (a.kneel ? 10 : 11)).setOrigin(0.5, 0.86);
     else a.spr.setTexture(a.key, row * 5).setOrigin(0.5, 1);
   }
 
@@ -806,7 +979,7 @@ export class ExploreScene extends Phaser.Scene {
     // 동료가 뒤를 따른다
     this.trail = [];
     if (seg.follow !== false)
-      for (const id of partyIds()) {
+      for (const id of walkers()) {
         if (id === 'leon') continue;
         if (!this.actors.has(id)) this.placeActor(id, { at: [leon.spr.x - 18, leon.spr.y + 4], facing: leon.facing }, true);
       }
@@ -865,9 +1038,14 @@ export class ExploreScene extends Phaser.Scene {
       if (this.seg && !this.reading) this.checkMobs(leon);
     }
     this.updateCarry();
+    for (const sp of this.spots) {
+      const a = this.actors.get(sp.id);
+      if (a) sp.light.setPosition(a.spr.x, a.spr.y - 20);
+    }
     for (const [id, s] of this.auras) {
       const a = this.actors.get(id);
-      if (a) s.setPosition(a.spr.x, a.spr.y + 2).setFrame(a.spr.frame.name).setDepth(a.spr.depth - 0.5).setVisible(a.spr.visible);
+      if (a) s.setPosition(a.spr.x, a.spr.y + 2).setTexture(a.spr.texture.key, a.spr.frame.name).setOrigin(a.spr.originX, a.spr.originY).setDepth(a.spr.depth - 0.5).setVisible(a.spr.visible);
+      if (this.blinking.has(id)) s.setAlpha(Math.random() < 0.18 ? 0.05 : 0.2 + Math.random() * 0.3);
     }
     for (const a of this.actors.values()) {
       a.spr.setDepth(a.spr.y);
@@ -881,7 +1059,7 @@ export class ExploreScene extends Phaser.Scene {
     if (!last || Math.hypot(last.x - leon.spr.x, last.y - leon.spr.y) > 2) this.trail.push({ x: leon.spr.x, y: leon.spr.y });
     if (this.trail.length > 60) this.trail.shift();
     let k = 0;
-    for (const id of partyIds()) {
+    for (const id of walkers()) {
       if (id === 'leon') continue;
       const a = this.actors.get(id);
       if (!a || a.walking) continue;
@@ -955,7 +1133,7 @@ export class ExploreScene extends Phaser.Scene {
       for (let tx = Math.floor(a.x0 / TS); tx <= Math.floor((a.x1 - 0.01) / TS); tx++) if (this.grid[ty * cols + tx]) return true;
     const hit = (b: Box) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
     if (this.boxes.some(hit)) return true;
-    const party = partyIds();
+    const party = walkers();
     for (const o of this.actors.values()) {
       if (o.id === 'leon' || party.includes(o.id) || !o.spr.visible) continue;
       if (hit({ x0: o.spr.x - 8, y0: o.spr.y - 6, x1: o.spr.x + 8, y1: o.spr.y })) return true;

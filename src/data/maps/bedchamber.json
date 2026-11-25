@@ -1671,9 +1671,9 @@
    "name": "palace",
    "image": "../../../public/assets/explore/palace_tiles.png",
    "imagewidth": 256,
-   "imageheight": 192,
+   "imageheight": 224,
    "columns": 8,
-   "tilecount": 42,
+   "tilecount": 56,
    "tilewidth": 32,
    "tileheight": 32,
    "margin": 0,
@@ -2186,6 +2186,181 @@
        "name": "name",
        "type": "string",
        "value": "river"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 42,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "desert"
+      }
+     ]
+    },
+    {
+     "id": 43,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "desert2"
+      }
+     ]
+    },
+    {
+     "id": 44,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dune"
+      }
+     ]
+    },
+    {
+     "id": 45,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sandstone"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 46,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sandstone_top"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 47,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "oasis_water"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 48,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "oasis_grass"
+      }
+     ]
+    },
+    {
+     "id": 49,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "adobe_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 50,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "adobe_roof"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 51,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "adobe_floor"
+      }
+     ]
+    },
+    {
+     "id": 52,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "bars"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 53,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "road"
+      }
+     ]
+    },
+    {
+     "id": 54,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "rock_floor"
+      }
+     ]
+    },
+    {
+     "id": 55,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "rock_wall"
       },
       {
        "name": "solid",

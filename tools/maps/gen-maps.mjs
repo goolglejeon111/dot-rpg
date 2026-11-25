@@ -58,6 +58,13 @@ const FLOOR = {
   g: () => 'grass',
   d: () => 'sand',
   r: () => 'river',
+  // 2막
+  a: (x, y) => ((x * 5 + y * 3) % 7 === 0 ? 'desert2' : 'desert'),
+  u: () => 'dune',
+  y: () => 'oasis_grass',
+  f: () => 'adobe_floor',
+  t: () => 'road',
+  j: () => 'rock_floor',
 };
 const WALL = {
   '#': () => 'wall_top',
@@ -74,6 +81,14 @@ const WALL = {
   K: () => 'cellar_wall',
   P: () => 'shack_wall',
   R: () => 'shack_roof',
+  // 2막
+  O: () => 'oasis_water',
+  A: () => 'adobe_wall',
+  T: () => 'adobe_roof',
+  Z: () => 'sandstone',
+  Y: () => 'sandstone_top',
+  I: () => 'bars',
+  J: () => 'rock_wall',
 };
 
 /** 맵 한 장을 Tiled JSON으로 */
@@ -605,6 +620,175 @@ const npc = (name, x, y, sprite, facing, talk) => ({ type: 'npc', name, x, y, sp
   objects.push({ type: 'prop', name: 'boat', x: cx(8), y: ty(6) + 18 });
   objects.push(spawn('leon_boat', cx(7) + 2, ty(6) + 8, 'down'), spawn('elysia_boat', cx(9) - 2, ty(6) + 8, 'down'));
   MAPS.river_boat = { rows: m.rows(), objects, props: { place: '강 위', ambient: '#2a3560', bg: '#05070f' } };
+}
+
+// ---------------------------------------------------------------------
+// 2막
+// ---------------------------------------------------------------------
+const DAY = '#fff2d6'; // 사막 낮: 옅은 노란 색조
+const NIGHT = '#28305e'; // 사막 밤: 짙은 남색
+/** 흙벽 집: 위 두 줄은 지붕, 아래는 벽 */
+function hut(m, c0, r0, c1, r1) {
+  m.rect(c0, r0, c1, r0 + 1, 'T');
+  m.rect(c0, r0 + 2, c1, r1, 'A');
+}
+const dune = (x, y) => ({ type: 'prop', name: 'dune', x, y, solid: '88,18' });
+const palm = (c, r) => ({ type: 'prop', name: 'palm', x: cx(c), y: ty(r) + 12, solid: '10,6' });
+
+// ---- 2막-1) 카심 사막 (60 x 25): 낮. 모래 언덕, 바위, 반쯤 묻힌 뼈. 가운데쯤 큰 바위 ----
+{
+  const W = 60;
+  const H = 25;
+  const m = grid(W, H, 'a');
+  m.rect(0, 0, W - 1, 0, 'Y');
+  m.rect(0, 1, W - 1, 1, 'Z');
+  m.rect(0, H - 1, W - 1, H - 1, 'Y');
+  const objects = [];
+  for (const [c, r] of [[8, 5], [14, 21], [22, 3], [27, 22], [41, 4], [44, 20], [52, 9], [55, 17], [6, 19], [37, 7]]) objects.push(dune(cx(c), ty(r) + 14));
+  for (const [c, r] of [[11, 9], [47, 13], [29, 6]]) objects.push({ type: 'prop', name: 'rock', x: cx(c), y: ty(r) + 12, solid: '34,10' });
+  objects.push({ type: 'prop', name: 'big_rock', x: cx(32), y: ty(10) + 16, solid: '64,18' });
+  objects.push({ type: 'prop', name: 'camel_bones', x: cx(12), y: ty(17) + 10 }, look('a2_bones', cx(12), ty(17) + 16, ty(17) - 14));
+  objects.push({ type: 'prop', name: 'rock_arrow', x: cx(20), y: ty(6) + 12, solid: '34,10' }, look('a2_rock_arrow', cx(20), ty(6) + 22, ty(6) - 30));
+  objects.push(spawn('leon_start', cx(3), ty(12), 'right'), spawn('elysia_start', cx(2), ty(13), 'right'));
+  objects.push(spawn('leon_rock', cx(31), ty(13), 'up'), spawn('elysia_rock', cx(33), ty(13), 'up'));
+  objects.push({ type: 'mob', name: 'mob1', x: cx(18), y: ty(12), sprite: 'sand_crawler', battle: '사막 몹 1' });
+  objects.push({ type: 'mob', name: 'mob2', x: cx(24), y: ty(18), sprite: 'sand_crawler', battle: '사막 몹 2' });
+  objects.push({ type: 'goal', name: 'goal_rock', x: cx(32), y: ty(12) + 8, r: 56 });
+  objects.push({ type: 'arena', name: 'arena', x: 25 * TS, y: 11 * TS, w: 448, h: 288 });
+  MAPS.desert_a = { rows: m.rows(), objects, props: { place: '카심 사막', ambient: DAY, bg: '#c8a464' } };
+}
+
+// ---- 2막-2) 사막의 야영지 (25 x 18): 밤 → 새벽. 바위 그늘, 불 피우지 못한 자리. 동쪽 지평선 ----
+{
+  const W = 25;
+  const H = 18;
+  const m = grid(W, H, 'a');
+  m.rect(0, 0, W - 1, 0, 'Y');
+  m.rect(0, 1, W - 1, 1, 'Z');
+  const objects = [];
+  objects.push({ type: 'prop', name: 'big_rock', x: cx(5), y: ty(8) + 16, solid: '64,18' });
+  objects.push({ type: 'prop', name: 'rock', x: cx(3), y: ty(12) + 12, solid: '34,10' });
+  objects.push(dune(cx(18), ty(15) + 14), dune(cx(4), ty(16) + 14));
+  objects.push({ type: 'prop', name: 'campfire_out', x: cx(11), y: ty(10) + 4 });
+  objects.push(spawn('leon_camp', cx(10), ty(9), 'right'), spawn('elysia_camp', cx(12), ty(9) + 4, 'left'));
+  objects.push(spawn('karg', cx(15), ty(9), 'left'));
+  const ring = [[8, 6], [14, 6], [7, 11], [16, 11], [10, 13], [13, 13]];
+  ring.forEach(([c, r], i) => objects.push(spawn(`w${i + 1}`, cx(c), ty(r), c < 11 ? 'right' : 'left')));
+  MAPS.desert_camp = { rows: m.rows(), objects, props: { place: '사막의 야영지', ambient: NIGHT, bg: '#04060e', carry: 'leon' } };
+}
+
+// ---- 2막-3) 루바 오아시스 (50 x 35): 가운데 우물과 푸른 물, 야자수, 흙벽 집, 감옥, 동쪽 출구, 서쪽 입구 ----
+{
+  const W = 50;
+  const H = 35;
+  const m = grid(W, H, 'a');
+  m.rect(13, 3, 37, 25, 'y');
+  m.rect(21, 5, 29, 9, 'O'); // 푸른 물
+  hut(m, 4, 3, 9, 6);
+  hut(m, 39, 3, 45, 6);
+  hut(m, 39, 26, 46, 30); // 장로의 집
+  hut(m, 4, 25, 9, 28); // 주인 없는 집
+  hut(m, 14, 27, 19, 30); // 흙벽 감옥
+  m.rect(15, 30, 18, 30, 'I');
+  const objects = [];
+  for (const [c, r] of [[15, 6], [33, 5], [19, 11], [31, 11], [15, 22], [35, 22], [36, 14], [20, 24], [11, 4], [47, 9]]) objects.push(palm(c, r));
+  objects.push({ type: 'prop', name: 'well', x: cx(25), y: ty(17) + 8, solid: '36,14' }, look('a2_well_names', cx(25), ty(18) + 4, ty(16) - 28));
+  objects.push({ type: 'prop', name: 'toll_notice', x: cx(34), y: ty(17) + 12, solid: '8,6' }, look('a2_toll_notice', cx(34), ty(18) + 2, ty(16) - 14));
+  objects.push(wallItem('hut_door', cx(6) + 16, 29 * TS), { type: 'prop', name: 'shoes', x: cx(6) + 16, y: 29 * TS + 10 }, look('a2_empty_hut', cx(6) + 16, 29 * TS + 18, 28 * TS - 6));
+  objects.push(wallItem('hut_door', cx(42) + 16, 31 * TS));
+  // 불길과 모닥불 (처음엔 꺼 둠, 무대에서 켠다)
+  for (const [x, y] of [[cx(23), ty(16)], [cx(27), ty(19)]]) objects.push({ type: 'light', name: 'well_fire', x, y, color: '#ff8a3a', radius: 110, intensity: 1.4, hidden: true, flicker: true });
+  objects.push({ type: 'prop', name: 'campfire', x: cx(25), y: ty(23) + 6, hidden: true });
+  objects.push({ type: 'prop', name: 'horse', x: cx(3), y: ty(17) + 12, hidden: true });
+  // 성기사단 (서쪽 입구). 앞의 셋은 횃불
+  const pal = [[5, 13], [5, 15], [5, 17], [5, 19], [5, 21], [3, 14], [3, 16], [3, 18], [3, 20], [2, 17]];
+  pal.forEach(([c, r], i) => objects.push(spawn(`p${i + 1}`, cx(c), ty(r), 'right')));
+  for (const [c, r] of pal.slice(0, 3)) objects.push({ type: 'light', name: 'paladin_torch', x: cx(c) + 6, y: ty(r) - 26, color: '#ffa048', radius: 90, intensity: 1.3, hidden: true, flicker: true });
+  objects.push(spawn('adrian_horse', cx(4), ty(17), 'right'), spawn('adrian_front', cx(7), ty(17), 'right'));
+  objects.push(spawn('leon_w', cx(15), ty(17), 'left'), spawn('elysia_w', cx(16), ty(18) + 8, 'left'), spawn('karg_w', cx(12), ty(15), 'left'));
+  objects.push(spawn('ursha_w', cx(14), ty(18), 'left'), spawn('ursha_mid', cx(10), ty(17), 'left'), spawn('leon_side', cx(12), ty(16) + 12, 'left'));
+  objects.push(spawn('wolf1', cx(13), ty(13), 'left'), spawn('wolf2', cx(14), ty(20), 'left'), spawn('wolf3', cx(16), ty(15), 'left'));
+  objects.push(spawn('leon_duel', cx(9), ty(16), 'left'), spawn('adrian_duel', cx(6), ty(16), 'right'), spawn('adrian_away', cx(0), ty(16), 'left'));
+  objects.push(spawn('palms_back', cx(36), ty(26), 'right'));
+  // 우물 쪽 (장면 5-1)
+  objects.push(spawn('prison_door', cx(16) + 16, ty(31) + 6, 'up'));
+  objects.push(spawn('leon_well', cx(22), ty(20), 'right'), spawn('elysia_well', cx(21), ty(21), 'right'), spawn('karg_well', cx(28), ty(19), 'left'));
+  objects.push(spawn('wolf_a', cx(27), ty(21), 'left'), spawn('wolf_b', cx(23), ty(15), 'down'), spawn('ursha_well', cx(19), ty(24), 'up'));
+  objects.push(spawn('sc1', cx(20), ty(16), 'right'), spawn('sc2', cx(30), ty(16), 'left'), spawn('sc3', cx(25), ty(21), 'up'));
+  // 장면 6-1 출발, 장면 9
+  objects.push(spawn('leon_night', cx(16), ty(32), 'up'), spawn('elysia_night', cx(15), ty(32) + 8, 'up'), spawn('karg_night', cx(18), ty(32), 'up'));
+  objects.push(spawn('leon_fire', cx(23), ty(23), 'right'), spawn('karg_fire', cx(27), ty(23), 'left'), spawn('elysia_fire', cx(25), ty(24) + 10, 'up'), spawn('elysia_apart', cx(30), ty(25), 'left'));
+  objects.push(spawn('leon_dusk', cx(22), ty(19), 'right'), spawn('karg_dusk', cx(26), ty(19), 'left'), spawn('elysia_dusk', cx(21), ty(20) + 8, 'right'));
+  for (const [i, r] of [[1, 18], [2, 20], [3, 21]]) objects.push(spawn(`wp${i}_from`, cx(34), ty(r), 'left'), spawn(`wp${i}_to`, cx(12), ty(r), 'left'));
+  // 늑대 전사 NPC (말 걸기)
+  objects.push(npc('wolf_npc1', cx(12), ty(9), 'mob_wolf', 'down', 'a2_wolf1'));
+  objects.push(npc('wolf_npc2', cx(35), ty(24), 'mob_wolf', 'left', 'a2_wolf2'));
+  objects.push(npc('wolf_npc3', cx(38), ty(10), 'mob_wolf', 'down', 'a2_wolf3'));
+  objects.push({ type: 'goal', name: 'goal_east', x: cx(49), y: ty(17), r: 48 });
+  objects.push({ type: 'arena', name: 'arena', x: 18 * TS, y: 13 * TS, w: 448, h: 288 }); // 우물 방어
+  objects.push({ type: 'arena', name: 'west', x: 1 * TS, y: 12 * TS, w: 448, h: 288 }); // 성기사단, 아드리안
+  MAPS.oasis = { rows: m.rows(), objects, props: { place: '루바 오아시스', ambient: DAY, bg: '#c8a464' } };
+}
+
+// ---- 2막-4) 흙벽 감옥 안 (12 x 10): 창살 너머로 오아시스 마당이 조금 보임 ----
+{
+  const W = 12;
+  const H = 10;
+  const m = grid(W, H, 'A');
+  m.rect(0, 0, W - 1, 0, 'T');
+  m.rect(1, 2, W - 2, 6, 'f');
+  m.rect(1, 7, W - 2, 7, 'I');
+  m.rect(0, 8, W - 1, 9, 'y');
+  const objects = [];
+  objects.push({ type: 'prop', name: 'straw_bed', x: cx(2) + 6, y: ty(5) + 12 });
+  objects.push(wallItem('wall_marks', cx(9), 2 * TS - 6), look('a2_prison_marks', cx(9), ty(2) + 4, TS - 12));
+  objects.push(spawn('leon_start', cx(3), ty(3), 'down'), spawn('elysia_start', cx(7), ty(5), 'down'));
+  objects.push(spawn('leon_bars', cx(5), ty(6), 'down'), spawn('elysia_bars', cx(7), ty(6), 'down'));
+  objects.push(spawn('karg_out', cx(6), ty(8) + 8, 'up'), spawn('ursha_out', cx(5), ty(8) + 8, 'up'), spawn('karg_side', cx(7) + 8, ty(8) + 10, 'up'));
+  objects.push({ type: 'goal', name: 'goal_bars', x: cx(5) + 16, y: ty(6), r: 44 });
+  MAPS.oasis_prison = { rows: m.rows(), objects, props: { place: '오아시스의 감옥', ambient: '#d0b088', bg: '#1a120a' } };
+}
+
+// ---- 2막-5) 동쪽 교역로 (60 x 15): 모래 언덕 사이의 긴 길. 오른쪽 끝에 바위 틈 ----
+{
+  const W = 60;
+  const H = 15;
+  const m = grid(W, H, 'a');
+  m.rect(0, 0, W - 1, 0, 'Y');
+  m.rect(0, 1, W - 1, 1, 'Z');
+  m.rect(0, H - 1, W - 1, H - 1, 'Y');
+  m.rect(0, 6, W - 1, 8, 't');
+  m.rect(55, 2, W - 1, 13, 'Z');
+  m.rect(55, 6, W - 1, 8, 'j'); // 바위 틈 (도적 은신처 입구)
+  const objects = [];
+  for (const c of [4, 10, 16, 24, 30, 36, 46, 51]) objects.push(dune(cx(c), ty(4) + 10));
+  for (const c of [7, 13, 21, 27, 33, 40, 49]) objects.push(dune(cx(c), ty(11) + 14));
+  objects.push({ type: 'prop', name: 'rock', x: cx(18), y: ty(10) + 12, solid: '34,10' });
+  objects.push({ type: 'prop', name: 'white_cloth', x: cx(22), y: ty(9) + 4 }, look('a2_white_cloth', cx(22), ty(9) + 8, ty(8) - 10));
+  // 숨겨진 장소: 길에서 벗어난 모래 언덕 뒤
+  objects.push({ type: 'prop', name: 'cache', x: cx(36), y: ty(2) + 14 }, look('a2_hidden_cache', cx(36), ty(2) + 20, ty(1) - 4));
+  objects.push(spawn('leon_start', cx(2), ty(7), 'right'), spawn('elysia_start', cx(0), ty(8), 'right'), spawn('karg_start', cx(4), ty(7), 'right'));
+  objects.push(spawn('leon_tracks', cx(44), ty(7), 'right'), spawn('elysia_tracks', cx(45), ty(8), 'down'), spawn('karg_tracks', cx(47), ty(7), 'left'));
+  objects.push({ type: 'goal', name: 'goal_tracks', x: cx(45), y: ty(7) + 8, r: 44 });
+  MAPS.trade_route = { rows: m.rows(), objects, props: { place: '동쪽 교역로', ambient: DAY, bg: '#c8a464' } };
+}
+
+// ---- 2막-6) 도적 은신처 (30 x 20): 바위 틈 안쪽의 천막과 상자, 묶인 정찰대 ----
+{
+  const W = 30;
+  const H = 20;
+  const m = grid(W, H, 'J');
+  m.rect(1, 2, W - 2, H - 2, 'j');
+  m.rect(0, 8, 0, 11, 'j');
+  const objects = [];
+  objects.push({ type: 'prop', name: 'tent', x: cx(5), y: ty(5) + 14, solid: '60,16' }, { type: 'prop', name: 'tent', x: cx(25), y: ty(5) + 14, solid: '60,16' });
+  objects.push({ type: 'prop', name: 'crates', x: cx(4), y: ty(16) + 12, solid: '36,12' }, { type: 'prop', name: 'crates', x: cx(26), y: ty(16) + 12, solid: '36,12' });
+  objects.push({ type: 'light', name: 'fire', x: cx(15), y: ty(3), color: '#ffa048', radius: 120, intensity: 0.8 });
+  objects.push(spawn('leon_start', cx(2), ty(9), 'right'), spawn('elysia_start', cx(1), ty(10), 'right'), spawn('karg_start', cx(3), ty(10), 'right'));
+  objects.push(spawn('sc1', cx(25), ty(9), 'left'), spawn('sc2', cx(26), ty(11), 'left'), spawn('sc3', cx(25), ty(13), 'left'));
+  objects.push(spawn('leon_scouts', cx(22), ty(11), 'right'), spawn('karg_scouts', cx(23), ty(10), 'right'), spawn('elysia_scouts', cx(21), ty(12), 'right'));
+  objects.push({ type: 'arena', name: 'arena', x: 8 * TS, y: 5 * TS, w: 448, h: 288 });
+  MAPS.bandit_hideout = { rows: m.rows(), objects, props: { place: '도적 은신처', ambient: '#f2dcb4', bg: '#20180f' } };
 }
 
 // ---------------------------------------------------------------------

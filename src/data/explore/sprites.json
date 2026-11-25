@@ -470,9 +470,16 @@
       "file": "assets/explore/campfire.png",
       "w": 28,
       "h": 22,
-      "frames": 3,
+      "frames": 2,
       "rate": 6,
-      "note": "모닥불 (0 꺼짐, 1~2 불꽃)"
+      "note": "모닥불 (불꽃)"
+    },
+    "campfire_out": {
+      "file": "assets/explore/campfire_out.png",
+      "w": 28,
+      "h": 22,
+      "frames": 1,
+      "note": "불을 피우지 못한 모닥불 자리"
     },
     "horse": {
       "file": "assets/explore/horse.png",

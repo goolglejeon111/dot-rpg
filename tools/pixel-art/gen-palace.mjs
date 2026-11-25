@@ -1185,17 +1185,19 @@ prop('camel_bones', 36, 18, 1, (c) => {
 prop('dune', 96, 28, 1, (c) => {
   c.ellipse(48, 28, 47, 26, (d, x, y) => (y > 27 ? '.' : x < 40 + (27 - y) * 0.4 ? (d < 0.8 ? 'c' : 'd') : d < 0.8 ? 'd' : 'D'));
 }, { note: '모래 언덕 (넘을 수 없음)' });
-prop('campfire', 28, 22, 3, (c, i) => {
+function campfire(c, i) {
   for (const [x, y] of [[4, 18], [10, 20], [17, 20], [23, 18], [14, 15]]) c.ellipse(x, y, 3, 2, (d) => (d < 0.5 ? 't' : 'T'));
   c.line(6, 17, 22, 13, 'O', 2);
   c.line(7, 13, 21, 17, 'o', 2);
-  if (i > 0) {
-    const h = i === 1 ? 0 : 2;
+  if (i >= 0) {
+    const h = i === 0 ? 0 : 2;
     c.ellipse(14, 10 - h / 2, 6, 7 + h / 2, (d) => (d < 0.35 ? 'v' : d < 0.6 ? 'y' : d < 0.85 ? 'Y' : '.'));
-    c.ellipse(14 + (i === 1 ? -2 : 2), 4 - h, 2.5, 3.5, (d) => (d < 0.6 ? 'y' : 'x'));
+    c.ellipse(14 + (i === 0 ? -2 : 2), 4 - h, 2.5, 3.5, (d) => (d < 0.6 ? 'y' : 'x'));
   }
   c.edge('R');
-}, { rate: 6, note: '모닥불 (0 꺼짐, 1~2 불꽃)' });
+}
+prop('campfire', 28, 22, 2, campfire, { rate: 6, note: '모닥불 (불꽃)' });
+prop('campfire_out', 28, 22, 1, (c) => campfire(c, -1), { note: '불을 피우지 못한 모닥불 자리' });
 prop('horse', 56, 48, 1, (c) => {
   const H = ['l', 'v', 'V', 'T'];
   for (const x of [12, 18, 36, 42]) c.rect(x, 30, x + 3, 46, (xx) => (xx === x ? H[1] : H[2]));

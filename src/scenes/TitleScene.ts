@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { EXP_REWARD, gainExp, joinParty, levelOf, unlock, type Unlock } from '../battle/progress';
+import { addGuest, EXP_REWARD, gainExp, joinParty, levelOf, unlock, type Unlock } from '../battle/progress';
 import { allEndings, FIRST_STORY, stories } from '../game/data';
 import { freshProgress, gameState } from '../game/GameState';
 import { AUTO_SPEEDS, save, TEXT_SPEEDS } from '../game/save';
@@ -199,6 +199,7 @@ export class TitleScene extends Phaser.Scene {
         gameState.progress.exp.leon = 700;
       })],
       ['1막 시험 ▶', () => this.showAct1Menu()],
+      ['2막 시험 ▶', () => this.showAct2Menu()],
     ];
     this.openPanel('개발 시험', (add) => {
       rows.forEach(([label, fn], i) => add(makeButton(this, W / 2, 180 + i * 46, label, fn, { w: 420, h: 42, fontSize: 18, depth: 0 })));
@@ -260,6 +261,72 @@ export class TitleScene extends Phaser.Scene {
     this.openPanel('1막 시험', (add) => {
       cols.forEach(([head, rows], c) => {
         const x = 270 + c * 210;
+        add(this.add.text(x, 172, head, { fontFamily: FONT, fontSize: '17px', color: '#a89a78' }).setOrigin(0.5));
+        rows.forEach(([label, fn], i) => add(makeButton(this, x, 206 + i * 33, label, fn, { w: 196, h: 30, fontSize: 14, depth: 0 })));
+      });
+    });
+  }
+
+  /**
+   * 2막 시험: 장면, 선택지, 전투, 이동 구간으로 바로 간다.
+   * 1막을 깬 상태(레벨 9)에서, 1막과 그 지점까지의 2막 노드(해금, 합류, 임시 동료, 겉모습)를 미리 적용한다
+   */
+  private showAct2Menu() {
+    const act1 = stories.act1;
+    const act2 = stories.act2;
+    if (!act1 || !act2) return;
+    const apply = (n: Record<string, unknown>) => {
+      const p = gameState.progress;
+      if ('unlock' in n) unlock(n.unlock as Unlock);
+      if ('join' in n) joinParty(String(n.join));
+      if ('guest' in n) addGuest(String(n.guest));
+      if ('costume' in n) p.costume[String(n.who ?? 'leon')] = String(n.costume);
+    };
+    const where = (pred: (n: object) => boolean) => {
+      for (const sc of act2.scenes) {
+        const i = sc.nodes.findIndex(pred);
+        if (i >= 0) return { scene: sc.id, node: i };
+      }
+      return { scene: act2.scenes[0].id, node: 0 };
+    };
+    const jump = (scene: string, node: number) => {
+      gameState.reset();
+      const p = gameState.progress;
+      p.stage = 'act1';
+      p.exp.leon = 2200;
+      unlock('evade');
+      for (const sc of act1.scenes) {
+        if (sc.branch) continue;
+        for (const n of sc.nodes as unknown as Record<string, unknown>[]) apply(n);
+      }
+      for (const sc of act2.scenes) {
+        if (sc.branch && sc.id !== scene) continue;
+        const end = sc.id === scene ? node : sc.nodes.length;
+        for (const n of sc.nodes.slice(0, end) as unknown as Record<string, unknown>[]) apply(n);
+        if (sc.id === scene) break;
+      }
+      this.go({ story: 'act2', scene, node });
+    };
+    const short = (t: string) => t.replace(/^장면 /, '').replace(/^▶ /, '').slice(0, 14);
+    const choiceAt = (id: string) => {
+      const sc = act2.scenes.find((x) => x.id === id);
+      return Math.max(0, sc?.nodes.findIndex((n) => 'choice' in n || 'choices' in n) ?? 0);
+    };
+    const branches = ['s4_resist', 's5_stop_elysia', 's5_calm_karg', 's5_ask', 's7_flee'];
+    const battles = ['모래 괴물 무리', '우물 방어', '교역로 도적', '성기사단', '아드리안'];
+    const segs = ['a2_desert_walk', 'a2_prison', 'a2_oasis', 'a2_trade_route'];
+    const cols: [string, [string, () => void][]][] = [
+      ['장면', act2.scenes.filter((sc) => !sc.branch).map((sc): [string, () => void] => [short(sc.title), () => jump(sc.id, 0)])],
+      ['선택지 · 갈래', [
+        ...['scene4', 'scene5', 'scene7', 'scene8'].map((id): [string, () => void] => [`${id.replace('scene', '장면 ')} 선택지`, () => jump(id, choiceAt(id))]),
+        ...branches.map((id): [string, () => void] => [short(act2.scenes.find((x) => x.id === id)?.title ?? id), () => jump(id, 0)]),
+      ]],
+      ['전투', battles.map((b): [string, () => void] => [b, () => { const w = where((n) => (n as { battle?: string }).battle === b); jump(w.scene, w.node); }])],
+      ['이동 구간', segs.map((g): [string, () => void] => [g.replace('a2_', ''), () => { const w = where((n) => (n as { explore?: string }).explore === g); jump(w.scene, w.node); }])],
+    ];
+    this.openPanel('2막 시험', (add) => {
+      cols.forEach(([head, rows], c) => {
+        const x = 165 + c * 210;
         add(this.add.text(x, 172, head, { fontFamily: FONT, fontSize: '17px', color: '#a89a78' }).setOrigin(0.5));
         rows.forEach(([label, fn], i) => add(makeButton(this, x, 206 + i * 33, label, fn, { w: 196, h: 30, fontSize: 14, depth: 0 })));
       });

@@ -53,7 +53,14 @@
     "imperial_spear": 10,
     "imperial_archer": 10,
     "pursuit_sword": 10,
-    "pursuit_shield": 10
+    "pursuit_shield": 10,
+    "sand_crawler": 15,
+    "desert_scorpion": 15,
+    "bandit_blade": 15,
+    "bandit_archer": 15,
+    "paladin": 20,
+    "adrian_boss": 0,
+    "karg": 0
   },
   "_battles": "전투 이벤트를 끝냈을 때, 처음 한 번 (전투 이름: src/data/battle/battles.json)",
   "battles": {
@@ -63,7 +70,12 @@
     "수로 쥐 떼": 30,
     "수로의 괴물": 150,
     "검문소 병사": 60,
-    "추격 기사": 100
+    "추격 기사": 100,
+    "모래 괴물 무리": 80,
+    "우물 방어": 200,
+    "교역로 도적": 200,
+    "성기사단": 250,
+    "아드리안": 300
   },
   "_looks": "조사할 물건을 처음 조사했을 때 (물건 ID: src/data/explore/looks.json). 없으면 default",
   "looks": {
@@ -77,13 +89,22 @@
     "a1_measurements": 25,
     "a1_mourning_notice": 25,
     "a1_checkpoint_board": 25,
-    "a1_hidden_coins": 50
+    "a1_hidden_coins": 50,
+    "a2_bones": 30,
+    "a2_rock_arrow": 30,
+    "a2_prison_marks": 30,
+    "a2_well_names": 30,
+    "a2_toll_notice": 30,
+    "a2_empty_hut": 30,
+    "a2_white_cloth": 30,
+    "a2_hidden_cache": 60
   },
   "_endings": "엔딩 목록의 보상 받기 (배드·데드엔딩만, 한 번)",
   "endings": {
     "prologue_dead": 170,
     "prologue_bad": 170,
-    "act1_bad": 200
+    "act1_bad": 200,
+    "act2_dead": 250
   },
   "_1막": "변장 통과 60은 선택지 효과(tools/script/stories.mjs의 s6_disguise)",
   "_프롤로그합계": "하수인 6×15=90 + 전투 이벤트 30 + 침입자 60 + 조사 9×20=180 + 엔딩 170×2=340 = 700 (5레벨)"

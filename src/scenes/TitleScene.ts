@@ -4,6 +4,7 @@ import { allEndings, FIRST_STORY, stories } from '../game/data';
 import { freshProgress, gameState } from '../game/GameState';
 import { AUTO_SPEEDS, save, TEXT_SPEEDS } from '../game/save';
 import { FONT, makeButton, type Button } from '../game/ui';
+import { CG_LIST, cgKey, fitCg, loadCgs } from '../game/cg';
 import type { StoryStartData } from './StoryScene';
 
 const W = 960;
@@ -41,12 +42,13 @@ export class TitleScene extends Phaser.Scene {
       ['새 게임', () => this.newGame(), true],
       ['이어하기', () => this.continueGame(), !!cp && !!stories[cp.story]],
       ['엔딩 목록', () => this.showEndings(), true],
+      ['CG 회상', () => void this.showCgs(), true],
       ['설정', () => this.showSettings(), true],
     ];
     // 개발 중에만: 전투·갈래 시험 메뉴
     if (import.meta.env.DEV) items.push(['개발 시험', () => this.showDevMenu(), true]);
     this.menu = items.map(([label, fn, enabled], i) =>
-      makeButton(this, W / 2, 320 + i * 70, label, fn, { w: 300, h: 54, fontSize: 24 }).setEnabled(enabled),
+      makeButton(this, W / 2, 300 + i * 62, label, fn, { w: 300, h: 50, fontSize: 23 }).setEnabled(enabled),
     );
     this.add
       .text(W / 2, H - 40, '진행: 클릭 · 스페이스 · Z   /   로그 L · 자동 A · 스킵 S', {
@@ -104,6 +106,39 @@ export class TitleScene extends Phaser.Scene {
     this.panel?.destroy();
     this.panel = undefined;
     this.menu.forEach((b) => b.setVisible(true));
+  }
+
+  /** CG 회상: 한 번 본 이벤트 CG는 작은 그림, 못 본 것은 ???. 누르면 크게 */
+  private async showCgs() {
+    await loadCgs(this, CG_LIST.filter((c) => save.hasCg(c.id)).map((c) => c.id));
+    const seen = CG_LIST.filter((c) => save.hasCg(c.id)).length;
+    this.openPanel(`CG 회상 (${seen}/${CG_LIST.length})`, (add) => {
+      const TW = 240;
+      const TH = 180;
+      CG_LIST.forEach((c, i) => {
+        const x = 200 + (i % 2) * 300 + TW / 2 + 30;
+        const y = 210 + Math.floor(i / 2) * 230 + TH / 2;
+        const got = save.hasCg(c.id) && this.textures.exists(cgKey(c.id));
+        const frame = this.add.rectangle(x, y, TW + 6, TH + 6, 0x0c0a14).setStrokeStyle(2, got ? 0xcdb88a : 0x444444);
+        add(frame);
+        if (got) {
+          const img = this.add.image(x, y, cgKey(c.id));
+          img.setScale(Math.min(TW / img.width, TH / img.height));
+          add(img);
+          frame.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.viewCg(c.id));
+        } else add(this.add.text(x, y, '???', { fontFamily: FONT, fontSize: '28px', color: '#555555' }).setOrigin(0.5));
+        add(this.add.text(x, y + TH / 2 + 20, got ? c.title : '???', { fontFamily: FONT, fontSize: '18px', color: got ? '#dddddd' : '#666666' }).setOrigin(0.5));
+      });
+    });
+  }
+
+  /** CG 한 장을 화면 가득. 누르거나 키를 누르면 닫힘 */
+  private viewCg(id: string) {
+    const back = this.add.rectangle(0, 0, W, H, 0x000000, 1).setOrigin(0).setDepth(60).setInteractive();
+    const img = fitCg(this.add.image(0, 0, cgKey(id)), W, H).setDepth(61);
+    const close = () => (back.destroy(), img.destroy());
+    back.once('pointerdown', close);
+    this.input.keyboard!.once('keydown', close);
   }
 
   /** 엔딩 목록: 본 엔딩은 이름과 "보상 받기", 못 본 엔딩은 ???와 힌트 한 줄 */
@@ -355,9 +390,22 @@ export class TitleScene extends Phaser.Scene {
       };
       row(220, '글자 속도', TEXT_SPEEDS, 'textDelay');
       row(300, '자동 진행 속도', AUTO_SPEEDS, 'autoDelay');
+      // 전투 궁극기 컷인 켜기/끄기
+      add(this.add.text(200, 380, '궁극기 컷인', { fontFamily: FONT, fontSize: '22px', color: '#dddddd' }).setOrigin(0, 0.5));
+      const onOff: Button[] = [];
+      const refresh = () => onOff.forEach((b, i) => b.setOn(save.settings.ultCutin === (i === 0)));
+      ['켜기', '끄기'].forEach((label, i) => {
+        const b = makeButton(this, 440 + i * 100, 380, label, () => {
+          save.setSettings({ ultCutin: i === 0 });
+          refresh();
+        }, { w: 90, h: 42, fontSize: 18, depth: 0 });
+        onOff.push(b);
+        add(b);
+      });
+      refresh();
       add(
         this.add
-          .text(W / 2, 400, '설정은 이 브라우저에 저장됩니다.', { fontFamily: FONT, fontSize: '17px', color: '#777777' })
+          .text(W / 2, 460, '설정은 이 브라우저에 저장됩니다.', { fontFamily: FONT, fontSize: '17px', color: '#777777' })
           .setOrigin(0.5),
       );
     });

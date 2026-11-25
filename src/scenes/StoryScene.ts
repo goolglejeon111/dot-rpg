@@ -7,11 +7,14 @@ import { StoryFx } from './StoryFx';
 import { addGuest, clearStory, gainOnce, joinParty, maxLevel, partyIds, unlock, unlockInfo, type Unlock } from '../battle/progress';
 import { characters, stories } from '../game/data';
 import { gameState, type StateData } from '../game/GameState';
-import { makeBodyPlaceholder, PORTRAIT_H } from '../game/placeholders';
+import { makeBodyPlaceholder, PORTRAIT_H, PORTRAIT_W } from '../game/placeholders';
 import { save } from '../game/save';
+import { cgKey, fitCg, loadCgs } from '../game/cg';
 import { FONT, GOLD, hex, makeButton, type Button } from '../game/ui';
 import type {
   ChoiceOption,
+  CutinNode,
+  Emphasis,
   Expression,
   LineNode,
   Side,
@@ -40,6 +43,11 @@ const PORTRAIT_HEIGHT = 700; // 화면에 보이는 스탠딩 높이 (하단 기
 const SIDE_X: Record<Side, number> = { left: 255, right: 705 };
 const DIM_SPEAK = 0x5c5c5c; // 듣는 사람
 const DIM_MONO = 0x9a9a9a; // 독백 중 (살짝)
+
+/** 컷인에 쓰는 눈매 자리 (스탠딩 그림 너비·높이에 대한 비율). 없으면 기본값 */
+const EYES: Record<string, { x: number; y: number }> = { adrian: { x: 0.5, y: 0.103 } };
+const EYE_DEFAULT = { x: 0.5, y: 0.11 };
+const EYE_PLACEHOLDER = { x: 0.5, y: 0.23 };
 
 const bodyKey = (id: string) => `${id}_body`;
 const itemKey = (id: string) => `item_${id}`;
@@ -131,6 +139,16 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   private curtain!: Phaser.GameObjects.Rectangle;
   /** 꿈에 들어가고 나올 때 하얗게 번지는 막 */
   private bloom!: Phaser.GameObjects.Rectangle;
+  /** 이벤트 CG (대사창 뒤 화면 전체) */
+  private cgView?: Phaser.GameObjects.Container;
+  private cgId: string | null = null;
+  /** 상처 sense: 화면 왼쪽 가장자리의 맥박 */
+  private senseFx?: Phaser.GameObjects.Image;
+  /** 강조 문장 big: 화면 가운데 큰 글 */
+  private bigText!: Phaser.GameObjects.Text;
+  private veil!: Phaser.GameObjects.Rectangle;
+  /** 강조 문장 slow: 다 나온 뒤 이만큼 머문다 */
+  private holdMs = 0;
   /** 맵 없이 대화 화면 위에서 하는 연출 (꿈, 남의 기억, 막간) */
   private fx!: StoryFx;
   /** 아래층 맵 화면(Explore) 상태 */
@@ -181,6 +199,12 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   private async loadPortraits() {
     const ids = new Set<string>();
     for (const s of this.story.scenes) for (const n of s.nodes) if ('speaker' in n && n.speaker) ids.add(n.speaker);
+    // 컷인 눈매는 스탠딩 그림에서 잘라 쓴다
+    for (const s of this.story.scenes) for (const n of s.nodes) if ('cutin' in n) ids.add(n.cutin);
+    // 이벤트 CG (없으면 임시 그림)
+    const cgs: string[] = [];
+    for (const s of this.story.scenes) for (const n of s.nodes) if ('cg' in n && n.cg) cgs.push(n.cg);
+    await loadCgs(this, cgs);
     const wanted: { key: string; url: string }[] = [];
     for (const id of ids) {
       const c = characters[id];
@@ -274,8 +298,9 @@ export class StoryScene extends Phaser.Scene implements MapHost {
 
     // 독백: 화면 전체를 살짝 덮고 가운데에 문장
     const veil = this.add.rectangle(0, 0, W, H, 0x000000, 0.5).setOrigin(0);
+    this.veil = veil;
     // 남의 기억이 번쩍이는 동안은 가림막을 옅게 (하얗게 타 버린 화면이 보이도록)
-    this.fx.onMemory = (on) => veil.setAlpha(on ? 0.18 : 0.5);
+    this.fx.onMemory = (on) => veil.setAlpha(on ? 0.18 : this.veilAlpha());
     this.monoText = this.add.text(150, 150, '', {
       fontFamily: FONT,
       fontSize: '26px',
@@ -289,6 +314,12 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       .setVisible(false);
     this.tweens.add({ targets: this.monoMark, y: '+=6', duration: 400, yoyo: true, repeat: -1 });
     this.mono = this.add.container(0, 0, [veil, this.monoText, this.monoMark]).setDepth(6).setVisible(false);
+    this.bigText = this.add
+      .text(W / 2, H / 2 - 30, '', { fontFamily: FONT, fontSize: '42px', color: '#ffffff', fontStyle: 'bold', align: 'center', wordWrap: { width: W - 160, useAdvancedWrap: true } })
+      .setOrigin(0.5)
+      .setShadow(0, 3, '#000000', 10)
+      .setDepth(7);
+    this.makeEdgeTextures();
 
     // 오른쪽 위 메뉴
     const small = { w: 92, h: 36, fontSize: 17, depth: 9 };
@@ -388,6 +419,11 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       this.setPlace(moved && 'place' in moved ? moved.place : sc.place);
       // 꿈 화면, 막간의 빛줄기·도트 (맵 없이 대화 화면에서)
       this.fx.clear();
+      const prior = sc.nodes.slice(0, this.nodeIdx);
+      const cgN = prior.filter((n) => 'cg' in n).pop();
+      this.showCg(cgN && 'cg' in cgN ? cgN.cg : null, true);
+      const wN = prior.filter((n) => 'wound' in n && (n.wound === 'sense' || n.wound === 'off')).pop();
+      this.setSense(!!wN && 'wound' in wN && wN.wound === 'sense', true);
       this.setDreamLook(kind === 'dream');
       if (kind === 'dream') this.fx.setDream(sc.color);
       for (const d of this.mapSteps(i, this.nodeIdx, true)) if (d) this.fx.apply(d, true);
@@ -610,6 +646,11 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   }
 
   /** 맵 위의 몹 무리와 짧은 전투. 몹이 있던 자리를 가운데로 그 맵 위에서 싸운다. 이기면 그 자리 이동으로 */
+  /** 1막부터는 레온의 어깨에 상처가 있다 (맵의 레온 도트에 빛 점) */
+  wounded() {
+    return this.story.id !== 'prologue';
+  }
+
   fieldBattle(battle: string, done: () => void, pos?: { x: number; y: number }) {
     this.fieldDone = done;
     // 어두운 수로에서 처음 싸울 때: 엘리시아가 빛을 밝힌 뒤 전투 (이후로는 계속 밝다)
@@ -646,6 +687,128 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.backlog.push({ text: line });
     const head = before.length ? `${before.join('\n')}\n` : '';
     this.typeText(line, (s) => this.monoText.setText(head + s));
+  }
+
+  /** 독백 가림막: CG가 떠 있으면 그림이 보이도록 옅게 */
+  private veilAlpha() {
+    return this.cgView ? 0.25 : 0.5;
+  }
+
+  // ---------- 추가 연출: 이벤트 CG, 컷인, 상처 반응 ----------
+
+  /** 이벤트 CG 띄우기 (null이면 닫기). 한 번 본 CG는 타이틀의 CG 회상에 남는다 */
+  private showCg(id: string | null, instant = false) {
+    if (id === this.cgId && (id === null || this.cgView)) return;
+    const old = this.cgView;
+    this.cgView = undefined;
+    this.cgId = id;
+    if (old) {
+      this.tweens.killTweensOf(old);
+      if (instant) old.destroy();
+      else this.tweens.add({ targets: old, alpha: 0, duration: 500, onComplete: () => old.destroy() });
+    }
+    if (!id || !this.textures.exists(cgKey(id))) return;
+    save.markCg(id);
+    for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, instant);
+    const black = this.add.rectangle(0, 0, W, H, 0x000000, 1).setOrigin(0);
+    const img = fitCg(this.add.image(0, 0, cgKey(id)), W, H);
+    this.cgView = this.add.container(0, 0, [black, img]).setDepth(4).setAlpha(instant ? 1 : 0);
+    if (!instant) this.tweens.add({ targets: this.cgView, alpha: 1, duration: 700 });
+    if (this.mono.visible) this.veil.setAlpha(this.veilAlpha());
+  }
+
+  /** 화면 가장자리 빛 그림: 사방(edge_all), 왼쪽만(edge_left) */
+  private makeEdgeTextures() {
+    if (!this.textures.exists('edge_all')) {
+      const t = this.textures.createCanvas('edge_all', W, H)!;
+      const ctx = t.getContext();
+      const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.hypot(W, H) / 2);
+      g.addColorStop(0, 'rgba(255,255,255,0)');
+      g.addColorStop(0.62, 'rgba(255,255,255,0)');
+      g.addColorStop(1, 'rgba(255,255,255,0.95)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      t.refresh();
+    }
+    if (!this.textures.exists('edge_left')) {
+      const t = this.textures.createCanvas('edge_left', 160, H)!;
+      const ctx = t.getContext();
+      const g = ctx.createLinearGradient(0, 0, 160, 0);
+      g.addColorStop(0, 'rgba(235,242,255,0.9)');
+      g.addColorStop(1, 'rgba(235,242,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 160, H);
+      t.refresh();
+    }
+  }
+
+  /** 상처 반응: 맵의 레온 어깨 빛 + 화면 가장자리 */
+  private woundReact(mode: 'flicker' | 'flare' | 'sense' | 'off') {
+    if (mode === 'sense' || mode === 'off') return this.setSense(mode === 'sense');
+    if (this.mapState === 'on') (this.scene.get('Explore') as ExploreScene).woundFx(mode);
+    if (mode !== 'flare') return;
+    // 크게 맥박: 화면 가장자리가 하얗게 번졌다 걷힌다 (효과음 se_wound_pulse 자리)
+    const e = this.add.image(0, 0, 'edge_all').setOrigin(0).setDepth(27).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
+    this.tweens.add({
+      targets: e, alpha: 1, duration: 140, ease: 'Quad.out',
+      onComplete: () => this.tweens.add({ targets: e, alpha: 0, duration: 900, ease: 'Quad.in', onComplete: () => e.destroy() }),
+    });
+  }
+
+  /** 상처 sense: 화면 왼쪽 가장자리가 희미하게 계속 맥박친다 (빛의 기둥과 같은 박자) */
+  private setSense(on: boolean, instant = false) {
+    if (this.mapState === 'on') (this.scene.get('Explore') as ExploreScene).woundFx(on ? 'sense' : 'off');
+    if (on === !!this.senseFx) return;
+    if (on) {
+      const e = this.add.image(0, 0, 'edge_left').setOrigin(0).setDepth(27).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
+      this.senseFx = e;
+      this.tweens.add({ targets: e, alpha: { from: 0.06, to: 0.38 }, duration: 523, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+      return;
+    }
+    const e = this.senseFx!;
+    this.senseFx = undefined;
+    this.tweens.killTweensOf(e);
+    if (instant) e.destroy();
+    else this.tweens.add({ targets: e, alpha: 0, duration: 600, onComplete: () => e.destroy() });
+  }
+
+  /**
+   * 컷인: 화면 가운데를 가로지르는 띠에 인물의 눈매를 크게 (0.8초). 스탠딩 그림의 눈 부분을 잘라 쓴다
+   */
+  private showCutin(n: CutinNode, done: () => void) {
+    this.mode = 'busy';
+    this.clearText();
+    const cy = H / 2 - 40;
+    const bandH = 150;
+    const parts: Phaser.GameObjects.GameObject[] = [this.add.rectangle(0, 0, W, bandH, 0x08060c, 0.94).setOrigin(0, 0.5)];
+    const key = bodyKey(n.cutin);
+    let img: Phaser.GameObjects.Image | undefined;
+    if (this.textures.exists(key)) {
+      img = this.add.image(0, 0, key).setOrigin(0, 0);
+      const tw = img.width;
+      const th = img.height;
+      const eye = tw === PORTRAIT_W ? EYE_PLACEHOLDER : EYES[n.cutin] ?? EYE_DEFAULT;
+      const cw = tw * 0.4;
+      const k = W / cw;
+      const ch = bandH / k;
+      const x0 = eye.x * tw - cw / 2;
+      const y0 = eye.y * th - ch / 2;
+      img.setCrop(x0, y0, cw, ch).setScale(k).setPosition(-x0 * k, -bandH / 2 - y0 * k);
+      if (n.tint === 'gold') img.setTint(0xffd27a, 0xffd27a, 0xff9a5a, 0xff9a5a);
+      parts.push(img);
+    }
+    parts.push(this.add.rectangle(0, -bandH / 2, W, 3, GOLD).setOrigin(0, 0.5), this.add.rectangle(0, bandH / 2, W, 3, GOLD).setOrigin(0, 0.5));
+    const band = this.add.container(0, cy, parts).setDepth(20).setScale(1, 0);
+    const cap = n.caption
+      ? this.add.text(W - 50, cy + bandH / 2 + 30, n.caption, { fontFamily: FONT, fontSize: '26px', color: '#f3e7c4', fontStyle: 'bold' }).setOrigin(1, 0.5).setShadow(0, 2, '#000', 6).setDepth(20).setAlpha(0)
+      : undefined;
+    this.tweens.add({ targets: band, scaleY: 1, duration: 120, ease: 'Quad.out' });
+    if (img) this.tweens.add({ targets: img, x: img.x - 60, duration: 800, ease: 'Linear' });
+    if (cap) this.tweens.add({ targets: cap, alpha: 1, x: cap.x - 16, duration: 220, delay: 100 });
+    this.time.delayedCall(650, () => {
+      this.tweens.add({ targets: [band, cap].filter(Boolean), alpha: 0, duration: 170, onComplete: () => (band.destroy(), cap?.destroy()) });
+    });
+    this.time.delayedCall(830, done);
   }
 
   private lookNext() {
@@ -761,6 +924,14 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     } else if ('item' in node) {
       this.showItem(node.item);
       this.nextNode();
+    } else if ('cg' in node) {
+      this.showCg(node.cg);
+      this.nextNode();
+    } else if ('wound' in node) {
+      this.woundReact(node.wound);
+      this.nextNode();
+    } else if ('cutin' in node) {
+      this.showCutin(node, () => this.nextNode());
     } else if ('ending' in node) {
       gameState.applyEffects(node);
       this.showEnding(node.ending);
@@ -963,6 +1134,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     if (this.overlay || this.logView || this.looking) return;
     if (this.mode !== 'typing' && this.mode !== 'waiting') return;
     const passed: string[] = [];
+    let cg: string | null | undefined;
+    let sense: boolean | undefined;
     const nodes = this.scene_.nodes;
     let i = this.nodeIdx + 1;
     for (; i < nodes.length; i++) {
@@ -975,8 +1148,12 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       if ('join' in n) joinParty(n.join);
       if ('guest' in n) addGuest(n.guest);
       if ('costume' in n) this.setCostume(n.who ?? 'leon', n.costume);
+      if ('cg' in n) cg = n.cg;
+      if ('wound' in n && (n.wound === 'sense' || n.wound === 'off')) sense = n.wound === 'sense';
     }
     this.showItem(null);
+    if (cg !== undefined) this.showCg(cg, true);
+    if (sense !== undefined) this.setSense(sense, true);
     // 건너뛴 무대 변화는 바로 적용
     const defs = passed.map((id) => STAGE.stages[id]).filter(Boolean);
     for (const d of defs) this.fx.apply(d, true);
@@ -997,14 +1174,17 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   }
 
   /** target 글자를 한 글자씩 */
-  private typeText(text: string, render: (s: string) => void) {
+  private typeText(text: string, render: (s: string) => void, fx: Emphasis[] = [], target?: Phaser.GameObjects.Text) {
     this.full = text;
     this.shown = 0;
     this.typeTimer?.remove();
     this.waitTimer?.remove();
     this.mode = 'typing';
     this.render = render;
-    const delay = save.settings.textDelay;
+    const slow = fx.includes('slow');
+    this.holdMs = slow ? 900 : 0;
+    if (fx.includes('shake')) this.shakeText(target);
+    const delay = slow ? Math.max(90, save.settings.textDelay * 3) : save.settings.textDelay;
     if (delay <= 0) return this.completeTyping();
     render('');
     const chars = Array.from(text);
@@ -1025,8 +1205,18 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.typeTimer?.remove();
     this.typeTimer = undefined;
     this.render(this.full);
-    this.mode = 'waiting';
     if (!this.looking) save.markRead(this.readKey());
+    if (this.holdMs > 0) {
+      // 강조 slow: 다 나온 뒤 잠깐 머문다 (그동안은 넘길 수 없음)
+      const ms = this.holdMs;
+      this.holdMs = 0;
+      this.mode = 'busy';
+      this.time.delayedCall(ms, () => {
+        if (this.mode === 'busy') this.completeTyping();
+      });
+      return;
+    }
+    this.mode = 'waiting';
     const inMono = this.mono.visible;
     this.nextMark.setVisible(!inMono);
     this.monoMark.setVisible(inMono);
@@ -1049,6 +1239,17 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     for (const o of [this.box, this.nameBox, this.mono]) o.setVisible(false).setAlpha(1);
     this.monoText.setText('');
     this.lineText.setText('');
+    this.bigText.setText('');
+    this.holdMs = 0;
+  }
+
+  /** 강조 shake: 글자와 화면이 짧게 흔들린다 */
+  private shakeText(target?: Phaser.GameObjects.Text) {
+    this.screenFx({ shake: 0.006 });
+    if (!target) return;
+    const x0 = target.x;
+    this.tweens.killTweensOf(target);
+    this.tweens.add({ targets: target, x: x0 + 5, duration: 35, yoyo: true, repeat: 4, onComplete: () => target.setX(x0) });
   }
 
   private showLine(node: LineNode, instant = false) {
@@ -1057,7 +1258,9 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.nextMark.setVisible(false);
     const c = node.speaker ? characters[node.speaker] : undefined;
     const name = c?.name ?? node.name ?? '';
-    if (c) {
+    this.bigText.setText('');
+    // 이벤트 CG가 떠 있는 동안은 스탠딩 없이 이름표만
+    if (c && !this.cgView) {
       const side = node.position ?? (c.id === this.leftOf() ? 'left' : 'right');
       this.setPortrait(side, c.id, node.expression ?? 'normal');
       this.highlight(side);
@@ -1072,7 +1275,11 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       return;
     }
     this.backlog.push({ name, text: node.text });
-    this.typeText(node.text, (s) => this.lineText.setText(s));
+    const fx = node.emphasis ?? [];
+    if (fx.includes('big')) {
+      this.lineText.setText('');
+      this.typeText(node.text, (s) => this.bigText.setText(s), fx, this.bigText);
+    } else this.typeText(node.text, (s) => this.lineText.setText(s), fx, this.lineText);
   }
 
   /** 왼쪽에 서는 인물: 레온. 레온이 없는 장면(막간)은 그 장면의 첫 화자 */
@@ -1082,12 +1289,14 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   }
 
   private showMonoLine(instantLines?: string[]) {
-    const node = this.scene_.nodes[this.nodeIdx] as { monologue: string[] };
+    const node = this.scene_.nodes[this.nodeIdx] as { monologue: string[]; emphasis?: Record<string, Emphasis[]> };
     this.box.setVisible(false);
     this.nameBox.setVisible(false);
     this.mono.setVisible(true);
+    this.veil.setAlpha(this.veilAlpha());
     this.monoMark.setVisible(false);
     this.highlight(null, DIM_MONO);
+    this.bigText.setText('');
     if (instantLines) {
       this.monoText.setText(instantLines.join('\n'));
       return;
@@ -1098,7 +1307,12 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.fx.onLine();
     this.backlog.push({ text: line });
     const head = before.length ? `${before.join('\n')}\n` : '';
-    this.typeText(line, (s) => this.monoText.setText(head + s));
+    const fx = node.emphasis?.[line] ?? [];
+    if (fx.includes('big')) {
+      // 크게: 앞 줄은 그대로 두고 이 줄만 화면 가운데에
+      this.monoText.setText(before.join('\n'));
+      this.typeText(line, (s) => this.bigText.setText(s), fx, this.bigText);
+    } else this.typeText(line, (s) => this.monoText.setText(head + s), fx, this.monoText);
   }
 
   // ---------- 스탠딩 ----------

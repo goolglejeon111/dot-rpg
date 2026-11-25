@@ -23,6 +23,9 @@ export interface Effects {
   flags?: Record<string, FlagValue>;
 }
 
+/** 강조 문장: big = 화면 가운데에 크게, slow = 한 글자씩 느리게(다 나온 뒤 잠깐 머묾), shake = 나타날 때 글자와 화면이 흔들림 */
+export type Emphasis = 'big' | 'slow' | 'shake';
+
 /** 대사. speaker(인물 ID)가 있으면 스탠딩을 보여 주고, name만 있으면 이름표만 */
 export interface LineNode extends Effects {
   speaker?: string;
@@ -31,11 +34,31 @@ export interface LineNode extends Effects {
   /** 생략하면 레온은 왼쪽, 나머지는 오른쪽 */
   position?: Side;
   text: string;
+  emphasis?: Emphasis[];
 }
 
 /** 독백 덩어리(한 화면). 줄은 누를 때마다 하나씩 나타난다 */
 export interface MonologueNode {
   monologue: string[];
+  /** 줄(글 그대로) → 강조 */
+  emphasis?: Record<string, Emphasis[]>;
+}
+
+/** 컷인: 화면 가운데를 가로지르는 띠에 인물의 눈매 (0.8초). caption = 띠 아래 글, tint = 눈매 색(gold 등) */
+export interface CutinNode {
+  cutin: string;
+  caption?: string;
+  tint?: string;
+}
+
+/** 이벤트 CG: 대사창 뒤 화면 전체 그림 (null이면 닫기). 장면이 바뀌면 저절로 닫힌다 */
+export interface CgNode {
+  cg: string | null;
+}
+
+/** 레온의 상처 반응: flicker = 희미하게 한 번, flare = 크게 맥박, sense = 계속 맥박(장면이 바뀌거나 off까지) */
+export interface WoundNode {
+  wound: 'flicker' | 'flare' | 'sense' | 'off';
 }
 
 export interface ChoiceOption extends Effects {
@@ -132,6 +155,9 @@ export type StoryNode =
   | GuestNode
   | CostumeNode
   | ItemNode
+  | CutinNode
+  | CgNode
+  | WoundNode
   | EndingNode
   | ChapterNode;
 

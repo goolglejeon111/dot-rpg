@@ -191,5 +191,17 @@ export function parseScript(md, cfg) {
     }
     sc.nodes.splice(i, 0, ins.node);
   }
+
+  // 강조 문장 (big, slow, shake): 독백 안의 한 줄이면 그 독백 덩어리의 emphasis에 줄별로, 대사면 그 대사에
+  for (const e of cfg.emphasis ?? []) {
+    const sc = story.scenes.find((s) => s.id === e.scene);
+    const n = sc?.nodes.find((x) => x.monologue?.includes(e.line) || x.text === e.line);
+    if (!n) {
+      warnings.push(`강조할 줄을 찾지 못함: ${e.scene} / ${e.line}`);
+      continue;
+    }
+    if (n.text === e.line) n.emphasis = e.fx;
+    else n.emphasis = { ...(n.emphasis ?? {}), [e.line]: e.fx };
+  }
   return { story, warnings };
 }

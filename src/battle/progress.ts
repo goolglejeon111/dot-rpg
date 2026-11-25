@@ -16,7 +16,16 @@ const MAX: Record<string, number> = expTable.maxLevel;
 
 /** 경험치 수치 (src/data/exp.json 한 곳에서 고친다) */
 export const EXP_REWARD = {
-  enemy: (id: string) => (expTable.enemies as Record<string, number>)[id] ?? 0,
+  /** 몹 경험치. 파티 평균 레벨(level)이 몹 레벨보다 많이 높으면 줄어든다 (enemyLevels, weakScale) */
+  enemy: (id: string, level?: number) => {
+    const base = (expTable.enemies as Record<string, number>)[id] ?? 0;
+    const lv = (expTable.enemyLevels as Record<string, number>)[id];
+    if (!base || level === undefined || lv === undefined) return base;
+    const gap = Math.floor(level - lv);
+    const steps = Object.entries(expTable.weakScale as Record<string, number>).map(([k, v]) => [Number(k), v] as const).sort((a, b) => b[0] - a[0]);
+    const k = steps.find(([g]) => gap >= g)?.[1] ?? 1;
+    return Math.max(1, Math.round(base * k));
+  },
   battle: (name: string) => (expTable.battles as Record<string, number>)[name] ?? 0,
   look: (id: string) => (expTable.looks as Record<string, number>)[id] ?? expTable.looks.default,
   ending: (id: string) => (expTable.endings as Record<string, number>)[id] ?? 0,

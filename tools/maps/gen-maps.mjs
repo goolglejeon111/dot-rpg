@@ -616,11 +616,10 @@ const npc = (name, x, y, sprite, facing, talk) => ({ type: 'npc', name, x, y, sp
   m.rect(0, 9, W - 1, 9, 'd');
   m.rect(0, 10, W - 1, 11, 'g');
   const objects = [];
-  for (const c of [1, 4, 9, 13]) objects.push({ type: 'prop', name: 'reeds', x: cx(c), y: ty(2) + 14 });
-  for (const c of [2, 7, 11, 14]) objects.push({ type: 'prop', name: 'reeds', x: cx(c), y: ty(11) + 14 });
+  // 기슭의 갈대는 맵 화면이 만들어 왼쪽으로 흘려보낸다 (drift)
   objects.push({ type: 'prop', name: 'boat', x: cx(8), y: ty(6) + 18 });
   objects.push(spawn('leon_boat', cx(7) + 2, ty(6) + 8, 'down'), spawn('elysia_boat', cx(9) - 2, ty(6) + 8, 'down'));
-  MAPS.river_boat = { rows: m.rows(), objects, props: { place: '강 위', ambient: '#2a3560', bg: '#05070f' } };
+  MAPS.river_boat = { rows: m.rows(), objects, props: { place: '강 위', ambient: '#2a3560', bg: '#05070f', drift: true } };
 }
 
 // ---------------------------------------------------------------------

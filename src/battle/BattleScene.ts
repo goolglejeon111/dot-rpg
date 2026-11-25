@@ -5,6 +5,7 @@ import fighters from '../data/battle/fighters.json';
 import combos from '../data/battle/combos.json';
 import levels from '../data/battle/levels.json';
 import { gameState } from '../game/GameState';
+import { save } from '../game/save';
 import { fxInfo, makeBattleAnims, preloadBattle } from './assets';
 import { EXP_REWARD, gainExp, gainOnce, isUnlocked, levelOf, partyIds, statsOf, type LevelUp, type Unlock } from './progress';
 import { MAPS, findObj, footOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf } from '../explore/mapData';
@@ -345,6 +346,8 @@ const FX_ORIGIN: Record<string, [number, number]> = {
   adrian_bash: [4, 24], adrian_charge: [4, 16], adrian_sever: [18, 32], light_bolt: [23, 8], karg_dash: [44, 12],
 };
 const BODY = 18; // 발밑에서 몸 가운데까지
+/** 레벨 추가 효과가 열리는 레벨 */
+const BONUS_LEVELS = [10, 15, 20, 25, 30];
 /** 궁극기 마지막 일격 때 느려지는 배율 (0.3 = 약 3배 느리게) */
 const FINISH_SLOW = 0.3;
 const JUMP_V = 140;
@@ -402,7 +405,7 @@ export class BattleScene extends Phaser.Scene {
   bounds = { x0: 12, x1: 436, y0: 50, y1: 282 };
   vin: VirtualInput = { mx: 0, my: 0, attack: false, evade: false, jump: false, skill: false, ult: false, combo: false, interact: false, swap: 0 };
   /** HUD가 읽는 알림 (보여 준 뒤 비움) */
-  notices: { kind: 'toast' | 'guide' | 'guideOff' | 'levelup' | 'unlock' | 'word' | 'cutin'; text: string; what?: Unlock; ms?: number }[] = [];
+  notices: { kind: 'toast' | 'guide' | 'guideOff' | 'levelup' | 'unlock' | 'word' | 'cutin' | 'ultcut'; text: string; what?: Unlock; ms?: number }[] = [];
   wheelOpen = false;
   /** 기절·게임 오버 규칙을 쓰는지 (체력 0 연출에서는 끔) */
   cutscene = false;
@@ -1218,8 +1221,17 @@ export class BattleScene extends Phaser.Scene {
     f.guardCd = this.now + (f.def.evade?.cooldown ?? 4000);
     const [vx, vy] = dirVec(f.facing);
     this.fx('elysia_blink', f.x, f.y - BODY, { depth: f.y + 2 });
+    const from = { x: f.x, y: f.y };
     // 조금씩 옮겨 벽에서 멈추게
     for (let i = 0; i < 16; i++) this.moveBy(f, vx * 4, vy * 4);
+    if (this.bonus(f, 10, 'elysia')) {
+      // 10레벨: 떠난 자리에 룬이 터진다
+      this.time.delayedCall(120, () => {
+        this.fx('elysia_rune', from.x, from.y, { depth: from.y - 1, scale: 0.6 });
+        this.fx('elysia_bolt_hit', from.x, from.y - BODY, { depth: from.y + 5, scale: 1.6 });
+        for (const e of this.foesOf(f)) if (Math.hypot(e.x - from.x, e.y - from.y) < 34 + e.radius) this.damage(e, f, f.atk * 0.9, { push: 8, from });
+      });
+    }
     this.fx('elysia_blink', f.x, f.y - BODY, { depth: f.y + 2 });
     f.invulnUntil = this.now + 250;
     f.state = 'idle';
@@ -1235,7 +1247,18 @@ export class BattleScene extends Phaser.Scene {
     if (f.dashUsed.length >= (ev.charges ?? 1)) return;
     f.dashUsed.push(this.now);
     const [vx, vy] = dirVec(f.facing);
+    const from = { x: f.x, y: f.y };
     for (let i = 0; i < 14; i++) this.moveBy(f, vx * 4, vy * 4);
+    if (this.bonus(f, 10, 'karg')) {
+      // 10레벨: 지나간 길 위의 적을 벤다
+      const lx = f.x - from.x;
+      const ly = f.y - from.y;
+      const l2 = lx * lx + ly * ly || 1;
+      for (const e of this.foesOf(f)) {
+        const k = Phaser.Math.Clamp(((e.x - from.x) * lx + (e.y - from.y) * ly) / l2, 0, 1);
+        if (Math.hypot(e.x - (from.x + lx * k), e.y - (from.y + ly * k)) < 12 + e.radius) this.damage(e, f, f.atk * 0.7, { push: 6, from });
+      }
+    }
     const ang = Math.atan2(vy, vx);
     this.fx(ev.fx ?? 'karg_dash', f.x, f.y - BODY, { angle: ang, depth: f.y + 2, flipY: Math.cos(ang) < -0.01 });
     f.invulnUntil = this.now + 200;
@@ -1293,7 +1316,11 @@ export class BattleScene extends Phaser.Scene {
     if (which === 'skill') {
       f.skillCd = this.now + (m.cooldown ?? 8000);
       if (me && this.bdef.guideUntil === 'skill') this.notices.push({ kind: 'guideOff', text: '' });
-    } else f.gauge = 0;
+    } else {
+      f.gauge = 0;
+      // 궁극기 짧은 컷인 (설정에서 끌 수 있음). 전투는 멈추지 않는다
+      if (save.settings.ultCutin) this.notices.push({ kind: 'ultcut', text: `${f.id},${m.name}` });
+    }
     if (me) [f.aimX, f.aimY] = dirVec(f.facing);
     f.state = 'skill';
     f.move = kind;
@@ -1430,7 +1457,7 @@ export class BattleScene extends Phaser.Scene {
         if (!f.hitDone) {
           f.hitDone = true;
           this.cameras.main.flash(160, 200, 90, 60);
-          this.startBuff(f, 8000);
+          this.startBuff(f, this.bonus(f, 15, 'karg') ? 11000 : 8000);
         }
         f.moveCol = 9;
         if (t > 650) this.endMove(f);
@@ -1683,7 +1710,8 @@ export class BattleScene extends Phaser.Scene {
     if (h.projectile) {
       // 마력탄 (엘리시아)
       this.overloadUse(f, 'bolt');
-      this.shoot(f, f.x + f.aimX * 10, f.y - BODY + f.aimY * 6, f.aimX * h.projectile, f.aimY * h.projectile, h.fx, Math.round(f.atk * h.mult), false);
+      const boost = this.bonus(f, 15, 'elysia') ? 1 + f.gauge / 200 : 1;
+      this.shoot(f, f.x + f.aimX * 10, f.y - BODY + f.aimY * 6, f.aimX * h.projectile, f.aimY * h.projectile, h.fx, Math.round(f.atk * h.mult * boost), false);
       return;
     }
     const foes = this.foesOf(f);
@@ -1764,7 +1792,7 @@ export class BattleScene extends Phaser.Scene {
           // 튕겨 내기 + 반격
           this.word('parry', t);
           this.fx('parry', t.x + (fx / fl) * 10, t.y - BODY + (fy / fl) * 6, { depth: t.y + 5 });
-          this.addGauge(t, t.def.gauge?.perParry ?? 20);
+          this.addGauge(t, (t.def.gauge?.perParry ?? 20) * (this.bonus(t, 10, 'leon') ? 2 : 1));
           if (src && src.team === 'enemy' && src.state !== 'prep') {
             src.state = 'stagger';
             src.stateT = 0;
@@ -1919,7 +1947,10 @@ export class BattleScene extends Phaser.Scene {
     e.signal?.destroy();
     e.area?.warn.destroy();
     this.clearExtra(e);
-    const ex = e.enemy ? EXP_REWARD.enemy(e.id) : 0;
+    // 나보다 많이 약한 몹은 경험치를 거의 주지 않는다 (파티 평균 레벨과 적 레벨 차이)
+    const ids = this.expIds();
+    const avg = ids.reduce((a, id) => a + levelOf(id), 0) / (ids.length || 1);
+    const ex = e.enemy ? EXP_REWARD.enemy(e.id, avg) : 0;
     if (ex && !this.cutscene) this.grantExp(ex);
   }
 
@@ -1946,7 +1977,14 @@ export class BattleScene extends Phaser.Scene {
         this.fx('level_up', f.x, f.y + 2, { origin: [0.5, 1], depth: f.y + 3 });
       }
       this.notices.push({ kind: 'levelup', text: `${f?.def.name ?? u.id} Lv ${u.to}` });
+      const bonus = (levels.bonus as Record<string, Record<string, string>>)[u.id] ?? {};
+      for (const lv of BONUS_LEVELS) if (u.from < lv && u.to >= lv && bonus[lv]) this.notices.push({ kind: 'unlock', text: `추가 효과: ${bonus[lv]}` });
     }
+  }
+
+  /** 레벨 추가 효과 (levels.json의 bonus): 이 인물이 lv레벨 이상이면 true */
+  private bonus(f: Fighter, lv: number, id: string) {
+    return f.id === id && f.team !== 'enemy' && levelOf(f.id) >= lv;
   }
 
   // ---- 기절 ----

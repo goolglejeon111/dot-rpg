@@ -12,6 +12,8 @@ export interface Settings {
   textDelay: number;
   /** 자동 진행: 글이 다 나온 뒤 기다리는 ms */
   autoDelay: number;
+  /** 전투 궁극기 컷인 */
+  ultCutin: boolean;
 }
 
 export interface Checkpoint {
@@ -33,6 +35,8 @@ interface Meta {
   /** 보상을 받은 엔딩 */
   rewards: string[];
   read: string[];
+  /** 한 번 본 이벤트 CG (타이틀의 CG 회상) */
+  cgs: string[];
   checkpoint: Checkpoint | null;
 }
 
@@ -49,10 +53,11 @@ export const AUTO_SPEEDS = [
 ];
 
 const fresh = (): Meta => ({
-  settings: { textDelay: 30, autoDelay: 1600 },
+  settings: { textDelay: 30, autoDelay: 1600, ultCutin: true },
   endings: [],
   rewards: [],
   read: [],
+  cgs: [],
   checkpoint: null,
 });
 
@@ -67,6 +72,7 @@ function load(): Meta {
       endings: Array.isArray(p.endings) ? p.endings : [],
       rewards: Array.isArray(p.rewards) ? p.rewards : [],
       read: Array.isArray(p.read) ? p.read : [],
+      cgs: Array.isArray(p.cgs) ? p.cgs : [],
       checkpoint: p.checkpoint ?? null,
     };
   } catch (err) {
@@ -120,6 +126,13 @@ export const save = {
     if (meta.checkpoint) apply(meta.checkpoint);
     write();
     return true;
+  },
+
+  hasCg: (id: string) => meta.cgs.includes(id),
+  markCg(id: string) {
+    if (meta.cgs.includes(id)) return;
+    meta.cgs.push(id);
+    write();
   },
 
   isRead: (key: string) => readSet.has(key),

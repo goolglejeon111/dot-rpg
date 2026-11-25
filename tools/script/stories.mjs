@@ -165,6 +165,9 @@ export const STORIES = [
       { scene: 'scene7', before: '검은 옷의 사내들.', node: { stage: 'a1_boat_dim' } },
       { scene: 'scene7', before: '배가 서쪽 강기슭에 닿았다.', node: { stage: 'a1_boat_night' } },
       { scene: 'scene7', before: '서쪽 하늘 끝.', node: { stage: 'a1_boat_dawn' } },
+      // 추가 연출 (1막_연출.md "추가 연출" 표)
+      { scene: 'scene2', before: '은백색 머리. 짙은 남보라색 로브.', node: { cg: 'act1_elysia' } },
+      { scene: 'scene2', before: '…이런 곳에 사람이라니.', node: { cg: null } },
     ],
     endingExtras: {
       act1_bad: { hint: '혼자서는 갈 수 없는 길도 있다.' },
@@ -209,11 +212,17 @@ export const STORIES = [
       { scene: 'scene2', before: '마지막 한 마리가 모래 속으로 무너졌을 때.', node: { battle: '모래 괴물 무리' } },
       { scene: 'scene2', before: '제복을 가리던 갈색 천은, 괴물의 발톱에 찢겨 모래 속으로 사라지고 없었다.', node: { costume: 'leon' } },
       { scene: 'scene2', before: '해가 진다.', node: { stage: 'a2_sunset' } },
-      { scene: 'scene3', before: '어깨가, 타올랐다.', node: { stage: 'a2_wound' } },
+      { scene: 'scene3', before: '어깨가, 타올랐다.', node: { wound: 'flare' } },
       { scene: 'scene3', before: '그리고 한순간.', node: { stage: 'a2_memory' } },
       { scene: 'scene3', before: '눈을 깜빡이자, 사라졌다.', node: { stage: 'a2_memory_end' } },
       { scene: 'scene3', before: '지평선 끝, 아득히 먼 곳에서.', node: { stage: 'a2_pillar' } },
       { scene: 'scene3', before: '빛의 기둥이 사라진 것은, 숨을 서른 번쯤 쉬었을 때였다.', node: { stage: 'a2_pillar_end' } },
+      // 추가 연출 (2막_연출.md "추가 연출" 표)
+      { scene: 'scene3', before: '지평선 끝, 아득히 먼 곳에서.', node: { cg: 'act2_pillar' } },
+      { scene: 'scene3', before: '지평선 끝, 아득히 먼 곳에서.', node: { wound: 'sense' } },
+      { scene: 'scene3', before: '빛의 기둥이 사라진 것은, 숨을 서른 번쯤 쉬었을 때였다.', node: { cg: null } },
+      { scene: 'scene3', before: '빛의 기둥이 사라진 것은, 숨을 서른 번쯤 쉬었을 때였다.', node: { wound: 'off' } },
+      { scene: 'scene8', before: '…신의 이름으로. 당신을 심판하겠습니다.', node: { cutin: 'adrian', caption: '루멘 성기사 아드리안' } },
       { scene: 'scene3', before: '그녀는 그날 밤, 측정 결과를 몇 번이고 다시 적었다.', node: { stage: 'a2_write' } },
       { scene: 'scene4', before: '눈을 뜨자, 사방이 창끝이었다.', node: { stage: 'a2_wolves' } },
       { scene: 'scene4', before: '그 가운데, 한 사내가 앞으로 나섰다.', node: { stage: 'a2_karg' } },
@@ -272,6 +281,11 @@ export const STORIES = [
       { scene: 'scene9_1', before: '그녀가 종이를 손바닥에 올려놓았다.', node: { stage: 'a2_embers' } },
       { scene: 'interlude2', before: '빛이시여.', node: { stage: 'a2_pray_light' } },
       { scene: 'interlude2', before: '아드리안.', node: { stage: 'a2_ignatius_in' } },
+    ],
+    // 강조 문장: line = 독백 안의 아무 줄이나 대사, fx = big(크게 가운데) / slow(한 글자씩 느리게) / shake(흔들림)
+    emphasis: [
+      { scene: 'scene3', line: '그리고 한순간.', fx: ['slow'] },
+      { scene: 'scene3', line: '하얀 빛의 기둥이, 하늘을 찌르고 있었다.', fx: ['big'] },
     ],
     endingExtras: {
       act2_dead: { hint: '등을 보이면, 돌아갈 길도 함께 사라진다.' },

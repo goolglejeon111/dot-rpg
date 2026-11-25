@@ -282,7 +282,7 @@
       "flash": { "who": "leon", "color": "#ffffff" },
       "screen": { "flash": "#d8c8ff" }
     },
-    "a1_seal": { "flash": { "who": "leon", "color": "#a47cff" } },
+    "a1_seal": { "flash": { "who": "leon", "color": "#a47cff" }, "once": "a1:seal" },
     "a1_bad_walk": {
       "map": "sewer_b",
       "focus": "leon",
@@ -368,8 +368,10 @@
       "actors": {
         "leon": { "at": "leon_start", "facing": "right" },
         "elysia": { "at": "elysia_start", "facing": "right" },
-        "sp1": { "sprite": "imperial_spear", "at": "sp1", "facing": "left" },
-        "sp2": { "sprite": "imperial_spear", "at": "sp2", "facing": "left" },
+        "c1": { "sprite": "mob_citizen", "at": [562,322], "facing": "right" },
+        "c2": { "sprite": "mob_citizen", "at": [530,318], "facing": "right" },
+        "sp1": { "sprite": "imperial_spear", "at": "sp1", "facing": "left", "compare": "left" },
+        "sp2": { "sprite": "imperial_spear", "at": "sp2", "facing": "left", "compare": "left" },
         "sp3": { "sprite": "imperial_spear", "at": "sp3", "facing": "left" },
         "sp4": { "sprite": "imperial_spear", "at": "sp4", "facing": "left" },
         "ar1": { "sprite": "imperial_archer", "at": "ar1", "facing": "left" },
@@ -487,19 +489,19 @@
       "map": "river_boat",
       "focus": [272, 216],
       "actors": {
-        "leon": { "at": "leon_boat", "facing": "right" },
-        "elysia": { "at": "elysia_boat", "facing": "left" }
-      }
+        "leon": { "at": "leon_boat", "facing": "right", "pose": "kneel" },
+        "elysia": { "at": "elysia_boat", "facing": "left", "pose": "kneel" }
+      },
+      "city": 1
     },
-    "a1_boat_dim": { "ambient": "#161c38" },
-    "a1_boat_night": { "ambient": "#2a3560" },
-    "a1_boat_dawn": { "ambient": "#ffc890" },
+    "a1_boat_dim": { "ambient": "#161c38", "city": 0.55 },
+    "a1_boat_night": { "ambient": "#2a3560", "city": 0.15 },
+    "a1_boat_dawn": { "ambient": "#ffc890", "city": 0, "dawnBand": true },
     "a2_s1": {"map": "desert_a", "focus": "leon", "actors": {"leon": {"at": "leon_start", "facing": "right"}, "elysia": {"at": "elysia_start", "facing": "right"}}},
     "a2_rock": {"map": "desert_a", "focus": "leon", "actors": {"leon": {"at": "leon_rock", "facing": "up"}, "elysia": {"at": "elysia_rock", "facing": "up"}}},
     "a2_collapse": {"screen": {"shake": 0.008}},
     "a2_sunset": {"from": "#ff9a50", "ambient": "#28305e", "fade": 7000},
     "a2_camp": {"map": "desert_camp", "ambient": "#28305e", "focus": "leon", "actors": {"leon": {"at": "leon_camp", "facing": "right"}, "elysia": {"at": "elysia_camp", "facing": "left"}}},
-    "a2_wound": {"pulse": true, "flash": {"who": "leon", "color": "#ffffff"}, "screen": {"flash": "#ffffff"}},
     "a2_pillar": {"pillar": "rise"},
     "a2_pillar_end": {"pillar": "fade"},
     "a2_write": {"actors": {"elysia": {"pose": "kneel", "write": true}}},

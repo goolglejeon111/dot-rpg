@@ -379,6 +379,7 @@ export class BattleHUD extends Phaser.Scene {
         this.tweens.killTweensOf(this.guideBox);
         this.tweens.add({ targets: this.guideBox, alpha: 0, duration: 400 });
       } else if (n.kind === 'cutin') this.cutIn(n.text);
+      else if (n.kind === 'ultcut') this.ultCut(n.text);
     }
   }
 
@@ -491,6 +492,19 @@ export class BattleHUD extends Phaser.Scene {
     band(b, H / 2 + 80, 360);
     const t = this.add.text(W / 2, H / 2, name ?? '', { fontFamily: FONT, fontSize: '30px', color: '#f3e7c4', fontStyle: 'bold' }).setOrigin(0.5).setShadow(0, 2, '#000', 4).setDepth(37);
     this.tweens.add({ targets: t, alpha: 0, delay: 900, duration: 200, onComplete: () => t.destroy() });
+  }
+
+  /** 궁극기 컷인: 가운데 띠 하나에 얼굴과 기술 이름이 0.6초 스친다 (전투는 계속) */
+  private ultCut(text: string) {
+    const [id, name] = text.split(',');
+    const y = H / 2 - 40;
+    const bg = this.add.rectangle(0, y, W, 96, 0x000000, 0.7).setOrigin(0, 0.5).setDepth(35).setScale(1, 0);
+    const face = this.add.image(W / 2 - 220, y, `ui_face_${id}`, 0).setScale(S * 2.4).setDepth(36).setAlpha(0);
+    const t = this.add.text(W / 2 + 40, y, name ?? '', { fontFamily: FONT, fontSize: '30px', color: '#f3e7c4', fontStyle: 'bold' }).setOrigin(0, 0.5).setShadow(0, 2, '#000', 4).setDepth(37).setAlpha(0);
+    this.tweens.add({ targets: bg, scaleY: 1, duration: 90, ease: 'Quad.out' });
+    this.tweens.add({ targets: face, alpha: 1, x: face.x + 40, duration: 200, ease: 'Quad.out' });
+    this.tweens.add({ targets: t, alpha: 1, x: t.x - 20, duration: 200, delay: 60, ease: 'Quad.out' });
+    this.tweens.add({ targets: [bg, face, t], alpha: 0, delay: 520, duration: 140, onComplete: () => (bg.destroy(), face.destroy(), t.destroy()) });
   }
 
   /** 파티 전멸: 데드엔딩처럼 화면이 붉게 어두워지고 GAME OVER */

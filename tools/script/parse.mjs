@@ -172,10 +172,22 @@ export function parseScript(md, cfg) {
         text,
         next: target?.id,
         flags: { [flagKey]: target?.id ?? String(n) },
+        ...(fx.flags ? { flags: { [flagKey]: target?.id ?? String(n), ...fx.flags } } : {}),
         ...(fx.affection ? { affection: fx.affection } : {}),
         ...(fx.exp ? { exp: fx.exp } : {}),
       };
     });
+  }
+
+  // 선택지로 들어가지 않는 장면(전투 결과로 들어가는 장면 등)의 효과는 장면에 붙여 들어갈 때 적용한다
+  const choiceTargets = new Set(choiceNodes.flatMap((c) => c.choices.map((o) => o.next)));
+  for (const sc of story.scenes) {
+    const fx = cfg.scenes.find((s) => s.id === sc.id)?.effects;
+    if (fx && !choiceTargets.has(sc.id)) {
+      const { nodes, ...head } = sc;
+      for (const k of Object.keys(sc)) delete sc[k];
+      Object.assign(sc, head, { effects: fx, nodes });
+    }
   }
 
   // 게임에서만 줄이거나 빼는 독백 덩어리 (from = 대본의 독백 덩어리 전체, to = 바꿀 줄들. 빈 배열이면 뺌)
@@ -193,6 +205,12 @@ export function parseScript(md, cfg) {
   // 나중에 넣을 요소(전투, 장소 변경)를 표시한다
   for (const ins of cfg.inserts ?? []) {
     const sc = story.scenes.find((s) => s.id === ins.scene);
+    // atEnd: 장면의 마지막에 (같은 장면에 여러 개면 적은 순서대로)
+    if (ins.atEnd) {
+      if (sc) sc.nodes.push(ins.node);
+      else warnings.push(`끼워 넣을 장면을 찾지 못함: ${ins.scene} (atEnd)`);
+      continue;
+    }
     const i = sc?.nodes.findIndex((n) => n.monologue?.[0] === ins.before || n.text === ins.before) ?? -1;
     if (!sc || i < 0) {
       warnings.push(`끼워 넣을 자리를 찾지 못함: ${ins.scene} / ${ins.before}`);

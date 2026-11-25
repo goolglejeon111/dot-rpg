@@ -412,6 +412,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.entered = true;
     this.sceneIdx = i;
     this.nodeIdx = Math.min(startNode, sc.nodes.length);
+    if (this.nodeIdx === 0) gameState.applyEffects(sc.effects);
     this.saveHere();
 
     // 이전 장면 인물은 퇴장, 맵과 무대는 이 장면(중간부터면 그 지점)에 맞춘다

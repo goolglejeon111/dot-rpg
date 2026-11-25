@@ -176,6 +176,8 @@ export interface StorySceneData {
   color: string;
   /** 선택지로만 들어오는 장면 (앞 장면에서 이어서 들어오지 않음) */
   branch?: boolean;
+  /** 장면에 들어갈 때 적용하는 효과 (전투 결과로 들어가는 장면 등, 선택지가 아닌 길로 들어오는 장면) */
+  effects?: Effects;
   nodes: StoryNode[];
 }
 

@@ -791,6 +791,14 @@ const PROPS = {
     g.rect(x, 26, x + 4, 29, (xx, y) => ((xx + y) % 2 ? 'p' : 'o'));
     g.rect(x + 1, 25, x + 3, 25, 'q');
   },
+  /** 나무 지팡이 (우르샤) */
+  woodStaff(g, c, v, front) {
+    if (v === 'up' ? front : !front) return;
+    const x0 = v === 'right' ? 24 : 26;
+    g.rect(x0, 8, x0, 34, (x, y) => (y % 4 ? 'o' : 'O'));
+    g.ellipse(x0, 6.5, 1.8, 2, 'O');
+    g.set(x0, 6, 'p');
+  },
   /** 꼬리 (카르크) */
   tail(g, c, v, front) {
     const r = c.hair.ramp;
@@ -864,7 +872,23 @@ function draw(c, v) {
     if (c.hair?.long && !c.hood) hairBack(g, c, v);
   }
   for (const p of props) PROPS[p](g, c, v, true);
+  if (c.stoop) stoop(g, v);
   return g.outline();
+}
+
+/** 굽은 허리 (우르샤): 머리와 어깨를 아래(옆모습은 앞으로도) 내린다 */
+function stoop(g, v) {
+  const src = g.d.map((r) => [...r]);
+  const dx = v === 'right' ? 2 : 0;
+  for (let y = 0; y < 20; y++) for (let x = 0; x < g.w; x++) g.d[y][x] = '.';
+  for (let y = 0; y < 20; y++)
+    for (let x = 0; x < g.w; x++) {
+      const ch = src[y][x];
+      if (ch === '.') continue;
+      const ny = y + 3;
+      const nx = x + (y < 18 ? dx : 0);
+      if (ny < g.h && nx >= 0 && nx < g.w && (ny >= 20 ? src[ny][nx] === '.' || y < 18 : true)) g.d[ny][nx] = ch;
+    }
 }
 
 // =====================================================================
@@ -1042,10 +1066,65 @@ export const CHARS = [
     outfit: { ramp: R.green, lower: 'tunic', collar: 'c', belt: ['o', 'p'], cuff: 'c' },
     props: ['basket'],
   },
+  // ---- 2막: 늑대 수인, 사막 도적 (서기) ----
+  {
+    id: 'mob_wolf', kind: 'mob', name: '늑대 전사', legs: { K: 'D', k: 'C', L: 'k', M: 'K' }, // 회색 털, 뾰족한 귀, 노란 눈, 가죽 끈 + 창
+    hair: { ramp: ['r', 't', 'T', 'R'], style: 'short', sides: 'T' },
+    ears: true, eye: 'y', brow: 'R',
+    outfit: { ramp: R.skin, sleeve: R.skin, lower: 'tunic', lowerRamp: R.leather, belt: ['k', 'K'], cuff: 'K' },
+    decor: ['wolfStrap'],
+    props: ['spear', 'tail'],
+  },
+  {
+    id: 'ursha', kind: 'npc', legs: { K: 'D', k: 'C', L: 'D', M: 'd' }, // 흰 털, 굽은 허리, 흙빛 로브 + 나무 지팡이
+    hair: { ramp: ['v', 'v', 'V', 'T'], style: 'straight', long: 22 },
+    ears: true, eye: 'y', brow: 'V', stoop: true,
+    outfit: { ramp: R.tan, lower: 'robe', collar: 'D', belt: ['o', 'O'], cuff: 'D' },
+    props: ['woodStaff', 'tail'],
+  },
+  {
+    id: 'wolf_scout', kind: 'mob', name: '정찰대원', legs: { K: 'D', k: 'C', L: 'k', M: 'K' }, // 회색 털, 가죽 조끼
+    hair: { ramp: ['r', 't', 'T', 'R'], style: 'short', sides: 'T' },
+    ears: true, eye: 'y', brow: 'R',
+    outfit: { ramp: R.leather, sleeve: R.skin, lower: 'tunic', lowerRamp: R.tan, belt: ['k', 'K'], cuff: 'K' },
+    props: ['tail'],
+  },
+  {
+    id: 'wolf_scout_tied', kind: 'mob', name: '정찰대원 (묶임)', legs: { K: 'D', k: 'C', L: 'k', M: 'K' }, // 밧줄에 묶인 모습
+    hair: { ramp: ['r', 't', 'T', 'R'], style: 'short', sides: 'T' },
+    ears: true, eye: 'y', brow: 'R', pose: 'cross',
+    outfit: { ramp: R.leather, sleeve: R.skin, lower: 'tunic', lowerRamp: R.tan, belt: ['k', 'K'], cuff: 'K' },
+    decor: ['ropes'],
+    props: ['tail'],
+  },
+  {
+    id: 'bandit_blade', kind: 'mob', name: '도적', legs: { K: 'C', k: 'P', L: 'D', M: 'd' }, // 모래색 두건과 복면, 가죽 옷 + 단검
+    hood: R.tan, eye: 'v',
+    outfit: { ramp: R.leather, lower: 'tunic', collar: 'D', belt: ['X', 'Z'], cuff: 'D' },
+    props: ['dagger'],
+  },
+  {
+    id: 'bandit_archer', kind: 'mob', name: '도적 궁수', legs: { K: 'C', k: 'P', L: 'D', M: 'd' }, // 모래색 두건, 갈색 옷 + 활
+    hood: R.tan, eye: 'v',
+    outfit: { ramp: R.brown, lower: 'tunic', collar: 'D', belt: ['X', 'Z'], cuff: 'D' },
+    props: ['bow'],
+  },
 ];
 
 // 인물 하나만 쓰는 장식
 Object.assign(DECOR, {
+  /** 묶인 밧줄 (정찰대원) */
+  ropes(g, c, v) {
+    for (const y of [21, 25]) g.rect(6, y, 25, y, (x) => (g.get(x, y) === '.' ? '.' : x % 3 ? 'p' : 'O'));
+    if (v !== 'up') g.rect(14, 22, 17, 24, (x, y) => (g.get(x, y) === '.' ? '.' : 'o'));
+  },
+  /** 가죽 끈과 송곳니 (늑대 전사) */
+  wolfStrap(g, c, v) {
+    if (v === 'up') return void g.line(9, 18, 22, 27, 'P');
+    if (v === 'right') return void g.rect(15, 19, 20, 19, 'P');
+    g.line(9, 18, 22, 27, 'P');
+    g.set(13, 21, 'v');
+  },
   serenaTrim(g, c, v) {
     if (v === 'up') return;
     const xs = v === 'right' ? [18] : [12, 19];

@@ -1063,6 +1063,30 @@
       "h": 48,
       "columns": 12
     },
+    "mob_wolf": {
+      "file": "assets/battle/chars/mob_wolf.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "mob_paladin": {
+      "file": "assets/battle/chars/mob_paladin.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "bandit_blade": {
+      "file": "assets/battle/chars/bandit_blade.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "bandit_archer": {
+      "file": "assets/battle/chars/bandit_archer.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
     "sewer_rat": {
       "file": "assets/battle/chars/sewer_rat.png",
       "w": 48,
@@ -1079,6 +1103,18 @@
       "file": "assets/battle/chars/sewer_eel.png",
       "w": 96,
       "h": 96,
+      "columns": 12
+    },
+    "sand_crawler": {
+      "file": "assets/battle/chars/sand_crawler.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "desert_scorpion": {
+      "file": "assets/battle/chars/desert_scorpion.png",
+      "w": 48,
+      "h": 48,
       "columns": 12
     }
   }

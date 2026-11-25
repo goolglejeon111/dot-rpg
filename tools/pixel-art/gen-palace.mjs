@@ -884,6 +884,105 @@ tile('river', (c) => {
   }
 }, { solid: true, note: '강물 (낮)' });
 
+
+// ---- 2막 타일: 사막, 오아시스, 교역로, 은신처 ----
+function desert(c, seed, dark) {
+  const rnd = rng(seed);
+  c.rect(0, 0, 31, 31, dark ? 'd' : 'c');
+  // 바람 자국 (가는 물결)
+  for (let k = 0; k < 4; k++) {
+    const y = 3 + k * 8 + Math.floor(rnd() * 3);
+    const x0 = Math.floor(rnd() * 10);
+    for (let x = x0; x < x0 + 14 + rnd() * 8; x++) c.set(x, y + Math.round(Math.sin(x / 3) * 0.8), dark ? 'D' : 'd');
+  }
+  for (let k = 0; k < 8; k++) c.set(rnd() * 31, rnd() * 31, rnd() < 0.5 ? 'D' : dark ? 'c' : 'v');
+}
+tile('desert', (c) => desert(c, 101, false), { note: '사막 모래' });
+tile('desert2', (c) => desert(c, 103, false), { note: '사막 모래 (다른 결)' });
+tile('dune', (c) => desert(c, 105, true), { note: '모래 언덕 그늘' });
+tile('sandstone', (c) => {
+  const rnd = rng(107);
+  c.rect(0, 0, 31, 31, 'D');
+  for (let y = 0; y < 32; y += 8) {
+    c.rect(0, y, 31, y, 'C');
+    c.rect(0, y + 1, 31, y + 1, 'd');
+  }
+  for (let k = 0; k < 10; k++) c.set(rnd() * 31, rnd() * 31, rnd() < 0.5 ? 'C' : 'd');
+}, { solid: true, note: '사암 절벽' });
+tile('sandstone_top', (c) => {
+  desert(c, 109, true);
+  c.rect(0, 26, 31, 31, 'D');
+  c.rect(0, 26, 31, 26, 'c');
+  c.rect(0, 31, 31, 31, 'C');
+}, { solid: true, note: '사암 절벽 위' });
+tile('oasis_water', (c) => {
+  const rnd = rng(111);
+  c.rect(0, 0, 31, 31, 'a');
+  for (let i = 0; i < 7; i++) {
+    const x = rnd() * 26;
+    const y = 2 + rnd() * 28;
+    c.rect(x, y, x + 3 + rnd() * 4, y, rnd() < 0.6 ? 'w' : 'A');
+  }
+}, { solid: true, note: '오아시스의 푸른 물' });
+tile('oasis_grass', (c) => {
+  const rnd = rng(113);
+  c.rect(0, 0, 31, 31, 'c');
+  for (let k = 0; k < 26; k++) {
+    const x = rnd() * 31;
+    const y = rnd() * 30;
+    c.set(x, y, rnd() < 0.5 ? 'g' : 'q');
+    c.set(x, y + 1, 'G');
+  }
+}, { note: '물가의 풀 섞인 모래' });
+tile('adobe_wall', (c) => {
+  const rnd = rng(115);
+  c.rect(0, 0, 31, 31, 'd');
+  for (let k = 0; k < 14; k++) c.set(rnd() * 31, rnd() * 31, rnd() < 0.5 ? 'D' : 'c');
+  c.rect(0, 0, 31, 1, 'c');
+  c.rect(0, 29, 31, 31, 'D');
+}, { solid: true, note: '흙벽' });
+tile('adobe_roof', (c) => {
+  c.rect(0, 0, 31, 31, 'c');
+  for (let x = 2; x < 32; x += 6) c.rect(x, 0, x + 1, 31, 'd');
+  c.rect(0, 31, 31, 31, 'D');
+}, { solid: true, note: '흙벽 지붕 (평평한 흙과 나무 들보)' });
+tile('adobe_floor', (c) => {
+  const rnd = rng(117);
+  c.rect(0, 0, 31, 31, 'D');
+  for (let k = 0; k < 14; k++) c.set(rnd() * 31, rnd() * 31, rnd() < 0.5 ? 'd' : 'C');
+  for (let k = 0; k < 5; k++) {
+    const x = rnd() * 28;
+    const y = rnd() * 30;
+    c.line(x, y, x + 3, y - 1, 'Y');
+  }
+}, { note: '감옥 흙바닥과 짚 부스러기' });
+tile('bars', (c) => {
+  c.rect(0, 0, 31, 31, 'D');
+  for (let x = 2; x < 32; x += 6) c.rect(x, 0, x + 1, 31, (xx) => (xx % 2 ? 'L' : 'M'));
+  c.rect(0, 4, 31, 5, 'L');
+  c.rect(0, 26, 31, 27, 'L');
+}, { solid: true, note: '감옥 창살 (너머가 보이는 흙빛)' });
+tile('road', (c) => {
+  const rnd = rng(119);
+  c.rect(0, 0, 31, 31, 'd');
+  for (let k = 0; k < 20; k++) c.set(rnd() * 31, rnd() * 31, rnd() < 0.5 ? 'D' : 'c');
+  for (const y of [8, 22]) for (let x = 0; x < 32; x++) if (rnd() < 0.7) c.set(x, y + (x % 5 === 0 ? 1 : 0), 'D');
+}, { note: '교역로 (다져진 흙과 수레바퀴 자국)' });
+tile('rock_floor', (c) => {
+  const rnd = rng(121);
+  c.rect(0, 0, 31, 31, 'T');
+  for (let k = 0; k < 8; k++) {
+    const x = rnd() * 28;
+    const y = rnd() * 28;
+    c.ellipse(x + 2, y + 2, 2.5, 1.8, (d) => (d < 0.5 ? 't' : 'R'));
+  }
+  for (let k = 0; k < 10; k++) c.set(rnd() * 31, rnd() * 31, 'd');
+}, { note: '바위 틈 은신처 바닥' });
+tile('rock_wall', (c) => {
+  bigStones(c, 123);
+  c.map((ch) => ({ r: 'd', t: 'D', T: 'C', R: 'C' })[ch] ?? ch);
+}, { solid: true, note: '바위 틈 벽' });
+
 // ---- 1막 물건 ----
 prop('scorch', 28, 30, 1, (c) => {
   // 벽에 줄지어 찍힌 하얀 손바닥 자국
@@ -1009,6 +1108,174 @@ prop('boat', 72, 32, 1, (c) => {
   c.edge('P');
 }, { note: '버려진 작은 배' });
 
+
+
+// ---- 2막 물건 ----
+function well(c, cracked) {
+  if (cracked) {
+    c.line(8, 32, 13, 36, 'k');
+    c.line(13, 36, 11, 39, 'k');
+    c.line(27, 31, 31, 35, 'k');
+    c.line(31, 35, 34, 34, 'k');
+    c.line(6, 9, 9, 12, 'k');
+    c.rect(36, 37, 38, 39, 'T');
+    c.rect(1, 36, 3, 38, 'T');
+    return;
+  }
+  c.ellipse(20, 30, 18, 9, (d) => (d < 0.55 ? 'k' : d < 0.75 ? 'W' : '.'));
+  // 돌 둘레 (이름이 새겨진 돌)
+  for (let a = 0; a < 16; a++) {
+    const t = (a / 16) * Math.PI * 2;
+    const x = 20 + Math.cos(t) * 17;
+    const y = 30 + Math.sin(t) * 8;
+    c.ellipse(x, y, 3.2, 2.6, (d) => (d < 0.5 ? 'r' : d < 0.85 ? 't' : 'T'));
+    if (a % 3 === 0) c.set(x, y, 'R');
+  }
+  c.rect(4, 31, 36, 37, (x, y) => (y === 37 ? 'R' : (x + y) % 7 === 0 ? 'T' : 't'));
+  c.ellipse(20, 31, 13, 5, (d) => (d < 0.7 ? 'W' : 'A'));
+  c.ellipse(18, 30, 5, 1.5, 'a');
+  // 도르래 기둥
+  for (const x of [5, 34]) c.rect(x, 6, x + 1, 30, (xx) => (xx === x ? 'o' : 'O'));
+  c.rect(4, 5, 36, 7, (x, y) => (y === 5 ? 'p' : 'O'));
+  c.line(20, 8, 20, 22, 'V');
+  c.rect(18, 22, 22, 25, 'o');
+  c.edge('P');
+}
+prop('well', 40, 40, 1, (c) => well(c, false), { note: '오아시스의 우물' });
+prop('well_cracked', 40, 40, 1, (c) => well(c, true), { note: '우물에 겹치는 금 (전투 중 체력이 반 아래)' });
+prop('palm', 48, 80, 1, (c) => {
+  for (let y = 30; y < 80; y++) {
+    const x = 24 + Math.round(Math.sin(y / 16) * 2);
+    c.rect(x - 2, y, x + 2, y, (xx) => (xx === x - 2 ? 'p' : xx === x + 2 ? 'P' : y % 4 ? 'o' : 'O'));
+  }
+  for (const [ex, ey] of [[2, 30], [46, 32], [8, 44], [40, 46], [14, 18], [36, 18], [24, 14]]) {
+    c.line(24, 30, ex, ey, 'G', 3);
+    c.line(24, 29, ex, ey - 1, 'g');
+  }
+  c.disc(24, 30, 4, (d) => (d < 0.5 ? 'g' : 'G'));
+  c.disc(21, 34, 2, 'O');
+  c.disc(27, 34, 2, 'O');
+  c.edge('Q');
+}, { note: '야자수' });
+prop('rock', 40, 30, 1, (c) => {
+  c.ellipse(20, 18, 18, 12, (d, x, y) => (d < 0.35 ? 'c' : d < 0.7 ? 'd' : 'D'));
+  c.line(8, 22, 30, 24, 'C');
+  c.edge('C');
+}, { note: '사막의 바위' });
+prop('big_rock', 72, 60, 1, (c) => {
+  c.ellipse(36, 34, 34, 25, (d) => (d < 0.3 ? 'c' : d < 0.68 ? 'd' : 'D'));
+  c.ellipse(28, 26, 14, 9, (d) => (d < 0.6 ? 'c' : '.'));
+  c.line(14, 44, 58, 46, 'C', 2);
+  c.line(40, 14, 46, 36, 'D');
+  c.edge('C');
+}, { note: '큰 바위 (장면 1의 "어제도 본 바위")' });
+prop('rock_arrow', 40, 30, 1, (c) => {
+  c.ellipse(20, 18, 18, 12, (d) => (d < 0.35 ? 'c' : d < 0.7 ? 'd' : 'D'));
+  c.line(10, 17, 26, 17, 'C');
+  c.line(10, 17, 14, 14, 'C');
+  c.line(10, 17, 14, 20, 'C');
+  c.edge('C');
+}, { note: '칼로 새긴 화살표가 있는 바위' });
+prop('camel_bones', 36, 18, 1, (c) => {
+  for (let k = 0; k < 5; k++) c.line(8 + k * 5, 15, 6 + k * 5, 3 + (k % 2) * 2, 'v');
+  c.line(4, 15, 32, 15, 'V', 2);
+  c.ellipse(32, 11, 4, 3, (d) => (d < 0.6 ? 'v' : 'V'));
+  c.outline('T');
+}, { note: '반쯤 묻힌 낙타 뼈' });
+prop('dune', 96, 28, 1, (c) => {
+  c.ellipse(48, 28, 47, 26, (d, x, y) => (y > 27 ? '.' : x < 40 + (27 - y) * 0.4 ? (d < 0.8 ? 'c' : 'd') : d < 0.8 ? 'd' : 'D'));
+}, { note: '모래 언덕 (넘을 수 없음)' });
+prop('campfire', 28, 22, 3, (c, i) => {
+  for (const [x, y] of [[4, 18], [10, 20], [17, 20], [23, 18], [14, 15]]) c.ellipse(x, y, 3, 2, (d) => (d < 0.5 ? 't' : 'T'));
+  c.line(6, 17, 22, 13, 'O', 2);
+  c.line(7, 13, 21, 17, 'o', 2);
+  if (i > 0) {
+    const h = i === 1 ? 0 : 2;
+    c.ellipse(14, 10 - h / 2, 6, 7 + h / 2, (d) => (d < 0.35 ? 'v' : d < 0.6 ? 'y' : d < 0.85 ? 'Y' : '.'));
+    c.ellipse(14 + (i === 1 ? -2 : 2), 4 - h, 2.5, 3.5, (d) => (d < 0.6 ? 'y' : 'x'));
+  }
+  c.edge('R');
+}, { rate: 6, note: '모닥불 (0 꺼짐, 1~2 불꽃)' });
+prop('horse', 56, 48, 1, (c) => {
+  const H = ['l', 'v', 'V', 'T'];
+  for (const x of [12, 18, 36, 42]) c.rect(x, 30, x + 3, 46, (xx) => (xx === x ? H[1] : H[2]));
+  c.ellipse(27, 26, 18, 8, (d) => (d < 0.4 ? H[0] : d < 0.8 ? H[1] : H[2]));
+  c.line(42, 22, 48, 8, H[1], 5);
+  c.ellipse(50, 9, 6, 3.5, (d) => (d < 0.6 ? H[1] : H[2]));
+  c.rect(40, 6, 45, 18, (x, y) => ((x + y) % 2 ? 'Y' : 'y')); // 금 갈기
+  c.rect(18, 18, 32, 22, 'n'); // 남색 안장 천
+  c.rect(24, 18, 26, 22, 'Y');
+  c.line(8, 22, 3, 34, 'y', 2); // 꼬리
+  c.set(52, 8, 'k');
+  c.edge(H[3]);
+}, { note: '아드리안의 흰 말' });
+prop('tent', 72, 52, 1, (c) => {
+  for (let y = 2; y <= 50; y++) {
+    const half = 2 + ((y - 2) / 48) * 32;
+    c.rect(Math.round(36 - half), y, Math.round(36 + half), y, (x) => (x < 36 ? 'd' : 'D'));
+  }
+  for (let y = 28; y <= 50; y++) {
+    const h = ((y - 28) / 22) * 6;
+    c.rect(Math.round(36 - h), y, Math.round(36 + h), y, 'k');
+  }
+  c.line(36, 2, 36, 8, 'O', 2);
+  c.edge('C');
+}, { note: '도적의 천막' });
+prop('crates', 40, 34, 1, (c) => {
+  for (const [x, y, w, h] of [[2, 12, 18, 21], [20, 16, 18, 17], [10, 0, 16, 13]]) {
+    c.rect(x, y, x + w - 1, y + h - 1, 'o');
+    c.rect(x, y, x + w - 1, y, 'p');
+    c.line(x, y, x + w - 1, y + h - 1, 'O');
+    c.line(x + w - 1, y, x, y + h - 1, 'O');
+  }
+  c.edge('P');
+}, { note: '쌓인 나무 상자' });
+prop('cache', 26, 14, 1, (c) => {
+  c.ellipse(13, 10, 12, 4, (d) => (d < 0.6 ? 'c' : 'd'));
+  c.rect(6, 2, 18, 9, 'o');
+  c.rect(6, 2, 18, 2, 'p');
+  c.line(6, 5, 18, 5, 'O');
+  c.ellipse(13, 11, 11, 2.5, (d) => (d < 0.6 ? 'c' : 'd'));
+  c.edge('P');
+}, { note: '모래에 묻힌 물통 상자 (숨겨진 장소)' });
+prop('white_cloth', 22, 10, 1, (c) => {
+  c.ellipse(11, 6, 10, 3.5, (d) => (d < 0.6 ? 'v' : 'V'));
+  c.disc(15, 5, 2, (d) => (d < 0.5 ? 'y' : 'Y'));
+  c.ellipse(5, 8, 5, 2, (d) => (d < 0.6 ? 'c' : 'd'));
+}, { note: '모래에 반쯤 묻힌 흰 천 (금실 무늬)' });
+prop('shoes', 14, 8, 1, (c) => {
+  c.ellipse(4, 4, 3, 2.2, 'o');
+  c.ellipse(10, 4, 3, 2.2, 'o');
+  c.set(4, 3, 'O');
+  c.set(10, 3, 'O');
+  c.edge('P');
+}, { note: '문간의 작은 신발 한 켤레' });
+prop('toll_notice', 24, 40, 1, (c) => {
+  c.rect(10, 18, 12, 39, 'O');
+  c.rect(0, 0, 23, 20, 'V');
+  c.rect(3, 3, 20, 4, 'K');
+  for (let y = 8; y < 18; y += 3) c.rect(3, y, 18, y, 'T');
+  c.line(4, 16, 20, 9, 'D');
+  c.edge('D');
+}, { note: '교역 공고문 (손톱 자국)' });
+prop('wall_marks', 26, 18, 1, (c) => {
+  for (let g = 0; g < 4; g++) {
+    const x0 = 1 + g * 6;
+    for (let k = 0; k < 4; k++) c.line(x0 + k, 2, x0 + k, 12, 'C');
+    c.line(x0 - 1, 11, x0 + 4, 3, 'C');
+  }
+  c.rect(1, 14, 3, 16, 'C');
+}, { note: '흙벽의 긁힌 자국 (wall)' });
+prop('hut_door', 30, 40, 1, (c) => {
+  c.rect(0, 0, 29, 39, 'd');
+  c.rect(5, 6, 24, 39, 'k');
+  c.rect(5, 6, 24, 7, 'C');
+}, { note: '문이 열린 흙벽 집 입구 (wall)' });
+prop('torch_stand', 12, 40, 2, (c, i) => {
+  c.rect(5, 12, 6, 39, (x) => (x === 5 ? 'o' : 'O'));
+  c.rect(3, 9, 8, 12, 'O');
+  c.ellipse(5.5, 5 - i, 3, 4 + i, (d) => (d < 0.4 ? 'y' : d < 0.8 ? 'Y' : 'x'));
+}, { rate: 6, note: '세워 둔 횃불 (불빛 오브젝트와 함께)' });
 
 // ---- 이야기 화면 가운데에 크게 띄우는 아이템 그림 (public/assets/items/) ----
 const ITEMS = []; // { key, cv }

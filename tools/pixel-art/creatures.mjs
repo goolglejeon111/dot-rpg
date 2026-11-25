@@ -229,9 +229,148 @@ function eelBattle() {
   return frames;
 }
 
+
+// ---------------------------------------------------------------------
+// 2막 모래 괴물: 모래빛 마디 벌레, 검은 큰 턱. 모래 속에서 머리만 내밀고 문다
+// ---------------------------------------------------------------------
+const SANDW = ['c', 'd', 'D'];
+function crawler(view, step = 0, rise = 1) {
+  const c = new Cv(32, 40);
+  const v = view === 'left' ? 'right' : view;
+  const wig = [0, 1, 0, -1][step % 4];
+  // 흙더미 (몸이 나온 자리)
+  c.ellipse(16, 37, 9, 2.6, (d) => (d > 0.75 ? 'D' : d > 0.4 ? 'd' : 'c'));
+  if (rise <= 0) {
+    // 모래 속: 흙더미만, 작은 돌기
+    c.ellipse(16, 36, 6, 2.4, (d) => (d > 0.6 ? 'D' : 'd'));
+    c.set(14 + wig, 34, 'D');
+    c.set(18 - wig, 35, 'C');
+    c.outline('C');
+    return view === 'left' ? c.flipX() : c;
+  }
+  const n = 4;
+  const lean = v === 'right' ? 1.8 : 0;
+  let hx = 16;
+  let hy = 36;
+  for (let i = 0; i < n; i++) {
+    const r = 4.6 - i * 0.5;
+    hx = 16 + lean * i + (i % 2 ? wig : 0);
+    hy = 36 - i * 4.2 * rise;
+    c.disc(hx, hy, r, shade(SANDW));
+    if (i > 0) c.line(hx - r + 1, hy + 1, hx + r - 1, hy + 1, 'D');
+  }
+  // 머리와 큰 턱
+  const jaw = step === 1 ? 3 : 1;
+  if (v === 'up') {
+    c.disc(hx, hy - 2, 3.6, shade(SANDW));
+  } else {
+    const fx = v === 'right' ? 3 : 0;
+    c.disc(hx + fx, hy - 2, 3.8, shade(['c', 'c', 'd']));
+    c.line(hx + fx - 3, hy, hx + fx - 4 - (v === 'right' ? 0 : jaw), hy + 3, 'K');
+    c.line(hx + fx + 3, hy, hx + fx + 4 + jaw, hy + 3, 'K');
+    if (v === 'right') c.line(hx + fx + 2, hy - 1, hx + fx + 5 + jaw, hy + 1, 'K');
+    c.set(hx + fx - (v === 'right' ? -1 : 1), hy - 3, 'k');
+    if (v !== 'right') c.set(hx + fx + 1, hy - 3, 'k');
+  }
+  c.outline('C');
+  // 흙더미 앞쪽 (몸 밑동을 가림)
+  c.ellipse(16, 38, 8, 1.6, (d) => (d > 0.6 ? 'D' : 'd'));
+  return view === 'left' ? c.flipX() : c;
+}
+
+/** 모래 괴물 전투 시트: 0~5 물기, 7 맞음, 8·9 튀어나오기, 10 모래 속(흙더미만), 11 쓰러짐 */
+function crawlerBattle() {
+  const frames = [];
+  for (const view of VIEWS) {
+    const fwd = { down: [0, 1], left: [-1, 0], right: [1, 0], up: [0, -1] }[view];
+    for (let col = 0; col < 12; col++) {
+      const cell = new Cv(48, 48);
+      if (col === 10) cell.blit(crawler(view, 0, 0), 8, 8);
+      else if (col === 8) cell.blit(crawler(view, 0, 0.45), 8, 8);
+      else if (col === 9) cell.blit(crawler(view, 1, 0.75), 8, 8);
+      else if (col === 11) {
+        const b = crawler(view === 'up' ? 'down' : view, 0, 0.3);
+        b.map((ch) => (ch === 'c' ? 'd' : ch));
+        cell.blit(b, 8, 9);
+      } else if (col === 7) cell.blit(crawler(view, 0), 8 - fwd[0] * 2, 8 - fwd[1] * 2);
+      else if (col < 6) {
+        const strike = col % 2 === 1;
+        cell.blit(crawler(view, strike ? 1 : 0, strike ? 1.15 : 0.9), 8 + fwd[0] * (strike ? 4 : -1), 8 + fwd[1] * (strike ? 4 : -1));
+      } else cell.blit(crawler(view, 0), 8, 8);
+      frames.push(cell);
+    }
+  }
+  return frames;
+}
+
+// ---------------------------------------------------------------------
+// 2막 사막 전갈: 붉은 갈색 등껍질, 집게, 말아 올린 꼬리와 독침
+// ---------------------------------------------------------------------
+const SHELL = ['p', 'O', 'P'];
+function scorpion(view, step = 0, sting = 0) {
+  const c = new Cv(32, 40);
+  const v = view === 'left' ? 'right' : view;
+  const a = [0, 1, 0, -1][step % 4];
+  if (v === 'right') {
+    // 다리
+    for (const [x, k] of [[10, 1], [14, -1], [18, 1]]) {
+      c.line(x, 35, x - 2 + a * k, 38, 'P');
+      c.line(x + 1, 35, x + 2 - a * k, 38, 'P');
+    }
+    // 꼬리: 몸 뒤에서 위로 말려 머리 위로
+    const pts = sting ? [[8, 33], [5, 29], [5, 24], [8, 20], [13, 19], [18, 21], [22, 25]] : [[8, 33], [5, 29], [5, 24], [8, 20], [12, 19], [15, 21]];
+    pts.forEach(([x, y], i) => c.disc(x, y, 2.3 - i * 0.15, shade(SHELL)));
+    const [tx, ty] = pts[pts.length - 1];
+    c.line(tx, ty, tx + 2, ty + 3, sting ? 'x' : 'X');
+    // 몸통
+    c.ellipse(15, 34, 7.5, 3.4, shade(SHELL));
+    for (const x of [11, 14, 17]) c.set(x, 32, 'O');
+    // 집게
+    c.ellipse(24, 34, 2.6, 1.8, shade(SHELL));
+    c.disc(27 + (step === 1 ? 1 : 0), 33, 2, shade(SHELL));
+    c.set(29 + (step === 1 ? 1 : 0), 34, '.');
+    c.set(21, 32, 'k');
+  } else {
+    const up = v === 'up';
+    for (const k of [-1, 1])
+      for (const [dx, dy] of [[5, 0], [6, 2], [5, 4]]) c.line(16 + k * 4, 33 + dy, 16 + k * (dx + 3) + a * k, 34 + dy + (dy === 4 ? 1 : 0), 'P');
+    c.ellipse(16, 34, 5.5, 4, shade(SHELL));
+    c.rect(13, 33, 19, 33, 'O');
+    // 꼬리: 몸 뒤에서 솟아 위로
+    const h = sting ? 18 : 14;
+    for (let i = 0; i <= 6; i++) c.disc(16, (up ? 36 : 32) - (i * h) / 6, 2.2 - i * 0.12, shade(SHELL));
+    c.line(16, (up ? 36 : 32) - h - 2, 16, (up ? 36 : 32) - h + 1, sting ? 'x' : 'X');
+    if (!up) {
+      // 집게 둘
+      for (const k of [-1, 1]) {
+        c.line(16 + k * 4, 36, 16 + k * 7, 38, 'O');
+        c.disc(16 + k * (8 + (step === 1 ? 1 : 0)), 38, 1.8, shade(SHELL));
+      }
+      c.set(14, 35, 'k');
+      c.set(18, 35, 'k');
+    }
+  }
+  c.outline('P');
+  return view === 'left' ? c.flipX() : c;
+}
+
+/** 전갈 전투 시트: 0~5 집게, 7 맞음, 8·9 꼬리 들기(독침 준비), 10 움츠림, 11 뒤집힘 */
+function scorpionBattle() {
+  const frames = smallBattle(scorpion);
+  for (let r = 0; r < 4; r++)
+    for (const col of [8, 9]) {
+      const cell = new Cv(48, 48);
+      cell.blit(scorpion(VIEWS[r], 0, 1), 8, col === 9 ? 7 : 8);
+      frames[r * 12 + col] = cell;
+    }
+  return frames;
+}
+
 /** gen-battle.mjs가 쓰는 목록 */
 export const CREATURES = {
   sewer_rat: { walk: walkSheet(rat), battle: smallBattle(rat), cell: 48 },
   sewer_leech: { walk: walkSheet(leech), battle: smallBattle(leech), cell: 48 },
   sewer_eel: { walk: null, battle: eelBattle(), cell: 96 },
+  sand_crawler: { walk: walkSheet((v, i) => crawler(v, i, 0)), battle: crawlerBattle(), cell: 48 },
+  desert_scorpion: { walk: walkSheet(scorpion), battle: scorpionBattle(), cell: 48 },
 };

@@ -708,6 +708,11 @@ const BATTLE_CHARS = [
   { id: 'imperial_archer', lunge: true },
   { id: 'pursuit_sword', lunge: true },
   { id: 'pursuit_shield', lunge: true },
+  // 2막
+  { id: 'mob_wolf', lunge: true }, // 늑대 전사: 몸에 창
+  { id: 'mob_paladin', lunge: true }, // 성기사: 몸에 창 (쓰러짐 칸 = 기절)
+  { id: 'bandit_blade', weapon: 'dagger', dual: true },
+  { id: 'bandit_archer', lunge: true },
 ];
 
 const VIEWS = ['down', 'left', 'right', 'up'];

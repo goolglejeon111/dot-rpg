@@ -46,7 +46,21 @@
       "bridge",
       "grass",
       "sand",
-      "river"
+      "river",
+      "desert",
+      "desert2",
+      "dune",
+      "sandstone",
+      "sandstone_top",
+      "oasis_water",
+      "oasis_grass",
+      "adobe_wall",
+      "adobe_roof",
+      "adobe_floor",
+      "bars",
+      "road",
+      "rock_floor",
+      "rock_wall"
     ],
     "solid": [
       "wall_top",
@@ -67,7 +81,14 @@
       "cellar_wall",
       "shack_wall",
       "shack_roof",
-      "river"
+      "river",
+      "sandstone",
+      "sandstone_top",
+      "oasis_water",
+      "adobe_wall",
+      "adobe_roof",
+      "bars",
+      "rock_wall"
     ],
     "notes": {
       "floor": "대리석 바닥",
@@ -111,7 +132,21 @@
       "bridge": "나무 다리 판",
       "grass": "풀밭",
       "sand": "물가 모랫길",
-      "river": "강물 (낮)"
+      "river": "강물 (낮)",
+      "desert": "사막 모래",
+      "desert2": "사막 모래 (다른 결)",
+      "dune": "모래 언덕 그늘",
+      "sandstone": "사암 절벽",
+      "sandstone_top": "사암 절벽 위",
+      "oasis_water": "오아시스의 푸른 물",
+      "oasis_grass": "물가의 풀 섞인 모래",
+      "adobe_wall": "흙벽",
+      "adobe_roof": "흙벽 지붕 (평평한 흙과 나무 들보)",
+      "adobe_floor": "감옥 흙바닥과 짚 부스러기",
+      "bars": "감옥 창살 (너머가 보이는 흙빛)",
+      "road": "교역로 (다져진 흙과 수레바퀴 자국)",
+      "rock_floor": "바위 틈 은신처 바닥",
+      "rock_wall": "바위 틈 벽"
     }
   },
   "props": {
@@ -165,6 +200,13 @@
       "frames": 2,
       "rate": 4,
       "note": "루멘 신성국의 은제 기도대 (2프레임)"
+    },
+    "sanctum": {
+      "file": "assets/explore/sanctum.png",
+      "w": 40,
+      "h": 60,
+      "frames": 1,
+      "note": "지하 성소의 문 (문틈 빛)"
     },
     "door_gold": {
       "file": "assets/explore/door_gold.png",
@@ -367,6 +409,141 @@
       "h": 32,
       "frames": 1,
       "note": "버려진 작은 배"
+    },
+    "well": {
+      "file": "assets/explore/well.png",
+      "w": 40,
+      "h": 40,
+      "frames": 1,
+      "note": "오아시스의 우물"
+    },
+    "well_cracked": {
+      "file": "assets/explore/well_cracked.png",
+      "w": 40,
+      "h": 40,
+      "frames": 1,
+      "note": "우물에 겹치는 금 (전투 중 체력이 반 아래)"
+    },
+    "palm": {
+      "file": "assets/explore/palm.png",
+      "w": 48,
+      "h": 80,
+      "frames": 1,
+      "note": "야자수"
+    },
+    "rock": {
+      "file": "assets/explore/rock.png",
+      "w": 40,
+      "h": 30,
+      "frames": 1,
+      "note": "사막의 바위"
+    },
+    "big_rock": {
+      "file": "assets/explore/big_rock.png",
+      "w": 72,
+      "h": 60,
+      "frames": 1,
+      "note": "큰 바위 (장면 1의 \"어제도 본 바위\")"
+    },
+    "rock_arrow": {
+      "file": "assets/explore/rock_arrow.png",
+      "w": 40,
+      "h": 30,
+      "frames": 1,
+      "note": "칼로 새긴 화살표가 있는 바위"
+    },
+    "camel_bones": {
+      "file": "assets/explore/camel_bones.png",
+      "w": 36,
+      "h": 18,
+      "frames": 1,
+      "note": "반쯤 묻힌 낙타 뼈"
+    },
+    "dune": {
+      "file": "assets/explore/dune.png",
+      "w": 96,
+      "h": 28,
+      "frames": 1,
+      "note": "모래 언덕 (넘을 수 없음)"
+    },
+    "campfire": {
+      "file": "assets/explore/campfire.png",
+      "w": 28,
+      "h": 22,
+      "frames": 3,
+      "rate": 6,
+      "note": "모닥불 (0 꺼짐, 1~2 불꽃)"
+    },
+    "horse": {
+      "file": "assets/explore/horse.png",
+      "w": 56,
+      "h": 48,
+      "frames": 1,
+      "note": "아드리안의 흰 말"
+    },
+    "tent": {
+      "file": "assets/explore/tent.png",
+      "w": 72,
+      "h": 52,
+      "frames": 1,
+      "note": "도적의 천막"
+    },
+    "crates": {
+      "file": "assets/explore/crates.png",
+      "w": 40,
+      "h": 34,
+      "frames": 1,
+      "note": "쌓인 나무 상자"
+    },
+    "cache": {
+      "file": "assets/explore/cache.png",
+      "w": 26,
+      "h": 14,
+      "frames": 1,
+      "note": "모래에 묻힌 물통 상자 (숨겨진 장소)"
+    },
+    "white_cloth": {
+      "file": "assets/explore/white_cloth.png",
+      "w": 22,
+      "h": 10,
+      "frames": 1,
+      "note": "모래에 반쯤 묻힌 흰 천 (금실 무늬)"
+    },
+    "shoes": {
+      "file": "assets/explore/shoes.png",
+      "w": 14,
+      "h": 8,
+      "frames": 1,
+      "note": "문간의 작은 신발 한 켤레"
+    },
+    "toll_notice": {
+      "file": "assets/explore/toll_notice.png",
+      "w": 24,
+      "h": 40,
+      "frames": 1,
+      "note": "교역 공고문 (손톱 자국)"
+    },
+    "wall_marks": {
+      "file": "assets/explore/wall_marks.png",
+      "w": 26,
+      "h": 18,
+      "frames": 1,
+      "note": "흙벽의 긁힌 자국 (wall)"
+    },
+    "hut_door": {
+      "file": "assets/explore/hut_door.png",
+      "w": 30,
+      "h": 40,
+      "frames": 1,
+      "note": "문이 열린 흙벽 집 입구 (wall)"
+    },
+    "torch_stand": {
+      "file": "assets/explore/torch_stand.png",
+      "w": 12,
+      "h": 40,
+      "frames": 2,
+      "rate": 6,
+      "note": "세워 둔 횃불 (불빛 오브젝트와 함께)"
     }
   }
 }

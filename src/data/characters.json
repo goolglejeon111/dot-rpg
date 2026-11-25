@@ -14,6 +14,7 @@
     { "id": "bram", "name": "브람", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 528, "y": 157, "scale": 2.2 } },
     { "id": "oswald", "name": "오스발트", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 513, "y": 140, "scale": 2.2 } },
     { "id": "marcion_hooded", "name": "침입자", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 603, "y": 192, "scale": 2.2 } },
-    { "id": "imperial_guard", "name": "근위병", "expressions": ["normal", "smile", "angry", "sad", "surprised"] }
+    { "id": "imperial_guard", "name": "근위병", "expressions": ["normal", "smile", "angry", "sad", "surprised"] },
+    { "id": "ursha", "name": "우르샤", "expressions": ["normal"], "silhouette": false }
   ]
 }

@@ -7,6 +7,13 @@
 //   > **[선택지]** + > 1. 내용      → 선택지
 //   **DEAD END: 이름** / **BAD END: 이름** / **프롤로그 끝** → 엔딩
 
+import { readFileSync } from 'node:fs';
+
+// 인물 ID → 인물 이름 (src/data/characters.json)
+const CHAR_NAMES = Object.fromEntries(
+  JSON.parse(readFileSync(new URL('../../src/data/characters.json', import.meta.url), 'utf8')).characters.map((c) => [c.id, c.name]),
+);
+
 const EXPRESSIONS = { 기본: 'normal', 웃음: 'smile', 화남: 'angry', 슬픔: 'sad', 놀람: 'surprised' };
 const LINE_RE = /^(.+?) \((기본|웃음|화남|슬픔|놀람)\): (.*)$/;
 const ENDING_RE = /^\*\*(DEAD END|BAD END): (.+)\*\*$/;
@@ -134,7 +141,9 @@ export function parseScript(md, cfg) {
       if (rw) usedRewrites.add(rw);
       const text = rw ? rw.to : original;
       const id = cfg.names[name];
-      push(id ? { speaker: id, expression: EXPRESSIONS[expr], text } : { name, expression: EXPRESSIONS[expr], text });
+      // 대본의 이름이 인물 이름과 다르면(예: 이름을 밝히기 전의 "장로") 이름표는 대본 이름 그대로
+      const shown = id && CHAR_NAMES[id] !== name ? { name } : {};
+      push(id ? { speaker: id, ...shown, expression: EXPRESSIONS[expr], text } : { name, expression: EXPRESSIONS[expr], text });
       continue;
     }
     if (inMono) {

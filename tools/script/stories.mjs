@@ -191,7 +191,7 @@ export const STORIES = [
     source: 'docs/대본/2막.md',
     output: 'src/data/dialogue/act2.json',
     stopAt: '이 막에 숨겨 둔 복선',
-    names: { 레온: 'leon', 엘리시아: 'elysia', 카르크: 'karg', 아드리안: 'adrian', 갈리아: 'galia', 이그나티우스: 'ignatius' },
+    names: { 레온: 'leon', 엘리시아: 'elysia', 카르크: 'karg', 아드리안: 'adrian', 갈리아: 'galia', 이그나티우스: 'ignatius', 우르샤: 'ursha', 장로: 'ursha' },
     scenes: [
       { match: '장면 1.', id: 'scene1', place: '카심 사막', color: '#3a2c18' },
       { match: '장면 2.', id: 'scene2', place: '카심 사막', color: '#3a2c18' },

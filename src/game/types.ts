@@ -8,6 +8,8 @@ export interface CharacterDef {
   expressions: Expression[];
   /** 컷인 눈매: 스탠딩 그림({id}_body.png)에서 두 눈 사이 가운데 좌표(픽셀)와 띠 안에서 키울 배율. 없으면 컷인 생략 */
   cutin?: { x: number; y: number; scale: number };
+  /** false면 스탠딩 그림이 없을 때 회색 실루엣 없이 이름표만 */
+  silhouette?: boolean;
 }
 
 export interface Condition {

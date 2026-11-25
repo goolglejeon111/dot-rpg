@@ -35,13 +35,14 @@ for (const cfg of STORIES) {
   }
 
   // json → 같은 모양의 글줄
-  const names = Object.fromEntries(Object.entries(cfg.names).map(([k, v]) => [v, k]));
+  // 인물 ID → 대본 이름 (한 인물에 이름이 여럿이면 처음 적은 것. 다른 이름은 데이터의 name에 남아 있음)
+  const names = Object.fromEntries(Object.entries(cfg.names).reverse().map(([k, v]) => [v, k]));
   const b = [];
   for (const s of data.scenes) {
     b.push(`${s.branch ? '###' : '##'} ${s.title}`);
     for (const n of s.nodes) {
       if (n.monologue) b.push(...n.monologue);
-      else if (n.text !== undefined) b.push(`${n.speaker ? names[n.speaker] ?? n.speaker : n.name} (${EXPR[n.expression]}): ${n.text}`);
+      else if (n.text !== undefined) b.push(`${n.speaker ? n.name ?? names[n.speaker] ?? n.speaker : n.name} (${EXPR[n.expression]}): ${n.text}`);
       else if (n.choices) n.choices.forEach((c, i) => b.push(`${i + 1}. ${c.text}`));
       else if (n.ending) b.push(`**${data.endings[n.ending].label}: ${data.endings[n.ending].title}**`);
       else if (n.chapter) b.push(`**${data.chapters[n.chapter].finished}**`);

@@ -226,7 +226,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     // 몸 그림도 없으면 회색 실루엣
     for (const id of ids) {
       if (characters[id] && !this.textures.exists(bodyKey(id)) && !toLoad.some((w) => w.key === bodyKey(id))) {
-        makeBodyPlaceholder(this, bodyKey(id), id);
+        // silhouette: false인 인물(그림이 아직 없는 새 인물)은 회색 실루엣 없이 이름표만
+        if (characters[id].silhouette !== false) makeBodyPlaceholder(this, bodyKey(id), id);
       }
     }
     // 막간처럼 맵 없이 도트를 세우는 이야기는 도트 그림도 (맵 화면이 아직 안 불렀을 수 있음)
@@ -1297,10 +1298,11 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.box.setVisible(true);
     this.nextMark.setVisible(false);
     const c = node.speaker ? characters[node.speaker] : undefined;
-    const name = c?.name ?? node.name ?? '';
+    // 대본의 이름이 따로 있으면 그것을 (이름을 밝히기 전의 "장로"처럼)
+    const name = node.name ?? c?.name ?? '';
     this.bigText.setText('');
     // 이벤트 CG가 떠 있는 동안은 스탠딩 없이 이름표만
-    if (c && !this.cgView) {
+    if (c && !this.cgView && this.textures.exists(bodyKey(c.id))) {
       const side = node.position ?? (c.id === this.leftOf() ? 'left' : 'right');
       this.setPortrait(side, c.id, node.expression ?? 'normal');
       this.highlight(side);
@@ -1365,6 +1367,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   }
 
   private setPortrait(side: Side, id: string, expr: Expression, instant = false) {
+    if (!this.textures.exists(bodyKey(id))) return;
     const p = this.portraits[side];
     const otherSide: Side = side === 'left' ? 'right' : 'left';
     if (this.portraits[otherSide].charId === id) this.hidePortrait(otherSide, true);

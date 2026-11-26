@@ -925,6 +925,24 @@
       "puddle"
     ]
   },
+  "_jumps": {
+    "file": "assets/explore/jumps.png",
+    "size": 32,
+    "kinds": [
+      "armor_rack",
+      "candlestick",
+      "cart",
+      "rock",
+      "log",
+      "beam",
+      "wall",
+      "sewer_gap",
+      "stones",
+      "sand_pit",
+      "ice_crack",
+      "lava_crack"
+    ]
+  },
   "_faces": {
     "mob_royal_knight": [
       "mob_royal_knight",
@@ -1238,6 +1256,7 @@
     "assets/battle/chars/sewer_eel.png": 2,
     "assets/battle/chars/sewer_leech.png": 2,
     "assets/battle/chars/sewer_rat.png": 2,
+    "assets/explore/jumps.png": 2,
     "assets/explore/decor.png": 2
   }
 }

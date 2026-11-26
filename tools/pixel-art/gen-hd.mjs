@@ -28,6 +28,8 @@ import { remapData } from './hd/remap.mjs';
 import { palaceHi, creaturesHi } from './hd/redraw.mjs';
 import { finish, putRGBA } from './hd/hicv.mjs';
 import { SMALLS, DECOR } from './hd/smalls.mjs';
+import { JUMP_ART } from './hd/jumps.mjs';
+import { jumpSheet } from './gen-jumps.mjs';
 // 예전 그림 코드(gen-palace.mjs, creatures.mjs)를 고해상도 캔버스로 다시 실행한 결과
 const PAL_HI = await palaceHi();
 const CRE_HI = (await creaturesHi()).CREATURES;
@@ -414,6 +416,8 @@ for (const dir of ['public/assets/sprites', 'public/assets/battle/chars']) {
 }
 // 장식 소품: 종류마다 한 줄, 프레임 2장 (16x16)
 const DECOR_KINDS = Object.keys(DECOR);
+// 점프 장애물 (docs/대본/점프_장애물.md): 한 줄에 4칸, 32x32
+write('public/assets/explore/jumps.png', jumpSheet());
 write('public/assets/explore/decor.png', hiSheet(DECOR_KINDS.flatMap((k) => [0, 1].map((f) => finish(DECOR[k](f), { grain: 0 }))), 16, 16, 2));
 writeFileSync(
   join(ROOT, 'src/data/explore/hd_sprites.json'),
@@ -424,6 +428,7 @@ writeFileSync(
       _tiles: tileInfo,
       _files: files,
       _decor: { file: "assets/explore/decor.png", size: 16, kinds: DECOR_KINDS },
+      _jumps: { file: 'assets/explore/jumps.png', size: 32, kinds: Object.keys(JUMP_ART) },
       _faces: FACE_SETS,
       _hd: HD,
     },

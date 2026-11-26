@@ -3286,8 +3286,10 @@ export class BattleScene extends Phaser.Scene {
     // 맵 위: 벽·기둥·가구에 막힌다 (가로, 세로 따로 → 벽을 따라 미끄러짐)
     const nx = Phaser.Math.Clamp(f.x + dx, this.bounds.x0, this.bounds.x1);
     const ny = Phaser.Math.Clamp(f.y + dy, this.bounds.y0, this.bounds.y1);
-    if (!m.solidAt(nx + this.ox, f.y + this.oy)) f.x = nx;
-    if (!m.solidAt(f.x + this.ox, ny + this.oy)) f.y = ny;
+    // 점프 장애물: 땅에 선 사람(적 포함)은 넘지 못하고 틈에 빠지지 않음. 점프 중(z > 0)인 사람만 넘음
+    const ground = f.z === 0;
+    if (!m.solidAt(nx + this.ox, f.y + this.oy, 12, 6, ground)) f.x = nx;
+    if (!m.solidAt(f.x + this.ox, ny + this.oy, 12, 6, ground)) f.y = ny;
   }
 
   /** 서로 겹치지 않게 살짝 밀어냄 */

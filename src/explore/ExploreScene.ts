@@ -9,6 +9,7 @@ import { FacePicker } from '../game/faces';
 import { fieldFrame, footOrigin, isHd, rise } from '../game/hdSprites';
 import { EXP_REWARD, activeParty, gainOnce, hpOf, isCapped, levelOf, levelProgress, maxHpOf, partyIds } from '../battle/progress';
 import charData from '../data/characters.json';
+import hd from '../data/explore/hd_sprites.json';
 import { gameState } from '../game/GameState';
 import type { StoryFxDef } from '../scenes/StoryFx';
 import {
@@ -157,6 +158,26 @@ export interface SegmentDef {
   follow?: boolean;
   /** 필수 조사: 이 물건을 조사하는 순간 구간이 끝난다 (출구 없이). 이 구간에서는 이미 본 물건도 다시 조사할 수 있다 */
   until?: string;
+  /** 점프 장애물 (docs/대본/점프_장애물.md). 칸 단위 */
+  jumps?: JumpDef[];
+}
+export interface JumpDef {
+  type: 'hurdle' | 'gap';
+  at: [number, number];
+  size: [number, number];
+  art?: string[];
+  fall?: 'water' | 'pit';
+  crossLine?: string | string[];
+  fallLine?: string;
+  /** 이 인물이 파티에 있을 때만 한마디 */
+  with?: string;
+}
+interface Jump extends JumpDef {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  key: string;
 }
 export const STAGE = stageData as unknown as {
   scenes: Record<string, string | null>;
@@ -220,6 +241,10 @@ interface Lookable {
   /** 이 글을 누르면 이동이 끝나는 도착점 (사다리 오르기 등) */
   goal?: boolean;
 }
+/** 점프 중에만 빨라지는 배율: 420ms 동안 1칸(32)과 발 너비를 넉넉히 넘게 (92 x 1.5 x 0.42 ≈ 58px) */
+const JUMP_BOOST = 1.5;
+const JUMP_INFO = (hd as unknown as { _jumps?: { kinds: string[] } })._jumps;
+
 interface Mob {
   name: string;
   battle: string;
@@ -367,6 +392,15 @@ export class ExploreScene extends Phaser.Scene {
   /** 이동 구간의 작은 파티 체력바 (체력은 전투가 끝나도 이어짐) */
   private hpRows!: Phaser.GameObjects.Container;
   private swingUntil = 0;
+  /** 이 구간의 점프 장애물 (맵 px) */
+  private jumps: Jump[] = [];
+  private jumpObjs: Phaser.GameObjects.GameObject[] = [];
+  private lastSafe = { x: 0, y: 0 };
+  private falling = false;
+  /** 이미 띄운 한마디·안내 (구간 id + 글) */
+  private saidJump = new Set<string>();
+  /** 점프 시작 때 발밑이 장애물 밖이었는지, 점프 중 지난 장애물 */
+  private overJump?: Jump;
   private prompt!: Phaser.GameObjects.Text;
   private guideBox!: Phaser.GameObjects.Container;
   private guideText!: Phaser.GameObjects.Text;
@@ -402,6 +436,7 @@ export class ExploreScene extends Phaser.Scene {
   preload() {
     preloadBattle(this);
     preloadMapArt(this);
+    if (!this.textures.exists('ex_jumps')) this.load.spritesheet('ex_jumps', 'assets/explore/jumps.png', { frameWidth: 32, frameHeight: 32 });
     if (!this.textures.exists('oswald')) this.load.spritesheet('oswald', 'assets/sprites/oswald.png', fieldFrame('oswald'));
   }
 
@@ -490,6 +525,9 @@ export class ExploreScene extends Phaser.Scene {
 
   private clearWorld() {
     this.stopPlay();
+    this.jumpObjs.forEach((o) => o.destroy());
+    this.jumpObjs = [];
+    this.jumps = [];
     for (const id of [...this.actors.keys()]) this.removeActor(id);
     for (const o of this.worldObjs) o.destroy();
     this.worldObjs = [];
@@ -1446,9 +1484,11 @@ export class ExploreScene extends Phaser.Scene {
   }
 
   /** 발밑(x, y)이 벽이나 물건에 막혔는지 (인물은 빼고) */
-  solidAt(x: number, y: number, w = 12, h = 6) {
+  solidAt(x: number, y: number, w = 12, h = 6, ground = false) {
     if (!this.map) return false;
     const a = { x0: x - w / 2, y0: y - h, x1: x + w / 2, y1: y };
+    // 전투: 땅에 선 사람은 점프 장애물을 넘지도, 틈에 빠지지도 않는다 (물 틈은 걸어서 지남)
+    if (ground && this.jumps.some((j) => j.fall !== 'water' && a.x0 < j.x1 && a.x1 > j.x0 && a.y0 < j.y1 && a.y1 > j.y0)) return true;
     if (a.x0 < 0 || a.x1 > this.mapW || a.y0 < 0 || a.y1 > this.mapH) return true;
     const cols = this.map.width;
     for (let ty = Math.floor(a.y0 / TS); ty <= Math.floor((a.y1 - 0.01) / TS); ty++)
@@ -1510,9 +1550,11 @@ export class ExploreScene extends Phaser.Scene {
     this.reading = false;
     this.moved = 0;
     this.tutStep = 0;
+    this.goalArmed = false;
     this.cameras.main.startFollow(leon.spr, true, 0.15, 0.15, 0, 20);
     // 동료가 뒤를 따른다
     this.trail = [];
+    this.placeJumps(segId, seg);
     if (seg.follow !== false)
       for (const id of walkers()) {
         if (id === 'leon') continue;
@@ -1593,6 +1635,7 @@ export class ExploreScene extends Phaser.Scene {
       }
       if (!this.reading) this.move(leon, dt);
       else if (leon.spr.anims.isPlaying) this.pose(leon);
+      if (this.seg && this.jumps.length) this.checkJumps(leon);
       if (this.seg) this.follow(leon);
       if (this.seg) this.findNear(leon);
       if (this.seg) this.checkGoal(leon);
@@ -1781,6 +1824,8 @@ export class ExploreScene extends Phaser.Scene {
       }
       a.facing = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
       a.spr.play(`${a.key}-walk-${a.facing}`, true);
+      // 장애물 앞에서 스스로 점프 (실패하지 않음)
+      if (!a.jumping && this.jumps.some((j) => a.spr.x + (dx / d) * 14 > j.x0 && a.spr.x + (dx / d) * 14 < j.x1 && a.spr.y + (dy / d) * 14 > j.y0 && a.spr.y + (dy / d) * 14 < j.y1)) this.jump(a, true);
       const step = Math.min(d, Math.max(SPEED * (this.seg?.speed ?? 1), d * 0.15) * (16 / 1000) * 1.1);
       a.spr.setPosition(a.spr.x + (dx / d) * step, a.spr.y + (dy / d) * step);
     }
@@ -1835,12 +1880,13 @@ export class ExploreScene extends Phaser.Scene {
     }
     a.facing = Math.abs(mx) > Math.abs(my) ? (mx > 0 ? 'right' : 'left') : my > 0 ? 'down' : 'up';
     a.spr.play(`${a.key}-walk-${a.facing}`, true);
-    const step = SPEED * (this.seg?.speed ?? 1) * (dt / 1000) * (this.wadeAt(a.spr.x, a.spr.y) && !a.jumping ? WADE_SPEED : 1);
+    const step = SPEED * (this.seg?.speed ?? 1) * (dt / 1000) * (a.jumping ? JUMP_BOOST : this.wadeAt(a.spr.x, a.spr.y) ? WADE_SPEED : 1);
     const { x: ox, y: oy } = a.spr;
     let x = ox;
     let y = oy;
-    if (!this.blocked(x + mx * step, y)) x += mx * step;
-    if (!this.blocked(x, y + my * step)) y += my * step;
+    const air = !!a.jumping;
+    if (!this.blocked(x + mx * step, y, air)) x += mx * step;
+    if (!this.blocked(x, y + my * step, air)) y += my * step;
     a.spr.setPosition(x, y);
     this.moved += Math.hypot(x - ox, y - oy);
     if (this.seg?.tutorial && this.tutStep === 0 && this.moved > 60) {
@@ -1852,6 +1898,7 @@ export class ExploreScene extends Phaser.Scene {
   /** 발밑이 걸어 들어갈 수 있는 물인지 */
   wadeAt(x: number, y: number) {
     if (!this.map) return false;
+    if (this.jumps.some((j) => j.fall === 'water' && x > j.x0 && x < j.x1 && y > j.y0 && y < j.y1)) return true;
     const tx = Math.floor(x / TS);
     const ty = Math.floor((y - 2) / TS);
     if (tx < 0 || ty < 0 || tx >= this.map.width || ty >= this.map.height) return false;
@@ -1859,9 +1906,10 @@ export class ExploreScene extends Phaser.Scene {
   }
 
   /** 점프: 그림만 포물선으로 떴다 내려온다 (움직임은 그대로) */
-  private jump(a: Actor) {
-    if (a.jumping || a.down || this.reading) return;
+  private jump(a: Actor, follower = false) {
+    if (a.jumping || a.down || (this.reading && !follower)) return;
     a.jumping = true;
+    if (a.id === 'leon') this.overJump = undefined;
     this.tweens.addCounter({
       from: 0, to: 1, duration: JUMP_MS, ease: 'Linear',
       onUpdate: (tw) => void (a.lift = Math.sin(Math.PI * (tw.getValue() ?? 0)) * JUMP_H),
@@ -1903,9 +1951,16 @@ export class ExploreScene extends Phaser.Scene {
       .setVisible(true);
   }
 
-  private blocked(x: number, y: number) {
+  private blocked(x: number, y: number, air = false) {
     const a = { x0: x - FOOT.w / 2, y0: y - FOOT.h, x1: x + FOOT.w / 2, y1: y };
     if (a.x0 < 0 || a.x1 > this.mapW || a.y0 < 0 || a.y1 > this.mapH) return true;
+    // 낮은 장애물: 점프 중에만 넘음. 이미 겹쳐 있으면(넘다 걸침) 빠져나갈 수 있게 막지 않음
+    if (!air) {
+      const leon = this.actors.get('leon')!.spr;
+      const cur = { x0: leon.x - FOOT.w / 2, y0: leon.y - FOOT.h, x1: leon.x + FOOT.w / 2, y1: leon.y };
+      const over = (b: Box, p: Box) => p.x0 < b.x1 && p.x1 > b.x0 && p.y0 < b.y1 && p.y1 > b.y0;
+      if (this.jumps.some((j) => j.type === 'hurdle' && over(j, a) && !over(j, cur))) return true;
+    }
     const cols = this.map!.width;
     for (let ty = Math.floor(a.y0 / TS); ty <= Math.floor((a.y1 - 0.01) / TS); ty++)
       for (let tx = Math.floor(a.x0 / TS); tx <= Math.floor((a.x1 - 0.01) / TS); tx++) if (this.grid[ty * cols + tx]) return true;
@@ -1948,12 +2003,20 @@ export class ExploreScene extends Phaser.Scene {
     this.prompt.setText(`${key}  ${label}`).setPosition(sx, sy).setVisible(true);
   }
 
+  /** 도착점 밖을 한 번이라도 밟았는지 (구간마다 새로) */
+  private goalArmed = false;
+
   private checkGoal(a: Actor) {
     if (this.reading || !this.seg || !this.map) return;
     const g = findObj(this.map, 'goal', this.seg.goal);
     if (!g || propOf(g, 'press')) return;
     const r = Number(propOf(g, 'r') ?? 40);
-    if (Math.hypot(a.spr.x - g.x, (a.spr.y - g.y) * 1.2) > r) return;
+    if (Math.hypot(a.spr.x - g.x, (a.spr.y - g.y) * 1.2) > r) {
+      this.goalArmed = true;
+      return;
+    }
+    // 도착점 안에서 구간이 시작됐으면(무대가 레온을 그 자리에 세움) 한 번 벗어났다 돌아와야 도착
+    if (!this.goalArmed) return;
     if (this.mobNear(g.x, g.y)) return;
     const missing = this.seg.need?.find((id) => !this.seen(id));
     if (missing) {
@@ -2165,6 +2228,124 @@ export class ExploreScene extends Phaser.Scene {
     };
     this.input.on('pointerup', up);
     this.input.on('pointerupoutside', up);
+  }
+
+  // ---------------------------------------------------------------
+  // 점프 장애물 (docs/대본/점프_장애물.md)
+  // ---------------------------------------------------------------
+
+  /** 구간 시작: stage.json jumps를 맵 위에 놓는다 (맵 타일·spawn은 그대로, 그림만 얹음) */
+  private placeJumps(segId: string, seg: SegmentDef) {
+    this.jumpObjs.forEach((o) => o.destroy());
+    this.jumpObjs = [];
+    this.jumps = (seg.jumps ?? []).map((j, i) => ({
+      ...j,
+      x0: j.at[0] * TS,
+      y0: j.at[1] * TS,
+      x1: (j.at[0] + j.size[0]) * TS,
+      y1: (j.at[1] + j.size[1]) * TS,
+      key: `${segId}#${i}`,
+    }));
+    const kinds = JUMP_INFO?.kinds ?? [];
+    for (const j of this.jumps) {
+      let n = 0;
+      for (let ty = j.at[1]; ty < j.at[1] + j.size[1]; ty++)
+        for (let tx = j.at[0]; tx < j.at[0] + j.size[0]; tx++) {
+          const art = j.art?.[n++ % (j.art?.length || 1)] ?? (j.type === 'hurdle' ? 'rock' : 'sand_pit');
+          const f = kinds.indexOf(art);
+          if (f < 0 || !this.textures.exists('ex_jumps')) continue;
+          const gap = j.type === 'gap';
+          const im = this.lightUp(this.world(this.add.image(tx * TS + 16, (ty + 1) * TS, 'ex_jumps', f).setOrigin(0.5, 1)));
+          // 틈은 바닥 높이(인물 아래), 넘는 것은 발 높이에 맞춰 앞뒤가 갈림
+          im.setDepth(gap ? -15 : (ty + 1) * TS - 6);
+          if (!gap && ((tx * 7 + ty * 3) & 1)) im.setFlipX(true);
+          this.jumpObjs.push(im);
+        }
+    }
+    const leon = this.actors.get('leon');
+    if (leon) this.lastSafe = { x: leon.spr.x, y: leon.spr.y };
+    this.falling = false;
+  }
+
+  private jumpAt(x: number, y: number, pad = 0) {
+    return this.jumps.find((j) => x > j.x0 - pad && x < j.x1 + pad && y > j.y0 - pad && y < j.y1 + pad);
+  }
+
+  /** 레온: 처음 다가가면 안내, 넘으면 한마디, 틈에 빠지면 물(느려짐) 또는 마지막 안전한 자리로 */
+  private checkJumps(leon: Actor) {
+    if (this.falling) return;
+    const { x, y } = leon.spr;
+    const on = this.jumpAt(x, y);
+    // 처음 다가갈 때 안내 (구간마다 한 번)
+    const segKey = this.jumps[0].key.split('#')[0];
+    if (!this.saidJump.has(`${segKey}:hint`) && this.jumpAt(x, y, 56)) {
+      this.saidJump.add(`${segKey}:hint`);
+      const touch = this.touchUi.length > 0;
+      const msg = touch ? '점프 버튼: 점프로 넘을 수 있습니다' : 'Space: 점프로 넘을 수 있습니다';
+      if (segKey === 'corridor') this.guide(msg, 4500);
+      else this.toast(msg);
+    }
+    if (leon.jumping) {
+      if (on) this.overJump = on;
+    } else if (this.overJump && !on) {
+      // 착지: 장애물을 넘어 건넜다
+      const j = this.overJump;
+      this.overJump = undefined;
+      this.sayJump(j, j.crossLine);
+    }
+    if (!on) {
+      if (!leon.jumping && !this.jumpAt(x, y, 14)) this.lastSafe = { x, y };
+      return;
+    }
+    if (leon.jumping || on.type !== 'gap') return;
+    if (on.fall === 'water') {
+      // 물: 잠겨서 느려짐 (wadeAt이 이 틈을 물로 봄). 처음 빠질 때 한마디
+      if (!this.saidJump.has(`${on.key}:wet`)) {
+        this.saidJump.add(`${on.key}:wet`);
+        this.splash(x, y);
+        this.sayJump(on, on.fallLine, 'fall');
+      }
+      return;
+    }
+    this.fallPit(leon, on);
+  }
+
+  /** 모래·얼음·용암 틈: 잠깐 어두워지고(용암은 붉게) 마지막 안전한 자리에서 다시. 체력은 그대로 */
+  private fallPit(leon: Actor, j: Jump) {
+    this.falling = true;
+    this.reading = true;
+    this.pose(leon);
+    this.sayJump(j, j.fallLine, 'fall');
+    const lava = j.art?.includes('lava_crack');
+    this.tweens.add({ targets: leon.spr, alpha: 0, scaleX: 0.7, scaleY: 0.7, duration: 260 });
+    const cam = this.cameras.main;
+    if (lava) cam.flash(260, 255, 80, 40);
+    cam.fadeOut(320, 0, 0, 0);
+    cam.once('camerafadeoutcomplete', () => {
+      const p = this.lastSafe;
+      leon.spr.setPosition(p.x, p.y).setAlpha(1).setScale(1);
+      this.trail = [];
+      for (const id of walkers()) {
+        const a = this.actors.get(id);
+        if (a && id !== 'leon') a.spr.setPosition(p.x - 14, p.y + 4);
+      }
+      cam.fadeIn(320, 0, 0, 0);
+      this.time.delayedCall(330, () => {
+        this.falling = false;
+        this.reading = false;
+      });
+    });
+  }
+
+  /** 화면 아래 한마디 (조작은 멈추지 않음, 같은 글은 그 구간에서 한 번만) */
+  private sayJump(j: Jump, line: string | string[] | undefined, kind = 'cross') {
+    if (!line) return;
+    if (j.with && !walkers().includes(j.with)) return;
+    const lines = Array.isArray(line) ? line : [line];
+    const key = `${j.key.split('#')[0]}:${kind}:${lines[0]}`;
+    if (this.saidJump.has(key)) return;
+    this.saidJump.add(key);
+    lines.forEach((l, i) => this.time.delayedCall(i * 3200, () => this.seg && this.guide(l, 3000)));
   }
 
   /** 이동 구간에서 공격: 가까운 몹이 있으면 바로 싸움, 없으면 허공을 벤다 */

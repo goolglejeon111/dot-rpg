@@ -1,5 +1,6 @@
 {
   "_설명": "대사를 맵 위에서 보여 줄 때의 무대. scenes = 장면에 들어갈 때의 무대(인물을 모두 새로 세움), places = 장소 변경 줄에서 바뀌는 맵(map이 null이면 맵 없이 검은 화면), stages = 대본 중간의 무대 변화(tools/script/stories.mjs의 inserts에서 { stage: 이름 }으로 끼움), segments = 레온을 직접 움직이는 이동 구간({ explore: 이름 }).",
+  "_점프": "segments의 jumps = 점프 장애물(docs/대본/점프_장애물.md). type: hurdle(걸어서는 막힘)·gap(걸으면 빠짐), at·size = 칸 단위 [x, y]·[너비, 높이], art = public/assets/explore/jumps.png의 그림 이름(칸마다 돌려 씀), fall: water(물에 잠겨 느려짐)·pit(어두워진 뒤 마지막 안전한 자리로), crossLine·fallLine = 처음 넘을 때·처음 빠질 때 화면 아래 한마디(한 번만), with = 그 인물이 파티에 있을 때만 한마디",
   "_인물": "actors의 값: at = 맵의 spawn 이름 또는 [x, y], facing = down/left/right/up, pose = down(쓰러짐)/stand, walk = 걸어갈 곳(spawn 이름 또는 [x, y]), sprite = 그림 ID(없으면 인물 ID). null이면 퇴장. focus = 카메라가 볼 인물 ID·spawn 이름·[x, y] 그 밖에: lift = 그림만 위로(px, 말 위), hop = 그 자리로 뛰어내린 뒤 walk, nod = 고개 숙이기, emerge = 모래에서 기어 나옴, write = 앉아서 적기(true/false), leave = 걸어간 뒤 퇴장, drag = 끌린 자국 색. 무대의 items = 맵 위 물건 그림 {key, at, to(굴러감), ms, delay} 또는 null(치움).",
 
   "scenes": {
@@ -2526,6 +2527,10 @@
       "after": "hall_s2_ready"
     },
     "corridor": {
+      "jumps": [
+        {"type":"hurdle","at":[8,3],"size":[1,3],"art":["armor_rack"],"crossLine":"놈들이 지나간 자리마다, 무언가가 쓰러져 있었다."},
+        {"type":"hurdle","at":[21,3],"size":[1,3],"art":["candlestick"],"crossLine":"놈들이 지나간 자리마다, 무언가가 쓰러져 있었다."}
+      ],
       "map": "chamber_corridor",
       "looks": ["guard"],
       "goal": "goal_ante",
@@ -2560,6 +2565,10 @@
       "after": "a1_to_deep"
     },
     "a1_sewer_deep": {
+      "jumps": [
+        {"type":"gap","at":[22,7],"size":[3,1],"art":["sewer_gap"],"fall":"water","crossLine":"어깨의 상처가, 뛸 때마다 하얗게 울렸다.","fallLine":"수로의 물은, 한겨울의 칼날처럼 차가웠다."},
+        {"type":"gap","at":[22,9],"size":[3,1],"art":["sewer_gap"],"fall":"water","crossLine":"어깨의 상처가, 뛸 때마다 하얗게 울렸다.","fallLine":"수로의 물은, 한겨울의 칼날처럼 차가웠다."}
+      ],
       "map": "sewer_b",
       "looks": ["a1_hidden_coins"],
       "goal": "goal_cistern",
@@ -2581,6 +2590,9 @@
       "after": "a1_slum_dawn"
     },
     "a1_slum": {
+      "jumps": [
+        {"type":"hurdle","at":[31,4],"size":[1,3],"art":["cart"],"crossLine":"제복을 벗자, 담을 넘는 것도 도둑처럼 익숙해졌다."}
+      ],
       "map": "slum_alley",
       "looks": ["a1_mourning_notice"],
       "goal": "goal_exit",
@@ -2601,6 +2613,10 @@
       "after": "a1_boat"
     },
     "a2_desert_walk": {
+      "jumps": [
+        {"type":"gap","at":[12,11],"size":[1,3],"art":["sand_pit"],"fall":"pit","fallLine":"모래는 물처럼 흘렀다. 다만 물과 달리, 붙잡은 것을 놓아주지 않았다."},
+        {"type":"gap","at":[26,11],"size":[1,3],"art":["sand_pit"],"fall":"pit","fallLine":"모래는 물처럼 흘렀다. 다만 물과 달리, 붙잡은 것을 놓아주지 않았다."}
+      ],
       "map": "desert_a",
       "looks": ["a2_bones", "a2_rock_arrow"],
       "goal": "goal_rock",
@@ -2623,6 +2639,10 @@
       "after": "a2_route"
     },
     "a2_trade_route": {
+      "jumps": [
+        {"type":"hurdle","at":[15,6],"size":[1,3],"art":["cart"],"crossLine":"수레바퀴 자국이 길 한가운데서 끊겨 있었다. 끌려간 쪽으로."},
+        {"type":"hurdle","at":[32,6],"size":[1,3],"art":["rock"],"crossLine":"수레바퀴 자국이 길 한가운데서 끊겨 있었다. 끌려간 쪽으로."}
+      ],
       "map": "trade_route",
       "looks": ["a2_white_cloth", "a2_hidden_cache"],
       "goal": "goal_tracks",
@@ -2637,6 +2657,12 @@
       "after": "a3_forge"
     },
     "a3_forest": {
+      "jumps": [
+        {"type":"hurdle","at":[17,17],"size":[1,3],"art":["log"]},
+        {"type":"gap","at":[41,14],"size":[3,1],"art":["stones"],"fall":"water","crossLine":"단장님의 표식은, 늘 한 걸음 더 먼 돌에 새겨져 있었다."},
+        {"type":"gap","at":[41,11],"size":[3,1],"art":["stones"],"fall":"water","crossLine":"단장님의 표식은, 늘 한 걸음 더 먼 돌에 새겨져 있었다."},
+        {"type":"gap","at":[41,8],"size":[3,1],"art":["stones"],"fall":"water","crossLine":"단장님의 표식은, 늘 한 걸음 더 먼 돌에 새겨져 있었다."}
+      ],
       "map": "morwen_edge",
       "looks": ["a3_old_fire", "a3_spirit_stone", "a3_hidden_herbs"],
       "goal": "goal_ruins",
@@ -2644,6 +2670,10 @@
       "after": "a3_forest_end"
     },
     "a3_night": {
+      "jumps": [
+        {"type":"hurdle","at":[18,15],"size":[3,1],"art":["beam"],"crossLine":"타다 만 들보는, 아직 따뜻했다."},
+        {"type":"hurdle","at":[18,22],"size":[3,1],"art":["wall"],"crossLine":"타다 만 들보는, 아직 따뜻했다."}
+      ],
       "map": "ruined_village",
       "looks": ["a3_village_stone"],
       "goal": "goal_door",
@@ -2665,6 +2695,10 @@
       "after": "a4_arg"
     },
     "a4_pass": {
+      "jumps": [
+        {"type":"gap","at":[40,17],"size":[1,2],"art":["ice_crack"],"fall":"pit","crossLine":["뒤를 돌아보기도 전에, 전하가 먼저 건너와 있었다.","지켜지기만 하는 건 싫다던, 그 얼굴로."],"with":"serena"},
+        {"type":"gap","at":[52,17],"size":[1,3],"art":["ice_crack"],"fall":"pit","crossLine":["뒤를 돌아보기도 전에, 전하가 먼저 건너와 있었다.","지켜지기만 하는 건 싫다던, 그 얼굴로."],"with":"serena"}
+      ],
       "map": "eisen_pass",
       "looks": ["a4_trade_cart"],
       "goal": "goal_gate",
@@ -2718,6 +2752,11 @@
       "follow": false
     },
     "a4_volcano": {
+      "jumps": [
+        {"type":"gap","at":[22,20],"size":[3,1],"art":["lava_crack"],"fall":"pit","crossLine":"발밑의 바위가, 숨을 쉬듯 붉게 부풀었다 가라앉았다."},
+        {"type":"gap","at":[33,8],"size":[1,2],"art":["lava_crack"],"fall":"pit","crossLine":"발밑의 바위가, 숨을 쉬듯 붉게 부풀었다 가라앉았다."},
+        {"type":"gap","at":[43,19],"size":[1,3],"art":["lava_crack"],"fall":"pit","crossLine":"발밑의 바위가, 숨을 쉬듯 붉게 부풀었다 가라앉았다."}
+      ],
       "map": "muspel_a",
       "looks": ["a4_melted_helm", "a4_hidden_vent"],
       "goal": "goal_lake",

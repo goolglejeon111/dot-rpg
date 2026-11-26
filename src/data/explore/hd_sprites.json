@@ -4,25 +4,25 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 5
   },
   "serena": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 4
+    "rise": 3
   },
   "leon_hood": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "leon_blade": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 5
   },
   "serena_hood": {
     "w": 32,
@@ -34,7 +34,7 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 3
   },
   "karg": {
     "w": 32,
@@ -46,13 +46,13 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 4
   },
   "galia": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 5
   },
   "bram": {
     "w": 32,

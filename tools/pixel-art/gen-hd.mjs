@@ -17,7 +17,10 @@ import { readPNG } from './png-read.mjs';
 import { TILES, EXTRA, VARIANTS, ALTERNATE, SHADOW_BELOW, PROPS } from './hd/palace.mjs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PEOPLE, FACE_SETS, drawPerson, drawWeapon, FOOT } from './hd/people.mjs';
+import { PEOPLE, FACE_SETS, drawPerson as drawPerson25, drawWeapon, FOOT } from './hd/people.mjs';
+import { drawTall, isTall, tallBattleSheet } from './hd/tall.mjs';
+// 3등신 인물(hd/tall.mjs TALL 표)은 새 방식으로, 나머지는 2.5등신(hd/people.mjs)
+const drawPerson = (id, v, o) => (isTall(id) ? drawTall(id, v, o) : drawPerson25(id, v, o));
 import { RAMPS as R } from './palette.mjs';
 import { Layer, K, scale2x } from './hd/layer.mjs';
 import { WORLD_TILES, WORLD_EXTRA, WORLD_VARIANTS, WORLD_SHADOW } from './hd/world.mjs';
@@ -179,6 +182,7 @@ function battleFrame(id, view, col) {
 }
 
 function battleSheet(id) {
+  if (isTall(id)) return tallBattleSheet(id);
   const frames = [];
   for (const v of VIEWS) for (let col = 0; col < 12; col++) frames.push(battleFrame(id, v, col));
   return frames;

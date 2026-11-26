@@ -218,8 +218,13 @@ export interface EndingDef {
 }
 
 export interface ChapterDef {
+  /** 다음 막 제목 (막 전환 제목 카드) */
   title: string;
   finished?: string;
+  /** 다음 막 번호 "2막" */
+  number?: string;
+  /** 무대가 되는 지역 */
+  region?: string;
 }
 
 export interface StoryData {

@@ -41,6 +41,8 @@ export interface StoryStartData {
   previewEnding?: string;
   /** 필드에서 열었을 때 돌아갈 장면 키 (없으면 끝나고 타이틀로) */
   returnTo?: string;
+  /** 막 전환 제목 카드를 보고 왔음 ("챕터:" 카드 생략) */
+  titled?: boolean;
   /** 선택지 기록(C)에서 고른 선택지 번호: 그 선택지 화면부터 */
   choiceAt?: number;
 }
@@ -432,7 +434,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       // 이 막을 처음부터: 그 막의 선택지 기록은 새로 (프롤로그면 전부)
       save.clearChoices(this.story.id, this.story.id === 'prologue');
       save.clearWalks(this.story.id, this.story.id === 'prologue');
-      this.showChapterCard(() => this.enterScene(0));
+      if (this.start.titled) this.enterScene(0);
+      else this.showChapterCard(() => this.enterScene(0));
     }
   }
 
@@ -2241,7 +2244,7 @@ Lv ${levelOf(id)}${locked.has(id) ? '  고정' : on ? '' : '  대기'}`);
   }
 
   /**
-   * 막 끝: "1막 끝" 화면 → 최대 레벨 해금 알림 → 다음 막(chapters의 id와 같은 이야기)을 처음부터.
+   * 막 끝(막_전환_화면.md): "1막 END"(+최대 레벨 해금) → 다음 막 제목 카드(번호·제목·지역) → 다음 막(chapters의 id와 같은 이야기)을 처음부터.
    * 다음 이야기가 없으면 "다음 이야기는 준비 중입니다" 뒤 타이틀로
    */
   private showChapter(id: string) {
@@ -2263,33 +2266,41 @@ Lv ${levelOf(id)}${locked.has(id) ? '  고정' : on ? '' : '  대기'}`);
       ...gameState.snapshot(),
     });
     const next = stories[id] ? id : null;
+    // 1. END 화면: "1막 끝" → "1막 END" (대본 데이터는 그대로, 보일 때만 바꿈)
     const black = this.add.rectangle(0, 0, W, H, 0x000000, 1).setOrigin(0).setAlpha(0);
-    const done = this.add
-      .text(W / 2, H / 2 - 60, def?.finished ?? '', { fontFamily: FONT, fontSize: '40px', color: '#e0c27a', fontStyle: 'bold' })
-      .setOrigin(0.5);
-    const title = this.add
-      .text(W / 2, H / 2 + 10, def?.title ?? '', { fontFamily: FONT, fontSize: '24px', color: '#9a9a9a' })
-      .setOrigin(0.5);
+    const end = this.add
+      .text(W / 2, H / 2 - 30, (def?.finished ?? '').replace(/ 끝$/, ' END'), { fontFamily: FONT, fontSize: '72px', color: '#e0c27a', fontStyle: 'bold' })
+      .setOrigin(0.5)
+      .setShadow(0, 4, '#000000', 12);
     const level = this.add
-      .text(W / 2, H / 2 + 90, after > before ? `최대 레벨 ${after} 해금` : '', { fontFamily: FONT, fontSize: '30px', color: '#ffe9a8', fontStyle: 'bold' })
+      .text(W / 2, H / 2 + 70, after > before ? `최대 레벨 ${after} 해금` : '', { fontFamily: FONT, fontSize: '30px', color: '#ffe9a8', fontStyle: 'bold' })
       .setOrigin(0.5)
       .setShadow(0, 3, '#000000', 8);
-    const hint = this.add
-      .text(W / 2, H - 80, '', { fontFamily: FONT, fontSize: '18px', color: '#888888' })
-      .setOrigin(0.5);
-    [done, title, level, hint].forEach((t) => t.setAlpha(0));
-    this.overlay = this.add.container(0, 0, [black, done, title, level, hint]).setDepth(30);
+    // 2. 다음 막 제목 카드: 번호 / 제목 / 지역, 제목 아래 금색 선이 양옆으로
+    const num = this.add.text(W / 2, H / 2 - 104, def?.number ?? '', { fontFamily: FONT, fontSize: '48px', color: '#bfae80' }).setOrigin(0.5);
+    const title = this.add
+      .text(W / 2, H / 2 - 12, def?.title ?? '', { fontFamily: FONT, fontSize: '64px', color: '#ffffff', fontStyle: 'bold' })
+      .setOrigin(0.5)
+      .setShadow(0, 4, '#000000', 10);
+    const rule = this.add.rectangle(W / 2, H / 2 + 46, 440, 2, GOLD, 1).setScale(0, 1);
+    const region = this.add.text(W / 2, H / 2 + 84, def?.region ?? '', { fontFamily: FONT, fontSize: '22px', color: '#9a9a9a' }).setOrigin(0.5);
+    const hint = this.add.text(W / 2, H - 80, '', { fontFamily: FONT, fontSize: '18px', color: '#888888' }).setOrigin(0.5);
+    [end, level, num, title, region, hint].forEach((t) => t.setAlpha(0));
+    this.overlay = this.add.container(0, 0, [black, end, level, num, title, rule, region, hint]).setDepth(30);
     this.tweens.add({ targets: [this.box, this.nameBox, this.mono], alpha: 0, duration: 500 });
     this.tweens.add({ targets: black, alpha: 1, duration: 900 });
-    this.tweens.add({ targets: [done, title], alpha: 1, duration: 700, delay: 800 });
-    // 막 끝 화면 2초 → 최대 레벨 알림 (겹치지 않게 차례로)
-    const lvAt = 800 + 2000;
+    this.tweens.add({ targets: end, alpha: 1, duration: 900, delay: 800 });
+    // 최대 레벨: END 아래에, END와 함께 머물다 같이 사라짐 (알림은 겹치지 않게 차례로)
     if (level.text) {
-      this.tweens.add({ targets: level, alpha: 1, duration: 400, delay: lvAt });
-      this.tweens.add({ targets: level, scale: { from: 1.3, to: 1 }, duration: 400, delay: lvAt, ease: 'Back.out' });
+      this.tweens.add({ targets: level, alpha: 1, duration: 400, delay: 1900 });
+      this.tweens.add({ targets: level, scale: { from: 1.3, to: 1 }, duration: 400, delay: 1900, ease: 'Back.out' });
     }
-    const ready = lvAt + (level.text ? 1200 : 0);
-    this.time.delayedCall(ready, () => {
+    const outAt = 800 + 900 + 2000 + (level.text ? 800 : 0);
+    this.tweens.add({ targets: [end, level], alpha: 0, duration: 500, delay: outAt });
+    const cardAt = outAt + 500 + 600;
+    this.tweens.add({ targets: [num, title, region], alpha: 1, duration: 800, delay: cardAt });
+    this.tweens.add({ targets: rule, scaleX: 1, duration: 900, delay: cardAt + 300, ease: 'Cubic.out' });
+    this.time.delayedCall(cardAt + 2500, () => {
       hint.setText(next ? '클릭하면 다음 이야기로' : '클릭하면 계속');
       this.tweens.add({ targets: hint, alpha: 1, duration: 400 });
       const go = () => {
@@ -2308,7 +2319,8 @@ Lv ${levelOf(id)}${locked.has(id) ? '  고정' : on ? '' : '  대기'}`);
   private goNextStory(id: string) {
     this.curtainIn(400, () => {
       this.hideMap();
-      this.scene.start('Story', { story: id, returnTo: this.start.returnTo } satisfies StoryStartData);
+      // 제목 카드를 이미 봤으므로 "챕터:" 카드는 건너뜀
+      this.scene.start('Story', { story: id, titled: true, returnTo: this.start.returnTo } satisfies StoryStartData);
     });
   }
 

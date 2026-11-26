@@ -129,7 +129,8 @@ export function parseScript(md, cfg) {
     const fin = FINISH_RE.exec(line);
     if (fin) {
       inMono = false;
-      story.chapters[cfg.next.id] = { title: cfg.next.title, finished: `${fin[1]} 끝` };
+      // 막 전환 화면(막_전환_화면.md): 다음 막의 번호·제목·지역
+      story.chapters[cfg.next.id] = { title: cfg.next.title, finished: `${fin[1]} 끝`, number: cfg.next.number, region: cfg.next.region };
       push({ chapter: cfg.next.id });
       continue;
     }

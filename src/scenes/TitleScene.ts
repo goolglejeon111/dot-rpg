@@ -80,11 +80,7 @@ export class TitleScene extends Phaser.Scene {
     const cp = save.checkpoint;
     if (!cp) return;
     gameState.restore(cp);
-    // 이 막을 다 봤고 다음 막 이야기가 있으면 그 막 처음부터
-    if (cp.finished) {
-      const next = Object.keys(stories[cp.story]?.chapters ?? {})[0];
-      if (next && stories[next]) return this.go({ story: next });
-    }
+    // 이 막을 다 봤으면 막 전환 화면(END → 다음 막 제목)부터: finished로 열면 Story가 그 화면을 띄운다
     this.go({ story: cp.story, scene: cp.scene, node: cp.node, finished: cp.finished });
   }
 

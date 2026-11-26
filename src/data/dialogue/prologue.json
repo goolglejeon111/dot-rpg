@@ -7,7 +7,7 @@
     "prologue_bad": {"type":"bad","label":"BAD END","title":"재판 없는 정의","epilogue":"마르키온의 시점. 시해범은 계획대로 처형되었고, 그날 밤의 진실을 아는 자는 남지 않았다. 계획에서 어긋난 것은 순례길에서 사라진 황녀 하나뿐이었다.","hint":"침소 앞에서, 조사를 믿고 검을 내려놓는다면."}
   },
   "chapters": {
-    "act1": {"title":"1막으로 이어집니다","finished":"프롤로그 끝"}
+    "act1": {"title":"쫓기는 자","finished":"프롤로그 끝","number":"1막","region":"황도 아에테리움 · 아우렐 평야"}
   },
   "scenes": [
     {

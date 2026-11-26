@@ -79,7 +79,7 @@ export const STORIES = [
       prologue_dead: { hint: '침소 앞에서, 칼끝들을 향해 검을 뽑는다면.' },
       prologue_bad: { hint: '침소 앞에서, 조사를 믿고 검을 내려놓는다면.' },
     },
-    next: { id: 'act1', title: '1막으로 이어집니다' },
+    next: { id: 'act1', number: '1막', title: '쫓기는 자', region: '황도 아에테리움 · 아우렐 평야' },
   },
   {
     id: 'act1',
@@ -157,7 +157,7 @@ export const STORIES = [
     endingExtras: {
       act1_bad: { hint: '혼자서는 갈 수 없는 길도 있다.' },
     },
-    next: { id: 'act2', title: '2막으로 이어집니다' },
+    next: { id: 'act2', number: '2막', title: '모래의 길', region: '카심 사막 · 루바 오아시스' },
   },
   {
     id: 'act2',
@@ -275,7 +275,7 @@ export const STORIES = [
     endingExtras: {
       act2_dead: { hint: '등을 보이면, 돌아갈 길도 함께 사라진다.' },
     },
-    next: { id: 'act3', title: '3막으로 이어집니다' },
+    next: { id: 'act3', number: '3막', title: '스승과 황녀', region: '로웬 평원 · 모르웬 숲 경계' },
   },
   {
     id: 'act3',
@@ -436,7 +436,7 @@ export const STORIES = [
     endingExtras: {
       act3_dead: { hint: '남기로 했다면, 끝까지 지켜야 할 사람은 둘이다.' },
     },
-    next: { id: 'act4', title: '4막으로 이어집니다' },
+    next: { id: 'act4', number: '4막', title: '산과 하늘', region: '아이젠 산맥 · 무스펠 화산지대 · 아스트라' },
   },
   {
     id: 'act4',
@@ -626,6 +626,6 @@ export const STORIES = [
       // 이 엔딩은 선택지가 아니라 관계로 갈린다: "선택지로 돌아가기"는 4막 장면 1의 선택지 앞으로
       act4_bad: { hint: '그녀가 망설일 때 붙잡아 줄 끈은, 그전에 이어 두어야 한다.', retry: 'scene1' },
     },
-    next: { id: 'act5', title: '5막: 신앙의 얼굴' },
+    next: { id: 'act5', number: '5막', title: '신앙의 얼굴', region: '세라핀 구릉 · 루멘 신성국의 성도' },
   },
 ];

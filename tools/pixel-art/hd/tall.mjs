@@ -132,7 +132,8 @@ const HEAD_F = [5, 7.3, 8.6, 9.4, 10, 10.3, 10.5, 10.5, 10.5, 10.5, 10.5, 10.5, 
 /** 얼굴 반폭 (r: 6~31) */
 export const faceHW = (girl, r) => (girl ? HEAD_F : HEAD_M)[Math.round(r) - 6] ?? 0;
 /** 머리카락 덮개 반폭: 정수리는 얼굴보다 2칸 크게, 위는 둥글게 */
-const capHW = (r) => (r < 5 ? 0 : 12.6 * Math.sqrt(Math.max(0, 1 - ((r - 16.8) / 11.8) ** 2)));
+// 정수리 모서리에서 머리 살이 삐져나오지 않게 얼굴 표보다 늘 1.5칸 크게
+const capHW = (r) => (r < 5 ? 0 : Math.max(12.6 * Math.sqrt(Math.max(0, 1 - ((r - 16.8) / 11.8) ** 2)), r < 17 ? (HEAD_M[Math.round(r) - 6] ?? 0) + 1.5 : 0));
 // 옆 보기 얼굴 [뒤, 앞] (6줄부터 31줄). 앞: 이마 40.8, 코끝 42.3(23줄), 턱 35(31줄)
 const SIDE = [
   [26, 35], [23.5, 37.5], [22, 39], [21, 40], [20.4, 40.5], [20, 40.8], [20, 40.8], [20, 40.8], [20, 40.8], [20, 40.8],
@@ -320,7 +321,8 @@ function drawHairFront(c) {
         const r = y - oy;
         const f = r <= 31 ? Math.max(faceHW(s.girl, r), r < 16 ? 10.5 : 0) : 8;
         const inner = (r <= 31 ? f - 1 : 8);
-        const outer = (r < 16 ? Math.max(capHW(r), f + st.th) : f + st.th) + (name === 'wavy' ? Math.sin(r / 4) * 0.7 : 0);
+        const outer = (r < 16.8 ? (capHW(r) * (f + st.th)) / 12.6 : f + st.th) // 덮개 둥근 선을 따름 (관자놀이에서 각지게 튀어나오지 않게)
+           + (name === 'wavy' ? Math.sin(r / 4) * 0.7 : 0);
         const a = CX + side * inner;
         const b = CX + side * outer;
         return side < 0 ? [b + 0.5, a + 0.5] : [a - 0.5, b - 0.5];

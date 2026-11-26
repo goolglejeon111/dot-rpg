@@ -80,6 +80,16 @@ interface MoveDef {
   fx?: string;
   /** 대시: 연달아 쓸 수 있는 횟수 (하나씩 cooldown 뒤에 다시 참) */
   charges?: number;
+  /** 버티기·도발: 지속 시간(ms), 받는 피해 감소 비율 */
+  hold?: number;
+  cut?: number;
+  /** 도발 범위, 대지 가르기 범위(픽셀) */
+  radius?: number;
+  /** 대지 가르기: 공격력 배율, 일어나지 못하는 시간(ms) */
+  mult?: number;
+  stun?: number;
+  /** 갈리아 10레벨: 버티기로 줄인 피해 중 오러 게이지로 바꾸는 비율 */
+  gaugeRatio?: number;
 }
 
 interface FighterDef {
@@ -233,6 +243,8 @@ const MOVES: Record<string, Fighter['move']> = {
   'elysia:ult': 'overload',
   'karg:skill': 'fang',
   'karg:ult': 'frenzy',
+  'galia:skill': 'taunt',
+  'galia:ult': 'quake',
 };
 
 type State =
@@ -293,7 +305,9 @@ export class Fighter {
   recoverUntil = 0;
   // 스킬·궁극기
   skillCd = 0;
-  move: '' | 'thrust' | 'oath' | 'rune' | 'overload' | 'combo' | 'fang' | 'frenzy' = '';
+  move: '' | 'thrust' | 'oath' | 'rune' | 'overload' | 'combo' | 'fang' | 'frenzy' | 'brace' | 'taunt' | 'quake' = '';
+  /** 도발 (갈리아 단장의 호령): 끝나는 때. 받는 피해 감소도 같은 때까지 */
+  tauntUntil = 0;
   moveCol = 0;
   /** 여러 번 베는 기술의 몇 번째 */
   moveStep = 0;
@@ -792,6 +806,8 @@ export class BattleScene extends Phaser.Scene {
     const list = this.all.filter((t) => t.targetable && t.team !== 'enemy');
     if (!list.length) return null;
     const near = (a: Fighter, b: Fighter) => (Math.hypot(a.x - e.x, a.y - e.y) - a.radius < Math.hypot(b.x - e.x, b.y - e.y) - b.radius ? a : b);
+    const taunt = list.find((t) => this.now < t.tauntUntil && Math.hypot(t.x - e.x, t.y - e.y) <= (t.def.skill?.radius ?? 90));
+    if (taunt) return taunt;
     const pr = list.find((t) => t.protect);
     if (!pr) return list.reduce(near);
     const h = e.lastHitBy;
@@ -1243,6 +1259,7 @@ export class BattleScene extends Phaser.Scene {
     if (!ev) return;
     if (ev.type === 'blink') return this.blink(f);
     if (ev.type === 'dash') return this.dash(f);
+    if (ev.type === 'brace') return this.brace(f);
     if (ev.type !== 'guard') return this.notices.push({ kind: 'toast', text: `${ev.name}: 아직 준비 중인 동작입니다` });
     if (this.now < f.guardCd || f.stamina < 10) return;
     if (f.state !== 'idle' && f.state !== 'move' && !(f.state === 'attack' && this.now >= f.chainUntil - f.def.attack!.chainWindow)) return;
@@ -1253,6 +1270,17 @@ export class BattleScene extends Phaser.Scene {
     const g = this.fx('leon_guard', f.x, f.y - BODY, { loop: true });
     g.setData('owner', f);
     f.extra.push(g);
+  }
+
+  /** 버티기 (갈리아): 잠깐 그 자리에서 밀려나지 않고 받는 피해를 줄임. 움직일 수 없음 */
+  private brace(f: Fighter) {
+    if (this.now < f.guardCd || !this.canAct(f)) return;
+    f.state = 'skill';
+    f.move = 'brace';
+    f.stateT = 0;
+    f.hitDone = false;
+    f.combo = -1;
+    f.moveHit.clear();
   }
 
   private endGuard(f: Fighter) {
@@ -1422,7 +1450,9 @@ export class BattleScene extends Phaser.Scene {
           for (const e of this.foesOf(f)) {
             if (f.moveHit.has(e) || Math.hypot(e.x - f.x, e.y - f.y) > 22) continue;
             f.moveHit.add(e);
-            this.damage(e, f, f.atk * 1.8, { heavy: true, unblockable: true, push: 10 });
+            // 막기 자세(방패를 든 동안)는 처음부터, 늘 든 방패는 15레벨 추가 효과로 무너뜨림
+            const ub = e.enemy?.shield?.mode !== 'always' || this.bonus(f, 15, 'leon');
+            this.damage(e, f, f.atk * 1.8, { heavy: true, unblockable: ub, push: 10 });
           }
           return;
         }
@@ -1524,6 +1554,61 @@ export class BattleScene extends Phaser.Scene {
         }
         f.moveCol = 9;
         if (t > 650) this.endMove(f);
+        return;
+      }
+      case 'brace': {
+        // 버티기: 막기 자세로 hold ms 동안 버팀
+        const ev = f.def.evade!;
+        if (!f.hitDone) {
+          f.hitDone = true;
+          const g = this.fx(ev.fx ?? 'galia_brace', f.x, f.y, { loop: true, depth: f.y - 1 });
+          g.setData('owner', f);
+          f.extra.push(g);
+        }
+        f.moveCol = 6;
+        if (t > (ev.hold ?? 1000)) {
+          this.clearExtra(f);
+          f.guardCd = this.now + (ev.cooldown ?? 3000);
+          this.endMove(f);
+        }
+        return;
+      }
+      case 'taunt': {
+        // 단장의 호령: 주변 적의 공격을 끌어오고, 그동안 받는 피해 감소
+        const m = f.def.skill!;
+        if (t < 200) return void (f.moveCol = 8);
+        if (!f.hitDone) {
+          f.hitDone = true;
+          this.fx(m.fx ?? 'galia_taunt', f.x, f.y - BODY, { depth: f.y + 5, scale: (m.radius ?? 90) / 32 });
+          f.tauntUntil = this.now + (m.hold ?? 4000);
+        }
+        f.moveCol = 9;
+        if (t > 500) this.endMove(f);
+        return;
+      }
+      case 'quake': {
+        // 대지 가르기: 대검을 내리꽂아 주변 적을 쓰러뜨리고 잠깐 일어나지 못하게 함
+        const m = f.def.ult!;
+        const WIND = 500;
+        if (t < WIND) return void (f.moveCol = Math.floor(t / 120) % 2 ? 9 : 8);
+        if (!f.hitDone) {
+          f.hitDone = true;
+          this.fx(m.fx ?? 'galia_quake', f.x, f.y + 6, { origin: [0.5, 1], depth: f.y + 10, scale: 1.4 });
+          this.cameras.main.shake(300, 0.012);
+          const r = m.radius ?? 75;
+          for (const e of this.foesOf(f)) {
+            if (Math.hypot(e.x - f.x, (e.y - f.y) / 0.6) > r) continue;
+            this.damage(e, f, f.atk * (m.mult ?? 3), { heavy: true, unblockable: true, area: true, push: 12 });
+            if (e.hp <= 0 || e.enemy?.boss || !e.targetable) continue;
+            if (e.state === 'cast') this.endCast(e);
+            if (e.state === 'attack') e.combo = -1;
+            this.clearExtra(e);
+            e.state = 'stagger';
+            e.stunUntil = this.now + (m.stun ?? 2000);
+          }
+        }
+        f.moveCol = 5;
+        if (t > WIND + 600) this.endMove(f);
         return;
       }
       case 'combo':
@@ -1887,6 +1972,18 @@ export class BattleScene extends Phaser.Scene {
       this.fx('block', t.x + ((from.x - t.x) > 0 ? 10 : -10), t.y - BODY, { depth: t.y + 5, flipX: from.x > t.x });
       return false;
     }
+    // 버티기·도발 중에는 받는 피해가 줄어듦 (갈리아)
+    const bracing = t.move === 'brace' && t.state === 'skill';
+    const taunting = this.now < t.tauntUntil;
+    if (!o.raw && t.team === 'party' && (bracing || taunting)) {
+      const before = amount;
+      if (bracing) amount *= 1 - (t.def.evade?.cut ?? 0);
+      if (taunting) amount *= 1 - (t.def.skill?.cut ?? 0);
+      // 10레벨: 버티기 중 받은 피해 일부를 오러 게이지로
+      if (bracing && this.bonus(t, 10, 'galia')) this.addGauge(t, Math.round((before - amount) * (t.def.evade?.gaugeRatio ?? 0.5)));
+    }
+    // 15레벨: 도발 중에는 넘어지거나 밀려나지 않음
+    const steady = bracing || (taunting && this.bonus(t, 15, 'galia'));
     let dmg = o.raw ? amount : Math.max(1, Math.round(amount * (0.9 + Math.random() * 0.2) - t.defense * 0.5));
     // NPC 아군은 쓰러지지 않음 (갈래 전투에서 "그 인물이 쓰러지면"이 있으면 쓰러질 수 있음)
     if (t.team === 'ally' && !this.bdef.outcomes?.[`fall:${t.id}`]) dmg = Math.min(dmg, t.hp - 1);
@@ -1945,7 +2042,7 @@ export class BattleScene extends Phaser.Scene {
     if (t.state === 'cast' && (t.castKind === 'area' || t.castKind === 'tail')) t.castTaken += dmg;
 
     // 밀려남
-    const push = o.push ?? 4;
+    const push = steady ? 0 : o.push ?? 4;
     if (push && !t.enemy?.boss) {
       const px = t.x - from.x;
       const py = t.y - from.y;
@@ -1958,7 +2055,7 @@ export class BattleScene extends Phaser.Scene {
       if (t.team === 'enemy') this.kill(t, src);
       else if (t.team === 'party') this.faint(t);
       else this.allyFall(t);
-    } else if (!broke && t.state !== 'prep' && t.state !== 'cast' && t.state !== 'skill' && !t.enemy?.boss) {
+    } else if (!broke && !steady && t.state !== 'prep' && t.state !== 'cast' && t.state !== 'skill' && !t.enemy?.boss) {
       // 맞으면 하던 것이 끊김
       if (t.state === 'guard') this.endGuard(t);
       t.state = 'hurt';
@@ -2240,6 +2337,9 @@ export class BattleScene extends Phaser.Scene {
     } else if (f.id === 'elysia') {
       if (ultOk && (near(100) >= 2 || this.enemiesBoss)) return use('ult');
       if (skillOk && near(60) >= 1) return use('skill');
+    } else if (f.id === 'galia') {
+      if (ultOk && (near(80) >= 2 || (this.enemiesBoss && d < 50))) return use('ult');
+      if (skillOk && near(90) >= 2) return use('skill');
     } else if (f.id === 'karg') {
       if (ultOk && (near(90) >= 2 || this.enemiesBoss)) return use('ult');
       if (skillOk && d > 20 && d < 80 && Math.random() < 0.03) return use('skill');

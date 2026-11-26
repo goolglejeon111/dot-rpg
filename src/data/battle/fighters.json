@@ -30,9 +30,9 @@
           { "mult": 1.5, "range": 42, "arc": 170, "windup": 240, "active": 90, "recover": 320, "step": 6, "fx": "galia_cleave", "cols": [2, 3], "push": 18, "flipFx": true }
         ]
       },
-      "evade": { "type": "brace", "name": "버티기", "cooldown": 3000, "fx": "galia_brace" },
-      "skill": { "name": "단장의 호령", "text": "주변 적의 공격을 끌어옴(도발). 잠깐 받는 피해 감소", "aim": "self", "cooldown": 9000, "fx": "galia_taunt" },
-      "ult": { "name": "대지 가르기", "text": "대검을 내리꽂아 주변 적을 쓰러뜨리고 잠깐 일어나지 못하게 함", "aim": "self", "fx": "galia_quake" }
+      "evade": { "type": "brace", "name": "버티기", "cooldown": 3000, "hold": 1000, "cut": 0.6, "gaugeRatio": 0.5, "fx": "galia_brace" },
+      "skill": { "name": "단장의 호령", "text": "주변 적의 공격을 끌어옴(도발). 잠깐 받는 피해 감소", "aim": "self", "cooldown": 9000, "hold": 4000, "cut": 0.3, "radius": 90, "fx": "galia_taunt" },
+      "ult": { "name": "대지 가르기", "text": "대검을 내리꽂아 주변 적을 쓰러뜨리고 잠깐 일어나지 못하게 함", "aim": "self", "mult": 3, "radius": 75, "stun": 2000, "fx": "galia_quake" }
     },
     "elysia": {
       "name": "엘리시아", "speed": 78, "hp": 90, "atk": 13, "def": 2, "grow": { "hp": 10, "atk": 3, "def": 1 },

@@ -468,8 +468,7 @@ export class ExploreScene extends Phaser.Scene {
     const floorLayer = this.lightUp(this.world(tm.createLayer('floor', ts, 0, 0)!.setDepth(-20)));
     if (layerOf(md, 'blood')) this.blood = this.lightUp(this.world(tm.createLayer('blood', ts, 0, 0)!.setDepth(-19).setVisible(false)));
     const wallLayer = this.lightUp(this.world(tm.createLayer('walls', ts, 0, 0)!.setDepth(-15)));
-    const wallShade = dressTiles(this, floorLayer, wallLayer);
-    if (wallShade) this.world(wallShade.setDepth(-18));
+    for (const o of dressTiles(this, floorLayer, wallLayer, id, (o) => this.lightUp(o))) this.world(o);
 
     for (const o of objectsOf(md)) this.makeObject(o);
     this.makeSky(md);

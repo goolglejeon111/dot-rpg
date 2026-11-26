@@ -23,11 +23,11 @@ import { drawTall, isTall, tallBattleSheet } from './hd/tall.mjs';
 const drawPerson = (id, v, o) => (isTall(id) ? drawTall(id, v, o) : drawPerson25(id, v, o));
 import { RAMPS as R } from './palette.mjs';
 import { Layer, K, scale2x } from './hd/layer.mjs';
-import { WORLD_TILES, WORLD_EXTRA, WORLD_VARIANTS, WORLD_SHADOW } from './hd/world.mjs';
+import { WORLD_TILES, WORLD_EXTRA, WORLD_VARIANTS, WORLD_SHADOW, WORLD_ANIM } from './hd/world.mjs';
 import { remapData } from './hd/remap.mjs';
 import { palaceHi, creaturesHi } from './hd/redraw.mjs';
 import { finish, putRGBA } from './hd/hicv.mjs';
-import { SMALLS } from './hd/smalls.mjs';
+import { SMALLS, DECOR } from './hd/smalls.mjs';
 // 예전 그림 코드(gen-palace.mjs, creatures.mjs)를 고해상도 캔버스로 다시 실행한 결과
 const PAL_HI = await palaceHi();
 const CRE_HI = (await creaturesHi()).CREATURES;
@@ -291,6 +291,7 @@ if (!existsSync(oldTiles)) {
   mkdirSync(dirname(oldTiles), { recursive: true });
   copyFileSync(tilesFile, oldTiles);
 }
+const AVG = {};
 {
   // 바탕은 예전 그림(_old). 새로 그리지 않은 칸은 새 팔레트로 옮겨 칠함
   const src = readPNG(oldTiles);
@@ -326,10 +327,25 @@ if (!existsSync(oldTiles)) {
     put(L, NAMES.indexOf(name));
   }
   extra.forEach((name, i) => put(ALL_EXTRA[name], NAMES.length + i));
+  // 타일마다 평균 색 (엔진이 바닥 경계를 둥글게 이을 때 씀)
+  NAMES.forEach((name, n) => {
+    const ox = (n % COLS) * T;
+    const oy = Math.floor(n / COLS) * T;
+    let r = 0, g = 0, b = 0, k = 0;
+    for (let y = 0; y < T; y++)
+      for (let x = 0; x < T; x++) {
+        const i = ((oy + y) * W + ox + x) * 4;
+        if (d[i + 3] < 255) continue;
+        r += d[i]; g += d[i + 1]; b += d[i + 2]; k++;
+      }
+    if (k > T * T * 0.9) AVG[name] = '#' + [r, g, b].map((v) => Math.round(v / k).toString(16).padStart(2, '0')).join('');
+  });
   write(`public/${sprites.tiles.file}`, encodePNG(W, H, d));
   HD[sprites.tiles.file] = K;
 }
 const tileInfo = {
+  anim: WORLD_ANIM,
+  avg: AVG,
   extra: Object.keys({ ...EXTRA, ...WORLD_EXTRA }),
   variants: { ...VARIANTS, ...WORLD_VARIANTS },
   alternate: ALTERNATE,
@@ -396,6 +412,9 @@ for (const dir of ['public/assets/sprites', 'public/assets/battle/chars']) {
       }
     }
 }
+// 장식 소품: 종류마다 한 줄, 프레임 2장 (16x16)
+const DECOR_KINDS = Object.keys(DECOR);
+write('public/assets/explore/decor.png', hiSheet(DECOR_KINDS.flatMap((k) => [0, 1].map((f) => finish(DECOR[k](f), { grain: 0 }))), 16, 16, 2));
 writeFileSync(
   join(ROOT, 'src/data/explore/hd_sprites.json'),
   JSON.stringify(
@@ -404,6 +423,7 @@ writeFileSync(
       ...list,
       _tiles: tileInfo,
       _files: files,
+      _decor: { file: "assets/explore/decor.png", size: 16, kinds: DECOR_KINDS },
       _faces: FACE_SETS,
       _hd: HD,
     },

@@ -614,7 +614,9 @@ export class BattleScene extends Phaser.Scene {
     const L = m.lighting();
     this.lit = L.lit;
     if (this.lit) {
-      this.lights.enable().setAmbientColor(L.ambient);
+      // 싸우는 인물은 이 장면이 따로 그리므로, 밝고 색이 진한 맵빛(화산의 붉은빛 등)은 색을 빼서 받는다
+      // (맵 그림은 맵 화면이 그대로 붉게 그림). 그래야 머리·옷 색이 맵마다 달라 보이지 않음
+      this.lights.enable().setAmbientColor(fighterAmbient(L.ambient));
       for (const l of L.lights) this.lights.addLight(l.x - this.ox, l.y - this.oy, l.r, l.color, l.intensity);
       const c = m.carrier();
       if (c) this.carry = { id: c.id, light: this.lights.addLight(0, 0, c.r, c.color, c.intensity), base: c.intensity, pulse: c.pulse };
@@ -3643,4 +3645,17 @@ export class BattleScene extends Phaser.Scene {
   levelOf(id: string) {
     return levelOf(id);
   }
+}
+
+/** 싸우는 인물이 받는 맵빛: 밝고 색이 진하면 같은 밝기의 회색 쪽으로 70% 당김 (어두운 밤빛은 그대로) */
+function fighterAmbient(c: number) {
+  const r = (c >> 16) & 255;
+  const g = (c >> 8) & 255;
+  const b = c & 255;
+  const l = (0.3 * r + 0.59 * g + 0.11 * b) / 255;
+  const sat = (Math.max(r, g, b) - Math.min(r, g, b)) / 255;
+  if (l < 0.35 || sat < 0.15) return c;
+  const grey = l * 255;
+  const mix = (v: number) => Math.round(v + (grey - v) * 0.7);
+  return (mix(r) << 16) | (mix(g) << 8) | mix(b);
 }

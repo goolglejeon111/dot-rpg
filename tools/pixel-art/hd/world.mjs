@@ -191,43 +191,48 @@ function planks(ramp, o = {}) {
 // ---------------------------------------------------------------------
 // 물: 바탕 얼룩 + 가로 물결(밝은 줄 위, 어두운 줄 아래) + 반짝임. frame으로 물결 위치를 옮김
 // ---------------------------------------------------------------------
+// 움직이는 타일 프레임 (0~3). 엔진이 차례로 바꿔 깖 (WORLD_ANIM)
+let ANIM_F = 0;
+const SWAY = [0, 1, 2, 1];
 function water(ramp, o = {}) {
   const { base = 1, seed = 1, frame = 0, glint = R.sky[0], specks, extra } = o;
   const L = new Layer(32, 32);
   L.rect(0, 0, 31, 31, (x, y) => (blot(x, y, seed, 8) < 0.22 ? ramp[base + 1] : ramp[base]));
   for (let i = 0; i < 7; i++) {
     const y = (Math.floor(hash(i, 1, seed) * 32) + frame * 2) % 32;
-    const x = (Math.floor(hash(i, 2, seed) * 32) + frame * 3) % 32;
+    const x = (Math.floor(hash(i, 2, seed) * 32) + frame * 3 + SWAY[ANIM_F] * (i % 2 ? 1 : -1) + 32) % 32;
     const len = 4 + Math.floor(hash(i, 3, seed) * 6);
     for (let k = 0; k < len; k++) {
       L.set((x + k) % 32, y, ramp[base - 1] ?? ramp[0]);
       if (k > 0 && k < len - 1) L.set((x + k) % 32, (y + 1) % 32, ramp[base + 1]);
     }
-    if (hash(i, 4, seed) < 0.4) L.set((x + 1) % 32, y, glint);
+    if (hash(i, 4, seed + ANIM_F) < 0.4) L.set((x + 1 + ANIM_F) % 32, y, glint);
   }
   if (specks) for (let i = 0; i < 6; i++) L.set(Math.floor(hash(i, 5, seed + frame) * 32), Math.floor(hash(i, 6, seed + frame) * 32), specks[i % specks.length]);
   extra?.(L);
   return L;
 }
 
-/** 용암: 붉은 바탕에 밝게 끓는 덩어리, 가장자리 어두운 껍질 */
+/** 용암: 붉은 바탕에 밝게 끓는 덩어리, 어두운 껍질 줄. 고해상도로 계산하고, 두 얼룩을 섞는 비율을 프레임마다 바꿔 끓어오름 */
 function lava(seed, frame = 0) {
   const L = new Layer(32, 32);
-  L.rect(0, 0, 31, 31, (x, y) => {
-    const b = blot(x + frame * 2, y, seed, 8);
-    if (b > 0.72) return R.fire[0];
-    if (b > 0.58) return R.fire[1];
-    if (b > 0.4) return R.fire[2];
-    if (b > 0.22) return R.fire[3];
-    return R.red[3];
-  });
-  for (let i = 0; i < 3; i++) {
-    const x = Math.floor(hash(i, 1, seed + frame) * 28) + 2;
-    const y = Math.floor(hash(i, 2, seed + frame) * 28) + 2;
-    L.set(x, y, R.fire[0]);
-    L.set(x + 1, y, R.fire[1]);
-    L.set(x, y - 1, R.fire[1]);
-  }
+  const t = ((ANIM_F + frame) * Math.PI) / 2;
+  const wa = 0.5 + 0.5 * Math.cos(t);
+  for (let Y = 0; Y < 64; Y++)
+    for (let X = 0; X < 64; X++) {
+      const x = X / 2;
+      const y = Y / 2;
+      const b = blot(x, y, seed, 8) * wa + blot(x, y, seed + 7, 8) * (1 - wa);
+      const crust = blot(x, y, seed + 3, 16);
+      let c;
+      if (crust < 0.2) c = R.red[3];
+      else if (crust < 0.24) c = R.fire[3];
+      else if (b > 0.66) c = R.fire[0];
+      else if (b > 0.56) c = R.fire[1];
+      else if (b > 0.38) c = R.fire[2];
+      else c = R.fire[3];
+      L.setHi(X, Y, c);
+    }
   return L;
 }
 
@@ -360,7 +365,7 @@ const make = {
   cellar_floor: (s = 15) => ground(DIRT, { base: 2, seed: s, pebbles: 2 }),
   mud: (s = 16) => ground(DIRT, { base: 2, seed: s, pebbles: 2, extra: (L) => patches(L, s + 3, [DIRT[3], DIRT[4]], 0.18) }),
   mud_snow: (s = 17) => ground(DIRT, { base: 2, seed: s, pebbles: 1, extra: (L) => patches(L, s + 4, [SNOW[0], SNOW[1]], 0.2) }),
-  shack_wall: (s = 18) => planks(WOOD, { base: 2, size: 8, vertical: true, seed: s }),
+  shack_wall: (s = 18) => planks(WOOD, { base: 2, size: 16, vertical: true, seed: s }),
   bridge: (s = 19) => planks(WOOD, { base: 1, size: 8, seed: s }),
   grass: (s = 20) => grass(R.green, { base: 1, seed: s, flowers: 0 }),
   sand: (s = 21) => ground(SAND, { base: 1, seed: s, pebbles: 1, specks: 0.015, dark: 0.08 }),
@@ -427,13 +432,13 @@ const make = {
     ground(DARK, {
       base: 2,
       seed: s,
-      pebbles: 4,
+      pebbles: 2,
       extra: (L) => {
-        // 짧은 붉은 금 (칸마다 자리·길이가 다르게, 없는 칸도 있음)
-        if (hash(2, 2, s) < 0.35) return;
+        // 붉은 금: 갈래 하나(씨앗 88)에만 길게 하나. 칸마다 짧은 금을 넣으면 붉은 점이 흩어진 것처럼 지저분해 보임
+        if (s !== 88) return;
         let x = Math.floor(hash(1, 1, s) * 20) + 4;
         const y0 = Math.floor(hash(1, 2, s) * 16) + 4;
-        const len = 5 + Math.floor(hash(1, 3, s) * 6);
+        const len = 9 + Math.floor(hash(1, 3, s) * 6);
         for (let y = y0; y < y0 + len; y++) {
           L.set(x, y, R.red[3]);
           if (y === y0 + 2) L.set(x, y, R.fire[3]);
@@ -477,26 +482,29 @@ export const WORLD_TILES = Object.fromEntries(Object.entries(make).map(([k, f]) 
 const VAR = {
   stone: [61, 62],
   cobble: [63],
-  grass: [64, 65],
-  sand: [66],
+  grass: [64, 65, 90],
+  sand: [66, 91],
   desert: [67, 68, 84],
   desert2: [85],
   dune: [86],
-  mud: [69],
+  mud: [69, 92],
   cellar_floor: [70],
-  road: [71],
-  rock_floor: [72],
-  dry_grass: [73],
-  forest_floor: [74],
-  frost_field: [75],
+  road: [71, 93],
+  rock_floor: [72, 94],
+  dry_grass: [73, 95, 96],
+  forest_floor: [74, 97, 98],
+  frost_field: [75, 99, 100],
   snow: [76, 77],
   snow_path: [78],
-  dwarf_floor: [79],
+  dwarf_floor: [79, 101],
   black_rock: [80, 87, 88],
   frost_road: [89],
   sewer_floor: [81],
   adobe_floor: [82],
-  cistern_floor: [83],
+  cistern_floor: [83, 102],
+  oasis_grass: [103, 104],
+  astra_floor: [105],
+  forge_floor: [106],
 };
 export const WORLD_EXTRA = {};
 export const WORLD_VARIANTS = {};
@@ -507,6 +515,18 @@ for (const [name, seeds] of Object.entries(VAR)) {
     return key;
   });
 }
+/** 움직이는 타일: 이름 → 프레임 4장 (이름_a0~a3). 물은 물결이 좌우로 흔들리고 용암은 끓어오름 */
+export const WORLD_ANIM = {};
+for (const name of ['water', 'water2', 'sewer_water', 'sewer_water2', 'deep_water', 'deep_water2', 'river', 'oasis_water', 'lava', 'lava2']) {
+  if (!make[name]) continue;
+  WORLD_ANIM[name] = [0, 1, 2, 3].map((f) => {
+    ANIM_F = f;
+    const key = `${name}_a${f}`;
+    WORLD_EXTRA[key] = make[name]();
+    return key;
+  });
+}
+ANIM_F = 0;
 /** 벽 아래 그림자 띠를 까는 벽 */
 export const WORLD_SHADOW = [
   'castle_wall', 'castle_moss', 'sewer_wall', 'cellar_wall', 'shack_wall', 'sandstone', 'adobe_wall', 'rock_wall', 'ruin_wall', 'snow_rock', 'dwarf_wall', 'lava_rock_wall', 'astra_wall',

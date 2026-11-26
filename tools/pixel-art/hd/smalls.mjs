@@ -117,3 +117,133 @@ export function talkIcon() {
 }
 
 export const SMALLS = { tree, house, crate, sign, talk_icon: talkIcon };
+
+// ---------------------------------------------------------------------
+// 장식 소품 (16x16, 충돌 없음). 엔진이 맵마다 src/data/explore/decor.json 의 종류·밀도로 흩뿌림
+// 칸마다 프레임 2장 (풀·꽃은 바람에 흔들림, 나머지는 같은 그림)
+// ---------------------------------------------------------------------
+const tuftDraw = (ramp, out) => (f) => {
+  const c = new HiCv(16, 16);
+  const sway = f ? 0.8 : 0;
+  for (const [x, h, lean] of [[5, 7, -1.5], [7, 9, -0.5], [8.5, 10, 0.4], [10, 8, 1.2], [12, 6, 2]]) {
+    c.line(x, 14, x + lean + sway, 14 - h, (t) => (t > 0.7 ? ramp[0] : t > 0.3 ? ramp[1] : ramp[2]));
+  }
+  c.outline(out);
+  return c;
+};
+function flowers(f) {
+  const c = new HiCv(16, 16);
+  const sway = f ? 0.6 : 0;
+  for (const [x, h, col] of [[5, 6, 'X'], [9, 8, 'v'], [12, 5, 'y']]) {
+    c.line(x, 14, x + sway, 14 - h, 'g');
+    c.disc(x + sway, 14 - h, 1.3, col);
+    c.set(x + sway, 14 - h, 'y');
+  }
+  c.line(7, 14, 6.5, 11, 'G');
+  c.outline('Q');
+  return c;
+}
+function pebbles() {
+  const c = new HiCv(16, 16);
+  for (const [x, y, r] of [[6, 11, 2.2], [10.5, 12.5, 1.6], [8, 13.5, 1.1]]) c.ellipse(x, y, r, r * 0.75, (d, X, Y) => (Y < y - r * 0.2 ? 'r' : d < 0.7 ? 't' : 'T'));
+  c.outline('R');
+  return c;
+}
+function rubble() {
+  const c = new HiCv(16, 16);
+  c.rect(3, 11, 7, 13, (x, y) => (y < 12 ? 'r' : 't'));
+  c.rect(8, 9, 12, 13, (x, y) => (y < 10 ? 'r' : x > 11 ? 'T' : 't'));
+  c.line(5, 9, 6.5, 10.5, 'T');
+  c.disc(13.5, 13, 0.9, 't');
+  c.outline('R');
+  return c;
+}
+function leaves() {
+  const c = new HiCv(16, 16);
+  for (const [x, y, col] of [[4, 11, 'x'], [8, 13, 'o'], [11, 10, 'Y'], [12.5, 13.5, 'x']]) {
+    c.ellipse(x, y, 1.8, 0.9, col);
+    c.set(x - 1, y, 'O');
+  }
+  return c;
+}
+function snowPile() {
+  const c = new HiCv(16, 16);
+  c.ellipse(8, 12.5, 6, 2.6, (d, x, y) => (y < 12 ? 'v' : d < 0.7 ? 'v' : 'V'));
+  c.ellipse(6, 11, 2.5, 1.6, 'v');
+  c.outline('m');
+  return c;
+}
+function bones() {
+  const c = new HiCv(16, 16);
+  c.line(3, 12, 11, 10, 'v', 1);
+  for (const [x, y] of [[3, 12], [11, 10]]) c.disc(x, y, 1.1, 'v');
+  c.ellipse(12.5, 13, 2, 1.5, 'v');
+  c.set(12, 13, 'T');
+  c.outline('M');
+  return c;
+}
+function mushrooms() {
+  const c = new HiCv(16, 16);
+  for (const [x, h, r] of [[6, 4, 2.6], [10.5, 3, 1.8]]) {
+    c.rect(x - 0.5, 14 - h, x, 14, 'v');
+    c.band(x, 14 - h, 0, r, Math.PI, Math.PI * 2, (tr) => (tr < 0.5 ? 'x' : 'X'));
+    c.set(x - r * 0.4, 14 - h - r * 0.5, 'v');
+  }
+  c.outline('Z');
+  return c;
+}
+function cobweb() {
+  const c = new HiCv(16, 16);
+  for (let k = 0; k < 5; k++) {
+    const a = (k / 4) * (Math.PI / 2);
+    c.line(1, 1, 1 + Math.cos(a) * 13, 1 + Math.sin(a) * 13, 'V');
+  }
+  for (const r of [5, 9, 12.5]) c.band(1, 1, r - 0.25, r + 0.25, 0, Math.PI / 2, 'V');
+  return c;
+}
+function potShards() {
+  const c = new HiCv(16, 16);
+  c.band(7, 13, 2.5, 4, Math.PI * 1.05, Math.PI * 1.75, (tr) => (tr < 0.5 ? 'p' : 'o'), 0.8);
+  c.ellipse(12, 13, 1.6, 1, 'o');
+  c.ellipse(3.5, 13.5, 1.2, 0.8, 'p');
+  c.outline('P');
+  return c;
+}
+function emberRock() {
+  const c = new HiCv(16, 16);
+  c.ellipse(8, 12, 4.5, 3, (d, x, y) => (y < 11 ? 't' : d < 0.8 ? 'T' : 'R'));
+  c.line(5.5, 12, 8, 11, 'x');
+  c.line(8, 11, 10.5, 13, 'y');
+  c.outline('k');
+  return c;
+}
+function shrub(f) {
+  const c = new HiCv(16, 16);
+  const s = f ? 0.5 : 0;
+  for (const [x, y, r] of [[5 + s, 11, 2.6], [10 + s, 11, 2.8], [7.5 + s, 8.5, 2.8]]) c.disc(x, y, r, (d, X, Y) => (Y < y - 1 ? 'c' : d < 0.7 ? 'd' : 'D'));
+  c.outline('C');
+  return c;
+}
+function puddle(f) {
+  const c = new HiCv(16, 16);
+  c.ellipse(8, 12.5, 5.5, 2.2, (d) => (d < 0.6 ? 'A' : 'W'));
+  c.line(5.5 + f, 12, 7.5 + f, 12, 'a');
+  return c;
+}
+const same = (d) => (f) => d(f);
+export const DECOR = {
+  tuft: tuftDraw(['q', 'g', 'G'], 'Q'),
+  tuft_dry: tuftDraw(['c', 'd', 'D'], 'C'),
+  flowers,
+  pebbles: same(pebbles),
+  rubble: same(rubble),
+  leaves: same(leaves),
+  snow_pile: same(snowPile),
+  bones: same(bones),
+  mushrooms: same(mushrooms),
+  cobweb: same(cobweb),
+  pot_shards: same(potShards),
+  ember_rock: same(emberRock),
+  shrub,
+  puddle,
+};

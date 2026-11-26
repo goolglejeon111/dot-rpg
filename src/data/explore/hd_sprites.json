@@ -415,6 +415,147 @@
     "rise": 7
   },
   "_tiles": {
+    "anim": {
+      "water": [
+        "water_a0",
+        "water_a1",
+        "water_a2",
+        "water_a3"
+      ],
+      "water2": [
+        "water2_a0",
+        "water2_a1",
+        "water2_a2",
+        "water2_a3"
+      ],
+      "sewer_water": [
+        "sewer_water_a0",
+        "sewer_water_a1",
+        "sewer_water_a2",
+        "sewer_water_a3"
+      ],
+      "sewer_water2": [
+        "sewer_water2_a0",
+        "sewer_water2_a1",
+        "sewer_water2_a2",
+        "sewer_water2_a3"
+      ],
+      "deep_water": [
+        "deep_water_a0",
+        "deep_water_a1",
+        "deep_water_a2",
+        "deep_water_a3"
+      ],
+      "deep_water2": [
+        "deep_water2_a0",
+        "deep_water2_a1",
+        "deep_water2_a2",
+        "deep_water2_a3"
+      ],
+      "river": [
+        "river_a0",
+        "river_a1",
+        "river_a2",
+        "river_a3"
+      ],
+      "oasis_water": [
+        "oasis_water_a0",
+        "oasis_water_a1",
+        "oasis_water_a2",
+        "oasis_water_a3"
+      ],
+      "lava": [
+        "lava_a0",
+        "lava_a1",
+        "lava_a2",
+        "lava_a3"
+      ],
+      "lava2": [
+        "lava2_a0",
+        "lava2_a1",
+        "lava2_a2",
+        "lava2_a3"
+      ]
+    },
+    "avg": {
+      "floor": "#ebe1d4",
+      "floor2": "#ebe0d2",
+      "carpet_top": "#9d2833",
+      "carpet_mid": "#aa2134",
+      "carpet_bot": "#9b2732",
+      "wall_top": "#3a4355",
+      "wall_up": "#aa9284",
+      "wall_low": "#8e5c39",
+      "window_up": "#8b8689",
+      "window_low": "#8a6f5e",
+      "stone": "#a6a5b9",
+      "stone2": "#a6a5ba",
+      "wood": "#9e6a3f",
+      "castle_top": "#8488a2",
+      "castle_wall": "#6a6b86",
+      "castle_moss": "#666f7f",
+      "castle_base": "#5d6683",
+      "water": "#22436e",
+      "water2": "#22436f",
+      "quay": "#706b76",
+      "cobble": "#82849d",
+      "sewer_floor": "#888ba3",
+      "sewer_floor2": "#898ca4",
+      "sewer_edge": "#655f6e",
+      "sewer_water": "#2a3242",
+      "sewer_water2": "#2a3242",
+      "deep_water": "#283040",
+      "deep_water2": "#283040",
+      "sewer_wall_top": "#3a4355",
+      "sewer_wall": "#50596b",
+      "cistern_floor": "#898da7",
+      "cellar_floor": "#794a30",
+      "cellar_wall": "#b7a49d",
+      "mud": "#784930",
+      "mud_snow": "#8f6853",
+      "shack_wall": "#754930",
+      "shack_roof": "#8b434a",
+      "bridge": "#9e6a3f",
+      "grass": "#6fba53",
+      "sand": "#d8b97a",
+      "river": "#486bb1",
+      "desert": "#d7b778",
+      "desert2": "#d8b879",
+      "dune": "#d6b677",
+      "sandstone": "#a37f52",
+      "sandstone_top": "#ccac73",
+      "oasis_water": "#6da3dc",
+      "oasis_grass": "#d0b474",
+      "adobe_wall": "#9f7b4f",
+      "adobe_roof": "#d0b27a",
+      "adobe_floor": "#ae8857",
+      "bars": "#78605d",
+      "road": "#aa8555",
+      "rock_floor": "#898fa9",
+      "rock_wall": "#7e656c",
+      "dry_field": "#99653d",
+      "dry_grass": "#d7b778",
+      "forest_floor": "#275a3f",
+      "ruin_wall": "#515c6b",
+      "frost_field": "#d8ccc0",
+      "frost_road": "#b5a19d",
+      "ice": "#a4d3f5",
+      "snow": "#eef0f6",
+      "snow_path": "#c2c7d9",
+      "snow_rock": "#85869c",
+      "dwarf_floor": "#898da6",
+      "stone_bridge": "#d5c8bd",
+      "dwarf_wall": "#7d646a",
+      "forge_floor": "#596074",
+      "black_rock": "#3b4457",
+      "lava": "#df8f5a",
+      "lava2": "#e07f3e",
+      "lava_rock_wall": "#554552",
+      "astra_floor": "#ebe1d4",
+      "astra_wall": "#9f8a8a",
+      "barrier": "#b0d8f7",
+      "cloud": "#92a7d1"
+    },
     "extra": [
       "floor_b",
       "floor_c",
@@ -426,30 +567,87 @@
       "cobble_v1",
       "grass_v1",
       "grass_v2",
+      "grass_v3",
       "sand_v1",
+      "sand_v2",
       "desert_v1",
       "desert_v2",
       "desert_v3",
       "desert2_v1",
       "dune_v1",
       "mud_v1",
+      "mud_v2",
       "cellar_floor_v1",
       "road_v1",
+      "road_v2",
       "rock_floor_v1",
+      "rock_floor_v2",
       "dry_grass_v1",
+      "dry_grass_v2",
+      "dry_grass_v3",
       "forest_floor_v1",
+      "forest_floor_v2",
+      "forest_floor_v3",
       "frost_field_v1",
+      "frost_field_v2",
+      "frost_field_v3",
       "snow_v1",
       "snow_v2",
       "snow_path_v1",
       "dwarf_floor_v1",
+      "dwarf_floor_v2",
       "black_rock_v1",
       "black_rock_v2",
       "black_rock_v3",
       "frost_road_v1",
       "sewer_floor_v1",
       "adobe_floor_v1",
-      "cistern_floor_v1"
+      "cistern_floor_v1",
+      "cistern_floor_v2",
+      "oasis_grass_v1",
+      "oasis_grass_v2",
+      "astra_floor_v1",
+      "forge_floor_v1",
+      "water_a0",
+      "water_a1",
+      "water_a2",
+      "water_a3",
+      "water2_a0",
+      "water2_a1",
+      "water2_a2",
+      "water2_a3",
+      "sewer_water_a0",
+      "sewer_water_a1",
+      "sewer_water_a2",
+      "sewer_water_a3",
+      "sewer_water2_a0",
+      "sewer_water2_a1",
+      "sewer_water2_a2",
+      "sewer_water2_a3",
+      "deep_water_a0",
+      "deep_water_a1",
+      "deep_water_a2",
+      "deep_water_a3",
+      "deep_water2_a0",
+      "deep_water2_a1",
+      "deep_water2_a2",
+      "deep_water2_a3",
+      "river_a0",
+      "river_a1",
+      "river_a2",
+      "river_a3",
+      "oasis_water_a0",
+      "oasis_water_a1",
+      "oasis_water_a2",
+      "oasis_water_a3",
+      "lava_a0",
+      "lava_a1",
+      "lava_a2",
+      "lava_a3",
+      "lava2_a0",
+      "lava2_a1",
+      "lava2_a2",
+      "lava2_a3"
     ],
     "variants": {
       "floor": [
@@ -467,10 +665,12 @@
       ],
       "grass": [
         "grass_v1",
-        "grass_v2"
+        "grass_v2",
+        "grass_v3"
       ],
       "sand": [
-        "sand_v1"
+        "sand_v1",
+        "sand_v2"
       ],
       "desert": [
         "desert_v1",
@@ -484,25 +684,34 @@
         "dune_v1"
       ],
       "mud": [
-        "mud_v1"
+        "mud_v1",
+        "mud_v2"
       ],
       "cellar_floor": [
         "cellar_floor_v1"
       ],
       "road": [
-        "road_v1"
+        "road_v1",
+        "road_v2"
       ],
       "rock_floor": [
-        "rock_floor_v1"
+        "rock_floor_v1",
+        "rock_floor_v2"
       ],
       "dry_grass": [
-        "dry_grass_v1"
+        "dry_grass_v1",
+        "dry_grass_v2",
+        "dry_grass_v3"
       ],
       "forest_floor": [
-        "forest_floor_v1"
+        "forest_floor_v1",
+        "forest_floor_v2",
+        "forest_floor_v3"
       ],
       "frost_field": [
-        "frost_field_v1"
+        "frost_field_v1",
+        "frost_field_v2",
+        "frost_field_v3"
       ],
       "snow": [
         "snow_v1",
@@ -512,7 +721,8 @@
         "snow_path_v1"
       ],
       "dwarf_floor": [
-        "dwarf_floor_v1"
+        "dwarf_floor_v1",
+        "dwarf_floor_v2"
       ],
       "black_rock": [
         "black_rock_v1",
@@ -529,7 +739,18 @@
         "adobe_floor_v1"
       ],
       "cistern_floor": [
-        "cistern_floor_v1"
+        "cistern_floor_v1",
+        "cistern_floor_v2"
+      ],
+      "oasis_grass": [
+        "oasis_grass_v1",
+        "oasis_grass_v2"
+      ],
+      "astra_floor": [
+        "astra_floor_v1"
+      ],
+      "forge_floor": [
+        "forge_floor_v1"
       ]
     },
     "alternate": {
@@ -684,6 +905,26 @@
     "public/assets/battle/chars/sewer_leech.png",
     "public/assets/battle/chars/sewer_rat.png"
   ],
+  "_decor": {
+    "file": "assets/explore/decor.png",
+    "size": 16,
+    "kinds": [
+      "tuft",
+      "tuft_dry",
+      "flowers",
+      "pebbles",
+      "rubble",
+      "leaves",
+      "snow_pile",
+      "bones",
+      "mushrooms",
+      "cobweb",
+      "pot_shards",
+      "ember_rock",
+      "shrub",
+      "puddle"
+    ]
+  },
   "_faces": {
     "mob_royal_knight": [
       "mob_royal_knight",
@@ -996,6 +1237,7 @@
     "assets/battle/chars/sand_crawler.png": 2,
     "assets/battle/chars/sewer_eel.png": 2,
     "assets/battle/chars/sewer_leech.png": 2,
-    "assets/battle/chars/sewer_rat.png": 2
+    "assets/battle/chars/sewer_rat.png": 2,
+    "assets/explore/decor.png": 2
   }
 }

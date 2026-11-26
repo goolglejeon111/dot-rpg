@@ -66,7 +66,25 @@
       "dry_field",
       "dry_grass",
       "forest_floor",
-      "ruin_wall"
+      "ruin_wall",
+      "frost_field",
+      "frost_road",
+      "ice",
+      "snow",
+      "snow_path",
+      "snow_rock",
+      "dwarf_floor",
+      "stone_bridge",
+      "dwarf_wall",
+      "forge_floor",
+      "black_rock",
+      "lava",
+      "lava2",
+      "lava_rock_wall",
+      "astra_floor",
+      "astra_wall",
+      "barrier",
+      "cloud"
     ],
     "solid": [
       "wall_top",
@@ -95,7 +113,15 @@
       "adobe_roof",
       "bars",
       "rock_wall",
-      "ruin_wall"
+      "ruin_wall",
+      "snow_rock",
+      "dwarf_wall",
+      "lava",
+      "lava2",
+      "lava_rock_wall",
+      "astra_wall",
+      "barrier",
+      "cloud"
     ],
     "wade": [
       "sewer_water",
@@ -163,7 +189,25 @@
       "dry_field": "갈라진 마른 밭과 누운 밀대",
       "dry_grass": "초겨울 누렇게 마른 풀",
       "forest_floor": "안개 숲의 검은 흙과 이끼",
-      "ruin_wall": "무너진 돌담 (이끼 낀 회색 돌)"
+      "ruin_wall": "무너진 돌담 (이끼 낀 회색 돌)",
+      "frost_field": "서리 내린 누런 들",
+      "frost_road": "서리 앉은 흙길",
+      "ice": "얼어붙은 개울 (걸을 수 있음)",
+      "snow": "눈 덮인 땅",
+      "snow_path": "눈 위로 밟아 다진 바위길",
+      "snow_rock": "눈 쌓인 바위 절벽",
+      "dwarf_floor": "드워프 지하 도시의 돌판 바닥",
+      "stone_bridge": "지하 도시의 돌다리",
+      "dwarf_wall": "드워프 지하 도시의 바위벽",
+      "forge_floor": "그을린 대장간 바닥",
+      "black_rock": "검게 굳은 화산 바위 바닥",
+      "lava": "용암 (들어갈 수 없음)",
+      "lava2": "용암 (다른 결)",
+      "lava_rock_wall": "화산 동굴 벽 (검은 바위, 붉은 틈)",
+      "astra_floor": "마탑의 흰 돌 바닥",
+      "astra_wall": "마탑의 흰 돌벽 (보라 띠)",
+      "barrier": "투명한 결계 벽",
+      "cloud": "발아래로 흐르는 구름 (벽 너머)"
     }
   },
   "props": {
@@ -702,6 +746,224 @@
       "h": 14,
       "frames": 1,
       "note": "시골 집 창 (닫힌 덧문, 처음엔 숨김. 차례로 보이며 창이 닫힘)"
+    },
+    "border_stone": {
+      "file": "assets/explore/border_stone.png",
+      "w": 24,
+      "h": 40,
+      "frames": 1,
+      "note": "반쯤 쓰러진 경계석 (양면에 아르덴과 제국의 문장)"
+    },
+    "trade_cart": {
+      "file": "assets/explore/trade_cart.png",
+      "w": 56,
+      "h": 36,
+      "frames": 1,
+      "note": "바퀴가 부서진 교역 수레, 굳은 소금 자루"
+    },
+    "snow_pine": {
+      "file": "assets/explore/snow_pine.png",
+      "w": 40,
+      "h": 64,
+      "frames": 1,
+      "note": "눈 얹힌 전나무"
+    },
+    "snow_boulder": {
+      "file": "assets/explore/snow_boulder.png",
+      "w": 40,
+      "h": 30,
+      "frames": 1,
+      "note": "눈 쌓인 바위 (도적이 숨은 바위)"
+    },
+    "stone_gate": {
+      "file": "assets/explore/stone_gate.png",
+      "w": 128,
+      "h": 112,
+      "frames": 1,
+      "note": "절벽에 박힌 거대한 돌문 (망치와 모루 문양)"
+    },
+    "stone_gate_open": {
+      "file": "assets/explore/stone_gate_open.png",
+      "w": 128,
+      "h": 112,
+      "frames": 1,
+      "note": "열린 돌문 (처음엔 숨김)"
+    },
+    "forge_lit": {
+      "file": "assets/explore/forge_lit.png",
+      "w": 56,
+      "h": 48,
+      "frames": 2,
+      "rate": 5,
+      "note": "불이 지펴진 화덕과 모루"
+    },
+    "anvil": {
+      "file": "assets/explore/anvil.png",
+      "w": 32,
+      "h": 24,
+      "frames": 1,
+      "note": "모루"
+    },
+    "shelf": {
+      "file": "assets/explore/shelf.png",
+      "w": 48,
+      "h": 40,
+      "frames": 1,
+      "note": "연장과 쇳덩이가 놓인 선반 (wall)"
+    },
+    "mural": {
+      "file": "assets/explore/mural.png",
+      "w": 128,
+      "h": 64,
+      "frames": 1,
+      "note": "300년 전의 벽화 (금관의 사람 얼굴만 쪼아 지움, wall)"
+    },
+    "stone_tablet1": {
+      "file": "assets/explore/stone_tablet1.png",
+      "w": 32,
+      "h": 44,
+      "frames": 1,
+      "note": "첫 번째 돌판 (금관의 사람과 옛 룬)"
+    },
+    "stone_tablet2": {
+      "file": "assets/explore/stone_tablet2.png",
+      "w": 32,
+      "h": 44,
+      "frames": 1,
+      "note": "두 번째 돌판 (쓰러진 사람들)"
+    },
+    "stone_tablet3": {
+      "file": "assets/explore/stone_tablet3.png",
+      "w": 32,
+      "h": 44,
+      "frames": 1,
+      "note": "세 번째 돌판 (깊게 판 글자와 작은 손자국)"
+    },
+    "broken_tablet": {
+      "file": "assets/explore/broken_tablet.png",
+      "w": 32,
+      "h": 20,
+      "frames": 1,
+      "note": "반으로 깨진 돌판 (구석에 놓임)"
+    },
+    "tablet_glow": {
+      "file": "assets/explore/tablet_glow.png",
+      "w": 32,
+      "h": 20,
+      "frames": 2,
+      "rate": 3,
+      "note": "깨진 돌판이 빛남 (처음엔 숨김)"
+    },
+    "name_wall": {
+      "file": "assets/explore/name_wall.png",
+      "w": 48,
+      "h": 48,
+      "frames": 1,
+      "note": "이름이 새겨진 대장간 벽 (마지막 셋 옆에 불꽃, wall)"
+    },
+    "rusty_hammers": {
+      "file": "assets/explore/rusty_hammers.png",
+      "w": 32,
+      "h": 16,
+      "frames": 1,
+      "note": "녹슨 망치 세 자루"
+    },
+    "small_hammer": {
+      "file": "assets/explore/small_hammer.png",
+      "w": 12,
+      "h": 10,
+      "frames": 1,
+      "note": "아이들이 준 작은 망치"
+    },
+    "steam_vent": {
+      "file": "assets/explore/steam_vent.png",
+      "w": 24,
+      "h": 32,
+      "frames": 3,
+      "rate": 4,
+      "note": "증기 구멍"
+    },
+    "melted_helm": {
+      "file": "assets/explore/melted_helm.png",
+      "w": 18,
+      "h": 14,
+      "frames": 1,
+      "note": "반쯤 녹아 바위에 붙은 드워프 투구"
+    },
+    "red_crystal": {
+      "file": "assets/explore/red_crystal.png",
+      "w": 24,
+      "h": 28,
+      "frames": 2,
+      "rate": 2,
+      "note": "숨은 증기 동굴의 붉은 수정"
+    },
+    "lava_mound": {
+      "file": "assets/explore/lava_mound.png",
+      "w": 64,
+      "h": 64,
+      "frames": 2,
+      "rate": 3,
+      "note": "용암이 솟아 몸을 이루는 수호자 (처음엔 숨김)"
+    },
+    "cooled_guardian": {
+      "file": "assets/explore/cooled_guardian.png",
+      "w": 64,
+      "h": 48,
+      "frames": 1,
+      "note": "식어서 검은 돌이 된 수호자 (처음엔 숨김)"
+    },
+    "portal_circle": {
+      "file": "assets/explore/portal_circle.png",
+      "w": 48,
+      "h": 20,
+      "frames": 3,
+      "rate": 6,
+      "note": "보랏빛 포탈 원 (처음엔 숨김)"
+    },
+    "stone_ring": {
+      "file": "assets/explore/stone_ring.png",
+      "w": 96,
+      "h": 104,
+      "frames": 1,
+      "note": "포탈실 한가운데의 거대한 돌고리"
+    },
+    "ring_light": {
+      "file": "assets/explore/ring_light.png",
+      "w": 96,
+      "h": 104,
+      "frames": 2,
+      "rate": 4,
+      "note": "돌고리 안에 차오른 빛 (처음엔 숨김)"
+    },
+    "lab_window": {
+      "file": "assets/explore/lab_window.png",
+      "w": 48,
+      "h": 40,
+      "frames": 1,
+      "note": "실험실 유리창 (wall)"
+    },
+    "violet_lamp": {
+      "file": "assets/explore/violet_lamp.png",
+      "w": 12,
+      "h": 32,
+      "frames": 2,
+      "rate": 2,
+      "note": "보랏빛 등"
+    },
+    "bookcase": {
+      "file": "assets/explore/bookcase.png",
+      "w": 48,
+      "h": 56,
+      "frames": 1,
+      "note": "책장 (탑주의 방)"
+    },
+    "cathedral_far": {
+      "file": "assets/explore/cathedral_far.png",
+      "w": 64,
+      "h": 96,
+      "frames": 1,
+      "note": "멀리 보이는 대성당의 첨탑"
     }
   }
 }

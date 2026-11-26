@@ -234,5 +234,63 @@
   "_cutscene": "체력 0 연출 전투장 (대본의 {\"hpZero\": ...})",
   "hpZero": {
     "arena": { "w": 448, "h": 288, "floor": "corridor", "tint": "#b88686" }
+  },
+  "_4막": "파티는 모두 current(지금 출전하는 파티). 적 자리, 안내 문구, 엔드리스 수는 임시. 마탑 파견대는 버티기 전투(survive 초, noGameOver)라 결과 time으로 다음 대사",
+  "산길의 도적": {
+    "title": "산길의 도적",
+    "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "eisen_pass" },
+    "party": "current",
+    "firstGuide": { "key": "a4_serena_guide", "who": "serena", "text": "세레나 — 스킬: 위압 / 회피: 물러서기 / 궁극기: 황제의 명령" },
+    "waves": [[{ "enemy": "bandit_snow_blade", "actor": "bandit1" }, { "enemy": "bandit_snow_blade", "actor": "bandit2" }, { "enemy": "bandit_snow_blade", "actor": "bandit3" }, { "enemy": "bandit_snow_archer", "actor": "bandit4" }, { "enemy": "bandit_snow_archer", "actor": "bandit5" }], [{ "enemy": "crag_lizard", "x": 400, "y": 80 }, { "enemy": "crag_lizard", "x": 420, "y": 200 }, { "enemy": "bandit_snow_blade", "x": 60, "y": 60 }, { "enemy": "bandit_snow_blade", "x": 40, "y": 220 }]]
+  },
+  "용암의 수호자": {
+    "title": "용암의 수호자",
+    "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "muspel_core" },
+    "party": "current",
+    "bgm": "bgm_boss_lava",
+    "bossEnds": true,
+    "gaugeFull": { "flag": "karg_heated", "who": "karg" },
+    "waves": [[{ "enemy": "lava_guardian", "x": 224, "y": 128 }]]
+  },
+  "마탑 파견대": {
+    "title": "마탑 파견대",
+    "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "grimhelm_gate" },
+    "party": "current",
+    "survive": 45,
+    "noGameOver": true,
+    "endless": [{ "enemy": "astra_mage", "keep": 4 }, { "enemy": "astra_binder", "keep": 1, "after": 20 }],
+    "waves": [[{ "enemy": "astra_mage", "actor": "mage1" }, { "enemy": "astra_mage", "actor": "mage2" }, { "enemy": "astra_mage", "actor": "mage3" }]],
+    "outcomes": { "time": { "continue": true } }
+  },
+  "아스트라 탈출": {
+    "title": "아스트라 탈출",
+    "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "astra_portal" },
+    "party": "current",
+    "force": ["elysia"],
+    "waves": [[{ "enemy": "astra_mage", "x": 380, "y": 60 }, { "enemy": "astra_mage", "x": 60, "y": 60 }, { "enemy": "astra_mage", "x": 400, "y": 220 }, { "enemy": "astra_mage", "x": 40, "y": 220 }], [{ "enemy": "astra_mage", "x": 380, "y": 40 }, { "enemy": "astra_mage", "x": 60, "y": 40 }, { "enemy": "astra_mage", "x": 224, "y": 20 }, { "enemy": "astra_binder", "x": 420, "y": 160 }, { "enemy": "astra_binder", "x": 30, "y": 160 }], [{ "enemy": "astra_golem", "x": 224, "y": 60 }]]
+  },
+  "산길 몹 1": {
+    "title": "바위 도마뱀",
+    "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "eisen_pass" },
+    "party": "current",
+    "waves": [[{ "enemy": "crag_lizard", "x": 360, "y": 100 }, { "enemy": "crag_lizard", "x": 380, "y": 200 }, { "enemy": "bandit_snow_blade", "x": 330, "y": 150 }]]
+  },
+  "산길 몹 2": {
+    "title": "바위 도마뱀",
+    "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "eisen_pass" },
+    "party": "current",
+    "waves": [[{ "enemy": "crag_lizard", "x": 360, "y": 80 }, { "enemy": "crag_lizard", "x": 390, "y": 160 }, { "enemy": "crag_lizard", "x": 360, "y": 240 }, { "enemy": "bandit_snow_blade", "x": 320, "y": 120 }, { "enemy": "bandit_snow_archer", "x": 420, "y": 200 }]]
+  },
+  "화산 몹 1": {
+    "title": "화산 정령",
+    "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "muspel_a" },
+    "party": "current",
+    "waves": [[{ "enemy": "fire_spirit", "x": 380, "y": 90 }, { "enemy": "fire_spirit", "x": 390, "y": 210 }, { "enemy": "magma_slug", "x": 330, "y": 150 }]]
+  },
+  "화산 몹 2": {
+    "title": "용암 민달팽이",
+    "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "muspel_a" },
+    "party": "current",
+    "waves": [[{ "enemy": "fire_spirit", "x": 380, "y": 70 }, { "enemy": "fire_spirit", "x": 400, "y": 150 }, { "enemy": "fire_spirit", "x": 380, "y": 240 }, { "enemy": "magma_slug", "x": 320, "y": 110 }, { "enemy": "magma_slug", "x": 320, "y": 200 }]]
   }
 }

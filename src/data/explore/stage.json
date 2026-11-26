@@ -79,14 +79,51 @@
     "act3:scene10": "a3_s10",
     "act3:s10_share": "a3_s10",
     "act3:s10_why": "a3_s10",
-    "act3:scene10_1": "a3_s10b"
+    "act3:scene10_1": "a3_s10b",
+    "act4:scene1": "a4_s1",
+    "act4:s1_stop": "a4_s1b",
+    "act4:s1_calm": "a4_s1b",
+    "act4:s1_ask": "a4_s1b",
+    "act4:scene1_1": "a4_s11",
+    "act4:g1": "a4_s11",
+    "act4:scene2": "a4_s2",
+    "act4:g2": "a4_s2b",
+    "act4:scene3": "a4_s3",
+    "act4:scene4": "a4_s4",
+    "act4:s4_reason": "a4_s4b",
+    "act4:s4_order": "a4_s4b",
+    "act4:scene4_1": "a4_s41",
+    "act4:scene5": "a4_s5",
+    "act4:dream3": null,
+    "act4:scene6": "a4_s6",
+    "act4:s6_trust": "a4_s6b",
+    "act4:s6_back": "a4_s6b",
+    "act4:scene6_1": "a4_s61",
+    "act4:scene7": "a4_s7",
+    "act4:scene8": "a4_s8",
+    "act4:scene9": "a4_s9",
+    "act4:g9": "a4_s9b",
+    "act4:interlude4a": "a4_study",
+    "act4:interlude4b": "a4_corridor",
+    "act4:scene10": "a4_s10",
+    "act4:e_stand": "a4_s10b",
+    "act4:e_together": "a4_s10b",
+    "act4:e_betray": "a4_s10c",
+    "act4:scene11": "a4_s11",
+    "act4:g11": "a4_s11b",
+    "act4:scene11_1": "a4_s111",
+    "act4:r11_stay": "a4_s11r",
+    "act4:r11_die": "a4_s11r",
+    "act4:scene12": "a4_s12",
+    "act4:interlude4": "a4_cathedral"
   },
   "places": {
     "황제의 침소": { "map": "bedchamber", "stage": "bed_enter" },
     "해자": { "map": "moat", "stage": "moat_fall" },
     "지하 감옥": { "map": null },
     "광장": { "map": null },
-    "지하 수로": { "map": null }
+    "지하 수로": { "map": null },
+    "세라핀 구릉 근처": { "map": "seraphine_hill", "stage": "a4_hill_arrive" }
   },
 
   "stages": {
@@ -1960,6 +1997,506 @@
     "a3_karg_side": {
       "focus": "leon_north",
       "actors": { "karg": { "walk": [690, 244], "facing": "left" } }
+    },
+    "a4_s1": {
+      "map": "lowen_north",
+      "focus": "leon",
+      "once": "a3:start",
+      "veil": { "color": "#000000", "alpha": 0, "ms": 10 },
+      "bgm": "bgm_road_winter",
+      "amb": "amb_wind",
+      "actors": { "leon": { "at": "leon_start", "facing": "right" }, "elysia": { "at": "elysia_start", "facing": "right" }, "karg": { "at": "karg_start", "facing": "right" }, "serena": { "at": "serena_start", "facing": "right" }, "galia": { "at": "galia_start", "facing": "right", "if": "galia_alive" } }
+    },
+    "a4_door_heavy": {
+      "se": "se_door_heavy"
+    },
+    "a4_hum": {
+      "se": "se_hum"
+    },
+    "a4_arg": {
+      "focus": "leon_arg",
+      "actors": { "leon": { "at": "leon_arg", "facing": "right" }, "elysia": { "at": "elysia_arg", "facing": "right" }, "karg": { "at": "karg_arg", "facing": "right" }, "serena": { "at": "serena_arg", "facing": "right" }, "galia": { "at": "galia_arg", "facing": "right", "if": "galia_alive" } }
+    },
+    "a4_tense": {
+      "actors": { "elysia": { "walk": "elysia_arg2", "facing": "right" }, "karg": { "walk": "karg_arg2", "facing": "left" } }
+    },
+    "a4_s1b": {
+      "map": "lowen_north",
+      "focus": "leon_arg",
+      "once": "a3:start",
+      "bgm": "bgm_road_winter",
+      "amb": "amb_wind",
+      "actors": { "leon": { "at": "leon_arg", "facing": "right" }, "elysia": { "at": "elysia_arg2", "facing": "right" }, "karg": { "at": "karg_arg2", "facing": "left" }, "serena": { "at": "serena_arg", "facing": "right" }, "galia": { "at": "galia_arg", "facing": "right", "if": "galia_alive" } }
+    },
+    "a4_hand": {
+      "flash": { "who": "karg", "color": "#a47cff" }
+    },
+    "a4_s11": {
+      "map": "astra_corridor",
+      "focus": "leon",
+      "once": "a3:start",
+      "veil": { "color": "#000000", "alpha": 0, "ms": 10 },
+      "bgm": "bgm_escape",
+      "amb": null,
+      "se": "se_alarm",
+      "actors": { "leon": { "at": "leon_start", "facing": "right", "walk": [800, 208], "speed": 120 }, "elysia": { "at": "elysia_start", "facing": "right", "walk": [768, 240], "speed": 120 }, "karg": { "at": "karg_start", "facing": "right", "walk": [832, 240], "speed": 120 }, "serena": { "at": "serena_start", "facing": "right", "walk": [752, 208], "speed": 120 }, "galia": { "at": "galia_start", "facing": "right", "if": "galia_alive", "walk": [720, 224], "speed": 120 } }
+    },
+    "a4_dagger": {
+      "actors": { "leon": { "pose": "stand" }, "serena": { "walk": "serena_dagger", "facing": "left" } }
+    },
+    "a4_s2": {
+      "map": "eisen_pass",
+      "focus": "leon_s2",
+      "once": "a3:start",
+      "bgm": null,
+      "amb": "amb_wind",
+      "actors": { "leon": { "at": "leon_s2", "facing": "up" }, "elysia": { "at": "elysia_s2", "facing": "up" }, "karg": { "at": "karg_s2", "facing": "up" }, "serena": { "at": "serena_s2", "facing": "up" }, "galia": { "at": "galia_s2", "facing": "up", "if": "galia_alive" } }
+    },
+    "a4_bandits": {
+      "screen": { "shake": 0.003 },
+      "actors": { "bandit1": { "sprite": "bandit_blade", "at": "bandit1_from", "walk": "bandit1", "facing": "down" }, "bandit2": { "sprite": "bandit_blade", "at": "bandit2_from", "walk": "bandit2", "facing": "down" }, "bandit3": { "sprite": "bandit_blade", "at": "bandit3_from", "walk": "bandit3", "facing": "down" }, "bandit4": { "sprite": "bandit_archer", "at": "bandit4_from", "walk": "bandit4", "facing": "down" }, "bandit5": { "sprite": "bandit_archer", "at": "bandit5_from", "walk": "bandit5", "facing": "down" } }
+    },
+    "a4_bandits_gone": {
+      "actors": { "bandit1": null, "bandit2": null, "bandit3": null, "bandit4": null, "bandit5": { "sprite": "bandit_blade", "at": "bandit5", "walk": "bandit_run", "facing": "up", "leave": true, "speed": 110 } }
+    },
+    "a4_laugh_all": {
+      "bgm": "bgm_party"
+    },
+    "a4_s2b": {
+      "map": "eisen_pass",
+      "focus": "leon_s2",
+      "once": "a3:start",
+      "bgm": "bgm_party",
+      "amb": "amb_wind",
+      "actors": { "leon": { "at": "leon_s2", "facing": "up" }, "elysia": { "at": "elysia_s2", "facing": "up" }, "karg": { "at": "karg_s2", "facing": "up" }, "serena": { "at": "serena_s2", "facing": "up" }, "galia": { "at": "galia_s2", "facing": "up", "if": "galia_alive" } }
+    },
+    "a4_s3": {
+      "map": "eisen_pass",
+      "focus": "leon",
+      "once": "a3:start",
+      "bgm": null,
+      "amb": "amb_wind",
+      "actors": { "leon": { "at": "leon_pass", "facing": "up" }, "elysia": { "at": "elysia_pass", "facing": "up" }, "karg": { "at": "karg_pass", "facing": "up" }, "serena": { "at": "serena_pass", "facing": "up" }, "galia": { "at": "galia_pass", "facing": "up", "if": "galia_alive" } }
+    },
+    "a4_gate": {
+      "map": "grimhelm_gate",
+      "focus": "leon_gate",
+      "actors": { "leon": { "at": "leon_gate", "facing": "up" }, "elysia": { "at": "elysia_gate", "facing": "up" }, "karg": { "at": "karg_gate", "facing": "up" }, "serena": { "at": "serena_gate", "facing": "up" }, "galia": { "at": "galia_gate", "facing": "up", "if": "galia_alive" }, "gatekeeper": { "sprite": "dwarf_gatekeeper", "at": "gatekeeper", "facing": "down" } }
+    },
+    "a4_karg_step": {
+      "actors": { "karg": { "walk": "karg_step", "facing": "up" } }
+    },
+    "a4_gate_open": {
+      "props": { "gate_shut": false, "gate_open": true },
+      "se": "se_gate_open",
+      "screen": { "shake": 0.004 },
+      "actors": { "gatekeeper": { "walk": [400, 340], "facing": "right" }, "karg": { "walk": "karg_in", "facing": "up", "leave": true } }
+    },
+    "a4_s4": {
+      "map": "grimhelm_hall",
+      "focus": "leon_hall",
+      "once": "a3:start",
+      "bgm": "bgm_grimhelm",
+      "amb": null,
+      "actors": { "leon": { "at": "leon_hall", "facing": "up", "walk": "leon_hall_end", "speed": 50 }, "elysia": { "at": "elysia_hall", "facing": "up", "walk": "elysia_hall_end", "speed": 50 }, "karg": { "at": "karg_hall", "facing": "up", "walk": "karg_hall_end", "speed": 50 }, "serena": { "at": "serena_hall", "facing": "up", "walk": "serena_hall_end", "speed": 50 }, "galia": { "at": "galia_hall", "facing": "up", "if": "galia_alive", "walk": "galia_hall_end", "speed": 50 } }
+    },
+    "a4_archive": {
+      "map": "dorin_archive",
+      "focus": [256, 240],
+      "actors": { "leon": { "at": "leon_in", "facing": "up" }, "elysia": { "at": "elysia_in", "facing": "up" }, "karg": { "at": "karg_in", "facing": "up" }, "serena": { "at": "serena_in", "facing": "up" }, "galia": { "at": "galia_in", "facing": "up", "if": "galia_alive" }, "brida": { "sprite": "dwarf_smith", "at": "brida", "facing": "left" } }
+    },
+    "a4_kids": {
+      "actors": { "kid1": { "sprite": "dwarf_kid", "at": "kid1_out", "walk": "kid1", "facing": "right" }, "kid2": { "sprite": "dwarf_kid2", "at": "kid2_out", "walk": "kid2", "facing": "right" }, "kid3": { "sprite": "dwarf_kid3", "at": "kid3_out", "walk": "kid3", "facing": "right" } }
+    },
+    "a4_kids_go": {
+      "actors": { "kid1": { "walk": "kid1_out", "leave": true }, "kid2": { "walk": "kid2_out", "leave": true }, "kid3": { "walk": "kid3_out", "leave": true }, "serena": { "walk": "serena_out", "leave": true, "speed": 70 } }
+    },
+    "a4_tab1": {
+      "focus": "leon_t1",
+      "actors": { "elysia": { "at": "elysia_t1", "facing": "up" }, "karg": { "at": "karg_t1", "facing": "up" } }
+    },
+    "a4_tab2": {
+      "focus": "leon_t2",
+      "actors": { "elysia": { "at": "elysia_t2", "facing": "up" }, "karg": { "at": "karg_t2", "facing": "up" } }
+    },
+    "a4_tab3": {
+      "focus": "leon_t3",
+      "actors": { "elysia": { "at": "elysia_t3", "facing": "up" }, "karg": { "at": "karg_t3", "facing": "up" } }
+    },
+    "a4_tab4": {
+      "focus": "leon_t4",
+      "props": { "tab4_glow": true },
+      "actors": { "elysia": { "at": "elysia_t4", "facing": "right" }, "karg": { "at": "karg_t4", "facing": "down" } }
+    },
+    "a4_read": {
+      "bgm": "bgm_record"
+    },
+    "a4_memory": {
+      "memory": ["crown_turn"],
+      "se": "se_memory_flash"
+    },
+    "a4_memory_dorin": {
+      "memory": ["dorin_engrave"]
+    },
+    "a4_memory_cut": {
+      "memory": null,
+      "actors": { "leon": { "pose": "kneel" }, "elysia": { "walk": "elysia_t3", "facing": "right" } }
+    },
+    "a4_children": {
+      "se": "se_children_laugh",
+      "actors": { "leon": { "pose": "stand" } }
+    },
+    "a4_stone_hit": {
+      "se": "se_stone_hit",
+      "screen": { "shake": 0.006 },
+      "actors": { "karg": { "at": "karg_t4", "facing": "down" } }
+    },
+    "a4_elysia_out": {
+      "actors": { "elysia": { "walk": "elysia_leave", "leave": true } }
+    },
+    "a4_s4b": {
+      "map": "dorin_archive",
+      "focus": "leon_t4",
+      "once": "a3:start",
+      "bgm": "bgm_record",
+      "amb": null,
+      "props": { "tab4_glow": true },
+      "actors": { "leon": { "at": "leon_t4", "facing": "down" }, "elysia": { "at": "elysia_kneel", "facing": "right" }, "karg": { "at": "karg_t4", "facing": "down" }, "galia": { "at": "galia_wall", "facing": "left", "if": "galia_alive" }, "brida": { "sprite": "dwarf_smith", "at": "brida", "facing": "left" } }
+    },
+    "a4_s41": {
+      "map": "dorin_archive",
+      "focus": "leon_plate",
+      "once": "a3:start",
+      "bgm": null,
+      "amb": "amb_forge",
+      "veil": { "color": "#000000", "alpha": 0, "ms": 10 },
+      "props": { "tab4_glow": true },
+      "actors": { "leon": { "at": "leon_plate", "facing": "down" }, "brida": { "sprite": "dwarf_smith", "at": "brida_plate", "facing": "up" } }
+    },
+    "a4_brida_out": {
+      "actors": { "brida": { "walk": "brida_out", "leave": true } }
+    },
+    "a4_brida_back": {
+      "actors": { "brida": { "sprite": "dwarf_smith", "at": "brida_out", "walk": "brida_plate", "facing": "up" } }
+    },
+    "a4_brida_out2": {
+      "actors": { "brida": { "walk": "brida_out", "leave": true } }
+    },
+    "a4_serena_in": {
+      "actors": { "serena": { "at": "serena_out", "walk": "brida_plate", "facing": "up" } }
+    },
+    "a4_serena_out": {
+      "actors": { "serena": { "walk": "serena_out", "leave": true, "speed": 80 } }
+    },
+    "a4_dim1": {
+      "veil": { "color": "#000000", "alpha": 0.35, "ms": 2500 }
+    },
+    "a4_dim2": {
+      "veil": { "color": "#000000", "alpha": 0.7, "ms": 2500 }
+    },
+    "a4_s5": {
+      "map": "brida_forge",
+      "focus": "leon_f",
+      "once": "a3:start",
+      "veil": { "color": "#000000", "alpha": 0, "ms": 10 },
+      "bgm": "bgm_forge",
+      "amb": "amb_forge",
+      "actors": { "leon": { "at": "leon_f", "facing": "up" }, "elysia": { "at": "elysia_f", "facing": "up" }, "karg": { "at": "karg_f", "facing": "up" }, "galia": { "at": "galia_f", "facing": "up", "if": "galia_alive" }, "brida": { "sprite": "dwarf_smith", "at": "brida", "facing": "right" } }
+    },
+    "a4_s6": {
+      "map": "muspel_a",
+      "focus": "leon",
+      "once": "a3:start",
+      "bgm": "bgm_volcano",
+      "amb": null,
+      "actors": { "leon": { "at": "leon_start", "facing": "right" }, "elysia": { "at": "elysia_start", "facing": "right" }, "karg": { "at": "karg_start", "facing": "right" }, "serena": { "at": "serena_start", "facing": "right" }, "galia": { "at": "galia_start", "facing": "right", "if": "galia_alive" } }
+    },
+    "a4_lake": {
+      "focus": "leon_lake",
+      "actors": { "leon": { "at": "leon_lake", "facing": "up" }, "elysia": { "at": "elysia_lake", "facing": "up" }, "karg": { "at": "karg_lake", "facing": "up" }, "serena": { "at": "serena_lake", "facing": "up" }, "galia": { "at": "galia_lake", "facing": "up", "if": "galia_alive" } }
+    },
+    "a4_s6b": {
+      "map": "muspel_a",
+      "focus": "leon_lake",
+      "once": "a3:start",
+      "bgm": "bgm_volcano",
+      "amb": null,
+      "actors": { "leon": { "at": "leon_lake", "facing": "up" }, "elysia": { "at": "elysia_lake", "facing": "up" }, "karg": { "at": "karg_lake", "facing": "up" }, "serena": { "at": "serena_lake", "facing": "up" }, "galia": { "at": "galia_lake", "facing": "up", "if": "galia_alive" } }
+    },
+    "a4_cool": {
+      "aura": { "karg": "#a47cff" },
+      "actors": { "elysia": { "walk": [1664, 400], "facing": "up" } }
+    },
+    "a4_cool_end": {
+      "aura": { "karg": null }
+    },
+    "a4_karg_ahead": {
+      "actors": { "karg": { "walk": "karg_front", "facing": "up" } }
+    },
+    "a4_s61": {
+      "map": "muspel_core",
+      "focus": "view_core",
+      "once": "a3:start",
+      "bgm": "bgm_boss_lava",
+      "amb": null,
+      "actors": { "leon": { "at": "leon_in", "facing": "up", "walk": "leon_core" }, "elysia": { "at": "elysia_in", "facing": "up", "walk": "elysia_core" }, "karg": { "at": "karg_in", "facing": "up", "walk": "karg_core" }, "serena": { "at": "serena_in", "facing": "up", "walk": "serena_core" }, "galia": { "at": "galia_in", "facing": "up", "if": "galia_alive", "walk": "galia_core" } }
+    },
+    "a4_guardian_rise": {
+      "focus": "view_core",
+      "props": { "guardian": true },
+      "screen": { "shake": 0.008 }
+    },
+    "a4_guardian_cool": {
+      "props": { "guardian": false, "guardian_stone": true },
+      "gray": 600
+    },
+    "a4_hammers": {
+      "focus": "karg_out",
+      "props": { "guardian": false, "guardian_stone": true, "hammers": true },
+      "actors": { "leon": { "at": "leon_out", "facing": "right" }, "elysia": { "at": "elysia_out", "facing": "right" }, "karg": { "at": "karg_out", "facing": "right", "walk": [784, 566] }, "serena": { "at": "serena_out", "facing": "right" }, "galia": { "at": "galia_out", "facing": "right", "if": "galia_alive" } }
+    },
+    "a4_s7": {
+      "map": "brida_forge",
+      "focus": "leon_f",
+      "once": "a3:start",
+      "bgm": "bgm_forge",
+      "amb": "amb_forge",
+      "se": "se_hammer",
+      "actors": { "leon": { "at": "leon_f", "facing": "up" }, "elysia": { "at": "elysia_f", "facing": "up" }, "karg": { "at": "karg_f", "facing": "up" }, "serena": { "at": "serena_f", "facing": "up" }, "galia": { "at": "galia_f", "facing": "up", "if": "galia_alive" }, "brida": { "sprite": "dwarf_smith", "at": "brida_anvil", "facing": "down" } }
+    },
+    "a4_rune_awake": {
+      "se": "se_rune_awake",
+      "flash": { "who": "leon", "color": "#dfe8ff" }
+    },
+    "a4_hammers_down": {
+      "props": { "hammers_down": true },
+      "actors": { "karg": { "walk": "karg_hammers", "facing": "up" } }
+    },
+    "a4_s8": {
+      "map": "grimhelm_gate",
+      "focus": "leon_s8",
+      "once": "a3:start",
+      "bgm": null,
+      "amb": "amb_wind",
+      "props": { "gate_shut": false, "gate_open": true },
+      "actors": { "leon": { "at": "leon_s8", "facing": "down" }, "elysia": { "at": "elysia_s8", "facing": "down" }, "karg": { "at": "karg_s8", "facing": "down" }, "serena": { "at": "serena_s8", "facing": "down" }, "galia": { "at": "galia_s8", "facing": "down", "if": "galia_alive" } }
+    },
+    "a4_portal1": {
+      "focus": [496, 368],
+      "props": { "portal1": true },
+      "se": "se_portal",
+      "actors": { "leon": { "facing": "up" }, "elysia": { "facing": "up" }, "karg": { "facing": "up" }, "serena": { "facing": "up" }, "galia": { "facing": "up", "if": "galia_alive" } }
+    },
+    "a4_portal_more": {
+      "reveal": { "keys": ["portal2", "portal3", "portal4", "portal5", "portal6", "portal7", "portal8", "portal9", "portal10", "portal11", "portal12"], "ms": 260, "se": "se_portal" }
+    },
+    "a4_mages_in": {
+      "actors": { "mage1": { "sprite": "astra_captain", "at": "mage1", "facing": "down" }, "mage2": { "sprite": "astra_mage", "at": "mage2", "facing": "down" }, "mage3": { "sprite": "astra_mage", "at": "mage3", "facing": "down" }, "mage4": { "sprite": "astra_mage", "at": "mage4", "facing": "down" }, "mage5": { "sprite": "astra_mage", "at": "mage5", "facing": "down" }, "mage6": { "sprite": "astra_mage", "at": "mage6", "facing": "down" } }
+    },
+    "a4_draw": {
+      "se": "se_rune_awake",
+      "flash": { "who": "leon", "color": "#dfe8ff" }
+    },
+    "a4_chain": {
+      "se": "se_chain",
+      "flash": { "who": "karg", "color": "#a47cff" }
+    },
+    "a4_portal_endless": {
+      "edge": "#6a3cff"
+    },
+    "a4_purple": {
+      "veil": { "color": "#6a3cff", "alpha": 1, "ms": 2200 }
+    },
+    "a4_s9": {
+      "map": "astra_cell",
+      "focus": "leon_cell",
+      "once": "a3:start",
+      "veil": { "color": "#000000", "alpha": 0, "ms": 10 },
+      "edge": null,
+      "bgm": "bgm_astra",
+      "amb": null,
+      "actors": { "leon": { "at": "leon_lie", "facing": "down", "pose": "down" }, "galia": { "at": "galia_cell", "facing": "left", "pose": "kneel", "if": "galia_alive" } }
+    },
+    "a4_cell_wake": {
+      "actors": { "leon": { "at": "leon_cell", "pose": "stand", "facing": "down" } }
+    },
+    "a4_wall_drain": {
+      "flash": { "who": "leon", "color": "#a47cff" },
+      "actors": { "leon": { "walk": "leon_wall", "facing": "down" } }
+    },
+    "a4_s9b": {
+      "map": "astra_cell",
+      "focus": [224, 160],
+      "once": "a3:start",
+      "bgm": "bgm_astra",
+      "amb": null,
+      "actors": { "leon": { "at": "leon_wall", "facing": "right" }, "galia": { "at": "galia_wall", "facing": "left", "pose": "kneel", "if": "galia_alive" } }
+    },
+    "a4_study": {
+      "bgm": "bgm_astra"
+    },
+    "a4_corridor": {
+      "bgm": null,
+      "se": "se_footsteps"
+    },
+    "a4_karg_glass": {
+      "dots": { "karg": { "sprite": "karg", "at": [480, 430], "facing": "down" } }
+    },
+    "a4_s10": {
+      "map": "astra_cell",
+      "focus": "leon_wall",
+      "once": "a3:start",
+      "bgm": "bgm_choice",
+      "amb": null,
+      "actors": { "leon": { "at": "leon_wall", "facing": "down" }, "elysia": { "at": "elysia_from", "walk": "elysia_visit", "facing": "up" }, "galia": { "at": "galia_cell", "facing": "left", "pose": "kneel", "if": "galia_alive" } }
+    },
+    "a4_wait": {
+      "bgm": null,
+      "actors": { "elysia": { "walk": "elysia_go", "leave": true } },
+      "ambient": "#1a1c2c",
+      "fade": 2000,
+      "wait": 2000
+    },
+    "a4_s10b": {
+      "map": "astra_cell",
+      "focus": "leon_wall",
+      "once": "a3:start",
+      "bgm": null,
+      "amb": null,
+      "ambient": "#1a1c2c",
+      "actors": { "leon": { "at": "leon_wall", "facing": "down" }, "galia": { "at": "galia_cell", "facing": "left", "pose": "kneel", "if": "galia_alive" } }
+    },
+    "a4_barrier_off": {
+      "se": "se_barrier_off",
+      "screen": { "flash": "#ffffff" },
+      "ambient": "#dfe4f4",
+      "actors": { "elysia": { "at": "elysia_from", "walk": "elysia_visit", "facing": "up" }, "galia": { "pose": "stand" } }
+    },
+    "a4_s10c": {
+      "map": "astra_cell",
+      "focus": "leon_cell",
+      "once": "a3:start",
+      "bgm": null,
+      "amb": null,
+      "actors": { "leon": { "at": "leon_cell", "facing": "down" }, "galia": { "at": "galia_cell", "facing": "left", "pose": "kneel", "if": "galia_alive" } }
+    },
+    "a4_night_pass": {
+      "ambient": "#dfe4f4",
+      "from": "#101220",
+      "fade": 2500
+    },
+    "a4_day_pass": {
+      "ambient": "#dfe4f4",
+      "from": "#101220",
+      "fade": 2500
+    },
+    "a4_quake": {
+      "screen": { "shake": 0.01 }
+    },
+    "a4_pillar": {
+      "focus": "view_south",
+      "pillar": "rise",
+      "actors": { "leon": { "walk": "leon_wall", "facing": "down" } }
+    },
+    "a4_white": {
+      "veil": { "color": "#ffffff", "alpha": 1, "ms": 4000 }
+    },
+    "a4_s11b": {
+      "map": "astra_corridor",
+      "focus": [880, 208],
+      "once": "a3:start",
+      "bgm": "bgm_escape",
+      "amb": null,
+      "actors": { "leon": { "at": [800, 208], "facing": "right" }, "elysia": { "at": [768, 240], "facing": "right" }, "karg": { "at": [832, 240], "facing": "right" }, "serena": { "at": [752, 208], "facing": "right" }, "galia": { "at": [864, 224], "facing": "right", "if": "galia_alive" }, "mage1": { "sprite": "astra_mage", "at": "mage1", "facing": "left" }, "mage2": { "sprite": "astra_mage", "at": "mage2", "facing": "left" }, "mage3": { "sprite": "astra_mage", "at": "mage3", "facing": "left" }, "mage4": { "sprite": "astra_mage", "at": "mage4", "facing": "left" } }
+    },
+    "a4_galia_sweep": {
+      "screen": { "shake": 0.005 },
+      "actors": { "galia": { "walk": "galia_sweep", "speed": 160 }, "mage1": null, "mage2": null, "mage3": null, "mage4": null }
+    },
+    "a4_s111": {
+      "map": "astra_portal",
+      "focus": "leon_in",
+      "once": "a3:start",
+      "bgm": "bgm_escape",
+      "amb": null,
+      "actors": { "leon": { "at": "leon_in", "facing": "up" }, "elysia": { "at": "elysia_in", "facing": "up" }, "karg": { "at": "karg_in", "facing": "up" }, "serena": { "at": "serena_in", "facing": "up" }, "galia": { "at": "galia_in", "facing": "up", "if": "galia_alive" } }
+    },
+    "a4_door_break": {
+      "screen": { "shake": 0.006 }
+    },
+    "a4_ring_light": {
+      "focus": [384, 256],
+      "props": { "ring_light": true },
+      "se": "se_portal_open",
+      "actors": { "leon": { "facing": "up", "walk": "leon_ring" }, "elysia": { "facing": "up", "walk": "elysia_ring" }, "karg": { "facing": "up", "walk": "karg_ring" }, "serena": { "facing": "up", "walk": "serena_ring" }, "galia": { "facing": "up", "if": "galia_alive", "walk": "galia_ring" } }
+    },
+    "a4_s11r": {
+      "map": "astra_portal",
+      "focus": [384, 256],
+      "once": "a3:start",
+      "bgm": null,
+      "amb": null,
+      "props": { "ring_light": true },
+      "actors": { "leon": { "at": "leon_ring", "facing": "up" }, "elysia": { "at": "elysia_ring", "facing": "up" }, "karg": { "at": "karg_ring", "facing": "up" }, "serena": { "at": "serena_ring", "facing": "up" }, "galia": { "at": "galia_ring", "facing": "up", "if": "galia_alive" } }
+    },
+    "a4_jump": {
+      "actors": { "karg": { "walk": "karg_jump", "leave": true }, "serena": { "walk": "serena_jump", "leave": true }, "galia": { "walk": "karg_jump", "leave": true, "if": "galia_alive" }, "leon": { "walk": "leon_jump", "facing": "down" }, "elysia": { "walk": "elysia_stay", "facing": "down" } }
+    },
+    "a4_stay_portals": {
+      "focus": "elysia_stay",
+      "actors": { "elysia": { "facing": "down" } },
+      "reveal": { "keys": ["portal1", "portal2", "portal3", "portal4", "portal5", "portal6", "portal7", "portal8", "portal9", "portal10", "portal11", "portal12"], "ms": 160, "se": "se_portal" }
+    },
+    "a4_stay_close": {
+      "props": { "ring_light": false },
+      "bgm": "bgm_farewell",
+      "veil": { "color": "#000000", "alpha": 1, "ms": 2500 }
+    },
+    "a4_hill_arrive": {
+      "map": "seraphine_hill",
+      "focus": "leon_arrive",
+      "ambient": "#dcdcd4",
+      "veil": { "color": "#000000", "alpha": 0, "ms": 10 },
+      "bgm": null,
+      "amb": "amb_wind",
+      "props": { "grave": false },
+      "actors": { "leon": { "at": "leon_arrive", "facing": "down" }, "elysia": { "at": "elysia_arrive", "facing": "down" }, "karg": { "at": "karg_arrive", "facing": "down" }, "serena": { "at": "serena_arrive", "facing": "down" }, "galia": { "at": "galia_arrive", "facing": "down", "if": "galia_alive" } }
+    },
+    "a4_elysia_fall": {
+      "actors": { "elysia": { "at": "elysia_lie", "pose": "down" }, "leon": { "facing": "left" }, "karg": { "facing": "left" } }
+    },
+    "a4_eyes_close": {
+      "bgm": "bgm_farewell"
+    },
+    "a4_hill_grave": {
+      "focus": [640, 176],
+      "props": { "grave": true },
+      "actors": { "elysia": null, "leon": { "at": "leon_grave", "facing": "up" }, "karg": { "at": "karg_grave", "facing": "up" }, "serena": { "at": "serena_grave", "facing": "up" }, "galia": { "at": "galia_hill", "facing": "up", "if": "galia_alive" } }
+    },
+    "a4_s12": {
+      "map": "seraphine_hill",
+      "focus": "view_hill",
+      "once": "a3:start",
+      "veil": { "color": "#000000", "alpha": 0, "ms": 10 },
+      "bgm": null,
+      "amb": "amb_wind",
+      "props": { "grave": "!elysia_alive" },
+      "actors": { "leon": { "at": "leon_hill", "facing": "down" }, "karg": { "at": "karg_hill", "facing": "down" }, "serena": { "at": "serena_hill", "facing": "down" }, "galia": { "at": "galia_hill", "facing": "down", "if": "galia_alive" }, "refugee1": { "sprite": "mob_citizen", "at": "refugee1", "walk": "refugee1_to", "facing": "right", "speed": 12 }, "refugee2": { "sprite": "mob_citizen", "at": "refugee2", "walk": "refugee2_to", "facing": "right", "speed": 12 }, "refugee3": { "sprite": "mob_citizen", "at": "refugee3", "walk": "refugee3_to", "facing": "right", "speed": 12 }, "refugee4": { "sprite": "mob_citizen", "at": "refugee4", "walk": "refugee4_to", "facing": "right", "speed": 12 }, "refugee5": { "sprite": "mob_citizen", "at": "refugee5", "walk": "refugee5_to", "facing": "right", "speed": 12 }, "refugee6": { "sprite": "mob_citizen", "at": "refugee6", "walk": "refugee6_to", "facing": "right", "speed": 12 }, "refugee7": { "sprite": "mob_citizen", "at": "refugee7", "walk": "refugee7_to", "facing": "right", "speed": 12 }, "refugee8": { "sprite": "mob_citizen", "at": "refugee8", "walk": "refugee8_to", "facing": "right", "speed": 12 } }
+    },
+    "a4_hum_soft": {
+      "se": "se_hum"
+    },
+    "a4_holywar": {
+      "bgm": "bgm_holywar"
+    },
+    "a4_cathedral": {
+      "rays": true,
+      "bgm": "bgm_cathedral",
+      "dots": { "adrian": { "sprite": "bt_adrian", "frame": 46, "at": [480, 470] } }
+    },
+    "a4_adrian_glow": {
+      "glow": "adrian",
+      "wait": 1600
     }
   },
 
@@ -2110,6 +2647,73 @@
       "goal": "goal_fire",
       "hint": "화덕 앞으로",
       "after": "a3_s6_fire"
+    },
+    "a4_plain": {
+      "map": "lowen_north",
+      "looks": ["a4_border_stone"],
+      "goal": "goal_north",
+      "hint": "북쪽 길을 따라",
+      "after": "a4_arg"
+    },
+    "a4_pass": {
+      "map": "eisen_pass",
+      "looks": ["a4_trade_cart"],
+      "goal": "goal_gate",
+      "hint": "산길을 넘어 관문으로",
+      "after": "a4_gate"
+    },
+    "a4_tablet1": {
+      "map": "dorin_archive",
+      "looks": ["a4_tablet_1"],
+      "goal": "",
+      "until": "a4_tablet_1",
+      "follow": false,
+      "hint": "첫 번째 돌판으로"
+    },
+    "a4_tablet2": {
+      "map": "dorin_archive",
+      "looks": ["a4_tablet_1", "a4_tablet_2"],
+      "goal": "",
+      "until": "a4_tablet_2",
+      "follow": false,
+      "hint": "두 번째 돌판으로"
+    },
+    "a4_tablet3": {
+      "map": "dorin_archive",
+      "looks": ["a4_tablet_1", "a4_tablet_2", "a4_tablet_3"],
+      "goal": "",
+      "until": "a4_tablet_3",
+      "follow": false,
+      "hint": "세 번째 돌판으로"
+    },
+    "a4_tablet4": {
+      "map": "dorin_archive",
+      "looks": ["a4_tablet_1", "a4_tablet_2", "a4_tablet_3", "a4_tablet_4"],
+      "goal": "",
+      "until": "a4_tablet_4",
+      "follow": false,
+      "hint": "깨진 돌판으로"
+    },
+    "a4_grimhelm_night": {
+      "map": "grimhelm_hall",
+      "looks": ["a4_mural"],
+      "goal": "goal_forge",
+      "hint": "브리다의 대장간으로",
+      "follow": false
+    },
+    "a4_grimhelm_night_in": {
+      "map": "brida_forge",
+      "looks": ["a4_forge_names"],
+      "goal": "goal_bed",
+      "hint": "잠자리로",
+      "follow": false
+    },
+    "a4_volcano": {
+      "map": "muspel_a",
+      "looks": ["a4_melted_helm", "a4_hidden_vent"],
+      "goal": "goal_lake",
+      "hint": "용암 호수로",
+      "after": "a4_lake"
     }
   }
 }

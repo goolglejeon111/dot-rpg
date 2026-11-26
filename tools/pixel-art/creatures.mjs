@@ -490,6 +490,200 @@ function mistBeast(view, step = 0) {
   return view === 'left' ? c.flipX() : c;
 }
 
+// ---------------------------------------------------------------------
+// 4막 바위 도마뱀: 바위처럼 울퉁불퉁한 회갈색 등, 흙빛 배, 낮고 긴 몸
+// ---------------------------------------------------------------------
+const CRAG = ['t', 'T', 'R'];
+function cragLizard(view, step = 0) {
+  const c = new Cv(32, 40);
+  const v = view === 'left' ? 'right' : view;
+  const leg = [0, 1, 0, -1][step % 4];
+  if (v === 'right') {
+    c.line(5, 34, 1, 31 + (step % 2), 'T', 2); // 꼬리
+    for (const [x, ph] of [[9, leg], [21, -leg]]) {
+      c.rect(x, 34, x + 2, 37 - Math.abs(ph), 'D');
+      c.rect(x + 3, 37 - Math.abs(ph), x + 4, 37 - Math.abs(ph), 'C');
+    }
+    c.ellipse(15, 33, 10, 3.2, (d) => (d < 0.5 ? 'd' : 'D'));
+    c.ellipse(15, 30, 10, 3.6, shade(CRAG));
+    for (const x of [9, 13, 17, 21]) c.disc(x, 28.5, 1.8, (d) => (d < 0.5 ? 'r' : 't'));
+    c.ellipse(27, 31, 4, 2.6, shade(CRAG));
+    c.set(28, 30, 'y');
+    c.rect(29, 32, 30, 32, 'C');
+  } else {
+    for (const [x, ph] of [[8, leg], [23, -leg]]) c.rect(x, 33, x + 2, 36 - Math.abs(ph), 'D');
+    c.ellipse(16, 31, 7.5, 6, shade(CRAG));
+    for (const [x, y] of [[13, 28], [19, 28], [16, 32], [12, 33], [20, 33]]) c.disc(x, y, 1.6, (d) => (d < 0.5 ? 'r' : 't'));
+    if (v === 'down') {
+      c.ellipse(16, 36, 4, 2.4, shade(CRAG));
+      c.set(14, 36, 'y');
+      c.set(18, 36, 'y');
+    } else c.line(16, 24, 15, 20, 'T', 2);
+  }
+  c.outline('R');
+  return view === 'left' ? c.flipX() : c;
+}
+
+// ---------------------------------------------------------------------
+// 4막 화산 정령: 둥실 떠다니는 불꽃. 흰 심지, 노랑·주황·붉은 겉불, 검은 눈 둘
+// ---------------------------------------------------------------------
+function fireSpirit(view, step = 0) {
+  const c = new Cv(32, 40);
+  const bob = [0, -1, -2, -1][step % 4];
+  const sway = [0, 1, 0, -1][step % 4];
+  c.ellipse(16, 38, 5, 1.4, 'z');
+  c.disc(16, 26 + bob, 8, 'Z');
+  c.line(16, 18 + bob, 16 + sway, 9 + bob, 'X', 3);
+  c.line(12, 20 + bob, 10 - sway, 14 + bob, 'X', 2);
+  c.line(20, 20 + bob, 22 - sway, 14 + bob, 'X', 2);
+  c.disc(16, 26 + bob, 6.5, (d) => (d < 0.45 ? 'y' : 'x'));
+  c.line(16, 20 + bob, 16 + sway, 13 + bob, 'x', 2);
+  c.disc(16, 27 + bob, 2.6, 'v');
+  if (view !== 'up') {
+    const dx = view === 'left' ? -2 : view === 'right' ? 2 : 0;
+    c.set(13 + dx, 25 + bob, 'k');
+    c.set(19 + dx, 25 + bob, 'k');
+  }
+  return c;
+}
+
+// ---------------------------------------------------------------------
+// 4막 용암 민달팽이: 검게 굳은 껍질 사이로 붉은 용암이 비치는 느린 덩어리
+// ---------------------------------------------------------------------
+function magmaSlug(view, step = 0) {
+  const c = new Cv(32, 40);
+  const v = view === 'left' ? 'right' : view;
+  const sq = [0, 1, 0, 1][step % 4];
+  if (v === 'right') {
+    c.ellipse(15, 33, 12 + sq, 4 - sq * 0.4, (d) => (d < 0.5 ? 'X' : 'Z'));
+    c.ellipse(13, 30, 8, 4.4, (d) => (d < 0.6 ? 'K' : 'k'));
+    for (const [x, y] of [[9, 30], [14, 28], [17, 31]]) c.line(x, y, x + 2, y + 1, 'x');
+    c.disc(25 + sq, 31, 3, (d) => (d < 0.5 ? 'x' : 'X'));
+    c.line(26 + sq, 28, 28 + sq, 25, 'Z');
+    c.set(28 + sq, 25, 'y');
+  } else {
+    c.ellipse(16, 33, 8 + sq, 5, (d) => (d < 0.5 ? 'X' : 'Z'));
+    c.ellipse(16, 30, 7, 5, (d) => (d < 0.6 ? 'K' : 'k'));
+    for (const [x, y] of [[12, 29], [17, 28], [15, 32]]) c.line(x, y, x + 2, y + 1, 'x');
+    if (v === 'down') {
+      c.line(13, 27, 12, 23, 'Z');
+      c.line(19, 27, 20, 23, 'Z');
+      c.set(12, 23, 'y');
+      c.set(20, 23, 'y');
+    }
+  }
+  c.outline('Z');
+  return view === 'left' ? c.flipX() : c;
+}
+
+// ---------------------------------------------------------------------
+// 큰 적 (96x96 칸): 몸 그림 draw(view, pose). pose = stand / wind(치켜듦) / strike(내려침) / hit / cast / down
+// 열: 0~5 공격(짝수 치켜듦, 홀수 내려침), 6 서기, 7 맞음, 8·9 시전, 10 웅크림, 11 쓰러짐
+// ---------------------------------------------------------------------
+function bigBattle(draw) {
+  const frames = [];
+  for (const view of VIEWS)
+    for (let col = 0; col < 12; col++) {
+      const pose = col < 6 ? (col % 2 ? 'strike' : 'wind') : ['stand', 'hit', 'cast', 'cast', 'crouch', 'down'][col - 6];
+      frames.push(draw(view, pose, col));
+    }
+  return frames;
+}
+
+/** 4막 용암의 수호자: 용암이 솟아 이룬 검은 바위 거인. 갈라진 틈마다 용암, 가슴 한가운데 붉은 핵 */
+function lavaGuardian(view, pose, col) {
+  const c = new Cv(96, 96);
+  const v = view === 'left' ? 'right' : view;
+  if (pose === 'down') {
+    c.ellipse(48, 84, 34, 9, (d, x, y) => ((x * 7 + y * 3) % 9 === 0 ? 'x' : d < 0.6 ? 'K' : 'k'));
+    c.ellipse(48, 88, 40, 5, (d) => (d < 0.6 ? 'X' : 'Z'));
+    c.outline('k');
+    return view === 'left' ? c.flipX() : c;
+  }
+  const sink = pose === 'crouch' ? 8 : pose === 'hit' ? 2 : 0;
+  const rock = (d, x, y) => ((x * 5 + y * 11) % 13 === 0 ? 'x' : (x + y * 2) % 17 === 0 ? 'X' : d < 0.4 ? 'R' : d < 0.8 ? 'K' : 'k');
+  // 용암 웅덩이 (발밑)
+  c.ellipse(48, 89, 34, 6, (d) => (d < 0.4 ? 'y' : d < 0.75 ? 'x' : 'X'));
+  // 다리
+  for (const x of [34, 60]) c.rect(x - 6, 66 + sink, x + 6, 88, (xx, yy) => rock(0.6, xx, yy));
+  // 몸통
+  c.ellipse(48, 50 + sink, 24, 22, rock);
+  // 가슴의 핵 (껍질 틈 사이로)
+  if (v !== 'up') {
+    const cx = v === 'right' ? 56 : 48;
+    c.disc(cx, 50 + sink, 6, (d) => (d < 0.35 ? 'v' : d < 0.7 ? 'y' : 'x'));
+    for (const [dx, dy] of [[-9, -6], [8, 7], [-7, 9], [9, -8]]) c.line(cx, 50 + sink, cx + dx, 50 + sink + dy, 'x');
+  }
+  // 머리 (작고 낮게 박힘), 눈 둘
+  c.ellipse(v === 'right' ? 58 : 48, 26 + sink, 10, 8, rock);
+  if (v !== 'up') {
+    const hx = v === 'right' ? 62 : 48;
+    c.rect(hx - 5, 25 + sink, hx - 3, 26 + sink, 'y');
+    if (v !== 'right') c.rect(hx + 3, 25 + sink, hx + 5, 26 + sink, 'y');
+  }
+  // 팔: 치켜들면 머리 위로, 내려치면 앞 바닥으로
+  const up = pose === 'wind' || pose === 'cast';
+  const arm = (sx, dir) => {
+    const ex = sx + dir * (pose === 'strike' ? 18 : 10);
+    const ey = up ? 10 + sink : pose === 'strike' ? 82 : 66 + sink;
+    c.line(sx, 40 + sink, ex, ey, 'K', 9);
+    c.disc(ex, ey, 7, (d, x, y) => rock(d, x, y));
+    if (pose === 'strike') c.ellipse(ex, 86, 12, 3, 'y');
+  };
+  if (v === 'right') arm(62, 1);
+  else {
+    arm(26, -1);
+    arm(70, 1);
+  }
+  if (pose === 'cast') c.disc(48, 8, 5, (d) => (d < 0.5 ? 'y' : 'x'));
+  c.outline('k');
+  if (pose === 'hit') c.map((ch) => (ch === 'K' ? 'R' : ch));
+  return view === 'left' ? c.flipX() : c;
+}
+
+/** 4막 포탈실 수호 골렘: 룬이 새겨진 흰 돌 거인. 하늘색·보랏빛 룬, 넓은 어깨, 주먹이 큼 */
+function astraGolem(view, pose, col) {
+  const c = new Cv(96, 96);
+  const v = view === 'left' ? 'right' : view;
+  const stone = (d, x, y) => ((x + y * 3) % 23 === 0 ? 'T' : d < 0.45 ? 'v' : d < 0.8 ? 'V' : 't');
+  if (pose === 'down') {
+    for (const [x, y, r] of [[30, 84, 10], [50, 86, 12], [68, 83, 9], [42, 76, 8]]) c.disc(x, y, r, stone);
+    c.outline('T');
+    return view === 'left' ? c.flipX() : c;
+  }
+  const sink = pose === 'crouch' ? 8 : pose === 'hit' ? 2 : 0;
+  c.ellipse(48, 90, 30, 4, 'z');
+  for (const x of [36, 60]) c.rect(x - 7, 66 + sink, x + 7, 89, (xx, yy) => stone(0.5, xx, yy));
+  c.rect(24, 34 + sink, 72, 68 + sink, (x, y) => stone(Math.abs(x - 48) / 24, x, y));
+  c.rect(30, 14 + sink, 66, 34 + sink, (x, y) => stone(Math.abs(x - 48) / 18, x, y));
+  // 룬 (가슴·머리)
+  if (v !== 'up') {
+    const cx = v === 'right' ? 54 : 48;
+    c.rect(cx - 8, 46 + sink, cx + 8, 46 + sink, 'a');
+    c.rect(cx, 40 + sink, cx, 60 + sink, 'a');
+    c.disc(cx, 50 + sink, 3, (d) => (d < 0.5 ? 'w' : 'i'));
+    c.rect(cx - 6, 22 + sink, cx - 3, 24 + sink, 'i');
+    if (v !== 'right') c.rect(cx + 3, 22 + sink, cx + 6, 24 + sink, 'i');
+  } else for (let y = 38; y < 64; y += 6) c.rect(40, y + sink, 56, y + sink, 'i');
+  const up = pose === 'wind' || pose === 'cast';
+  const fist = (sx, dir) => {
+    const ex = sx + dir * (pose === 'strike' ? 16 : 8);
+    const ey = up ? 12 + sink : pose === 'strike' ? 84 : 70 + sink;
+    c.line(sx, 40 + sink, ex, ey, 'V', 9);
+    c.rect(ex - 8, ey - 7, ex + 8, ey + 7, stone);
+    c.rect(ex - 4, ey, ex + 4, ey, 'i');
+  };
+  if (v === 'right') fist(66, 1);
+  else {
+    fist(22, -1);
+    fist(74, 1);
+  }
+  if (pose === 'cast') c.disc(48, 8, 5, (d) => (d < 0.5 ? 'w' : 'i'));
+  c.outline('T');
+  if (pose === 'hit') c.map((ch) => (ch === 'V' ? 'v' : ch));
+  return view === 'left' ? c.flipX() : c;
+}
+
 /** gen-battle.mjs가 쓰는 목록 */
 export const CREATURES = {
   sewer_rat: { walk: walkSheet(rat), battle: smallBattle(rat), cell: 48 },
@@ -498,4 +692,9 @@ export const CREATURES = {
   sand_crawler: { walk: walkSheet((v, i) => crawler(v, i, 0)), battle: crawlerBattle(), cell: 48 },
   desert_scorpion: { walk: walkSheet(scorpion), battle: scorpionBattle(), cell: 48 },
   mist_beast: { walk: walkSheet(mistBeast), battle: smallBattle(mistBeast), cell: 48 },
+  crag_lizard: { walk: walkSheet(cragLizard), battle: smallBattle(cragLizard), cell: 48 },
+  fire_spirit: { walk: walkSheet(fireSpirit), battle: smallBattle(fireSpirit), cell: 48 },
+  magma_slug: { walk: walkSheet(magmaSlug), battle: smallBattle(magmaSlug), cell: 48 },
+  lava_guardian: { walk: null, battle: bigBattle(lavaGuardian), cell: 96 },
+  astra_golem: { walk: null, battle: bigBattle(astraGolem), cell: 96 },
 };

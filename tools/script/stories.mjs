@@ -565,6 +565,7 @@ export const STORIES = [
       { scene: 's4_order', before: '엘리시아는 돌판을 덮고, 먼저 방을 나갔다.', node: { stage: 'a4_elysia_out' } },
       { scene: 'scene4_1', before: '브리다가 문을 닫고 나갔다.', node: { stage: 'a4_brida_out' } },
       { scene: 'scene4_1', before: '브리다가 돌판을 품에 안고 나간 뒤.', node: { stage: 'a4_brida_out2' } },
+      { scene: 'scene4_1', before: '다 읽었어? 뭐라고 써 있어?', node: { stage: 'a4_brida_back' } },
       { scene: 'scene4_1', before: '레온 경! 아이들이 이거 줬어. 작은 망치래. 행운을 부른대.', node: { stage: 'a4_serena_in' } },
       { scene: 'scene4_1', before: '전하는 작은 망치를 내 손에 쥐여 주고, 다시 아이들에게 달려갔다.', node: { stage: 'a4_serena_out' } },
       { scene: 'scene4_1', before: '그날 처음으로, 전하에게 거짓말을 했다.', node: { stage: 'a4_dim1' } },
@@ -605,6 +606,7 @@ export const STORIES = [
       { scene: 'r11_die', before: '언덕 꼭대기에, 엘리시아를 묻었다.', node: { stage: 'a4_hill_grave' } },
       { scene: 'scene12', before: '전하는 기도하듯 두 손을 모았다.', node: { stage: 'a4_hum_soft' } },
       { scene: 'scene12', atEnd: true, node: { stage: 'a4_holywar' } },
+      { scene: 'interlude4b', before: '저기… 카르크야!', node: { stage: 'a4_karg_glass' } },
       { scene: 'interlude4', before: '…예.', node: { stage: 'a4_adrian_glow' } },
     ],
     emphasis: [

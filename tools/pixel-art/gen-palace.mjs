@@ -1465,6 +1465,346 @@ prop('village_shutter', 16, 14, 1, (c) => {
   c.set(9, 6, 'T');
 }, { note: '시골 집 창 (닫힌 덧문, 처음엔 숨김. 차례로 보이며 창이 닫힘)' });
 
+// =====================================================================
+// 4막 타일과 물건
+// =====================================================================
+/** 흩뿌린 점: n개를 rnd 자리에 */
+function specks(c, rnd, n, pick) {
+  for (let k = 0; k < n; k++) c.set(rnd() * 31, rnd() * 31, pick(rnd()));
+}
+tile('frost_field', (c) => {
+  const rnd = rng(201);
+  c.rect(0, 0, 31, 31, 'd');
+  for (let k = 0; k < 26; k++) {
+    const x = rnd() * 31;
+    const y = 1 + rnd() * 30;
+    c.set(x, y, rnd() < 0.5 ? 'c' : 'D');
+    c.set(x, y - 1, rnd() < 0.5 ? 'v' : 'V');
+  }
+  specks(c, rnd, 18, (r) => (r < 0.6 ? 'l' : 'v'));
+}, { note: '서리 내린 누런 들' });
+tile('frost_road', (c) => {
+  const rnd = rng(203);
+  c.rect(0, 0, 31, 31, 'd');
+  for (const y of [8, 22]) for (let x = 0; x < 32; x++) if (rnd() < 0.7) c.set(x, y + (x % 5 === 0 ? 1 : 0), 'D');
+  specks(c, rnd, 22, (r) => (r < 0.5 ? 'V' : r < 0.8 ? 'l' : 'c'));
+}, { note: '서리 앉은 흙길' });
+tile('ice', (c) => {
+  const rnd = rng(205);
+  c.rect(0, 0, 31, 31, 'w');
+  for (let k = 0; k < 5; k++) {
+    const y = rnd() * 31;
+    c.line(rnd() * 10, y, 16 + rnd() * 15, y + rnd() * 4 - 2, 'l');
+  }
+  specks(c, rnd, 12, (r) => (r < 0.5 ? 'a' : 'm'));
+}, { note: '얼어붙은 개울 (걸을 수 있음)' });
+function snow(c, seed, path) {
+  const rnd = rng(seed);
+  c.rect(0, 0, 31, 31, 'v');
+  specks(c, rnd, 26, (r) => (r < 0.6 ? 'V' : 'l'));
+  if (path) {
+    c.rect(0, 6, 31, 25, (x, y) => ((x * 3 + y) % 7 === 0 ? 'T' : (x + y) % 4 === 0 ? 'm' : 'V'));
+    for (let x = 2; x < 32; x += 6) {
+      c.rect(x, 12, x + 1, 13, 'M');
+      c.rect(x + 3, 18, x + 4, 19, 'M');
+    }
+  }
+}
+tile('snow', (c) => snow(c, 207, false), { note: '눈 덮인 땅' });
+tile('snow_path', (c) => snow(c, 209, true), { note: '눈 위로 밟아 다진 바위길' });
+tile('snow_rock', (c) => {
+  bigStones(c, 211);
+  c.rect(0, 0, 31, 5, (x, y) => (y < 3 || (x + y) % 3 ? 'v' : 'V'));
+}, { solid: true, note: '눈 쌓인 바위 절벽' });
+tile('dwarf_floor', (c) => {
+  const rnd = rng(213);
+  c.rect(0, 0, 31, 31, 't');
+  for (const y of [0, 16]) c.rect(0, y, 31, y, 'T');
+  for (const [x, y] of [[0, 0], [16, 16]]) c.rect(x, y, x, y + 15, 'T');
+  for (const [x, y] of [[16, 0], [0, 16]]) c.rect(x, y, x, y + 15, 'T');
+  specks(c, rnd, 16, (r) => (r < 0.5 ? 'r' : 'c'));
+}, { note: '드워프 지하 도시의 돌판 바닥' });
+tile('stone_bridge', (c) => {
+  c.rect(0, 0, 31, 31, 'r');
+  for (let y = 0; y < 32; y += 8) c.rect(0, y, 31, y, 't');
+  c.rect(0, 0, 31, 1, 'T');
+  c.rect(0, 30, 31, 31, 'T');
+}, { note: '지하 도시의 돌다리' });
+tile('dwarf_wall', (c) => {
+  bigStones(c, 215);
+  c.map((ch) => ({ r: 'c', t: 'd', T: 'D', R: 'C' })[ch] ?? ch);
+  c.rect(0, 0, 31, 1, 'C');
+}, { solid: true, note: '드워프 지하 도시의 바위벽' });
+tile('forge_floor', (c) => {
+  const rnd = rng(217);
+  c.rect(0, 0, 31, 31, 'T');
+  for (const y of [10, 21]) c.rect(0, y, 31, y, 'R');
+  specks(c, rnd, 14, (r) => (r < 0.3 ? 'x' : r < 0.6 ? 'K' : 't'));
+}, { note: '그을린 대장간 바닥' });
+tile('black_rock', (c) => {
+  const rnd = rng(219);
+  c.rect(0, 0, 31, 31, 'K');
+  for (let k = 0; k < 7; k++) {
+    const x = rnd() * 28;
+    const y = rnd() * 28;
+    c.ellipse(x + 2, y + 2, 3, 2, (d) => (d < 0.5 ? 'R' : 'k'));
+  }
+  for (let k = 0; k < 3; k++) {
+    const x = rnd() * 24;
+    const y = rnd() * 28;
+    c.line(x, y, x + 6, y + 2, 'Z');
+  }
+}, { note: '검게 굳은 화산 바위 바닥' });
+function lava(c, seed) {
+  const rnd = rng(seed);
+  c.rect(0, 0, 31, 31, 'X');
+  for (let k = 0; k < 7; k++) c.ellipse(rnd() * 31, rnd() * 31, 4 + rnd() * 3, 2 + rnd() * 2, (d) => (d < 0.4 ? 'y' : 'x'));
+  specks(c, rnd, 8, () => 'Z');
+}
+tile('lava', (c) => lava(c, 221), { solid: true, note: '용암 (들어갈 수 없음)' });
+tile('lava2', (c) => lava(c, 223), { solid: true, note: '용암 (다른 결)' });
+tile('lava_rock_wall', (c) => {
+  bigStones(c, 225);
+  c.map((ch) => ({ r: 'R', t: 'K', T: 'k', R: 'Z' })[ch] ?? ch);
+}, { solid: true, note: '화산 동굴 벽 (검은 바위, 붉은 틈)' });
+tile('astra_floor', (c) => {
+  c.rect(0, 0, 31, 31, 'v');
+  c.rect(0, 0, 31, 0, 'V');
+  c.rect(0, 0, 0, 31, 'V');
+  c.rect(15, 15, 16, 16, 'i');
+  c.set(8, 8, 'l');
+  c.set(24, 24, 'l');
+}, { note: '마탑의 흰 돌 바닥' });
+tile('astra_wall', (c) => {
+  c.rect(0, 0, 31, 31, 'V');
+  for (let y = 7; y < 32; y += 8) c.rect(0, y, 31, y, 't');
+  for (let y = 0; y < 32; y += 8) for (let x = (y / 8) % 2 ? 0 : 8; x < 32; x += 16) c.rect(x, y, x, y + 6, 't');
+  c.rect(0, 0, 31, 1, 'v');
+  c.rect(0, 28, 31, 28, 'i');
+}, { solid: true, note: '마탑의 흰 돌벽 (보라 띠)' });
+tile('barrier', (c) => {
+  c.rect(0, 0, 31, 31, 'w');
+  for (let k = 0; k < 4; k++) c.line(k * 9, 31, k * 9 + 10, 0, 'l');
+  for (let y = 4; y < 32; y += 9) c.set((y * 7) % 31, y, 'i');
+  c.rect(0, 0, 31, 0, 'i');
+}, { solid: true, note: '투명한 결계 벽' });
+tile('cloud', (c) => {
+  const rnd = rng(227);
+  c.rect(0, 0, 31, 31, 'b');
+  for (let k = 0; k < 6; k++) c.ellipse(rnd() * 31, rnd() * 31, 6 + rnd() * 4, 3 + rnd() * 2, (d) => (d < 0.5 ? 'v' : 'l'));
+}, { solid: true, note: '발아래로 흐르는 구름 (벽 너머)' });
+
+prop('border_stone', 24, 40, 1, (c) => {
+  // 반쯤 쓰러진 돌기둥: 비스듬히 기울어 있음, 양면의 문장
+  for (let y = 4; y < 40; y++) {
+    const x0 = 4 + Math.round((40 - y) * 0.18);
+    c.rect(x0, y, x0 + 9, y, (x) => (x === x0 ? 'r' : x >= x0 + 8 ? 'R' : 't'));
+  }
+  c.disc(13, 16, 2.5, 'X'); // 아르덴의 문장 (붉은 점)
+  c.rect(10, 27, 14, 29, 'Y'); // 제국 문장 (금빛)
+  c.edge('k');
+}, { note: '반쯤 쓰러진 경계석 (양면에 아르덴과 제국의 문장)' });
+prop('trade_cart', 56, 36, 1, (c) => {
+  c.rect(4, 12, 51, 24, (x, y) => (y === 12 ? 'p' : (x % 8 === 0 ? 'O' : 'o')));
+  c.rect(10, 4, 44, 12, (x, y) => ((x + y) % 5 === 0 ? 'V' : 'v')); // 굳은 소금 자루
+  c.rect(24, 6, 27, 9, 'Y'); // 교역패 표식
+  c.disc(12, 29, 6, (d) => (d < 0.6 ? 'O' : 'P'));
+  c.ellipse(42, 32, 6, 3, (d) => (d < 0.6 ? 'O' : 'P')); // 부서져 누운 바퀴
+  c.line(51, 20, 55, 26, 'O', 2);
+  c.edge('P');
+}, { note: '바퀴가 부서진 교역 수레, 굳은 소금 자루' });
+prop('snow_pine', 40, 64, 1, (c) => {
+  c.rect(18, 48, 21, 63, 'O');
+  for (let k = 0; k < 4; k++) {
+    const y = 8 + k * 11;
+    for (let yy = 0; yy < 14; yy++) {
+      const half = 3 + yy * (0.7 + k * 0.12);
+      c.rect(20 - half, y + yy, 20 + half, y + yy, yy < 3 ? 'v' : (yy + k) % 3 ? 'G' : 'Q');
+    }
+  }
+  c.edge('Q');
+}, { note: '눈 얹힌 전나무' });
+prop('snow_boulder', 40, 30, 1, (c) => {
+  c.ellipse(20, 18, 18, 11, (d) => (d < 0.5 ? 't' : 'T'));
+  c.ellipse(19, 10, 14, 5, (d) => (d < 0.6 ? 'v' : 'V'));
+  c.edge('R');
+}, { note: '눈 쌓인 바위 (도적이 숨은 바위)' });
+prop('stone_gate', 128, 112, 1, (c) => {
+  c.rect(0, 0, 127, 111, (x, y) => ((x * 3 + y * 7) % 19 === 0 ? 'T' : 't'));
+  c.rect(16, 20, 111, 111, (x, y) => (x === 63 || x === 64 ? 'R' : (x + y) % 23 === 0 ? 'T' : 'r'));
+  c.rect(16, 20, 111, 22, 'R');
+  // 망치와 모루 문양
+  c.rect(40, 48, 55, 54, 'Y');
+  c.rect(46, 54, 49, 76, 'Y');
+  c.rect(72, 66, 92, 70, 'Y');
+  c.rect(78, 70, 86, 80, 'Y');
+  c.rect(74, 80, 90, 82, 'Y');
+  c.edge('R');
+}, { note: '절벽에 박힌 거대한 돌문 (망치와 모루 문양)' });
+prop('stone_gate_open', 128, 112, 1, (c) => {
+  c.rect(0, 0, 127, 111, (x, y) => ((x * 3 + y * 7) % 19 === 0 ? 'T' : 't'));
+  c.rect(16, 20, 111, 111, (x, y) => (y < 30 ? 'K' : 'k'));
+  c.rect(20, 60, 107, 111, (x, y) => ((x + y) % 11 === 0 ? 'x' : 'k')); // 안쪽 화덕 불빛
+  c.rect(16, 20, 111, 22, 'R');
+  c.edge('R');
+}, { note: '열린 돌문 (처음엔 숨김)' });
+prop('forge_lit', 56, 48, 2, (c, i) => {
+  c.rect(2, 10, 33, 47, (x, y) => ((x + y * 3) % 7 === 0 ? 'R' : 'T'));
+  c.rect(2, 10, 33, 12, 't');
+  c.rect(8, 28, 27, 44, 'k');
+  c.rect(10, 34, 25, 44, (x, y) => ((x + y + i) % 3 === 0 ? 'y' : (x + i) % 2 ? 'x' : 'X'));
+  c.rect(40, 30, 53, 34, 'L');
+  c.rect(40, 30, 53, 30, 'm');
+  c.rect(44, 35, 49, 47, 'R');
+  c.rect(42, 45, 51, 47, 'R');
+  c.edge('k');
+}, { rate: 5, note: '불이 지펴진 화덕과 모루' });
+prop('anvil', 32, 24, 1, (c) => {
+  c.rect(4, 4, 27, 9, 'L');
+  c.rect(4, 4, 27, 4, 'm');
+  c.rect(0, 5, 4, 7, 'L');
+  c.rect(11, 10, 20, 20, 'R');
+  c.rect(7, 20, 24, 23, 'R');
+  c.edge('k');
+}, { note: '모루' });
+prop('shelf', 48, 40, 1, (c) => {
+  c.rect(0, 0, 47, 39, 'O');
+  for (const y of [12, 26]) c.rect(1, y, 46, y + 1, 'P');
+  for (let x = 3; x < 45; x += 6) c.rect(x, 4, x + 3, 11, (xx) => (xx % 2 ? 'T' : 'R'));
+  for (let x = 4; x < 44; x += 9) c.rect(x, 18, x + 5, 25, 'L');
+  c.edge('P');
+}, { note: '연장과 쇳덩이가 놓인 선반 (wall)' });
+prop('mural', 128, 64, 1, (c) => {
+  c.rect(0, 0, 127, 63, 'c');
+  c.rect(2, 2, 125, 61, 'd');
+  const fig = (x, h, col, top) => {
+    c.rect(x - 4, 60 - h, x + 4, 58, col);
+    c.disc(x, 56 - h, 4, top ?? 's');
+  };
+  fig(18, 30, 'X', 'D'); // 금관의 사람: 얼굴을 쪼아 지움 (얼룩)
+  c.rect(14, 18, 22, 20, 'Y'); // 금관
+  for (const [dx, dy] of [[-2, 0], [1, 1], [2, -1], [-1, 2]]) c.set(18 + dx, 26 + dy, 'C');
+  fig(42, 26, 'n'); // 기사
+  fig(62, 24, 'T', 't'); // 수인
+  c.set(59, 26, 'T');
+  c.set(65, 26, 'T');
+  fig(84, 16, 'O'); // 망치를 든 드워프
+  c.rect(90, 36, 91, 46, 'P');
+  c.rect(88, 33, 93, 36, 'R');
+  fig(104, 16, 'O');
+  c.edge('C');
+}, { note: '300년 전의 벽화 (금관의 사람 얼굴만 쪼아 지움, wall)' });
+const tabletDraw = (n) => (c) => {
+  c.rect(2, 2, 29, 43, (x, y) => (x <= 3 ? 'r' : x >= 28 ? 'T' : 't'));
+  c.rect(4, 0, 27, 2, 't');
+  if (n === 1) {
+    c.disc(16, 9, 3, 's');
+    c.rect(13, 5, 19, 6, 'Y');
+  }
+  if (n === 2) for (const x of [7, 11, 21, 25]) c.rect(x, 12, x + 2, 13, 'T');
+  for (let y = 16; y < 40; y += 4) c.rect(6, y, 25, y, (x) => (x % 3 ? 'R' : 't'));
+  if (n === 3) c.rect(9, 36, 12, 39, 'R'); // 작은 손자국
+  c.edge('R');
+};
+prop('stone_tablet1', 32, 44, 1, tabletDraw(1), { note: '첫 번째 돌판 (금관의 사람과 옛 룬)' });
+prop('stone_tablet2', 32, 44, 1, tabletDraw(2), { note: '두 번째 돌판 (쓰러진 사람들)' });
+prop('stone_tablet3', 32, 44, 1, tabletDraw(3), { note: '세 번째 돌판 (깊게 판 글자와 작은 손자국)' });
+prop('broken_tablet', 32, 20, 1, (c) => {
+  c.rect(2, 4, 29, 19, (x) => (x <= 3 ? 'r' : x >= 28 ? 'T' : 't'));
+  c.line(2, 4, 16, 2, 't', 2);
+  for (let y = 8; y < 18; y += 4) c.rect(6, y, 25, y, (x) => (x % 3 ? 'R' : 't'));
+  c.edge('R');
+}, { note: '반으로 깨진 돌판 (구석에 놓임)' });
+prop('tablet_glow', 32, 20, 2, (c, i) => {
+  c.ellipse(16, 12, 14, 7, (d) => (d < 0.4 ? (i ? 'l' : 'w') : d < 0.8 ? 'a' : '.'));
+}, { rate: 3, note: '깨진 돌판이 빛남 (처음엔 숨김)' });
+prop('name_wall', 48, 48, 1, (c) => {
+  c.rect(0, 0, 47, 47, 'T');
+  c.rect(2, 2, 45, 45, 't');
+  for (let k = 0; k < 9; k++) c.rect(8, 5 + k * 4, 8 + 18 + ((k * 7) % 12), 6 + k * 4, 'R');
+  for (const k of [6, 7, 8]) c.disc(40, 6 + k * 4, 1.5, 'x'); // 작은 불꽃 문양
+  c.edge('R');
+}, { note: '이름이 새겨진 대장간 벽 (마지막 셋 옆에 불꽃, wall)' });
+prop('rusty_hammers', 32, 16, 1, (c) => {
+  for (const [x, a] of [[4, 0], [13, 1], [22, 0]]) {
+    c.line(x, 14, x + 8, 6 + a, 'O', 2);
+    c.rect(x + 6, 2 + a, x + 10, 7 + a, (xx, yy) => ((xx + yy) % 3 ? 'D' : 'C'));
+  }
+  c.edge('P');
+}, { note: '녹슨 망치 세 자루' });
+prop('small_hammer', 12, 10, 1, (c) => {
+  c.line(2, 9, 7, 4, 'O');
+  c.rect(6, 1, 10, 4, 'L');
+}, { note: '아이들이 준 작은 망치' });
+prop('steam_vent', 24, 32, 3, (c, i) => {
+  c.ellipse(12, 28, 8, 3, (d) => (d < 0.5 ? 'k' : 'K'));
+  for (let k = 0; k < 4; k++) c.disc(12 + Math.round(Math.sin((k + i) * 1.4) * 2), 22 - k * 6, 2 + (k % 2), k < 2 ? 'v' : 'V');
+}, { rate: 4, note: '증기 구멍' });
+prop('melted_helm', 18, 14, 1, (c) => {
+  c.ellipse(9, 8, 7, 5, (d) => (d < 0.5 ? 'm' : 'M'));
+  c.rect(2, 10, 15, 13, 'K');
+  c.line(4, 12, 7, 13, 'M');
+  c.set(9, 6, 'Y');
+  c.edge('L');
+}, { note: '반쯤 녹아 바위에 붙은 드워프 투구' });
+prop('red_crystal', 24, 28, 2, (c, i) => {
+  for (const [x, h] of [[6, 16], [12, 24], [18, 14]]) c.rect(x - 2, 27 - h, x + 2, 27, (xx, yy) => (xx === x - 2 ? 'x' : (yy + i) % 4 ? 'X' : 'y'));
+  c.edge('Z');
+}, { rate: 2, note: '숨은 증기 동굴의 붉은 수정' });
+prop('lava_mound', 64, 64, 2, (c, i) => {
+  c.ellipse(32, 52, 28, 11, (d) => (d < 0.4 ? 'y' : 'x'));
+  c.ellipse(32, 36, 16 + i, 22, (d, x, y) => ((x + y) % 5 === 0 ? 'x' : d < 0.6 ? 'K' : 'k'));
+  c.disc(32, 34, 4, (d) => (d < 0.5 ? 'y' : 'x'));
+  c.edge('Z');
+}, { rate: 3, note: '용암이 솟아 몸을 이루는 수호자 (처음엔 숨김)' });
+prop('cooled_guardian', 64, 48, 1, (c) => {
+  c.ellipse(32, 30, 26, 16, (d, x, y) => ((x * 3 + y) % 11 === 0 ? 'R' : d < 0.6 ? 'K' : 'k'));
+  c.edge('k');
+}, { note: '식어서 검은 돌이 된 수호자 (처음엔 숨김)' });
+prop('portal_circle', 48, 20, 3, (c, i) => {
+  c.ellipse(24, 10, 22, 8, (d) => (d > 0.8 ? 'i' : d > 0.6 ? 'u' : (d * 10 + i) % 3 < 1 ? 'I' : '.'));
+  for (let k = 0; k < 6; k++) {
+    const a = (k / 6) * Math.PI * 2 + i * 0.35;
+    c.set(24 + Math.cos(a) * 18, 10 + Math.sin(a) * 6, 'l');
+  }
+}, { rate: 6, note: '보랏빛 포탈 원 (처음엔 숨김)' });
+prop('stone_ring', 96, 104, 1, (c) => {
+  c.ellipse(48, 52, 44, 50, (d) => (d > 0.78 ? (d > 0.92 ? 'T' : 't') : '.'));
+  for (let k = 0; k < 10; k++) {
+    const a = (k / 10) * Math.PI * 2;
+    c.rect(48 + Math.cos(a) * 40 - 1, 52 + Math.sin(a) * 46 - 1, 48 + Math.cos(a) * 40 + 1, 52 + Math.sin(a) * 46 + 1, 'i');
+  }
+  c.rect(20, 100, 75, 103, 'T');
+  c.edge('R');
+}, { note: '포탈실 한가운데의 거대한 돌고리' });
+prop('ring_light', 96, 104, 2, (c, i) => {
+  c.ellipse(48, 52, 36, 42, (d) => (d < 0.5 ? 'v' : d < 0.8 ? (i ? 'l' : 'w') : 'i'));
+}, { rate: 4, note: '돌고리 안에 차오른 빛 (처음엔 숨김)' });
+prop('lab_window', 48, 40, 1, (c) => {
+  c.rect(0, 0, 47, 39, 'V');
+  c.rect(3, 3, 44, 36, 'w');
+  for (let k = 0; k < 3; k++) c.line(6 + k * 14, 34, 14 + k * 14, 6, 'l');
+  c.edge('t');
+}, { note: '실험실 유리창 (wall)' });
+prop('violet_lamp', 12, 32, 2, (c, i) => {
+  c.rect(5, 12, 6, 31, 'L');
+  c.disc(5.5, 7, 4, (d) => (d < 0.5 ? (i ? 'l' : 'i') : 'u'));
+}, { rate: 2, note: '보랏빛 등' });
+prop('bookcase', 48, 56, 1, (c) => {
+  c.rect(0, 0, 47, 55, 'O');
+  for (const y of [14, 28, 42]) c.rect(1, y, 46, y + 1, 'P');
+  for (let s = 0; s < 4; s++) for (let x = 3; x < 45; x += 4) c.rect(x, s * 14 + 4, x + 2, s * 14 + 13, ['X', 'n', 'G', 'u', 'Y'][(x + s) % 5]);
+  c.edge('P');
+}, { note: '책장 (탑주의 방)' });
+prop('cathedral_far', 64, 96, 1, (c) => {
+  c.rect(16, 40, 47, 95, 'V');
+  c.rect(28, 8, 35, 40, 'V');
+  c.line(31, 0, 31, 8, 'Y');
+  for (const x of [20, 40]) c.rect(x - 2, 24, x + 2, 40, 'V');
+  c.rect(28, 60, 35, 80, 'T');
+  c.edge('T');
+}, { note: '멀리 보이는 대성당의 첨탑' });
+
 // ---- 이야기 화면 가운데에 크게 띄우는 아이템 그림 (public/assets/items/) ----
 const ITEMS = []; // { key, cv }
 function item(key, w, h, draw) {
@@ -1508,6 +1848,31 @@ item('wanted_poster', 64, 84, (c) => {
   c.disc(48, 74, 5, 'X');
   c.disc(48, 74, 3, 'x');
   c.edge('D');
+});
+
+// 4막
+item('dorin_plate', 48, 40, (c) => {
+  // 천에 싸였던 작은 돌판: 반으로 깨진 돌판의 나머지 반쪽 (깨진 자리가 매끄러움)
+  c.rect(0, 30, 47, 39, (x, y) => ((x + y) % 4 ? 'o' : 'O')); // 풀어 놓은 천
+  c.rect(6, 6, 41, 32, (x) => (x <= 7 ? 'r' : x >= 40 ? 'T' : 't'));
+  c.line(6, 6, 41, 3, 't', 2);
+  for (let y = 11; y < 30; y += 4) c.rect(10, y, 37, y, (x) => (x % 3 ? 'R' : 't'));
+  c.edge('R');
+});
+item('blade_core', 72, 24, (c) => {
+  // 룬이 빽빽한 은빛 쇠막대
+  c.rect(2, 8, 69, 15, (x, y) => (y === 8 ? 'l' : y === 15 ? 'M' : 'm'));
+  for (let x = 6; x < 66; x += 5) {
+    c.rect(x, 10, x + 2, 10, 'a');
+    c.rect(x + 1, 12, x + 1, 13, 'w');
+  }
+  c.edge('L');
+});
+item('fire_core', 40, 40, (c) => {
+  // 맥박치는 붉은 돌
+  c.disc(20, 20, 15, (d) => (d < 0.3 ? 'v' : d < 0.55 ? 'y' : d < 0.8 ? 'x' : 'X'));
+  for (const [dx, dy] of [[-8, -5], [6, 8], [-4, 9], [9, -6]]) c.line(20, 20, 20 + dx, 20 + dy, 'y');
+  c.edge('Z');
 });
 
 // ---------------------------------------------------------------------

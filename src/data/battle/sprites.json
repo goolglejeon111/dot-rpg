@@ -1099,6 +1099,24 @@
       "h": 48,
       "columns": 12
     },
+    "leon_blade": {
+      "file": "assets/battle/chars/leon_blade.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "astra_mage": {
+      "file": "assets/battle/chars/astra_mage.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "astra_binder": {
+      "file": "assets/battle/chars/astra_binder.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
     "sewer_rat": {
       "file": "assets/battle/chars/sewer_rat.png",
       "w": 48,
@@ -1133,6 +1151,36 @@
       "file": "assets/battle/chars/mist_beast.png",
       "w": 48,
       "h": 48,
+      "columns": 12
+    },
+    "crag_lizard": {
+      "file": "assets/battle/chars/crag_lizard.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "fire_spirit": {
+      "file": "assets/battle/chars/fire_spirit.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "magma_slug": {
+      "file": "assets/battle/chars/magma_slug.png",
+      "w": 48,
+      "h": 48,
+      "columns": 12
+    },
+    "lava_guardian": {
+      "file": "assets/battle/chars/lava_guardian.png",
+      "w": 96,
+      "h": 96,
+      "columns": 12
+    },
+    "astra_golem": {
+      "file": "assets/battle/chars/astra_golem.png",
+      "w": 96,
+      "h": 96,
       "columns": 12
     }
   }

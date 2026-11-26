@@ -909,7 +909,15 @@ function draw(c, v) {
   }
   for (const p of props) PROPS[p](g, c, v, true);
   if (c.stoop) stoop(g, v);
+  if (c.short) shorten(g, c.short);
   return g.outline();
+}
+
+/** 작은 키 (드워프): 가슴께 n줄을 빼고 머리와 어깨를 n줄 내린다. 26줄 아래(허리·다리 쪽)는 그대로 */
+function shorten(g, n) {
+  const src = g.d.map((r) => [...r]);
+  const CUT = 26;
+  for (let y = 0; y < CUT; y++) g.d[y] = y < n ? Array(g.w).fill('.') : [...src[y - n]];
 }
 
 /** 굽은 허리 (우르샤): 머리와 어깨를 아래(옆모습은 앞으로도) 내린다 */
@@ -1177,6 +1185,55 @@ export const CHARS = [
     decor: ['cross', 'armMark', 'glowHand'], crossColor: 'v',
     decorTop: ['whiteMask'],
   },
+  // ---- 4막 ----
+  {
+    id: 'dwarf_smith', kind: 'npc', legs: { K: 'O', k: 'P', L: 'P', M: 'O' }, // 브리다: 두 갈래로 땋은 붉은 머리, 이마의 보호 안경, 가죽 앞치마, 파란 룬 망치 (키가 작음)
+    hair: { ramp: R.red, style: 'short' }, eye: 'y', smile: true, short: 5,
+    outfit: { ramp: R.tan, sleeve: R.skin, lower: 'tunic', lowerRamp: R.leather, cuff: 'O' },
+    decor: ['apron', 'redBraids'],
+    decorTop: ['goggles'],
+    props: ['runeHammer'],
+  },
+  {
+    id: 'dwarf_gatekeeper', kind: 'npc', legs: { K: 'R', k: 'k', L: 'R', M: 'T' }, // 관문지기: 갈색 머리와 굵은 수염, 회색 쇠 갑옷, 창 (키가 작음)
+    hair: { ramp: R.brown, style: 'short' }, beard: ['h', 'H', 'J'], beardLen: 4, brow: 'H', short: 5,
+    outfit: { ramp: R.grey, lower: 'tunic', belt: ['O', 'Y'], cuff: 'T' },
+    decor: ['armor'],
+    props: ['spear'],
+  },
+  {
+    id: 'dwarf_kid', kind: 'npc', legs: { K: 'O', k: 'P', L: 'P', M: 'O' }, // 드워프 아이 1: 붉은 머리, 초록 옷 (아주 작음)
+    hair: { ramp: R.red, style: 'short' }, smile: true, short: 9,
+    outfit: { ramp: R.green, lower: 'tunic' },
+  },
+  {
+    id: 'dwarf_kid2', kind: 'npc', legs: { K: 'O', k: 'P', L: 'P', M: 'O' }, // 드워프 아이 2: 갈색 머리, 하늘색 옷
+    hair: { ramp: R.brown, style: 'curly' }, smile: true, short: 9,
+    outfit: { ramp: R.sky, lower: 'tunic' },
+  },
+  {
+    id: 'dwarf_kid3', kind: 'npc', legs: { K: 'O', k: 'P', L: 'P', M: 'O' }, // 드워프 아이 3: 흙빛 머리, 붉은 옷
+    hair: { ramp: R.tan, style: 'short' }, smile: true, short: 9,
+    outfit: { ramp: R.red, lower: 'tunic' },
+  },
+  {
+    id: 'astra_mage', kind: 'mob', name: '마탑 마법사', legs: { K: 'v', k: 'V' }, // 흰 두건과 흰 로브, 보라 소매·밑단, 가슴의 하늘색 룬
+    hood: R.white, eye: 'i',
+    outfit: { ramp: R.white, lower: 'robe', belt: ['u', 'I'], cuff: 'i', hem: 'u' },
+    decor: ['runes'],
+  },
+  {
+    id: 'astra_captain', kind: 'mob', name: '파견대장', legs: { K: 'I', k: 'k' }, // 파견대장: 마법사와 같은 모습, 보라 두건·로브에 금 테두리
+    hood: R.purple, eye: 'y',
+    outfit: { ramp: R.purple, lower: 'robe', belt: ['Y', 'O'], cuff: 'Y', hem: 'Y' },
+    decor: ['runes'],
+  },
+  {
+    id: 'astra_binder', kind: 'mob', name: '마탑 결박술사', legs: { K: 'k', k: 'k' }, // 결박술사: 검은 두건과 로브, 몸에 감은 보랏빛 사슬
+    hood: R.black, eye: 'i',
+    outfit: { ramp: R.black, lower: 'robe', cuff: 'i', hem: 'i' },
+    decor: ['chains'],
+  },
 ];
 
 // 인물 하나만 쓰는 장식
@@ -1346,6 +1403,45 @@ Object.assign(DECOR, {
   raggedHem(g, c, v) {
     for (let x = 4; x <= 27; x++) if (x % 3 === 0) g.set(x, 34, '.');
   },
+  /** 두 갈래로 굵게 땋은 붉은 머리 (브리다): 어깨 앞으로 늘어뜨림 */
+  redBraids(g, c, v) {
+    const r = R.red;
+    const xs = v === 'right' ? [10] : v === 'up' ? [9, 21] : [8, 22];
+    for (const x0 of xs) for (let y = 14; y <= 26; y++) g.rect(x0, y, x0 + 1, y, (x) => ((x + y) % 2 ? r[1] : r[0]));
+    for (const x0 of xs) g.rect(x0, 27, x0 + 1, 27, 'Y');
+  },
+  /** 이마에 올린 보호 안경 */
+  goggles(g, c, v) {
+    if (v === 'up') return void g.rect(8, 6, 23, 6, 'P');
+    if (v === 'right') {
+      g.rect(9, 6, 22, 6, 'P');
+      g.rect(18, 4, 21, 7, (x, y) => (y === 4 || x === 18 ? 'L' : 'w'));
+      return;
+    }
+    g.rect(8, 6, 23, 6, 'P');
+    for (const x0 of [10, 17]) g.rect(x0, 4, x0 + 4, 7, (x, y) => (y === 4 || x === x0 ? 'L' : (x + y) % 3 ? 'w' : 'l'));
+  },
+  /** 몸에 감은 보랏빛 사슬 (결박술사) */
+  chains(g, c, v) {
+    for (let x = 6; x <= 25; x++) {
+      const y = 19 + Math.round((x - 6) * 0.45);
+      if (g.get(x, y) !== '.') g.set(x, y, x % 2 ? 'i' : 'u');
+    }
+    for (let x = 6; x <= 25; x++) if (g.get(x, 28) !== '.') g.set(x, 28, x % 2 ? 'i' : 'I');
+  },
+});
+// 인물 하나만 쓰는 소품
+Object.assign(PROPS, {
+  /** 파랗게 빛나는 룬이 새겨진 각인 망치 (브리다) */
+  runeHammer(g, c, v, front) {
+    if (v === 'up' ? front : !front) return;
+    const x0 = v === 'right' ? 23 : 27;
+    g.rect(x0, 16, x0, 30, (x, y) => (y % 4 ? 'o' : 'O'));
+    g.rect(x0 - 3, 12, x0 + 3, 16, (x, y) => (y === 12 || x === x0 - 3 ? 'R' : 'K'));
+    g.set(x0 - 1, 14, 'w');
+    g.set(x0 + 1, 14, 'a');
+    g.set(x0, 13, 'w');
+  },
 });
 
 // =====================================================================
@@ -1405,6 +1501,8 @@ for (const c of CHARS) {
 }
 // 레온 갈색 두건 망토 (1막): leon.txt의 몸 그림에 두건을 씌우고 남색 제복을 갈색 망토로
 for (const v of ['down', 'up', 'right']) out.push(`[leon_hood_body_${v}]`, leonHood(v), '');
+// 레온 각인 무기 (4막 장면 7부터): 몸은 그대로, 전투 그림의 검만 은빛 룬 검 (gen-battle.mjs의 runesword)
+for (const v of ['down', 'up', 'right']) out.push(`[leon_blade_body_${v}]`, leonArt(`leon_body_${v}`).map((r) => r.join('')).join('\n'), '');
 writeFileSync(join(HERE, 'art', 'characters.txt'), out.join('\n'));
 console.log(`인물 ${CHARS.length}명 → art/characters.txt`);
 }

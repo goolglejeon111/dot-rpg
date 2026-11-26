@@ -113,4 +113,5 @@ export const FLAMES: Record<string, { radius: number; intensity: number; top: nu
   candle: { radius: 70, intensity: 1.1, top: 5 },
   campfire: { radius: 130, intensity: 1.5, top: 10 },
   torch_stand: { radius: 100, intensity: 1.3, top: 5 },
+  forge_lit: { radius: 140, intensity: 1.5, top: 34 },
 };

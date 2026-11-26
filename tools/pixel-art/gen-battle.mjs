@@ -654,6 +654,7 @@ function weapon(kind, hx, hy, ang, cw, ch) {
     greatsword: { len: 18, w: 2, blade: ['l', 'm'], out: 'L', hilt: 'X' },
     dagger: { len: 7, w: 1, blade: ['l', 'm'], out: 'L', hilt: 'O' },
     darkdagger: { len: 8, w: 1, blade: ['t', 'T'], out: 'k', hilt: 'k' },
+    runesword: { len: 14, w: 1, blade: ['w', 'l'], out: 'A', hilt: 'Y' }, // 4막 각인 무기: 은빛 룬이 도는 검
   }[kind];
   const l = new Cv(cw, ch);
   const a = deg(ang);
@@ -716,6 +717,10 @@ const BATTLE_CHARS = [
   // 3막
   { id: 'raid_captain', cast: { ramp: ['l', 'v', 'V'], out: 'T', hand: { down: [27, 27], right: [23, 24], up: [5, 27] } } }, // 습격대장 (빛 손바닥)
   { id: 'paladin_captain', lunge: true },
+  // 4막
+  { id: 'leon_blade', weapon: 'runesword' }, // 레온 각인 무기
+  { id: 'astra_mage', cast: { ramp: ['l', 'i', 'u'], out: 'I', hand: { down: [27, 27], right: [23, 24], up: [5, 27] } } },
+  { id: 'astra_binder', cast: { ramp: ['i', 'u', 'I'], out: 'k', hand: { down: [27, 27], right: [23, 24], up: [5, 27] } } },
 ];
 
 const VIEWS = ['down', 'left', 'right', 'up'];

@@ -1,0 +1,1849 @@
+{
+ "compressionlevel": -1,
+ "type": "map",
+ "version": "1.10",
+ "tiledversion": "1.10.2",
+ "orientation": "orthogonal",
+ "renderorder": "right-down",
+ "infinite": false,
+ "width": 18,
+ "height": 12,
+ "tilewidth": 32,
+ "tileheight": 32,
+ "nextlayerid": 5,
+ "nextobjectid": 20,
+ "properties": [
+  {
+   "name": "place",
+   "type": "string",
+   "value": "브리다의 대장간"
+  },
+  {
+   "name": "ambient",
+   "type": "string",
+   "value": "#7a5040"
+  },
+  {
+   "name": "bg",
+   "type": "string",
+   "value": "#0c0604"
+  }
+ ],
+ "layers": [
+  {
+   "id": 1,
+   "name": "floor",
+   "type": "tilelayer",
+   "x": 0,
+   "y": 0,
+   "width": 18,
+   "height": 12,
+   "opacity": 1,
+   "visible": true,
+   "data": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    0,
+    0,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    0,
+    0,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    0,
+    0,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    0,
+    0,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    0,
+    0,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    0,
+    0,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    0,
+    0,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    0,
+    0,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    72,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "id": 2,
+   "name": "walls",
+   "type": "tilelayer",
+   "x": 0,
+   "y": 0,
+   "width": 18,
+   "height": 12,
+   "opacity": 1,
+   "visible": true,
+   "data": [
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    71,
+    71,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    71,
+    71,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    71,
+    71,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    71,
+    71,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    71,
+    71,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    71,
+    71,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    71,
+    71,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    71,
+    71,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    0,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71
+   ]
+  },
+  {
+   "id": 4,
+   "name": "objects",
+   "type": "objectgroup",
+   "x": 0,
+   "y": 0,
+   "opacity": 1,
+   "visible": true,
+   "draworder": "topdown",
+   "objects": [
+    {
+     "id": 1,
+     "name": "forge_lit",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 84,
+     "y": 74,
+     "width": 56,
+     "height": 48,
+     "properties": [
+      {
+       "name": "solid",
+       "type": "string",
+       "value": "52,14"
+      }
+     ]
+    },
+    {
+     "id": 2,
+     "name": "anvil",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 256,
+     "y": 160,
+     "width": 32,
+     "height": 24,
+     "properties": [
+      {
+       "name": "solid",
+       "type": "string",
+       "value": "24,8"
+      }
+     ]
+    },
+    {
+     "id": 3,
+     "name": "shelf",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 376,
+     "y": 32,
+     "width": 48,
+     "height": 40,
+     "properties": [
+      {
+       "name": "wall",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 4,
+     "name": "name_wall",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 472,
+     "y": 30,
+     "width": 48,
+     "height": 48,
+     "properties": [
+      {
+       "name": "wall",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 5,
+     "name": "a4_forge_names",
+     "type": "look",
+     "rotation": 0,
+     "visible": true,
+     "x": 496,
+     "y": 112,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "iconY",
+       "type": "int",
+       "value": 28
+      }
+     ]
+    },
+    {
+     "id": 6,
+     "name": "straw_bed",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 436,
+     "y": 286,
+     "width": 56,
+     "height": 30
+    },
+    {
+     "id": 7,
+     "name": "rusty_hammers",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 288,
+     "y": 200,
+     "width": 32,
+     "height": 16,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "hammers_down"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 8,
+     "name": "brida",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 240,
+     "y": 176,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "right"
+      }
+     ]
+    },
+    {
+     "id": 9,
+     "name": "brida_anvil",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 272,
+     "y": 144,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "down"
+      }
+     ]
+    },
+    {
+     "id": 10,
+     "name": "leon_f",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 304,
+     "y": 272,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 11,
+     "name": "elysia_f",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 208,
+     "y": 278,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 12,
+     "name": "karg_f",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 368,
+     "y": 278,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 13,
+     "name": "serena_f",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 272,
+     "y": 310,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 14,
+     "name": "galia_f",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 400,
+     "y": 304,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 15,
+     "name": "leon_bed",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 464,
+     "y": 310,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 16,
+     "name": "leon_night",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 304,
+     "y": 336,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 17,
+     "name": "leon_start",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 304,
+     "y": 336,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 18,
+     "name": "karg_hammers",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 304,
+     "y": 240,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 19,
+     "name": "goal_bed",
+     "type": "goal",
+     "rotation": 0,
+     "visible": true,
+     "x": 464,
+     "y": 304,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "r",
+       "type": "int",
+       "value": 36
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "tilesets": [
+  {
+   "firstgid": 1,
+   "name": "palace",
+   "image": "../../../public/assets/explore/palace_tiles.png",
+   "imagewidth": 256,
+   "imageheight": 320,
+   "columns": 8,
+   "tilecount": 80,
+   "tilewidth": 32,
+   "tileheight": 32,
+   "margin": 0,
+   "spacing": 0,
+   "tiles": [
+    {
+     "id": 0,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "floor"
+      }
+     ]
+    },
+    {
+     "id": 1,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "floor2"
+      }
+     ]
+    },
+    {
+     "id": 2,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "carpet_top"
+      }
+     ]
+    },
+    {
+     "id": 3,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "carpet_mid"
+      }
+     ]
+    },
+    {
+     "id": 4,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "carpet_bot"
+      }
+     ]
+    },
+    {
+     "id": 5,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "wall_top"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 6,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "wall_up"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 7,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "wall_low"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 8,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "window_up"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 9,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "window_low"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 10,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "stone"
+      }
+     ]
+    },
+    {
+     "id": 11,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "stone2"
+      }
+     ]
+    },
+    {
+     "id": 12,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "wood"
+      }
+     ]
+    },
+    {
+     "id": 13,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "blood1"
+      }
+     ]
+    },
+    {
+     "id": 14,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "blood2"
+      }
+     ]
+    },
+    {
+     "id": 15,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "blood3"
+      }
+     ]
+    },
+    {
+     "id": 16,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "castle_top"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 17,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "castle_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 18,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "castle_moss"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 19,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "castle_base"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 20,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "water"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 21,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "water2"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 22,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "quay"
+      }
+     ]
+    },
+    {
+     "id": 23,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cobble"
+      }
+     ]
+    },
+    {
+     "id": 24,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_floor"
+      }
+     ]
+    },
+    {
+     "id": 25,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_floor2"
+      }
+     ]
+    },
+    {
+     "id": 26,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_edge"
+      }
+     ]
+    },
+    {
+     "id": 27,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_water"
+      }
+     ]
+    },
+    {
+     "id": 28,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_water2"
+      }
+     ]
+    },
+    {
+     "id": 29,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "deep_water"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 30,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "deep_water2"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 31,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_wall_top"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 32,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 33,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cistern_floor"
+      }
+     ]
+    },
+    {
+     "id": 34,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cellar_floor"
+      }
+     ]
+    },
+    {
+     "id": 35,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cellar_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 36,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "mud"
+      }
+     ]
+    },
+    {
+     "id": 37,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "mud_snow"
+      }
+     ]
+    },
+    {
+     "id": 38,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "shack_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 39,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "shack_roof"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 40,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "bridge"
+      }
+     ]
+    },
+    {
+     "id": 41,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "grass"
+      }
+     ]
+    },
+    {
+     "id": 42,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sand"
+      }
+     ]
+    },
+    {
+     "id": 43,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "river"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 44,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "desert"
+      }
+     ]
+    },
+    {
+     "id": 45,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "desert2"
+      }
+     ]
+    },
+    {
+     "id": 46,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dune"
+      }
+     ]
+    },
+    {
+     "id": 47,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sandstone"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 48,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sandstone_top"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 49,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "oasis_water"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 50,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "oasis_grass"
+      }
+     ]
+    },
+    {
+     "id": 51,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "adobe_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 52,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "adobe_roof"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 53,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "adobe_floor"
+      }
+     ]
+    },
+    {
+     "id": 54,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "bars"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 55,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "road"
+      }
+     ]
+    },
+    {
+     "id": 56,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "rock_floor"
+      }
+     ]
+    },
+    {
+     "id": 57,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "rock_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 58,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dry_field"
+      }
+     ]
+    },
+    {
+     "id": 59,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dry_grass"
+      }
+     ]
+    },
+    {
+     "id": 60,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "forest_floor"
+      }
+     ]
+    },
+    {
+     "id": 61,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "ruin_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 62,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "frost_field"
+      }
+     ]
+    },
+    {
+     "id": 63,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "frost_road"
+      }
+     ]
+    },
+    {
+     "id": 64,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "ice"
+      }
+     ]
+    },
+    {
+     "id": 65,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "snow"
+      }
+     ]
+    },
+    {
+     "id": 66,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "snow_path"
+      }
+     ]
+    },
+    {
+     "id": 67,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "snow_rock"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 68,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dwarf_floor"
+      }
+     ]
+    },
+    {
+     "id": 69,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "stone_bridge"
+      }
+     ]
+    },
+    {
+     "id": 70,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dwarf_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 71,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "forge_floor"
+      }
+     ]
+    },
+    {
+     "id": 72,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "black_rock"
+      }
+     ]
+    },
+    {
+     "id": 73,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "lava"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 74,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "lava2"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 75,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "lava_rock_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 76,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "astra_floor"
+      }
+     ]
+    },
+    {
+     "id": 77,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "astra_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 78,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "barrier"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 79,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cloud"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

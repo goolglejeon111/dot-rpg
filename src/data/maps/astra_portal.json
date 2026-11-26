@@ -1,0 +1,2596 @@
+{
+ "compressionlevel": -1,
+ "type": "map",
+ "version": "1.10",
+ "tiledversion": "1.10.2",
+ "orientation": "orthogonal",
+ "renderorder": "right-down",
+ "infinite": false,
+ "width": 24,
+ "height": 18,
+ "tilewidth": 32,
+ "tileheight": 32,
+ "nextlayerid": 5,
+ "nextobjectid": 34,
+ "properties": [
+  {
+   "name": "place",
+   "type": "string",
+   "value": "아스트라, 포탈실"
+  },
+  {
+   "name": "ambient",
+   "type": "string",
+   "value": "#a89ad0"
+  },
+  {
+   "name": "bg",
+   "type": "string",
+   "value": "#1a1430"
+  }
+ ],
+ "layers": [
+  {
+   "id": 1,
+   "name": "floor",
+   "type": "tilelayer",
+   "x": 0,
+   "y": 0,
+   "width": 24,
+   "height": 18,
+   "opacity": 1,
+   "visible": true,
+   "data": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    77,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    77,
+    77,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "id": 2,
+   "name": "walls",
+   "type": "tilelayer",
+   "x": 0,
+   "y": 0,
+   "width": 24,
+   "height": 18,
+   "opacity": 1,
+   "visible": true,
+   "data": [
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    0,
+    0,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78,
+    78
+   ]
+  },
+  {
+   "id": 4,
+   "name": "objects",
+   "type": "objectgroup",
+   "x": 0,
+   "y": 0,
+   "opacity": 1,
+   "visible": true,
+   "draworder": "topdown",
+   "objects": [
+    {
+     "id": 1,
+     "name": "stone_ring",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 336,
+     "y": 152,
+     "width": 96,
+     "height": 104,
+     "properties": [
+      {
+       "name": "solid",
+       "type": "string",
+       "value": "60,10"
+      }
+     ]
+    },
+    {
+     "id": 2,
+     "name": "ring_light",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 336,
+     "y": 152,
+     "width": 96,
+     "height": 104,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "ring_light"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 3,
+     "name": "violet_lamp",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 106,
+     "y": 28,
+     "width": 12,
+     "height": 32,
+     "properties": [
+      {
+       "name": "wall",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 4,
+     "name": "violet_lamp",
+     "type": "prop",
+     "rotation": 0,
+     "visible": true,
+     "x": 650,
+     "y": 28,
+     "width": 12,
+     "height": 32,
+     "properties": [
+      {
+       "name": "wall",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 5,
+     "name": "portal_circle",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 152,
+     "y": 134,
+     "width": 48,
+     "height": 20,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "portal1"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 6,
+     "name": "portal_circle",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 568,
+     "y": 134,
+     "width": 48,
+     "height": 20,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "portal2"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 7,
+     "name": "portal_circle",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 88,
+     "y": 294,
+     "width": 48,
+     "height": 20,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "portal3"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 8,
+     "name": "portal_circle",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 632,
+     "y": 294,
+     "width": 48,
+     "height": 20,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "portal4"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 9,
+     "name": "portal_circle",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 184,
+     "y": 422,
+     "width": 48,
+     "height": 20,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "portal5"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 10,
+     "name": "portal_circle",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 536,
+     "y": 422,
+     "width": 48,
+     "height": 20,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "portal6"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 11,
+     "name": "portal_circle",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 280,
+     "y": 102,
+     "width": 48,
+     "height": 20,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "portal7"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 12,
+     "name": "portal_circle",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 440,
+     "y": 102,
+     "width": 48,
+     "height": 20,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "portal8"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 13,
+     "name": "portal_circle",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 56,
+     "y": 198,
+     "width": 48,
+     "height": 20,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "portal9"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 14,
+     "name": "portal_circle",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 664,
+     "y": 198,
+     "width": 48,
+     "height": 20,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "portal10"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 15,
+     "name": "portal_circle",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 56,
+     "y": 422,
+     "width": 48,
+     "height": 20,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "portal11"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 16,
+     "name": "portal_circle",
+     "type": "prop",
+     "rotation": 0,
+     "visible": false,
+     "x": 664,
+     "y": 422,
+     "width": 48,
+     "height": 20,
+     "properties": [
+      {
+       "name": "key",
+       "type": "string",
+       "value": "portal12"
+      },
+      {
+       "name": "hidden",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 17,
+     "name": "leon_in",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 400,
+     "y": 464,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 18,
+     "name": "elysia_in",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 344,
+     "y": 464,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 19,
+     "name": "karg_in",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 432,
+     "y": 496,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 20,
+     "name": "serena_in",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 376,
+     "y": 504,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 21,
+     "name": "galia_in",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 464,
+     "y": 464,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 22,
+     "name": "leon_ring",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 400,
+     "y": 336,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 23,
+     "name": "elysia_ring",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 364,
+     "y": 372,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 24,
+     "name": "karg_ring",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 432,
+     "y": 368,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 25,
+     "name": "serena_ring",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 400,
+     "y": 378,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 26,
+     "name": "galia_ring",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 464,
+     "y": 368,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 27,
+     "name": "elysia_stay",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 384,
+     "y": 432,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "down"
+      }
+     ]
+    },
+    {
+     "id": 28,
+     "name": "elysia_fall",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 372,
+     "y": 376,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "down"
+      }
+     ]
+    },
+    {
+     "id": 29,
+     "name": "leon_jump",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 384,
+     "y": 272,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 30,
+     "name": "karg_jump",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 400,
+     "y": 272,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 31,
+     "name": "serena_jump",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 368,
+     "y": 272,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 32,
+     "name": "door",
+     "type": "spawn",
+     "rotation": 0,
+     "visible": true,
+     "x": 384,
+     "y": 560,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "string",
+       "value": "up"
+      }
+     ]
+    },
+    {
+     "id": 33,
+     "name": "arena",
+     "type": "arena",
+     "rotation": 0,
+     "visible": true,
+     "x": 160,
+     "y": 224,
+     "width": 448,
+     "height": 288
+    }
+   ]
+  }
+ ],
+ "tilesets": [
+  {
+   "firstgid": 1,
+   "name": "palace",
+   "image": "../../../public/assets/explore/palace_tiles.png",
+   "imagewidth": 256,
+   "imageheight": 320,
+   "columns": 8,
+   "tilecount": 80,
+   "tilewidth": 32,
+   "tileheight": 32,
+   "margin": 0,
+   "spacing": 0,
+   "tiles": [
+    {
+     "id": 0,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "floor"
+      }
+     ]
+    },
+    {
+     "id": 1,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "floor2"
+      }
+     ]
+    },
+    {
+     "id": 2,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "carpet_top"
+      }
+     ]
+    },
+    {
+     "id": 3,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "carpet_mid"
+      }
+     ]
+    },
+    {
+     "id": 4,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "carpet_bot"
+      }
+     ]
+    },
+    {
+     "id": 5,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "wall_top"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 6,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "wall_up"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 7,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "wall_low"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 8,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "window_up"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 9,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "window_low"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 10,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "stone"
+      }
+     ]
+    },
+    {
+     "id": 11,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "stone2"
+      }
+     ]
+    },
+    {
+     "id": 12,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "wood"
+      }
+     ]
+    },
+    {
+     "id": 13,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "blood1"
+      }
+     ]
+    },
+    {
+     "id": 14,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "blood2"
+      }
+     ]
+    },
+    {
+     "id": 15,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "blood3"
+      }
+     ]
+    },
+    {
+     "id": 16,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "castle_top"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 17,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "castle_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 18,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "castle_moss"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 19,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "castle_base"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 20,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "water"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 21,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "water2"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 22,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "quay"
+      }
+     ]
+    },
+    {
+     "id": 23,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cobble"
+      }
+     ]
+    },
+    {
+     "id": 24,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_floor"
+      }
+     ]
+    },
+    {
+     "id": 25,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_floor2"
+      }
+     ]
+    },
+    {
+     "id": 26,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_edge"
+      }
+     ]
+    },
+    {
+     "id": 27,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_water"
+      }
+     ]
+    },
+    {
+     "id": 28,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_water2"
+      }
+     ]
+    },
+    {
+     "id": 29,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "deep_water"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 30,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "deep_water2"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 31,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_wall_top"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 32,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sewer_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 33,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cistern_floor"
+      }
+     ]
+    },
+    {
+     "id": 34,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cellar_floor"
+      }
+     ]
+    },
+    {
+     "id": 35,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cellar_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 36,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "mud"
+      }
+     ]
+    },
+    {
+     "id": 37,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "mud_snow"
+      }
+     ]
+    },
+    {
+     "id": 38,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "shack_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 39,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "shack_roof"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 40,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "bridge"
+      }
+     ]
+    },
+    {
+     "id": 41,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "grass"
+      }
+     ]
+    },
+    {
+     "id": 42,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sand"
+      }
+     ]
+    },
+    {
+     "id": 43,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "river"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 44,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "desert"
+      }
+     ]
+    },
+    {
+     "id": 45,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "desert2"
+      }
+     ]
+    },
+    {
+     "id": 46,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dune"
+      }
+     ]
+    },
+    {
+     "id": 47,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sandstone"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 48,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "sandstone_top"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 49,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "oasis_water"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 50,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "oasis_grass"
+      }
+     ]
+    },
+    {
+     "id": 51,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "adobe_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 52,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "adobe_roof"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 53,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "adobe_floor"
+      }
+     ]
+    },
+    {
+     "id": 54,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "bars"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 55,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "road"
+      }
+     ]
+    },
+    {
+     "id": 56,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "rock_floor"
+      }
+     ]
+    },
+    {
+     "id": 57,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "rock_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 58,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dry_field"
+      }
+     ]
+    },
+    {
+     "id": 59,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dry_grass"
+      }
+     ]
+    },
+    {
+     "id": 60,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "forest_floor"
+      }
+     ]
+    },
+    {
+     "id": 61,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "ruin_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 62,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "frost_field"
+      }
+     ]
+    },
+    {
+     "id": 63,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "frost_road"
+      }
+     ]
+    },
+    {
+     "id": 64,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "ice"
+      }
+     ]
+    },
+    {
+     "id": 65,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "snow"
+      }
+     ]
+    },
+    {
+     "id": 66,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "snow_path"
+      }
+     ]
+    },
+    {
+     "id": 67,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "snow_rock"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 68,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dwarf_floor"
+      }
+     ]
+    },
+    {
+     "id": 69,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "stone_bridge"
+      }
+     ]
+    },
+    {
+     "id": 70,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dwarf_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 71,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "forge_floor"
+      }
+     ]
+    },
+    {
+     "id": 72,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "black_rock"
+      }
+     ]
+    },
+    {
+     "id": 73,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "lava"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 74,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "lava2"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 75,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "lava_rock_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 76,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "astra_floor"
+      }
+     ]
+    },
+    {
+     "id": 77,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "astra_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 78,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "barrier"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 79,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cloud"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

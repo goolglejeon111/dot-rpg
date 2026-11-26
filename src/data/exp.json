@@ -62,7 +62,16 @@
     "mist_beast": 20,
     "gnosis_captain": 0,
     "adrian_boss": 0,
-    "karg": 0
+    "karg": 0,
+    "bandit_snow_blade": 40,
+    "bandit_snow_archer": 40,
+    "crag_lizard": 40,
+    "fire_spirit": 50,
+    "magma_slug": 50,
+    "astra_mage": 30,
+    "astra_binder": 30,
+    "lava_guardian": 0,
+    "astra_golem": 0
   },
   "_enemyLevels": "몹 레벨 (경험치 줄이기에만 씀). 파티 평균 레벨이 이보다 weakScale의 칸 이상 높으면 그 배율 (가장 큰 칸부터, 최소 1)",
   "enemyLevels": {
@@ -78,7 +87,14 @@
     "desert_scorpion": 11,
     "bandit_blade": 11,
     "bandit_archer": 11,
-    "paladin": 12
+    "paladin": 12,
+    "bandit_snow_blade": 17,
+    "bandit_snow_archer": 17,
+    "crag_lizard": 17,
+    "fire_spirit": 18,
+    "magma_slug": 18,
+    "astra_mage": 19,
+    "astra_binder": 19
   },
   "weakScale": { "3": 0.5, "5": 0.2, "7": 0.05 },
   "_battles": "전투 이벤트를 끝냈을 때, 처음 한 번 (전투 이름: src/data/battle/battles.json)",
@@ -97,7 +113,11 @@
     "아드리안": 300,
     "안개 짐승 무리": 150,
     "마을 습격": 300,
-    "습격대장": 400
+    "습격대장": 400,
+    "산길의 도적": 400,
+    "용암의 수호자": 1000,
+    "마탑 파견대": 300,
+    "아스트라 탈출": 1000
   },
   "_looks": "조사할 물건을 처음 조사했을 때 (물건 ID: src/data/explore/looks.json). 없으면 default",
   "looks": {
@@ -127,7 +147,17 @@
     "a3_spirit_stone": 40,
     "a3_folded_cloak": 40,
     "a3_village_stone": 40,
-    "a3_hidden_herbs": 80
+    "a3_hidden_herbs": 80,
+    "a4_border_stone": 80,
+    "a4_trade_cart": 80,
+    "a4_mural": 80,
+    "a4_forge_names": 80,
+    "a4_melted_helm": 80,
+    "a4_hidden_vent": 160,
+    "a4_tablet_1": 0,
+    "a4_tablet_2": 0,
+    "a4_tablet_3": 0,
+    "a4_tablet_4": 0
   },
   "_endings": "엔딩 목록의 보상 받기 (배드·데드엔딩만, 한 번)",
   "endings": {
@@ -135,7 +165,8 @@
     "prologue_bad": 170,
     "act1_bad": 200,
     "act2_dead": 250,
-    "act3_dead": 300
+    "act3_dead": 300,
+    "act4_bad": 400
   },
   "_1막": "변장 통과 60은 선택지 효과(tools/script/stories.mjs의 s6_disguise)",
   "_프롤로그합계": "하수인 6×15=90 + 전투 이벤트 30 + 침입자 60 + 조사 9×20=180 + 엔딩 170×2=340 = 700 (5레벨)"

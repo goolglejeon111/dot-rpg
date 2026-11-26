@@ -1391,9 +1391,9 @@
    "name": "palace",
    "image": "../../../public/assets/explore/palace_tiles.png",
    "imagewidth": 256,
-   "imageheight": 256,
+   "imageheight": 320,
    "columns": 8,
-   "tilecount": 62,
+   "tilecount": 80,
    "tilewidth": 32,
    "tileheight": 32,
    "margin": 0,
@@ -2146,6 +2146,226 @@
        "name": "name",
        "type": "string",
        "value": "ruin_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 62,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "frost_field"
+      }
+     ]
+    },
+    {
+     "id": 63,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "frost_road"
+      }
+     ]
+    },
+    {
+     "id": 64,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "ice"
+      }
+     ]
+    },
+    {
+     "id": 65,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "snow"
+      }
+     ]
+    },
+    {
+     "id": 66,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "snow_path"
+      }
+     ]
+    },
+    {
+     "id": 67,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "snow_rock"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 68,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dwarf_floor"
+      }
+     ]
+    },
+    {
+     "id": 69,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "stone_bridge"
+      }
+     ]
+    },
+    {
+     "id": 70,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "dwarf_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 71,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "forge_floor"
+      }
+     ]
+    },
+    {
+     "id": 72,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "black_rock"
+      }
+     ]
+    },
+    {
+     "id": 73,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "lava"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 74,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "lava2"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 75,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "lava_rock_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 76,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "astra_floor"
+      }
+     ]
+    },
+    {
+     "id": 77,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "astra_wall"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 78,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "barrier"
+      },
+      {
+       "name": "solid",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 79,
+     "properties": [
+      {
+       "name": "name",
+       "type": "string",
+       "value": "cloud"
       },
       {
        "name": "solid",

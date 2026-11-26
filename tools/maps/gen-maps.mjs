@@ -69,6 +69,17 @@ const FLOOR = {
   h: () => 'dry_field',
   l: () => 'dry_grass',
   p: () => 'forest_floor',
+  // 4막
+  1: () => 'frost_field',
+  2: () => 'frost_road',
+  3: () => 'ice',
+  4: () => 'snow',
+  5: () => 'snow_path',
+  6: () => 'dwarf_floor',
+  7: () => 'stone_bridge',
+  8: () => 'forge_floor',
+  9: () => 'black_rock',
+  0: () => 'astra_floor',
 };
 const WALL = {
   Q: (x, y) => ((x * 3 + y * 7) % 4 === 0 ? 'deep_water2' : 'deep_water'), // 저수조 깊은 물 (벽 레이어라 못 들어감)
@@ -96,6 +107,14 @@ const WALL = {
   J: () => 'rock_wall',
   // 3막
   G: () => 'ruin_wall',
+  // 4막
+  D: () => 'snow_rock',
+  E: () => 'dwarf_wall',
+  F: (x, y) => ((x * 5 + y * 3) % 4 === 0 ? 'lava2' : 'lava'),
+  M: () => 'lava_rock_wall',
+  N: () => 'astra_wall',
+  V: () => 'barrier',
+  W: () => 'cloud',
 };
 
 /** 맵 한 장을 Tiled JSON으로 */
@@ -988,6 +1007,337 @@ const hiddenProp = (name, key, x, y, extra = {}) => ({ type: 'prop', name, key, 
   objects.push(spawn('leon_north', cx(20), ty(7), 'up'), spawn('serena_north', cx(18), ty(7), 'up'), spawn('elysia_north', cx(17), ty(8), 'up'), spawn('karg_north', cx(22), ty(8), 'up'), spawn('galia_north', cx(23), ty(7), 'up'));
   objects.push(spawn('view_mountains', cx(20), ty(2)));
   MAPS.hunter_creek = { rows: m.rows(), objects, props: { place: '사냥꾼의 길', ambient: '#f2ead6', bg: '#2a3020' } };
+}
+
+// ---------------------------------------------------------------------
+// 4막 (4막_연출.md "맵 목록")
+// ---------------------------------------------------------------------
+const party5 = (tag, pts, facing) => ['leon', 'elysia', 'karg', 'serena', 'galia'].map((id, i) => spawn(`${id}_${tag}`, pts[i][0], pts[i][1], facing));
+const P = (c, r, dx = 0, dy = 0) => [cx(c) + dx, ty(r) + dy];
+const pine = (c, r) => ({ type: 'prop', name: 'snow_pine', x: cx(c), y: ty(r) + 12, solid: '12,8' });
+
+// ---- 4막-1) 로웬 평원 북쪽 길 (55 x 25): 서리 내린 누런 들, 얼어붙은 개울, 반쯤 쓰러진 경계석, 멀리 하얀 산맥. 맵 끝에 야영지 ----
+{
+  const W = 55;
+  const H = 25;
+  const m = grid(W, H, '1');
+  m.rect(0, 11, W - 1, 13, '2');
+  m.rect(20, 0, 22, H - 1, '3');
+  m.rect(20, 11, 22, 13, '2');
+  const objects = [];
+  for (const c of [6, 24, 42]) objects.push({ type: 'prop', name: 'far_mountains', x: cx(c), y: ty(1) + 12 });
+  objects.push({ type: 'prop', name: 'border_stone', x: cx(17), y: ty(9) + 10, solid: '16,8' }, look('a4_border_stone', cx(17), ty(10), ty(8) - 20));
+  objects.push({ type: 'prop', name: 'tent', x: cx(51), y: ty(14), solid: '60,12' });
+  objects.push({ type: 'prop', name: 'campfire', x: cx(49), y: ty(17) + 8, solid: '20,8' });
+  objects.push(...party5('start', [P(3, 12), P(1, 13), P(4, 13, 0, 8), P(2, 11), P(0, 11)], 'right'));
+  objects.push(...party5('arg', [P(38, 12), P(41, 11), P(42, 13), P(39, 13, 0, 6), P(37, 11)], 'right'));
+  objects.push(spawn('elysia_arg2', cx(41), ty(12), 'right'), spawn('karg_arg2', cx(42), ty(12) + 6, 'left'));
+  objects.push(...party5('camp', [P(47, 17), P(50, 19), P(51, 17), P(48, 17, 8, -10), P(49, 15)], 'right'));
+  objects.push(spawn('serena_dagger', cx(48), ty(17), 'left'));
+  objects.push(spawn('view_north', cx(30), ty(4)));
+  objects.push({ type: 'goal', name: 'goal_north', x: cx(38), y: ty(12), r: 48 });
+  MAPS.lowen_north = { rows: m.rows(), objects, props: { place: '로웬 평원 북쪽', ambient: '#f4efe4', bg: '#c8c0a8' } };
+}
+
+// ---- 4막-2) 주인 없는 산길 (55 x 30): 눈 덮인 바위길, 버려진 교역 수레, 도적 야영 흔적, 절벽 ----
+{
+  const W = 55;
+  const H = 30;
+  const m = grid(W, H, '4');
+  m.rect(0, 0, W - 1, 2, 'D');
+  m.rect(0, 27, W - 1, H - 1, 'D');
+  m.rect(30, 3, 34, 9, 'D');
+  m.rect(36, 19, 44, 26, 'D');
+  // 길: 왼쪽 아래 → 가운데 → 오른쪽 위
+  m.rect(0, 19, 24, 21, '5');
+  m.rect(22, 11, 24, 21, '5');
+  m.rect(22, 11, 46, 13, '5');
+  m.rect(44, 5, 46, 13, '5');
+  m.rect(44, 5, W - 1, 7, '5');
+  const objects = [];
+  for (const [c, r] of [[2, 5], [6, 4], [12, 6], [17, 4], [27, 4], [38, 15], [50, 16], [52, 11], [8, 24], [16, 25], [28, 24], [48, 24], [36, 4], [41, 2]]) objects.push(pine(c, r));
+  // 도적이 숨은 바위, 도적 야영 흔적
+  objects.push({ type: 'prop', name: 'snow_boulder', x: cx(15), y: ty(14) + 8, solid: '32,10' }, { type: 'prop', name: 'snow_boulder', x: cx(19), y: ty(13) + 8, solid: '32,10' });
+  objects.push({ type: 'prop', name: 'campfire_out', x: cx(10), y: ty(10) + 4 }, { type: 'prop', name: 'crates', x: cx(7), y: ty(10) + 8, solid: '30,10' });
+  objects.push({ type: 'prop', name: 'trade_cart', x: cx(34), y: ty(15) + 4, solid: '48,12' }, look('a4_trade_cart', cx(34), ty(16), ty(14) - 16));
+  objects.push(...party5('start', [P(3, 20), P(1, 21), P(4, 21, 0, 8), P(2, 19), P(0, 19)], 'right'));
+  objects.push(...party5('s2', [P(13, 19), P(11, 20), P(14, 20, 0, 8), P(12, 20, -8, 14), P(10, 19)], 'up'));
+  for (let i = 0; i < 5; i++) objects.push(spawn(`bandit${i + 1}`, cx(13 + i * 2), ty(15) + (i % 2) * 12, 'down'), spawn(`bandit${i + 1}_from`, cx(14 + i), ty(13) - 4, 'down'));
+  objects.push(spawn('bandit_run', cx(16), ty(3), 'up'));
+  objects.push(...party5('pass', [P(23, 18), P(22, 19), P(24, 19, 0, 8), P(23, 20), P(21, 19)], 'up'));
+  objects.push({ type: 'mob', name: 'mob1', x: cx(30), y: ty(12), sprite: 'crag_lizard', battle: '산길 몹 1' });
+  objects.push({ type: 'mob', name: 'mob2', x: cx(45), y: ty(9), sprite: 'crag_lizard', battle: '산길 몹 2' });
+  objects.push({ type: 'goal', name: 'goal_gate', x: cx(53), y: ty(6), r: 48 });
+  objects.push({ type: 'arena', name: 'arena', x: 6 * TS, y: 12 * TS, w: 448, h: 288 });
+  objects.push({ type: 'snow', name: 'sky', x: 0, y: 0, w: W * TS, h: H * TS, mode: 'fall' });
+  MAPS.eisen_pass = { rows: m.rows(), objects, props: { place: '주인 없는 산길', ambient: '#e8ecf4', bg: '#9aa0aa' } };
+}
+
+// ---- 4막-3) 그림헬름 관문 (30 x 20): 절벽에 박힌 거대한 돌문(망치와 모루 문양). 눈보라. 장면 3과 장면 8 ----
+{
+  const W = 30;
+  const H = 20;
+  const m = grid(W, H, '4');
+  m.rect(0, 0, W - 1, 7, 'D');
+  m.rect(13, 8, 16, H - 1, '5');
+  const objects = [];
+  objects.push({ type: 'prop', name: 'stone_gate', key: 'gate_shut', x: cx(15) - 16, y: 8 * TS });
+  objects.push(hiddenProp('stone_gate_open', 'gate_open', cx(15) - 16, 8 * TS));
+  for (const [c, r] of [[3, 10], [7, 13], [25, 11], [27, 15], [2, 17]]) objects.push(pine(c, r));
+  // 보랏빛 원: 1 → 2 → 5 → 12 (장면 8)
+  const portals = [[15, 11], [10, 12], [20, 12], [7, 15], [23, 15], [12, 9], [18, 9], [5, 11], [25, 10], [9, 17], [21, 17], [15, 17]];
+  portals.forEach(([c, r], i) => objects.push(hiddenProp('portal_circle', `portal${i + 1}`, cx(c), ty(r) + 10)));
+  portals.slice(0, 6).forEach(([c, r], i) => objects.push(spawn(`mage${i + 1}`, cx(c), ty(r) + 4, 'down')));
+  objects.push(spawn('gatekeeper', cx(15) - 16, ty(9), 'down'));
+  objects.push(...party5('gate', [P(14, 13), P(12, 14), P(16, 14), P(13, 15, 8, 4), P(15, 15, 8, 6)], 'up'));
+  objects.push(spawn('karg_step', cx(14), ty(11), 'up'), spawn('karg_in', cx(14), ty(8), 'up'));
+  objects.push(...party5('s8', [P(14, 14), P(12, 15), P(16, 15), P(14, 16, 0, 6), P(16, 13)], 'up'));
+  objects.push(spawn('leon_down', cx(14), ty(13), 'up'));
+  objects.push({ type: 'arena', name: 'arena', x: 8 * TS, y: 10 * TS, w: 448, h: 288 });
+  objects.push({ type: 'snow', name: 'sky', x: 0, y: 0, w: W * TS, h: H * TS, mode: 'fall' });
+  MAPS.grimhelm_gate = { rows: m.rows(), objects, props: { place: '그림헬름 관문', ambient: '#dfe4ee', bg: '#8a909c' } };
+}
+
+// ---- 4막-4) 그림헬름 지하 도시 (45 x 30): 수백 개의 화덕 불빛, 돌다리, 큰 벽화, 망치 소리 ----
+{
+  const W = 45;
+  const H = 30;
+  const m = grid(W, H, '6');
+  m.rect(0, 0, W - 1, 2, 'E');
+  m.rect(0, 0, 0, H - 1, 'E');
+  m.rect(W - 1, 0, W - 1, H - 1, 'E');
+  m.rect(0, H - 1, W - 1, H - 1, 'E');
+  m.rect(1, 13, W - 2, 15, 'F'); // 용암 물길
+  m.rect(20, 13, 24, 15, '7'); // 돌다리
+  m.set(22, H - 1, '6'); // 아래 입구
+  const objects = [];
+  objects.push(wallItem('mural', cx(22), 3 * TS - 2), look('a4_mural', cx(22), ty(3) + 8, ty(1) - 10));
+  for (const [c, r] of [[4, 5], [10, 5], [34, 5], [40, 5], [4, 19], [10, 19], [34, 19], [40, 19], [4, 25], [40, 25]]) objects.push({ type: 'prop', name: 'forge_lit', x: cx(c), y: ty(r) + 10, solid: '52,14' });
+  for (const [c, r] of [[15, 7], [29, 7], [15, 22], [29, 22]]) objects.push({ type: 'prop', name: 'anvil', x: cx(c), y: ty(r) + 8, solid: '24,8' });
+  objects.push(...party5('hall', [P(22, 27), P(21, 28), P(23, 28), P(22, 28, 0, 10), P(23, 27, 10, 0)], 'up'));
+  objects.push(...party5('hall_end', [P(22, 5), P(21, 6), P(23, 6), P(22, 6, 0, 10), P(23, 5, 10, 0)], 'up'));
+  objects.push(spawn('leon_night', cx(22), ty(20), 'up'), spawn('leon_start', cx(22), ty(20), 'up'));
+  objects.push(spawn('door_forge', cx(42), ty(21), 'right'));
+  objects.push({ type: 'goal', name: 'goal_forge', x: cx(42), y: ty(21), r: 40 });
+  MAPS.grimhelm_hall = { rows: m.rows(), objects, props: { place: '그림헬름', ambient: '#6a4a3a', bg: '#140a06' } };
+}
+
+// ---- 4막-5) 도린의 기록실 (16 x 12): 벽을 따라 선 돌판 셋과 구석의 반으로 깨진 돌판 하나, 옆방으로 가는 문 ----
+{
+  const W = 16;
+  const H = 12;
+  const m = grid(W, H, '6');
+  m.rect(0, 0, W - 1, 1, 'E');
+  m.rect(0, 0, 0, H - 1, 'E');
+  m.rect(W - 1, 0, W - 1, H - 1, 'E');
+  m.rect(0, H - 1, W - 1, H - 1, 'E');
+  m.rect(0, 5, 0, 6, '6'); // 옆방 문 (아이들 웃음소리)
+  m.set(8, H - 1, '6');
+  const objects = [];
+  [[3, 1], [7, 2], [12, 3]].forEach(([c, n]) => {
+    objects.push({ type: 'prop', name: `stone_tablet${n}`, x: cx(c), y: ty(2) + 12, solid: '28,8' });
+    objects.push(look(`a4_tablet_${n}`, cx(c), ty(3), ty(1) - 30));
+  });
+  objects.push({ type: 'prop', name: 'broken_tablet', x: cx(13), y: ty(9) + 10, solid: '28,8' }, look('a4_tablet_4', cx(13), ty(9) + 14, ty(8) - 10));
+  objects.push(hiddenProp('tablet_glow', 'tab4_glow', cx(13), ty(9) + 10));
+  objects.push({ type: 'prop', name: 'candle', x: cx(1), y: ty(2) + 4 }, { type: 'prop', name: 'candle', x: cx(14), y: ty(2) + 4 });
+  objects.push(...party5('in', [P(8, 9), P(7, 10), P(9, 10), P(8, 10, -14, 6), P(9, 9, 14, 0)], 'up'));
+  objects.push(spawn('brida', cx(10), ty(6), 'left'), spawn('brida_out', cx(8), ty(11), 'down'), spawn('brida_door', cx(8), ty(10), 'up'));
+  ['kid1', 'kid2', 'kid3'].forEach((k, i) => objects.push(spawn(k, cx(1), ty(5) + i * 10, 'right'), spawn(`${k}_out`, -16, ty(5) + i * 10, 'left')));
+  objects.push(spawn('serena_door', cx(1), ty(6), 'left'), spawn('serena_out', -16, ty(6), 'left'));
+  // 돌판마다 엘리시아·카르크가 곁에 선다 (구간 시작), 레온이 볼 자리
+  [[3, 3], [7, 3], [12, 3], [13, 10]].forEach(([c, r], i) => {
+    const t = i + 1;
+    objects.push(spawn(`elysia_t${t}`, cx(c) - 18, ty(r) + (t === 4 ? 0 : 6), t === 4 ? 'right' : 'up'), spawn(`karg_t${t}`, cx(c) + 22, ty(r) + (t === 4 ? -20 : 10), t === 4 ? 'down' : 'up'));
+    objects.push(spawn(`leon_t${t}`, cx(c), ty(r) + (t === 4 ? -22 : 20), t === 4 ? 'down' : 'up'));
+  });
+  objects.push(spawn('elysia_kneel', cx(12), ty(9) + 10, 'right'), spawn('galia_wall', cx(14), ty(5), 'left'));
+  objects.push(spawn('leon_alone', cx(8), ty(6), 'up'), spawn('elysia_leave', cx(8), ty(11) + 16, 'down'));
+  objects.push(spawn('leon_plate', cx(9), ty(5), 'down'), spawn('brida_plate', cx(9), ty(6) + 8, 'up'));
+  MAPS.dorin_archive = { rows: m.rows(), objects, props: { place: '도린의 기록실', ambient: '#7a5a48', bg: '#0c0806' } };
+}
+
+// ---- 4막-6) 브리다의 대장간 (18 x 12): 화덕, 모루, 선반, 이름이 새겨진 벽 ----
+{
+  const W = 18;
+  const H = 12;
+  const m = grid(W, H, '8');
+  m.rect(0, 0, W - 1, 1, 'E');
+  m.rect(0, 0, 0, H - 1, 'E');
+  m.rect(W - 1, 0, W - 1, H - 1, 'E');
+  m.rect(0, H - 1, W - 1, H - 1, 'E');
+  m.set(9, H - 1, '8');
+  const objects = [];
+  objects.push({ type: 'prop', name: 'forge_lit', x: cx(3), y: ty(3) + 10, solid: '52,14' });
+  objects.push({ type: 'prop', name: 'anvil', x: cx(8), y: ty(5) + 8, solid: '24,8' });
+  objects.push(wallItem('shelf', cx(12), 2 * TS + 8), wallItem('name_wall', cx(15), 2 * TS + 14), look('a4_forge_names', cx(15), ty(3), ty(1) - 20));
+  objects.push({ type: 'prop', name: 'straw_bed', x: cx(14), y: ty(9) + 12 });
+  objects.push(hiddenProp('rusty_hammers', 'hammers_down', cx(9), ty(6) + 8));
+  objects.push(spawn('brida', cx(7), ty(5), 'right'), spawn('brida_anvil', cx(8), ty(4), 'down'));
+  objects.push(...party5('f', [P(9, 8), P(6, 8, 0, 6), P(11, 8, 0, 6), P(8, 9, 0, 6), P(12, 9)], 'up'));
+  objects.push(spawn('leon_bed', cx(14), ty(9) + 6, 'up'), spawn('leon_night', cx(9), ty(10), 'up'), spawn('leon_start', cx(9), ty(10), 'up'));
+  objects.push(spawn('karg_hammers', cx(9), ty(7), 'up'));
+  objects.push({ type: 'goal', name: 'goal_bed', x: cx(14), y: ty(9), r: 36 });
+  MAPS.brida_forge = { rows: m.rows(), objects, props: { place: '브리다의 대장간', ambient: '#7a5040', bg: '#0c0604' } };
+}
+
+// ---- 4막-7) 무스펠 화산지대 (60 x 35): 용암 강, 검게 굳은 바위, 증기 구멍, 좁은 다리. 붉은 빛이 바닥에서 올라옴 ----
+{
+  const W = 60;
+  const H = 35;
+  const m = grid(W, H, '9');
+  m.rect(0, 0, W - 1, 1, 'M');
+  m.rect(0, H - 2, W - 1, H - 1, 'M');
+  m.rect(0, 0, 0, H - 1, 'M');
+  m.rect(W - 1, 0, W - 1, H - 1, 'M');
+  // 용암 강 셋과 좁은 다리
+  m.rect(14, 2, 17, H - 3, 'F');
+  m.rect(14, 24, 17, 25, '9');
+  m.rect(30, 2, 33, H - 3, 'F');
+  m.rect(30, 8, 33, 9, '9');
+  m.rect(18, 15, 29, 18, 'F');
+  m.rect(22, 15, 23, 18, '9');
+  m.rect(44, 2, 47, H - 3, 'F');
+  m.rect(44, 20, 47, 21, '9');
+  m.rect(50, 2, W - 2, 9, 'F'); // 오른쪽 위 용암 호수
+  m.rect(1, 2, 5, 6, 'M'); // 숨은 틈 뒤 벽
+  m.rect(2, 3, 3, 5, '9'); // 증기 구멍 뒤 좁은 틈 (숨은 증기 동굴)
+  m.set(3, 6, '9');
+  const objects = [];
+  for (const [c, r] of [[3, 8], [10, 28], [26, 5], [37, 26], [41, 12], [53, 25]]) objects.push({ type: 'prop', name: 'steam_vent', x: cx(c), y: ty(r) + 8 });
+  objects.push({ type: 'prop', name: 'red_crystal', x: cx(2), y: ty(4) + 10 }, look('a4_hidden_vent', cx(3), ty(5), ty(3) - 10));
+  objects.push({ type: 'prop', name: 'melted_helm', x: cx(38), y: ty(16) + 6 }, look('a4_melted_helm', cx(38), ty(16) + 10, ty(15) - 6));
+  objects.push(...party5('start', [P(4, 26), P(3, 27), P(5, 27, 0, 8), P(4, 28, 0, 4), P(2, 26)], 'right'));
+  objects.push(...party5('lake', [P(52, 12), P(50, 13), P(54, 13), P(51, 14, 0, 6), P(53, 14, 0, 6)], 'up'));
+  objects.push(spawn('karg_lake', cx(52), ty(11), 'up'), spawn('karg_front', cx(53), ty(11), 'up'));
+  objects.push({ type: 'mob', name: 'mob1', x: cx(24), y: ty(24), sprite: 'fire_spirit', battle: '화산 몹 1' });
+  objects.push({ type: 'mob', name: 'mob2', x: cx(39), y: ty(9), sprite: 'magma_slug', battle: '화산 몹 2' });
+  objects.push({ type: 'goal', name: 'goal_lake', x: cx(52), y: ty(12), r: 48 });
+  objects.push({ type: 'arena', name: 'arena', x: 18 * TS, y: 20 * TS, w: 448, h: 288 });
+  MAPS.muspel_a = { rows: m.rows(), objects, props: { place: '무스펠 화산지대', ambient: '#c87860', bg: '#200604' } };
+}
+
+// ---- 4막-8) 화산의 심장 (30 x 25): 용암 호수 한가운데의 둥근 바위판(보스 전투장) ----
+{
+  const W = 30;
+  const H = 25;
+  const m = grid(W, H, 'F');
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) if (((x - 14.5) / 9.5) ** 2 + ((y - 12) / 7) ** 2 <= 1) m.set(x, y, '9');
+  m.rect(13, 18, 16, H - 1, '9'); // 들어오는 바위길
+  m.rect(24, 16, 26, 18, '9'); // 돌아 나오는 길 바위틈
+  m.rect(0, 0, W - 1, 0, 'M');
+  const objects = [];
+  objects.push(hiddenProp('lava_mound', 'guardian', cx(14) + 16, ty(10) + 16));
+  objects.push(hiddenProp('cooled_guardian', 'guardian_stone', cx(14) + 16, ty(10) + 12));
+  objects.push(hiddenProp('rusty_hammers', 'hammers', cx(25), ty(17) + 6));
+  objects.push(...party5('in', [P(14, 22), P(13, 23), P(16, 23), P(15, 23, 0, 10), P(14, 23, -8, 12)], 'up'));
+  objects.push(...party5('core', [P(14, 14), P(12, 15), P(17, 15), P(15, 15, 0, 10), P(13, 14, -6, 8)], 'up'));
+  objects.push(...party5('out', [P(24, 17), P(22, 17, 0, 8), P(25, 18), P(23, 18, 0, 8), P(21, 17)], 'right'));
+  objects.push(spawn('view_core', cx(14) + 16, ty(10)));
+  objects.push({ type: 'arena', name: 'arena', x: 8 * TS, y: 7 * TS, w: 448, h: 288 });
+  MAPS.muspel_core = { rows: m.rows(), objects, props: { place: '화산의 심장', ambient: '#d08060', bg: '#200604' } };
+}
+
+// ---- 4막-9) 결계 감옥 (14 x 10): 투명한 벽, 벽 너머 발아래로 흐르는 구름. 옆 칸(갈리아) ----
+{
+  const W = 14;
+  const H = 10;
+  const m = grid(W, H, 'W');
+  m.rect(1, 1, 5, 6, '0'); // 레온의 칸
+  m.rect(8, 1, 12, 6, '0'); // 옆 칸 (갈리아)
+  m.rect(0, 0, 6, 0, 'V');
+  m.rect(7, 0, 13, 0, 'V');
+  m.rect(0, 0, 0, 7, 'V');
+  m.rect(6, 0, 7, 7, 'V');
+  m.rect(13, 0, 13, 7, 'V');
+  m.rect(0, 7, 13, 7, 'V');
+  m.rect(0, 8, W - 1, 9, '0'); // 감옥 앞 복도
+  const objects = [];
+  objects.push(spawn('leon_cell', cx(3), ty(4), 'down'), spawn('leon_wall', cx(3), ty(6), 'down'), spawn('leon_lie', cx(3), ty(3), 'down'));
+  objects.push(spawn('galia_cell', cx(10), ty(4), 'left'), spawn('galia_wall', cx(8), ty(4), 'left'));
+  objects.push(spawn('elysia_visit', cx(3), ty(8) + 6, 'up'), spawn('elysia_from', -20, ty(9), 'right'), spawn('elysia_go', -20, ty(9), 'left'));
+  objects.push(spawn('leon_out', cx(3), ty(8) + 4, 'right'), spawn('galia_out', cx(10), ty(8) + 4, 'left'));
+  objects.push(spawn('view_south', cx(7), ty(9)));
+  MAPS.astra_cell = { rows: m.rows(), objects, props: { place: '아스트라, 결계 감옥', ambient: '#dfe4f4', bg: '#6a7aa8' } };
+}
+
+// ---- 4막-10) 탑주의 방 (16 x 12): 책과 측정 기구, 큰 창 밖의 하늘 (막간은 맵 없이 연출하므로 지금은 쓰지 않음) ----
+{
+  const W = 16;
+  const H = 12;
+  const m = grid(W, H, '0');
+  m.rect(0, 0, W - 1, 1, 'N');
+  m.rect(5, 0, 10, 1, 'W'); // 큰 창
+  m.rect(0, 0, 0, H - 1, 'N');
+  m.rect(W - 1, 0, W - 1, H - 1, 'N');
+  m.rect(0, H - 1, W - 1, H - 1, 'N');
+  const objects = [];
+  objects.push(wallItem('bookcase', cx(2) + 16, 2 * TS + 22), wallItem('bookcase', cx(12) + 16, 2 * TS + 22));
+  objects.push({ type: 'prop', name: 'rune_table', x: cx(8), y: ty(6) + 10, solid: '36,10' }, { type: 'prop', name: 'measure_paper', x: cx(10), y: ty(7) + 8 });
+  objects.push(spawn('cassius', cx(8), ty(3), 'down'), spawn('elysia', cx(8), ty(8), 'up'));
+  MAPS.astra_study = { rows: m.rows(), objects, props: { place: '아스트라, 탑주의 방', ambient: '#9a90c8', bg: '#2a2448' } };
+}
+
+// ---- 4막-11) 탑의 복도 (45 x 12): 흰 돌 복도, 실험실 유리창(안에 카르크), 보랏빛 등 ----
+{
+  const W = 45;
+  const H = 12;
+  const m = grid(W, H, '0');
+  m.rect(0, 0, W - 1, 2, 'N');
+  m.rect(0, 10, W - 1, H - 1, 'N');
+  const objects = [];
+  for (const c of [8, 16, 24, 32]) objects.push(wallItem('lab_window', cx(c), 3 * TS - 2));
+  for (const c of [4, 12, 20, 28, 36, 42]) objects.push(wallItem('violet_lamp', cx(c), 3 * TS - 4));
+  objects.push(...party5('start', [P(3, 6), P(2, 7), P(4, 7, 0, 8), P(1, 6), P(5, 6)], 'right'));
+  objects.push(...party5('end', [P(41, 6), P(40, 7), P(42, 7, 0, 8), P(39, 6), P(43, 6)], 'right'));
+  for (let i = 0; i < 4; i++) objects.push(spawn(`mage${i + 1}`, cx(30 + i * 2), ty(5 + (i % 3)), 'left'));
+  objects.push(spawn('galia_sweep', cx(29), ty(6), 'right'));
+  objects.push({ type: 'goal', name: 'goal_portal', x: cx(43), y: ty(6), r: 40 });
+  MAPS.astra_corridor = { rows: m.rows(), objects, props: { place: '아스트라, 탑의 복도', ambient: '#e4e0f0', bg: '#2a2448' } };
+}
+
+// ---- 4막-12) 포탈실 (24 x 18): 방 한가운데 거대한 돌고리 ----
+{
+  const W = 24;
+  const H = 18;
+  const m = grid(W, H, '0');
+  m.rect(0, 0, W - 1, 1, 'N');
+  m.rect(0, 0, 0, H - 1, 'N');
+  m.rect(W - 1, 0, W - 1, H - 1, 'N');
+  m.rect(0, H - 1, W - 1, H - 1, 'N');
+  m.rect(11, H - 1, 12, H - 1, '0'); // 문
+  const objects = [];
+  objects.push({ type: 'prop', name: 'stone_ring', x: cx(11) + 16, y: ty(7) + 16, solid: '60,10' });
+  objects.push(hiddenProp('ring_light', 'ring_light', cx(11) + 16, ty(7) + 16));
+  for (const c of [3, 20]) objects.push(wallItem('violet_lamp', cx(c), 2 * TS - 4));
+  const pts = [[5, 4], [18, 4], [3, 9], [20, 9], [6, 13], [17, 13], [9, 3], [14, 3], [2, 6], [21, 6], [2, 13], [21, 13]];
+  pts.forEach(([c, r], i) => objects.push(hiddenProp('portal_circle', `portal${i + 1}`, cx(c), ty(r) + 10)));
+  objects.push(...party5('in', [P(12, 14), P(10, 14, 8, 0), P(13, 15), P(11, 15, 8, 8), P(14, 14)], 'up'));
+  objects.push(...party5('ring', [P(12, 10), P(11, 11, -4, 4), P(13, 11), P(12, 11, 0, 10), P(14, 11)], 'up'));
+  objects.push(spawn('elysia_stay', cx(11) + 16, ty(13), 'down'), spawn('elysia_fall', cx(11) + 4, ty(11) + 8, 'down'));
+  objects.push(spawn('leon_jump', cx(11) + 16, ty(8), 'up'), spawn('karg_jump', cx(12), ty(8), 'up'), spawn('serena_jump', cx(11), ty(8), 'up'));
+  objects.push(spawn('door', cx(11) + 16, ty(17), 'up'));
+  objects.push({ type: 'arena', name: 'arena', x: 5 * TS, y: 7 * TS, w: 448, h: 288 });
+  MAPS.astra_portal = { rows: m.rows(), objects, props: { place: '아스트라, 포탈실', ambient: '#a89ad0', bg: '#1a1430' } };
+}
+
+// ---- 4막-13) 세라핀 구릉 근처 언덕 (40 x 20): 낮은 언덕, 언덕 아래 피난민의 긴 줄, 멀리 대성당의 첨탑 ----
+{
+  const W = 40;
+  const H = 20;
+  const m = grid(W, H, 'l');
+  m.rect(12, 2, 28, 9, 'g'); // 언덕
+  m.rect(0, 14, W - 1, 16, 't'); // 언덕 아래 길
+  const objects = [];
+  objects.push({ type: 'prop', name: 'cathedral_far', x: cx(36), y: ty(4) + 10 }, { type: 'prop', name: 'far_mountains', x: cx(8), y: ty(1) + 10 });
+  objects.push(hiddenProp('cairn3', 'grave', cx(20), ty(4) + 6));
+  for (let i = 0; i < 8; i++) objects.push(spawn(`refugee${i + 1}`, cx(2 + i * 4), ty(15) + (i % 2) * 8, 'right'), spawn(`refugee${i + 1}_to`, cx(30 + i * 4), ty(15) + (i % 2) * 8, 'right'));
+  objects.push(...party5('hill', [P(20, 8), P(18, 9), P(22, 9), P(19, 8, -6, 10), P(21, 8, 6, 10)], 'down'));
+  objects.push(...party5('arrive', [P(18, 7), P(17, 8), P(21, 7), P(19, 8), P(22, 8)], 'down'));
+  objects.push(spawn('elysia_lie', cx(19), ty(7) + 6, 'down'), spawn('karg_grave', cx(21), ty(5), 'up'), spawn('leon_grave', cx(19), ty(5) + 10, 'up'), spawn('serena_grave', cx(20), ty(6), 'up'));
+  objects.push(spawn('view_hill', cx(20), ty(10)));
+  MAPS.seraphine_hill = { rows: m.rows(), objects, props: { place: '세라핀 구릉 근처', ambient: '#dcdcd4', bg: '#7a7a6a' } };
 }
 
 // ---------------------------------------------------------------------

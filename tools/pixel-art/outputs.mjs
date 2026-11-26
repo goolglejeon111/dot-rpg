@@ -101,7 +101,7 @@ function standRow(c) {
 
 // 확인용 한 장: 인물마다 한 줄씩 (아래, 왼쪽, 오른쪽, 위), 발밑 그림자 포함
 const LEON = { id: 'leon', legs: {} };
-const ALL = [LEON, { id: 'leon_hood', legs: {} }, ...CHARS];
+const ALL = [LEON, { id: 'leon_hood', legs: {} }, { id: 'leon_blade', legs: {} }, ...CHARS];
 const withShadow = (f) => ({ ...f, layers: [{ art: 'shadow', x: 6, y: 34 }, ...f.layers] });
 const PREVIEW_FRAMES = ALL.flatMap(standRow).map(withShadow);
 
@@ -129,6 +129,12 @@ export const OUTPUTS = [
     cell: [32, 40],
     columns: 5,
     frames: fullSheet((v) => `leon_hood_body_${v}`),
+  },
+  {
+    file: 'public/assets/sprites/leon_blade.png', // 4막 각인 무기
+    cell: [32, 40],
+    columns: 5,
+    frames: fullSheet((v) => `leon_blade_body_${v}`),
   },
   ...CHARS.map(characterSheet),
   // 확인용: 모든 인물을 한 장에 (4방향씩 가로로 두 묶음), 풀밭 배경, 3배 확대

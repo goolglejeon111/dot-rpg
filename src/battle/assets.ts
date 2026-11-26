@@ -19,6 +19,9 @@ export const WALK_SPRITES = [
   'leon_hood', 'mob_citizen', 'sewer_rat', 'sewer_leech', 'imperial_spear', 'imperial_archer', 'pursuit_sword', 'pursuit_shield',
   'mob_paladin', 'mob_wolf', 'ursha', 'wolf_scout', 'wolf_scout_tied', 'bandit_blade', 'bandit_archer', 'sand_crawler', 'desert_scorpion',
   'ignatius', 'serena_hood', 'blacksmith', 'paladin_captain', 'raid_captain', 'mist_beast',
+  // 4막
+  'leon_blade', 'dwarf_smith', 'dwarf_gatekeeper', 'dwarf_kid', 'dwarf_kid2', 'dwarf_kid3', 'astra_mage', 'astra_captain', 'astra_binder',
+  'crag_lizard', 'fire_spirit', 'magma_slug',
 ];
 
 export const fxInfo = (key: string) => FX[key];

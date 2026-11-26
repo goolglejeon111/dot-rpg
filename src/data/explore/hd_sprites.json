@@ -258,7 +258,30 @@
       "floor_c",
       "floor_d",
       "floor_e",
-      "carpet_mid_b"
+      "carpet_mid_b",
+      "stone_v1",
+      "stone_v2",
+      "cobble_v1",
+      "grass_v1",
+      "grass_v2",
+      "sand_v1",
+      "desert_v1",
+      "desert_v2",
+      "mud_v1",
+      "cellar_floor_v1",
+      "road_v1",
+      "rock_floor_v1",
+      "dry_grass_v1",
+      "forest_floor_v1",
+      "frost_field_v1",
+      "snow_v1",
+      "snow_v2",
+      "snow_path_v1",
+      "dwarf_floor_v1",
+      "black_rock_v1",
+      "sewer_floor_v1",
+      "adobe_floor_v1",
+      "cistern_floor_v1"
     ],
     "variants": {
       "floor": [
@@ -266,6 +289,67 @@
         "floor_c",
         "floor_d",
         "floor_e"
+      ],
+      "stone": [
+        "stone_v1",
+        "stone_v2"
+      ],
+      "cobble": [
+        "cobble_v1"
+      ],
+      "grass": [
+        "grass_v1",
+        "grass_v2"
+      ],
+      "sand": [
+        "sand_v1"
+      ],
+      "desert": [
+        "desert_v1",
+        "desert_v2"
+      ],
+      "mud": [
+        "mud_v1"
+      ],
+      "cellar_floor": [
+        "cellar_floor_v1"
+      ],
+      "road": [
+        "road_v1"
+      ],
+      "rock_floor": [
+        "rock_floor_v1"
+      ],
+      "dry_grass": [
+        "dry_grass_v1"
+      ],
+      "forest_floor": [
+        "forest_floor_v1"
+      ],
+      "frost_field": [
+        "frost_field_v1"
+      ],
+      "snow": [
+        "snow_v1",
+        "snow_v2"
+      ],
+      "snow_path": [
+        "snow_path_v1"
+      ],
+      "dwarf_floor": [
+        "dwarf_floor_v1"
+      ],
+      "black_rock": [
+        "black_rock_v1"
+      ],
+      "sewer_floor": [
+        "sewer_floor_v1"
+      ],
+      "adobe_floor": [
+        "adobe_floor_v1"
+      ],
+      "cistern_floor": [
+        "cistern_floor_v1"
       ]
     },
     "alternate": {
@@ -273,7 +357,20 @@
     },
     "shadowBelow": [
       "wall_low",
-      "window_low"
+      "window_low",
+      "castle_wall",
+      "castle_moss",
+      "sewer_wall",
+      "cellar_wall",
+      "shack_wall",
+      "sandstone",
+      "adobe_wall",
+      "rock_wall",
+      "ruin_wall",
+      "snow_rock",
+      "dwarf_wall",
+      "lava_rock_wall",
+      "astra_wall"
     ]
   },
   "_files": [
@@ -281,6 +378,130 @@
     "public/assets/explore/torch.png",
     "public/assets/explore/banner.png",
     "public/assets/explore/vase.png",
-    "public/assets/explore/armor.png"
+    "public/assets/explore/armor.png",
+    "public/assets/explore/portrait.png",
+    "public/assets/explore/board.png",
+    "public/assets/explore/honor.png",
+    "public/assets/explore/prayer.png",
+    "public/assets/explore/sanctum.png",
+    "public/assets/explore/door_gold.png",
+    "public/assets/explore/bed.png",
+    "public/assets/explore/curtain.png",
+    "public/assets/explore/candle.png",
+    "public/assets/explore/pendant.png",
+    "public/assets/explore/window_open.png",
+    "public/assets/explore/table.png",
+    "public/assets/explore/belltower.png",
+    "public/assets/explore/grate.png",
+    "public/assets/explore/torchpost.png",
+    "public/assets/explore/look.png",
+    "public/assets/explore/scorch.png",
+    "public/assets/explore/bones.png",
+    "public/assets/explore/coins.png",
+    "public/assets/explore/ladder.png",
+    "public/assets/explore/rune_float.png",
+    "public/assets/explore/dye_vat.png",
+    "public/assets/explore/rune_table.png",
+    "public/assets/explore/straw_bed.png",
+    "public/assets/explore/cloth.png",
+    "public/assets/explore/measure_paper.png",
+    "public/assets/explore/notice.png",
+    "public/assets/explore/wanted.png",
+    "public/assets/explore/palisade.png",
+    "public/assets/explore/reeds.png",
+    "public/assets/explore/boat.png",
+    "public/assets/explore/well.png",
+    "public/assets/explore/well_cracked.png",
+    "public/assets/explore/palm.png",
+    "public/assets/explore/rock.png",
+    "public/assets/explore/big_rock.png",
+    "public/assets/explore/rock_arrow.png",
+    "public/assets/explore/camel_bones.png",
+    "public/assets/explore/dune.png",
+    "public/assets/explore/campfire.png",
+    "public/assets/explore/campfire_out.png",
+    "public/assets/explore/horse.png",
+    "public/assets/explore/tent.png",
+    "public/assets/explore/crates.png",
+    "public/assets/explore/cache.png",
+    "public/assets/explore/white_cloth.png",
+    "public/assets/explore/notebook.png",
+    "public/assets/explore/shield_down.png",
+    "public/assets/explore/shoes.png",
+    "public/assets/explore/toll_notice.png",
+    "public/assets/explore/wall_marks.png",
+    "public/assets/explore/hut_door.png",
+    "public/assets/explore/torch_stand.png",
+    "public/assets/explore/dark_tree.png",
+    "public/assets/explore/mark_tree.png",
+    "public/assets/explore/forge.png",
+    "public/assets/explore/blade_rack.png",
+    "public/assets/explore/spirit_stone.png",
+    "public/assets/explore/white_herbs.png",
+    "public/assets/explore/greatsword_planted.png",
+    "public/assets/explore/broken_greatsword.png",
+    "public/assets/explore/cairn1.png",
+    "public/assets/explore/cairn2.png",
+    "public/assets/explore/cairn3.png",
+    "public/assets/explore/folded_cloak.png",
+    "public/assets/explore/stone_wall.png",
+    "public/assets/explore/far_mountains.png",
+    "public/assets/explore/smoke.png",
+    "public/assets/explore/village_window.png",
+    "public/assets/explore/village_shutter.png",
+    "public/assets/explore/border_stone.png",
+    "public/assets/explore/trade_cart.png",
+    "public/assets/explore/snow_pine.png",
+    "public/assets/explore/snow_boulder.png",
+    "public/assets/explore/stone_gate.png",
+    "public/assets/explore/stone_gate_open.png",
+    "public/assets/explore/forge_lit.png",
+    "public/assets/explore/anvil.png",
+    "public/assets/explore/shelf.png",
+    "public/assets/explore/mural.png",
+    "public/assets/explore/stone_tablet1.png",
+    "public/assets/explore/stone_tablet2.png",
+    "public/assets/explore/stone_tablet3.png",
+    "public/assets/explore/broken_tablet.png",
+    "public/assets/explore/tablet_glow.png",
+    "public/assets/explore/name_wall.png",
+    "public/assets/explore/rusty_hammers.png",
+    "public/assets/explore/small_hammer.png",
+    "public/assets/explore/steam_vent.png",
+    "public/assets/explore/melted_helm.png",
+    "public/assets/explore/red_crystal.png",
+    "public/assets/explore/lava_mound.png",
+    "public/assets/explore/cooled_guardian.png",
+    "public/assets/explore/portal_circle.png",
+    "public/assets/explore/stone_ring.png",
+    "public/assets/explore/ring_light.png",
+    "public/assets/explore/lab_window.png",
+    "public/assets/explore/violet_lamp.png",
+    "public/assets/explore/bookcase.png",
+    "public/assets/explore/cathedral_far.png",
+    "public/assets/sprites/crag_lizard.png",
+    "public/assets/sprites/crate.png",
+    "public/assets/sprites/desert_scorpion.png",
+    "public/assets/sprites/fire_spirit.png",
+    "public/assets/sprites/house.png",
+    "public/assets/sprites/magma_slug.png",
+    "public/assets/sprites/mist_beast.png",
+    "public/assets/sprites/sand_crawler.png",
+    "public/assets/sprites/sewer_leech.png",
+    "public/assets/sprites/sewer_rat.png",
+    "public/assets/sprites/sign.png",
+    "public/assets/sprites/talk_icon.png",
+    "public/assets/sprites/tree.png",
+    "public/assets/battle/chars/astra_golem.png",
+    "public/assets/battle/chars/crag_lizard.png",
+    "public/assets/battle/chars/desert_scorpion.png",
+    "public/assets/battle/chars/fire_spirit.png",
+    "public/assets/battle/chars/lava_guardian.png",
+    "public/assets/battle/chars/magma_slug.png",
+    "public/assets/battle/chars/mist_beast.png",
+    "public/assets/battle/chars/sand_crawler.png",
+    "public/assets/battle/chars/sewer_eel.png",
+    "public/assets/battle/chars/sewer_leech.png",
+    "public/assets/battle/chars/sewer_rat.png"
   ]
 }

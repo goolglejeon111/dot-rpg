@@ -11,7 +11,7 @@
 //   tools/pixel-art/preview_hd.png          확인용
 //
 // 여기 있는 인물은 예전 생성기(outputs.mjs, gen-battle.mjs)가 덮어쓰지 않는다.
-import { writeFileSync, mkdirSync, existsSync, copyFileSync, readFileSync } from 'node:fs';
+import { writeFileSync, mkdirSync, existsSync, copyFileSync, readFileSync, readdirSync } from 'node:fs';
 import { readPNG } from './png-read.mjs';
 import { TILES, EXTRA, VARIANTS, ALTERNATE, SHADOW_BELOW, PROPS } from './hd/palace.mjs';
 import { dirname, join, resolve } from 'node:path';
@@ -19,6 +19,8 @@ import { fileURLToPath } from 'node:url';
 import { PEOPLE, drawPerson, drawWeapon, FOOT } from './hd/people.mjs';
 import { RAMPS as R } from './palette.mjs';
 import { Layer } from './hd/layer.mjs';
+import { WORLD_TILES, WORLD_EXTRA, WORLD_VARIANTS, WORLD_SHADOW } from './hd/world.mjs';
+import { remapData } from './hd/remap.mjs';
 import { encodePNG } from './png.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -250,8 +252,11 @@ if (!existsSync(oldTiles)) {
   copyFileSync(tilesFile, oldTiles);
 }
 {
-  const src = readPNG(tilesFile);
-  const extra = Object.keys(EXTRA);
+  // 바탕은 예전 그림(_old). 새로 그리지 않은 칸은 새 팔레트로 옮겨 칠함
+  const src = readPNG(oldTiles);
+  src.data = remapData(src.data);
+  const ALL_EXTRA = { ...EXTRA, ...WORLD_EXTRA };
+  const extra = Object.keys(ALL_EXTRA);
   const total = NAMES.length + extra.length;
   const W = COLS * 32;
   const H = Math.ceil(total / COLS) * 32;
@@ -268,11 +273,19 @@ if (!existsSync(oldTiles)) {
         d.set(c ? [...rgb(c), 255] : [0, 0, 0, 0], ((oy + y) * W + ox + x) * 4);
       }
   };
-  for (const [name, L] of Object.entries(TILES)) put(L, NAMES.indexOf(name));
-  extra.forEach((name, i) => put(EXTRA[name], NAMES.length + i));
+  for (const [name, L] of Object.entries({ ...TILES, ...WORLD_TILES })) {
+    if (!NAMES.includes(name)) throw new Error(`타일 이름 없음: ${name}`);
+    put(L, NAMES.indexOf(name));
+  }
+  extra.forEach((name, i) => put(ALL_EXTRA[name], NAMES.length + i));
   write(`public/${sprites.tiles.file}`, encodePNG(W, H, d));
 }
-const tileInfo = { extra: Object.keys(EXTRA), variants: VARIANTS, alternate: ALTERNATE, shadowBelow: SHADOW_BELOW };
+const tileInfo = {
+  extra: Object.keys({ ...EXTRA, ...WORLD_EXTRA }),
+  variants: { ...VARIANTS, ...WORLD_VARIANTS },
+  alternate: ALTERNATE,
+  shadowBelow: [...SHADOW_BELOW, ...WORLD_SHADOW],
+};
 
 // 물건: 예전 그림은 public/assets/_old/explore/로 옮겨 두고 같은 크기로 새로 그림
 const files = [];
@@ -283,6 +296,27 @@ for (const [name, frames] of Object.entries(PROPS)) {
   if (!existsSync(old)) copyFileSync(join(ROOT, rel), old);
   write(rel, toPNG(frames, p.w, p.h, frames.length));
   files.push(rel);
+}
+// 새로 그리지 않은 물건·생물·작은 그림: 예전 그림(_old)을 새 팔레트로 옮겨 칠함 (모양은 그대로)
+const remapFile = (rel) => {
+  keepOld(rel);
+  const old = join(ROOT, rel.replace('public/assets/', 'public/assets/_old/'));
+  if (!existsSync(old)) return;
+  const im = readPNG(old);
+  write(rel, encodePNG(im.w, im.h, remapData(im.data)));
+  files.push(rel);
+};
+for (const [name, p] of Object.entries(sprites.props)) if (!PROPS[name]) remapFile(`public/${p.file}`);
+const SKIP = new Set(['shadow', 'shadow_large', '.gitkeep']);
+for (const dir of ['public/assets/sprites', 'public/assets/battle/chars']) {
+  const seen = new Set();
+  for (const where of [dir, dir.replace('public/assets/', 'public/assets/_old/')])
+    for (const f of existsSync(join(ROOT, where)) ? readdirSync(join(ROOT, where)) : []) {
+      const id = f.replace(/.png$/, '');
+      if (!f.endsWith('.png') || SKIP.has(id) || PEOPLE[id] || seen.has(id)) continue;
+      seen.add(id);
+      remapFile(`${dir}/${f}`);
+    }
 }
 writeFileSync(
   join(ROOT, 'src/data/explore/hd_sprites.json'),

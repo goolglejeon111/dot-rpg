@@ -7,7 +7,8 @@ import battlesData from '../data/battle/battles.json';
 import { makeBattleAnims, preloadBattle } from '../battle/assets';
 import { FacePicker } from '../game/faces';
 import { fieldFrame, footOrigin, isHd, rise } from '../game/hdSprites';
-import { EXP_REWARD, gainOnce, isCapped, levelOf, levelProgress, partyIds } from '../battle/progress';
+import { EXP_REWARD, activeParty, gainOnce, hpOf, isCapped, levelOf, levelProgress, maxHpOf, partyIds } from '../battle/progress';
+import charData from '../data/characters.json';
 import { gameState } from '../game/GameState';
 import type { StoryFxDef } from '../scenes/StoryFx';
 import {
@@ -29,7 +30,7 @@ export interface MapHost {
   /** 행인의 한 줄 대사 (이름표만). 다 읽으면 done */
   playTalk(name: string, text: string, done: () => void): void;
   /** 맵 위의 몹 무리와 짧은 전투. 이기면 done(true), 지면 Story가 게임 오버를 처리 */
-  fieldBattle(battle: string, done: () => void, at?: { x: number; y: number }): void;
+  fieldBattle(battle: string, done: (r?: { outcome: string }) => void, at?: { x: number; y: number }): void;
   /** 레온의 어깨에 상처가 있는 이야기인가 (1막부터. 없으면 없음) */
   wounded?(): boolean;
 }
@@ -225,7 +226,13 @@ interface Mob {
   x: number;
   y: number;
   sprs: Phaser.GameObjects.Sprite[];
+  /** 도망쳐 지나간 무리: 레온이 알아보는 범위 밖으로 나갈 때까지 다시 덤비지 않는다 */
+  calm?: boolean;
 }
+/** 몹이 레온을 알아보는 범위 (맵 px, 세로는 1.3배로 잼). 이 안에 들어오면 바로 덤벼든다 (docs/claude_code/상시_전투.md) */
+const MOB_SIGHT = 72;
+/** 도착점·출구 둘레에 몹이 붙어 있으면 이 거리 안에서는 다음으로 넘어가지 않는다 */
+const MOB_BLOCK = 110;
 /** 인물을 따라다니는 빛: leon = 어깨 상처의 하얀 빛(맥박), elysia = 지팡이의 보랏빛 */
 /** 엘리시아가 빛을 밝힌 뒤(이 표시가 once에 있으면) 어두운 맵도 이만큼 밝게 본다 */
 export const LIGHT_KEY = 'a1:elysia_light';
@@ -357,6 +364,9 @@ export class ExploreScene extends Phaser.Scene {
   private lvText!: Phaser.GameObjects.Text;
   private expFill!: Phaser.GameObjects.Image;
   private countText!: Phaser.GameObjects.Text;
+  /** 이동 구간의 작은 파티 체력바 (체력은 전투가 끝나도 이어짐) */
+  private hpRows!: Phaser.GameObjects.Container;
+  private swingUntil = 0;
   private prompt!: Phaser.GameObjects.Text;
   private guideBox!: Phaser.GameObjects.Container;
   private guideText!: Phaser.GameObjects.Text;
@@ -1778,20 +1788,34 @@ export class ExploreScene extends Phaser.Scene {
 
   /** 몹 무리에 닿으면 짧은 전투. 이기면 그 무리는 사라지고 그 자리에서 이어서 움직인다 */
   private checkMobs(leon: Actor) {
-    const hit = this.mobs.find((m) => Math.hypot(m.x - leon.spr.x, (m.y - leon.spr.y) * 1.3) < 26);
+    const dist = (m: Mob) => Math.hypot(m.x - leon.spr.x, (m.y - leon.spr.y) * 1.3);
+    for (const m of this.mobs) if (m.calm && dist(m) > MOB_SIGHT + 40) m.calm = false;
+    const hit = this.mobs.find((m) => !m.calm && dist(m) < MOB_SIGHT);
     if (!hit) return;
+    this.startMobFight(hit, leon);
+  }
+
+  /** 지금 몹과 싸우기 시작 (레온이 알아보는 범위에 들어왔거나, 가까이서 먼저 공격함) */
+  private startMobFight(hit: Mob, leon: Actor) {
     this.mobs = this.mobs.filter((m) => m !== hit);
     this.reading = true;
+    this.hud.setVisible(false);
     this.pose(leon);
     this.prompt.setVisible(false);
     // 맵 위 몹 그림은 숨기고, 그 자리에서 전투의 적이 나타난다
     for (const s of hit.sprs) s.setVisible(false);
-    this.host.fieldBattle(hit.battle, () => {
-      for (const s of hit.sprs) s.destroy();
+    this.host.fieldBattle(hit.battle, (r) => {
+      if (r?.outcome === 'flee') {
+        // 도망쳐 지나감: 무리는 그 자리에 남는다 (레온이 멀어질 때까지 다시 덤비지 않음)
+        for (const s of hit.sprs) s.setVisible(true);
+        hit.calm = true;
+        this.mobs.push(hit);
+      } else for (const s of hit.sprs) s.destroy();
       // 맵 위에서 싸우느라 카메라가 전투장에 가 있었으면 다시 레온을 따라간다
       this.cameras.main.startFollow(leon.spr, true, 0.15, 0.15, 0, 20);
       this.reading = false;
       this.lockUntil = this.time.now + 300;
+      this.hud.setVisible(!!this.seg);
       this.refreshHud();
     }, { x: hit.x, y: hit.y });
   }
@@ -1930,6 +1954,7 @@ export class ExploreScene extends Phaser.Scene {
     if (!g || propOf(g, 'press')) return;
     const r = Number(propOf(g, 'r') ?? 40);
     if (Math.hypot(a.spr.x - g.x, (a.spr.y - g.y) * 1.2) > r) return;
+    if (this.mobNear(g.x, g.y)) return;
     const missing = this.seg.need?.find((id) => !this.seen(id));
     if (missing) {
       if (this.time.now > this.needWarn) this.guide(`먼저 ${LOOKS[missing]?.name ?? missing} (F)`, 2500);
@@ -1939,9 +1964,31 @@ export class ExploreScene extends Phaser.Scene {
     this.finish(a);
   }
 
+  /** 도착점·출구 둘레에 몹이 붙어 있으면 안내하고 true (다음 대사로 넘어가지 않음) */
+  private mobNear(x: number, y: number) {
+    if (!this.mobs.some((m) => Math.hypot(m.x - x, (m.y - y) * 1.3) < MOB_BLOCK)) return false;
+    if (this.time.now > this.needWarn) this.guide('적을 떨쳐 내야 합니다', 2500);
+    this.needWarn = this.time.now + 2600;
+    return true;
+  }
+
+  /** 근처에 몹이 있는지 (싸우는 중: 파티 화면을 열 수 없음) */
+  enemyNear(r = 200) {
+    const l = this.actors.get('leon');
+    if (!l || !this.seg) return false;
+    return this.mobs.some((m) => Math.hypot(m.x - l.spr.x, m.y - l.spr.y) < r);
+  }
+
   private finish(a: Actor) {
     this.pose(a);
     const cb = this.onEnd;
+    // 대사가 시작되면 싸움은 멈춘다: 남은 필드 몹은 물러나 사라진다
+    const lx = a.spr.x;
+    for (const m of this.mobs) for (const s of m.sprs) {
+      this.tweens.killTweensOf(s);
+      this.tweens.add({ targets: s, alpha: 0, x: s.x + (s.x < lx ? -24 : 24), duration: 500, onComplete: () => s.setVisible(false) });
+    }
+    this.mobs = [];
     this.stopPlay();
     this.time.delayedCall(150, () => cb?.());
   }
@@ -1957,6 +2004,7 @@ export class ExploreScene extends Phaser.Scene {
     const l = this.near;
     const leon = this.actors.get('leon')!;
     if (l.goal) {
+      if (this.mobNear(l.x, l.y)) return;
       const missing = this.seg.need?.find((id) => !this.seen(id));
       if (missing) return this.guide(`먼저 ${LOOKS[missing]?.name ?? missing} (F)`, 2500);
       return this.finish(leon);
@@ -2022,7 +2070,8 @@ export class ExploreScene extends Phaser.Scene {
     const bar = this.add.image(84, 66, 'ui_bar_exp').setOrigin(0, 0.5).setScale(1, 2);
     this.expFill = this.add.image(85, 66, 'ui_fill_sky_3').setOrigin(0, 0.5).setScale(1, 2);
     this.countText = this.add.text(W - 24, 62, '', { fontFamily: FONT, fontSize: '17px', color: '#cccccc' }).setOrigin(1, 0).setShadow(0, 2, '#000', 2);
-    this.hud = this.ui(this.add.container(0, 0, [this.lvText, bar, this.expFill, this.countText]).setVisible(false).setDepth(20));
+    this.hpRows = this.add.container(0, 0);
+    this.hud = this.ui(this.add.container(0, 0, [this.lvText, bar, this.expFill, this.countText, this.hpRows]).setVisible(false).setDepth(20));
     this.prompt = this.ui(
       this.add
         .text(0, 0, '', { fontFamily: FONT, fontSize: '17px', color: '#ffffff', backgroundColor: '#000000bb', padding: { x: 10, y: 5 } })
@@ -2048,6 +2097,11 @@ export class ExploreScene extends Phaser.Scene {
     kb.addCapture('UP,DOWN,LEFT,RIGHT');
     this.keys.F.on('down', () => this.look());
     this.keys.SPACE.on('down', () => this.tryJump());
+    // 상시 전투: 공격(왼쪽 클릭)·스킬(E)·궁극기(Q)·합동(R)은 이동 구간에서도 쓸 수 있다
+    for (const k of ['E', 'Q', 'R']) kb.on(`keydown-${k}`, () => this.tryStrike());
+    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+      if (p.leftButtonDown() && !this.sys.game.device.input.touch) this.tryStrike();
+    });
 
     const touch = this.sys.game.device.input.touch || new URLSearchParams(location.search).has('touch');
     if (!touch) return;
@@ -2076,6 +2130,18 @@ export class ExploreScene extends Phaser.Scene {
     });
     jbtn.on('pointerup', () => jbtn.setFrame(0));
     jbtn.on('pointerout', () => jbtn.setFrame(0));
+    // 공격 버튼 (살펴보기 왼쪽, 겹치지 않게)
+    const abtn = this.ui(this.add.image(W - 250, H - 130, 'ui_btn', 0).setScale(1.5).setInteractive());
+    const alabel = this.ui(this.add.text(W - 250, H - 130, '공격', { fontFamily: FONT, fontSize: '16px', color: '#ffffff' }).setOrigin(0.5).setShadow(0, 2, '#000', 2));
+    this.touchUi.push(abtn, alabel);
+    abtn.setVisible(false);
+    alabel.setVisible(false);
+    abtn.on('pointerdown', () => {
+      abtn.setFrame(1);
+      this.tryStrike();
+    });
+    abtn.on('pointerup', () => abtn.setFrame(0));
+    abtn.on('pointerout', () => abtn.setFrame(0));
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (this.seg && p.x < W / 2 && this.stick.id < 0) this.stick = { id: p.id, x: base.x, y: base.y, dx: 0, dy: 0 };
     });
@@ -2101,6 +2167,21 @@ export class ExploreScene extends Phaser.Scene {
     this.input.on('pointerupoutside', up);
   }
 
+  /** 이동 구간에서 공격: 가까운 몹이 있으면 바로 싸움, 없으면 허공을 벤다 */
+  tryStrike() {
+    const leon = this.actors.get('leon');
+    if (!this.seg || !leon || this.reading || this.time.now < this.swingUntil) return;
+    this.swingUntil = this.time.now + 380;
+    const near = this.mobs.find((m) => Math.hypot(m.x - leon.spr.x, (m.y - leon.spr.y) * 1.3) < MOB_SIGHT * 1.9);
+    if (near) return this.startMobFight(near, leon);
+    const dir = leon.spr.flipX ? -1 : 1;
+    const x0 = leon.spr.x;
+    this.tweens.add({ targets: leon.spr, x: x0 + dir * 4, duration: 70, yoyo: true, ease: 'Quad.out' });
+    const arc = this.world(this.add.graphics().setDepth(leon.spr.depth + 1));
+    arc.lineStyle(3, 0xf4ecd8, 0.85).beginPath().arc(x0 + dir * 10, leon.spr.y - 14, 14, dir > 0 ? -1.2 : Math.PI - 0.6, dir > 0 ? 0.6 : Math.PI + 1.2).strokePath();
+    this.tweens.add({ targets: arc, alpha: 0, duration: 220, onComplete: () => arc.destroy() });
+  }
+
   /** 직접 움직이는 구간에서만 점프 */
   private tryJump() {
     const leon = this.actors.get('leon');
@@ -2115,6 +2196,28 @@ export class ExploreScene extends Phaser.Scene {
     const all = list.length;
     const done = list.filter((id) => this.seen(id)).length;
     this.countText.setText(all ? `조사 ${done} / ${all}` : '');
+    this.drawHpRows();
+  }
+
+  /** 작은 파티 체력바: 레벨 아래에 한 줄씩 (전투 HUD를 줄여 쓴 것) */
+  private drawHpRows() {
+    this.hpRows.removeAll(true);
+    const names = new Map(charData.characters.map((c) => [c.id, c.name] as const));
+    activeParty().forEach((id, i) => {
+      const y = 92 + i * 22;
+      const max = maxHpOf(id);
+      const r = Math.max(0, Math.min(1, hpOf(id) / max));
+      const col = r > 0.5 ? 0x6fd06a : r > 0.25 ? 0xe8c24a : 0xe0584a;
+      const name = this.add.text(24, y, names.get(id) ?? id, { fontFamily: FONT, fontSize: '14px', color: '#e8e2d2' }).setOrigin(0, 0.5).setShadow(0, 2, '#000', 2);
+      const bg = this.add.rectangle(96, y, 120, 8, 0x000000, 0.6).setOrigin(0, 0.5).setStrokeStyle(1, 0x2a2430);
+      const fill = this.add.rectangle(97, y, Math.round(118 * r), 6, col).setOrigin(0, 0.5);
+      this.hpRows.add([name, bg, fill]);
+    });
+  }
+
+  /** 바깥(StoryScene)에서 쓰는 짧은 안내 */
+  say(text: string, ms = 2500) {
+    this.guide(text, ms);
   }
 
   private guide(text: string, ms = 0) {

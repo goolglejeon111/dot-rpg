@@ -4,7 +4,7 @@ import { STAGE, type ExploreScene, type ExploreStart, type MapHost, type StageDe
 import { makeBattleAnims, preloadBattle } from '../battle/assets';
 import battlesData from '../data/battle/battles.json';
 import { StoryFx } from './StoryFx';
-import { ACTIVE_MAX, activeParty, addGuest, clearStory, gainOnce, joinParty, leaveParty, levelOf, maxLevel, partyIds, setActive, unlock, unlockInfo, type Unlock } from '../battle/progress';
+import { ACTIVE_MAX, activeParty, addGuest, clearStory, gainOnce, healAll, joinParty, lowToHalf, leaveParty, levelOf, maxLevel, partyIds, setActive, unlock, unlockInfo, type Unlock } from '../battle/progress';
 import { characters, stories } from '../game/data';
 import { gameState, type StateData } from '../game/GameState';
 import { makeBodyPlaceholder, PORTRAIT_H, PORTRAIT_W } from '../game/placeholders';
@@ -154,7 +154,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   /** 물건 살펴보기 독백 */
   private looking: { pages: string[][]; page: number; line: number; done: () => void; name?: string } | null = null;
   /** 맵 위 몹과의 짧은 전투가 끝나면 이동으로 돌아간다 */
-  private fieldDone: (() => void) | null = null;
+  private fieldDone: ((r?: BattleResult) => void) | null = null;
   /** 강제 출전(force) 때문에 바꾼 파티: 전투 전 대기 목록 (전투가 끝나면 되돌린다) */
   private benchBefore: string[] | null = null;
   /** 이동 중에 여는 파티 선택 버튼 (동료가 5명 이상일 때) */
@@ -676,7 +676,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     return this.story.id !== 'prologue';
   }
 
-  fieldBattle(battle: string, done: () => void, pos?: { x: number; y: number }) {
+  fieldBattle(battle: string, done: (r?: BattleResult) => void, pos?: { x: number; y: number }) {
     this.fieldDone = done;
     // 어두운 수로에서 처음 싸울 때: 엘리시아가 빛을 밝힌 뒤 전투 (이후로는 계속 밝다)
     const m = this.mapState === 'on' ? (this.scene.get('Explore') as ExploreScene) : null;
@@ -1059,6 +1059,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     // 따로 그린 전투장은 쓰지 않는다: 맵이 꺼져 있거나 다른 맵이면, 그 전투의 맵을 띄워 그 위에서 싸운다
     const arMap = (battlesData as unknown as Record<string, { arena: { map?: string } }>)[b.battle]?.arena.map;
     if (!center && !b.hpZero && arMap) {
+      // 상시 전투 기준으로는 앞 대사의 장소 바뀜에서 이미 이 맵이어야 한다. 아니면 화면을 바꿀 수밖에 없음 (점검 목록용)
+      console.warn(`[상시 전투] 맵이 달라 화면을 바꾼 전투: ${b.battle} (지금 ${m?.mapId ?? '맵 없음'} → ${arMap})`);
       this.clearText();
       for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
       return this.curtainIn(350, () =>
@@ -1076,12 +1078,11 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     }
     if (!center) console.error(`[story] 맵 위에서 싸울 수 없는 전투: ${b.battle} (battles.json arena.map과 맵의 arena 구역 필요)`);
     if (m && center) {
+      // 상시 전투: 카메라를 전투장으로 옮기지 않고 그 자리에서 바로 시작. 카메라는 전투가 싸움 가운데를 부드럽게 따라감
       this.clearText();
       for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side);
-      m.lookAt(center.x, center.y, 450, () => {
-        this.scene.launch('Battle', { ...b, map: m, onEnd: (r: BattleResult) => this.afterBattle(r) } satisfies BattleStart);
-        this.scene.sleep();
-      });
+      this.scene.launch('Battle', { ...b, map: m, onEnd: (r: BattleResult) => this.afterBattle(r) } satisfies BattleStart);
+      this.scene.sleep();
       return;
     }
     this.curtainIn(350, () => {
@@ -1128,6 +1129,9 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       const cp = save.checkpoint;
       if (!cp) return this.scene.start('Title');
       gameState.restore(cp);
+      // 체력이 절반보다 낮은 인물은 절반으로 맞춰 다시 시작 (낮은 체력으로 저장된 뒤 계속 지는 막힘 방지)
+      lowToHalf();
+      save.setCheckpoint({ ...cp, ...gameState.snapshot() });
       return this.scene.start('Story', { story: cp.story, scene: cp.scene, node: cp.node, returnTo: this.start.returnTo } satisfies StoryStartData);
     }
     if (a === 'gameover-title') return this.scene.start('Title');
@@ -1137,7 +1141,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     if (field) {
       this.fieldDone = null;
       this.mode = 'explore';
-      return field();
+      return field(r);
     }
     this.time.delayedCall(350, () => {
       if (a.next) {
@@ -1684,6 +1688,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   private openPartyFromMap() {
     if (this.overlay || gameState.progress.party.length <= ACTIVE_MAX) return;
     const m = this.mapState === 'on' ? (this.scene.get('Explore') as ExploreScene) : null;
+    if (m?.enemyNear()) return m.say('근처에 적이 있어 파티를 바꿀 수 없습니다');
     m?.hold(true);
     this.openParty({ done: () => m?.hold(false) });
   }
@@ -1863,6 +1868,7 @@ Lv ${levelOf(id)}${locked.has(id) ? '  고정' : on ? '' : '  대기'}`);
     this.setSense(false);
     const before = maxLevel();
     clearStory(this.story.id); // 다음 구간이 열려 최대 레벨이 오른다
+    healAll(); // 막 클리어: 파티 전원(대기 동료 포함) 체력 가득
     const after = maxLevel();
     const cp = save.checkpoint;
     save.setCheckpoint({

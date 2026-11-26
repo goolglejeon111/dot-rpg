@@ -149,7 +149,10 @@ export function gainExp(ids: string[], amount: number, p: Progress = gameState.p
     const from = levelOf(id, p);
     p.exp[id] = expOf(id, p) + amount;
     const to = levelOf(id, p);
-    if (to > from) ups.push({ id, from, to });
+    if (to > from) {
+      ups.push({ id, from, to });
+      if (p.hp) delete p.hp[id]; // 레벨 업: 오른 인물의 체력이 가득 참
+    }
   }
   return ups;
 }
@@ -168,6 +171,35 @@ export function clearStory(storyId: string) {
   if (!stage) return;
   const order = Object.keys(MAX);
   if (order.indexOf(stage) > order.indexOf(gameState.progress.stage)) gameState.progress.stage = stage;
+}
+
+// ---------- 체력 유지 (docs/claude_code/상시_전투.md 2절) ----------
+
+/** 지금 체력 (저장 없으면 가득) */
+export function hpOf(id: string, p: Progress = gameState.progress) {
+  const max = statsOf(id, levelOf(id, p))?.hp ?? 1;
+  const v = p.hp?.[id];
+  return v === undefined ? max : Math.max(0, Math.min(max, Math.round(v)));
+}
+/** 최대 체력 */
+export const maxHpOf = (id: string, p: Progress = gameState.progress) => statsOf(id, levelOf(id, p))?.hp ?? 1;
+/** 체력을 남긴다 (가득이면 지움) */
+export function setHp(id: string, v: number, p: Progress = gameState.progress) {
+  p.hp ??= {};
+  const max = maxHpOf(id, p);
+  if (v >= max) delete p.hp[id];
+  else p.hp[id] = Math.max(0, Math.round(v));
+}
+/** 막 클리어: 파티 전원(대기 동료 포함) 가득 */
+export function healAll(p: Progress = gameState.progress) {
+  p.hp = {};
+}
+/** 게임 오버 뒤 다시 시작: 체력이 절반보다 낮은 인물만 절반으로 */
+export function lowToHalf(p: Progress = gameState.progress) {
+  for (const id of Object.keys(p.hp ?? {})) {
+    const max = maxHpOf(id, p);
+    if (hpOf(id, p) < max * 0.5) p.hp[id] = Math.ceil(max * 0.5);
+  }
 }
 
 /** 레벨에 따른 능력치 */

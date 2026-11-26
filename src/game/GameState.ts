@@ -20,6 +20,8 @@ export interface Progress {
   guests: Record<string, number>;
   /** 대기 동료: 파티에 있지만 출전하지 않는 인물 (파티 선택 화면. 동료가 5명 이상일 때) */
   bench: string[];
+  /** 지금 체력 (docs/claude_code/상시_전투.md 2절). 없는 인물은 가득 찬 상태. 레벨 업·막 클리어 때 지움(= 가득) */
+  hp: Record<string, number>;
 }
 
 export interface StateData {
@@ -28,7 +30,7 @@ export interface StateData {
   progress: Progress;
 }
 
-export const freshProgress = (): Progress => ({ exp: {}, stage: 'start', once: [], party: ['leon'], unlocks: ['move'], costume: {}, guests: {}, bench: [] });
+export const freshProgress = (): Progress => ({ exp: {}, stage: 'start', once: [], party: ['leon'], unlocks: ['move'], costume: {}, guests: {}, bench: [], hp: {} });
 
 /** 예전 저장(조작이 레벨로 열리던 때)의 열린 조작: 그때 레온의 레벨로 열려 있던 것 */
 function legacyUnlocks(p: Partial<Progress>): string[] {
@@ -127,6 +129,7 @@ class GameState {
     p.costume ??= {};
     p.guests ??= {};
     if (!Array.isArray(p.bench)) p.bench = [];
+    if (!p.hp || typeof p.hp !== 'object') p.hp = {}; // 예전 저장: 가득 찬 상태로 시작
   }
 
   reset() {

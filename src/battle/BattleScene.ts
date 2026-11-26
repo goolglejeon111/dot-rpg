@@ -11,7 +11,7 @@ import { loadOptional } from '../game/assets';
 import { hasCutin } from '../game/cutin';
 import { currentLoop, playLoop } from '../game/sound';
 import { fxInfo, makeBattleAnims, preloadBattle } from './assets';
-import { activeParty, EXP_REWARD, gainExp, isUnlocked, levelOf, partyIds, statsOf, type LevelUp, type Unlock } from './progress';
+import { activeParty, EXP_REWARD, gainExp, hpOf, isUnlocked, levelOf, partyIds, setHp, statsOf, type LevelUp, type Unlock } from './progress';
 import { MAPS, findObj, footOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf } from '../explore/mapData';
 import type { ExploreScene } from '../explore/ExploreScene';
 import { FacePicker } from '../game/faces';
@@ -500,6 +500,8 @@ export class BattleScene extends Phaser.Scene {
   private chainG?: Phaser.GameObjects.Graphics;
   /** 끝없이 나오는 적: 다음에 채울 때 */
   private endlessCd = 0;
+  /** 필드 몹 전투에서 전투장 밖으로 밀고 있는 시간 (도망) */
+  private fleeMs = 0;
   /** 엑스트라 얼굴 돌려쓰기 (src/game/faces.ts) */
   private faces = new FacePicker();
   /** HUD가 읽는 알림 (보여 준 뒤 비움) */
@@ -538,6 +540,7 @@ export class BattleScene extends Phaser.Scene {
     this.fires = [];
     this.commandUntil = 0;
     this.endlessCd = 0;
+    this.fleeMs = 0;
     this.chainG = undefined;
     this.comboPick = -1;
     this.now = 0;
@@ -972,7 +975,10 @@ export class BattleScene extends Phaser.Scene {
     // 대본의 costume으로 바뀐 겉모습 (그림이 없으면 기본)
     const c = gameState.progress.costume[id];
     const f = new Fighter(id, c && this.textures.exists(c) && this.textures.exists(`bt_${c}`) ? c : id, 'party', d);
-    Object.assign(f, { hp: st.hp, maxHp: st.hp, atk: st.atk, defense: st.def, speed: d.speed, stamina: d.stamina ?? 100, maxStamina: d.stamina ?? 100 });
+    // 체력은 이어진다: 저장된 지금 체력으로 시작 (0이면 기절에서 일어난 만큼). 체력 0 연출은 가득
+    const keep = this.cutscene ? st.hp : hpOf(id);
+    const hp0 = keep > 0 ? keep : Math.max(1, Math.round(st.hp * levels.faint.reviveHp));
+    Object.assign(f, { hp: hp0, maxHp: st.hp, atk: st.atk, defense: st.def, speed: d.speed, stamina: d.stamina ?? 100, maxStamina: d.stamina ?? 100 });
     f.facing = 'right';
     f.aimX = 1;
     f.aimY = 0;
@@ -1239,7 +1245,37 @@ export class BattleScene extends Phaser.Scene {
     if (!this.cutscene && !this.ended) this.checkOutcome();
     this.updateCarry();
     this.renderAll();
+    this.followFight(dt);
     this.syncCamera();
+  }
+
+  /**
+   * 맵 위 전투: 다른 화면으로 바꾸지 않고, 맵 카메라가 싸움 가운데(조종하는 인물과 가장 가까운 적 사이)를 부드럽게 따라간다
+   * (docs/claude_code/상시_전투.md 1절). 체력 0 연출은 대본 카메라 그대로
+   */
+  private followFight(dt: number) {
+    const m = this.onMap;
+    if (!m || this.cutscene) return;
+    const f = this.controlled ?? this.party[0];
+    if (!f) return;
+    let x = f.x;
+    let y = f.y - 20;
+    let best = 220;
+    for (const e of this.all) {
+      if (e.team !== 'enemy' || !e.alive) continue;
+      const d = Math.hypot(e.x - f.x, e.y - f.y);
+      if (d < best) {
+        best = d;
+        x = (f.x * 2 + e.x) / 3;
+        y = (f.y * 2 + e.y) / 3 - 20;
+      }
+    }
+    const cam = m.cameras.main;
+    cam.stopFollow();
+    const tx = x + this.ox - cam.width / 2;
+    const ty = y + this.oy - cam.height / 2;
+    const k = 1 - Math.exp(-dt / 260);
+    cam.setScroll(cam.scrollX + (tx - cam.scrollX) * k, cam.scrollY + (ty - cam.scrollY) * k);
   }
 
   // ---- 입력 ----
@@ -1284,6 +1320,16 @@ export class BattleScene extends Phaser.Scene {
       mx /= len;
       my /= len;
     }
+    // 필드 몹: 몹이 남아 있어도 전투장 가장자리로 계속 밀고 나가면 도망쳐 지나간다 (docs/claude_code/상시_전투.md)
+    if (this.start.field && len > 0.2) {
+      const b = this.bounds;
+      const out = (mx < -0.3 && f.x <= b.x0 + 1) || (mx > 0.3 && f.x >= b.x1 - 1) || (my < -0.3 && f.y <= b.y0 + 1) || (my > 0.3 && f.y >= b.y1 - 1);
+      this.fleeMs = out ? this.fleeMs + dt : 0;
+      if (this.fleeMs > 450) {
+        this.notices.push({ kind: 'toast', text: '몹을 떨쳐 내고 빠져나왔습니다' });
+        return this.finish('flee', { continue: true });
+      }
+    } else this.fleeMs = 0;
 
     // 깨우기 (F를 누르고 있기)
     const near = this.party.find((p) => p !== f && p.state === 'fainted' && Math.hypot(p.x - f.x, p.y - f.y) < 34);
@@ -2465,8 +2511,12 @@ export class BattleScene extends Phaser.Scene {
         f.maxHp = st.hp;
         f.atk = st.atk;
         f.defense = st.def;
-        if (f.state !== 'fainted') f.hp = Math.min(f.maxHp, f.hp + gained);
+        void gained;
+        // 레벨 업: 오른 인물의 체력이 바로 가득 참 (기절 중이면 일어남), 초록 빛
+        if (f.state === 'fainted') this.getUp(f);
+        f.hp = f.maxHp;
         this.fx('level_up', f.x, f.y + 2, { origin: [0.5, 1], depth: f.y + 3 });
+        this.fx('adrian_heal', f.x, f.y - 20, { depth: f.y + 4 }); // 초록 빛 (체력 가득)
       }
       this.notices.push({ kind: 'levelup', text: `${f?.def.name ?? u.id} Lv ${u.to}` });
       const bonus = (levels.bonus as Record<string, Record<string, string>>)[u.id] ?? {};
@@ -3393,12 +3443,12 @@ export class BattleScene extends Phaser.Scene {
     const bex = EXP_REWARD.battle(this.start.battle);
     const once = gameState.progress.once;
     const bkey = `battle:${this.start.battle}`;
-    if (outcome !== 'wipe' && bex && !this.cutscene && !once.includes(bkey)) {
+    if (outcome !== 'wipe' && outcome !== 'flee' && bex && !this.cutscene && !once.includes(bkey)) {
       once.push(bkey);
       this.grantExp(bex);
     }
     if (outcome === 'damage') this.cameras.main.flash(500, 255, 255, 255);
-    const wait = outcome === 'done' ? 200 : 1500;
+    const wait = outcome === 'done' || outcome === 'flee' ? 200 : 1500;
     this.time.delayedCall(wait, () => this.leaveAfterBanners({ outcome, action: done }));
   }
 
@@ -3416,9 +3466,19 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private leaving = false;
+  /** 싸움이 끝난 체력을 남긴다: 기절해 있던 동료는 25%로 일어남 (게임 오버·체력 0 연출은 남기지 않음) */
+  private keepHp(r: BattleResult) {
+    if (this.cutscene || r.action === 'gameover-retry' || r.action === 'gameover-title') return;
+    for (const f of this.party) {
+      if (f.team !== 'party') continue;
+      setHp(f.id, f.state === 'fainted' || f.hp <= 0 ? Math.max(1, Math.round(f.maxHp * levels.faint.reviveHp)) : f.hp);
+    }
+  }
+
   private leave(r: BattleResult) {
     if (this.leaving) return;
     this.leaving = true;
+    this.keepHp(r);
     // 전투 BGM을 끄고 앞의 곡으로
     if (this.bdef.bgm) void playLoop(this, 'bgm', this.prevBgm);
     if (this.onMap && typeof r.action !== 'string') {

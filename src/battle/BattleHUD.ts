@@ -90,7 +90,9 @@ export class BattleHUD extends Phaser.Scene {
     this.lastBannerAt = 0;
     this.touch = isTouch();
     this.input.addPointer(3);
-    this.cameras.main.fadeIn(350, 0, 0, 0);
+    // 암전 없이 HUD만 서서히 나타남
+    this.cameras.main.setAlpha(0);
+    this.tweens.add({ targets: this.cameras.main, alpha: 1, duration: 300 });
     const cut = this.b.cutscene;
 
     // ---- 위: 파티 초상화 (숫자 = 교체 키) ----

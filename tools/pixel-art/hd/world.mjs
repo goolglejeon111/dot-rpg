@@ -310,6 +310,20 @@ const patches = (L, seed, colors, amount = 0.25, cell = 8) => {
   }
 };
 
+/** 녹다 만 눈: 칸 안쪽에 작은 덩어리 몇 개 (칸 가장자리에 닿지 않아 격자로 보이지 않음) */
+const snowBits = (L, seed) => {
+  const n = 2 + Math.floor(hash(7, 7, seed) * 2);
+  for (let k = 0; k < n; k++) {
+    const cx = 6 + hash(k, 1, seed) * 20;
+    const cy = 6 + hash(k, 2, seed) * 20;
+    const r = 1.8 + hash(k, 3, seed) * 2.2;
+    for (let y = Math.floor(cy - r - 1); y <= cy + r + 1; y++) for (let x = Math.floor(cx - r * 1.4 - 1); x <= cx + r * 1.4 + 1; x++) {
+      const d = Math.hypot((x - cx) / 1.4, y - cy) / r + (hash(x, y, seed + k) - 0.5) * 0.45;
+      if (d < 1 && x > 0 && y > 0 && x < 31 && y < 31) L.set(x, y, d < 0.55 ? SNOW[1] : SNOW[2]);
+    }
+  }
+};
+
 // ---------------------------------------------------------------------
 // 타일 목록 (이름 → 그림). seed만 다른 갈래는 VARIANTS
 // ---------------------------------------------------------------------
@@ -364,7 +378,7 @@ const make = {
   cistern_floor: (s = 14) => slabs(GREY, { base: 2, seed: s, w: 32, h: 16, crack: 2 }),
   cellar_floor: (s = 15) => ground(DIRT, { base: 2, seed: s, pebbles: 2 }),
   mud: (s = 16) => ground(DIRT, { base: 2, seed: s, pebbles: 2, extra: (L) => patches(L, s + 3, [DIRT[3], DIRT[4]], 0.18) }),
-  mud_snow: (s = 17) => ground(DIRT, { base: 2, seed: s, pebbles: 1, extra: (L) => patches(L, s + 4, [SNOW[0], SNOW[1]], 0.2) }),
+  mud_snow: (s = 17) => ground(DIRT, { base: 2, seed: s, pebbles: 1, extra: (L) => snowBits(L, s + 4) }),
   shack_wall: (s = 18) => planks(WOOD, { base: 2, size: 16, vertical: true, seed: s }),
   bridge: (s = 19) => planks(WOOD, { base: 1, size: 8, seed: s }),
   grass: (s = 20) => grass(R.green, { base: 1, seed: s, flowers: 0 }),
@@ -527,6 +541,14 @@ for (const name of ['water', 'water2', 'sewer_water', 'sewer_water2', 'deep_wate
   });
 }
 ANIM_F = 0;
+// 나중에 더한 갈래: 위 목록 뒤에 덧붙임 (앞의 타일 번호는 그대로)
+for (const [name, seeds] of Object.entries({ mud_snow: [107, 108] })) {
+  WORLD_VARIANTS[name] = seeds.map((s, i) => {
+    const key = `${name}_v${i + 1}`;
+    WORLD_EXTRA[key] = make[name](s);
+    return key;
+  });
+}
 /** 벽 아래 그림자 띠를 까는 벽 */
 export const WORLD_SHADOW = [
   'castle_wall', 'castle_moss', 'sewer_wall', 'cellar_wall', 'shack_wall', 'sandstone', 'adobe_wall', 'rock_wall', 'ruin_wall', 'snow_rock', 'dwarf_wall', 'lava_rock_wall', 'astra_wall',

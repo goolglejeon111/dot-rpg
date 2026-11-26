@@ -1591,6 +1591,14 @@ export class ExploreScene extends Phaser.Scene {
       this.untilLight = this.addLight(uo.x, uo.y - 10, 60, 0xfff0b0, 0.9, true)?.light;
       this.untilFx.push(glow, pin);
     }
+    // 도착점: 화면에서 찾기 어려울 수 있어 바닥에 은은한 빛 (말 걸기형·조사형 도착은 표시가 따로 있음)
+    const go = this.map ? findObj(this.map, 'goal', seg.goal) : undefined;
+    if (go && !propOf(go, 'press') && !seg.until) {
+      const r = Number(propOf(go, 'r') ?? 40);
+      const ring = this.world(this.add.ellipse(go.x, go.y, Math.min(64, r * 1.4), Math.min(30, r * 0.66), 0xfff3c4, 0.16).setDepth(go.y - 2).setBlendMode(Phaser.BlendModes.ADD));
+      this.tweens.add({ targets: ring, alpha: 0.05, scaleX: 1.15, scaleY: 1.15, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+      this.untilFx.push(ring);
+    }
     this.mark?.destroy();
     this.mark = this.world(this.add.sprite(leon.spr.x, leon.spr.y - 44 - rise(leon.key), 'ex_look', 0).setDepth(9500).setAlpha(0).play('ex_look'));
     this.hud.setVisible(true);

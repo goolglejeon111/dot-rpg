@@ -512,7 +512,7 @@
       "cellar_floor": "#794a30",
       "cellar_wall": "#b7a49d",
       "mud": "#784930",
-      "mud_snow": "#8f6853",
+      "mud_snow": "#7e523b",
       "shack_wall": "#754930",
       "shack_roof": "#8b434a",
       "bridge": "#9e6a3f",
@@ -647,7 +647,9 @@
       "lava2_a0",
       "lava2_a1",
       "lava2_a2",
-      "lava2_a3"
+      "lava2_a3",
+      "mud_snow_v1",
+      "mud_snow_v2"
     ],
     "variants": {
       "floor": [
@@ -751,6 +753,10 @@
       ],
       "forge_floor": [
         "forge_floor_v1"
+      ],
+      "mud_snow": [
+        "mud_snow_v1",
+        "mud_snow_v2"
       ]
     },
     "alternate": {

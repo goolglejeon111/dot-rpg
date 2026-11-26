@@ -13,16 +13,17 @@ const hash = (x, y, s = 0) => {
 };
 
 // ---------------------------------------------------------------------
-// 바닥: 대리석 16x16 판 네 장. 판마다 위·왼쪽 1px 밝게, 줄눈 앞 1px 어둡게
+// 바닥: 대리석 16x16 판 네 장(줄눈은 연하게). cross: false면 가운데 십자 줄 없는 한 장짜리 판
+// 판마다 위·왼쪽 1px 밝게
 // ---------------------------------------------------------------------
-function marble(seed, extra) {
+function marble(seed, extra, cross = true) {
   const L = new Layer(32, 32);
   L.rect(0, 0, 31, 31, (x, y) => {
-    const u = x % 16;
-    const v = y % 16;
-    if (u === 15 || v === 15) return R.stone[3];
+    const u = cross ? x % 16 : x;
+    const v = cross ? y % 16 : y;
+    const end = cross ? 15 : 31;
+    if (u === end || v === end) return R.stone[2];
     if (u === 0 || v === 0) return R.stone[0];
-    if (u === 14 || v === 14) return R.stone[2];
     return hash(x, y, seed) < 0.025 ? R.stone[2] : R.stone[1];
   });
   extra?.(L);
@@ -45,6 +46,12 @@ export const FLOOR = {
     L.set(10, 25, R.stone[3]);
     L.set(10, 24, R.stone[2]);
   }),
+  // 줄 없는 판 (바둑판처럼 안 보이게 섞음)
+  floor_d: marble(5, (L) => vein(L, [[3, 9], [8, 12], [12, 12], [18, 17], [21, 23]]), false),
+  floor_e: marble(6, (L) => {
+    vein(L, [[24, 4], [21, 8], [22, 13]]);
+    vein(L, [[6, 24], [10, 27]], R.stone[3]);
+  }, false),
 };
 // 결이 다른 바닥: 판 가운데 금 상감
 const floor2 = marble(4, (L) => {
@@ -63,16 +70,34 @@ const floor2 = marble(4, (L) => {
 // ---------------------------------------------------------------------
 // 카펫 (가로로 깔림): 위·아래 금테, 가운데 마름모
 // ---------------------------------------------------------------------
+/** 카펫 테두리 띠: 금줄 사이 어두운 진홍 띠에 작은 금 마름모가 8px마다 (y0 = 띠 맨 윗줄, flip = 아래 테두리) */
+function carpetBorder(L, y0, flip) {
+  const rows = [[0, R.red[3]], [1, R.gold[1]], [2, R.gold[2]], [3, R.red[3]], [4, R.red[3]], [5, R.red[3]], [6, R.red[3]], [7, R.red[3]], [8, R.gold[2]], [9, R.red[3]]];
+  for (const [k, c] of rows) L.rect(0, y0 + (flip ? 9 - k : k), 31, y0 + (flip ? 9 - k : k), c);
+  const cy = y0 + 5 - (flip ? 1 : 0);
+  for (let x = 4; x < 32; x += 8) {
+    L.set(x, cy - 1, R.gold[1]);
+    L.rect(x - 1, cy, x + 1, cy, R.gold[2]);
+    L.set(x, cy, R.gold[0]);
+    L.set(x, cy + 1, R.gold[2]);
+    // 마름모 사이 작은 점
+    L.set(x + 4, cy, R.red[1]);
+  }
+}
 function carpet(part) {
   const L = new Layer(32, 32);
   L.rect(0, 0, 31, 31, (x, y) => ((x + y * 3) % 11 === 0 && y % 4 === 1 ? R.red[3] : R.red[2]));
-  const band = (rows) => rows.forEach(([y, c]) => L.rect(0, y, 31, y, c));
   if (part === 'top') {
-    band([[0, R.red[3]], [1, R.gold[0]], [2, R.gold[1]], [3, R.gold[2]], [4, R.red[3]], [5, R.red[1]]]);
-    for (let x = 3; x < 32; x += 8) L.rect(x, 9, x + 1, 9, R.gold[2]);
+    carpetBorder(L, 0, false);
+    L.rect(0, 10, 31, 10, R.red[1]);
   } else if (part === 'bot') {
-    band([[26, R.red[3]], [27, R.red[3]], [28, R.gold[1]], [29, R.gold[1]], [30, R.gold[2]], [31, R.red[3]]]);
-    for (let x = 3; x < 32; x += 8) L.rect(x, 22, x + 1, 22, R.gold[2]);
+    carpetBorder(L, 22, true);
+  } else if (part === 'mid_b') {
+    // 마름모 없는 칸: 가운데 작은 금점만 (마름모가 두 칸마다 오게)
+    L.set(15, 15, R.gold[2]);
+    L.set(16, 16, R.gold[2]);
+    L.set(15, 16, R.gold[3]);
+    L.set(16, 15, R.gold[1]);
   } else {
     // 마름모 (가운데 금, 테두리 진홍)
     for (let y = 0; y < 32; y++)
@@ -110,10 +135,11 @@ function bricks(L, y0, y1) {
       const v = y % 8;
       const u = (x + (row % 2) * 8) % 16;
       let c;
+      // 바닥(대리석 1)보다 두 단계 어두운 따뜻한 회갈색 (벽과 바닥 경계가 바로 읽히게)
       if (v === 7 || u === 15) c = R.stone[4];
-      else if (v === 0) c = R.stone[1];
-      else if (v === 6 || u === 14) c = R.stone[3];
-      else c = hash(x, y, 5) < 0.05 ? R.stone[3] : R.stone[2];
+      else if (v === 0) c = R.stone[2];
+      else if (v === 6 || u === 14) c = hash(x, y, 4) < 0.2 ? R.stone[4] : R.stone[3];
+      else c = hash(x, y, 5) < 0.025 ? R.stone[4] : R.stone[3];
       L.set(x, y, c);
     }
 }
@@ -130,7 +156,7 @@ function wallLow() {
   L.rect(0, 0, 31, 31, R.wood[1]);
   L.rect(0, 0, 31, 0, R.wood[0]);
   L.rect(0, 3, 31, 3, R.wood[2]);
-  L.rect(4, 5, 27, 24, (x, y) => (hash(x, 0, 7) < 0.25 && hash(x, y, 8) < 0.7 ? R.wood[1] : R.wood[2]));
+  L.rect(4, 5, 27, 24, (x, y) => (hash(x, 0, 7) < 0.12 && hash(x, y, 8) < 0.7 ? R.wood[1] : R.wood[2]));
   L.rect(4, 5, 27, 5, R.wood[3]);
   L.rect(4, 5, 4, 24, R.wood[3]);
   L.rect(5, 24, 27, 24, R.wood[0]);
@@ -197,8 +223,10 @@ export const TILES = {
   window_low: windowLow(),
 };
 /** 타일 뒤에 덧붙이는 무늬 갈래 (엔진이 바닥을 칸마다 섞어 깖) */
-export const VARIANTS = { floor: ['floor_b', 'floor_c'] };
-export const EXTRA = { floor_b: FLOOR.floor_b, floor_c: FLOOR.floor_c };
+export const VARIANTS = { floor: ['floor_b', 'floor_c', 'floor_d', 'floor_e'] };
+/** 가로로 번갈아 까는 타일 (홀수 칸이 갈래): 카펫 마름모를 두 칸마다 */
+export const ALTERNATE = { carpet_mid: 'carpet_mid_b' };
+export const EXTRA = { floor_b: FLOOR.floor_b, floor_c: FLOOR.floor_c, floor_d: FLOOR.floor_d, floor_e: FLOOR.floor_e, carpet_mid_b: carpet('mid_b') };
 /** 벽 아래 그림자 띠를 까는 타일 (그 아래 바닥 칸 위쪽) */
 export const SHADOW_BELOW = ['wall_low', 'window_low'];
 

@@ -27,7 +27,7 @@ export const PEOPLE = {
     eye: [R.sky[2], R.sky[3], R.hair[4]], // 회청색 [밝음, 기본, 어둠]
     brow: 'sharp',
     cloth: R.navy, // 남색 제복
-    cape: [R.navy[3], R.navy[3], R.navy[4], R.navy[4], R.black[3]], // 어두운 남색 망토
+    cape: [R.navy[2], R.navy[2], R.navy[3], R.navy[3], R.navy[4]], // 어두운 남색 망토 (외곽선 #1d2735)
     pants: R.black,
     shoes: R.black,
     glove: R.white,
@@ -58,6 +58,7 @@ export const PEOPLE = {
     glove: R.skin,
     weapon: 'dagger',
     handsTogether: true,
+    drop: 3, // 레온보다 3px 작게
   },
 };
 
@@ -94,23 +95,25 @@ function drawHead(p, view, dy) {
 }
 
 /** 머리카락: 뒤(몸 뒤로 늘어지는 것)와 앞(정수리·앞머리) */
-function drawHairBack(p, view, dy) {
+function drawHairBack(p, view, dy, sway = 0) {
   const L = new Layer();
   const h = p.hair;
   if (p.hairStyle !== 'long') return L;
   // 바닥까지 끌리는 긴 머리
   const bottom = 44;
   if (view === 'down') {
-    L.trap(10 + dy, bottom, 7, 24, 5, 26, (x, y, t) => (t < 0.18 ? h[1] : t > 0.82 ? h[3] : (x + Math.floor(y / 5)) % 5 === 0 ? h[2] : h[1]));
+    L.trap(10 + dy, bottom, 7, 24, 5 + sway, 26 + sway, (x, y, t) => (t < 0.18 ? h[2] : t > 0.82 ? h[3] : x % 3 === 0 ? h[2] : x % 3 === 1 && y > 30 && y < 36 ? h[0] : h[1]));
   } else if (view === 'up') {
-    L.trap(5 + dy, bottom, 8, 23, 6, 25, (x, y, t, k) => {
-      if ((x === 11 || x === 16 || x === 20) && y > 20) return h[2];
-      return t < 0.2 ? h[1] : t > 0.8 ? h[3] : h[1];
+    L.trap(5 + dy, bottom, 8, 23, 6 + sway, 25 + sway, (x, y, t, k) => {
+      // 머리카락 결 (세로 줄)과 반짝임 띠
+      if (x % 3 === 0 && y > 14) return t > 0.6 ? h[3] : h[2];
+      if (x % 3 === 1 && y > 24 && y < 29 && t < 0.6) return h[0];
+      return t < 0.2 ? h[1] : t > 0.75 ? h[2] : h[1];
     });
     // 끝이 살짝 갈라짐
     for (const x of [6, 11, 16, 21, 25]) L.clear(x, bottom);
   } else {
-    L.trap(9 + dy, bottom, 8, 17, 6, 17, (x, y, t) => (t < 0.3 ? h[2] : (x + Math.floor(y / 4)) % 4 === 0 ? h[2] : h[1]));
+    L.trap(9 + dy, bottom - Math.abs(sway), 8, 17, 6 - Math.abs(sway) * 2, 17 - Math.abs(sway), (x, y, t) => (t < 0.3 ? h[2] : (x + Math.floor(y / 4)) % 4 === 0 ? h[2] : h[1]));
   }
   L.outline();
   return L;
@@ -226,66 +229,86 @@ function drawFace(p, view, dy, L) {
 }
 
 /** 망토 (몸 뒤) */
-function drawCape(p, view, dy) {
+function drawCape(p, view, dy, sway = 0, flare = 0) {
   const L = new Layer();
   if (!p.cape) return L;
   const c = p.cape;
   if (view === 'down') {
-    L.trap(21 + dy, 41, 8, 23, 6, 25, (x, y, t) => (t < 0.5 ? c[1] : c[2]));
+    L.trap(21 + dy, 41, 8, 23, 6 + sway, 25 + sway, (x, y, t) => (t < 0.5 ? c[1] : c[2]));
   } else if (view === 'up') {
-    L.trap(20 + dy, 41, 9, 22, 6, 25, (x, y, t) => {
+    L.trap(20 + dy, 41, 9, 22, 6 + sway, 25 + sway, (x, y, t) => {
       if ((x === 12 || x === 19) && y > 26) return c[2];
       return t < 0.3 ? R.navy[2] : t > 0.75 ? c[2] : c[1];
     });
   } else {
-    L.trap(21 + dy, 41, 11, 16, 7, 14, (x, y, t) => (t < 0.4 ? c[2] : c[1]));
+    // 걸을 때 뒤로 날림 (flare)
+    L.trap(21 + dy, 41 - flare, 11, 16, 7 - flare * 2, 14 - flare, (x, y, t) => (t < 0.4 ? c[2] : c[1]));
   }
   L.outline();
   return L;
 }
 
-/** 다리. step: 'stand' | 'a' | 'b' (걷기 다리 벌림), lift: 다리를 위로 당김(점프) */
+/**
+ * 다리. step: 없음(서기) | 'a'·'b'(걸음 벌림, 발 닿음) | 'pa'·'pb'(한 발을 들고 지나감)
+ * lift: 다리를 위로 당김(점프). 아래·위 보기는 앞으로 나온 발이 1px 아래, 든 발은 3px 위
+ */
 function drawLegs(p, view, o) {
   const L = new Layer();
   const pa = p.pants;
   const so = p.shoes;
   const lift = o.lift ?? 0;
+  const st = o.step;
+  const F = FOOT - lift;
   if (p.dress) {
-    // 드레스: 발끝만 살짝
-    const f = (x0, up) => L.rect(x0, FOOT - 1 - up - lift, x0 + 2, FOOT - up - lift, (x) => (x === x0 ? so[0] : so[1]));
+    // 드레스: 치맛단 아래로 발끝만
+    const f = (x0, up, far) => L.rect(x0, F - 1 - up, x0 + 2, F - up, (x) => (far ? so[1] : x === x0 ? so[0] : so[1]));
     if (view === 'right') {
-      if (o.step === 'a') { f(17, 0); f(12, 0); } else if (o.step === 'b') { f(16, 0); f(13, 1); } else f(15, 0);
+      if (st === 'a' || st === 'b') { f(11, 0, true); f(19, 0); } else if (st) { f(16, 2, true); f(15, 0); } else f(15, 0);
     } else {
-      f(12, o.step === 'a' ? 1 : 0);
-      f(17, o.step === 'b' ? 1 : 0);
+      const [l, r] = { a: [-1, 1], b: [1, -1], pa: [0, 3], pb: [3, 0] }[st] ?? [0, 0];
+      f(12, l);
+      f(17, r);
     }
     L.outline();
     return L;
   }
-  const leg = (x0, top, bottom, front) => {
-    L.rect(x0, top, x0 + 2, bottom - 2, (x) => (x === x0 ? pa[0] : x === x0 + 2 ? pa[2] : pa[1]));
-    // 구두
-    L.rect(x0 - (front ? 0 : 0), bottom - 1, x0 + 3, bottom, (x, y) => (y === bottom - 1 && x === x0 ? so[0] : so[1]));
+  const top = 33 + (o.drop ?? 0);
+  // 앞뒤 보기: 곧은 다리
+  const leg = (x0, bottom) => {
+    const P = new Layer();
+    P.rect(x0, top, x0 + 2, bottom - 2, (x) => (x === x0 ? pa[0] : x === x0 + 2 ? pa[2] : pa[1]));
+    P.rect(x0, bottom - 1, x0 + 3, bottom, (x, y) => (y === bottom - 1 && x === x0 ? so[0] : so[1]));
+    return P.outline();
   };
-  const top = 33;
+  // 옆 보기: 엉덩이(15, top)에서 발목까지 비스듬한 다리, 구두는 앞(오른쪽)으로
+  const sideLeg = (fx, bottom, far) => {
+    const P = new Layer();
+    P.line(15, top, fx, bottom - 2, far ? pa[2] : pa[1], 3);
+    if (!far) P.line(14, top, fx - 1, bottom - 2, pa[0], 1);
+    P.rect(fx - 1, bottom - 1, fx + 2, bottom, (x, y) => (far ? so[2] : y === bottom - 1 && x === fx - 1 ? so[0] : so[1]));
+    return P.outline();
+  };
   if (view === 'right') {
-    if (o.step === 'a') {
-      leg(12, top, FOOT - lift, false);
-      leg(17, top, FOOT - lift, true);
-    } else if (o.step === 'b') {
-      leg(13, top, FOOT - lift, false);
-      leg(16, top, FOOT - 1 - lift, true);
-    } else leg(15, top, FOOT - lift, true);
-  } else {
-    leg(12, top, FOOT - lift - (o.step === 'a' ? 1 : 0), true);
-    leg(17, top, FOOT - lift - (o.step === 'b' ? 1 : 0), true);
+    if (st === 'a' || st === 'b') {
+      // 큰 걸음: 뒤 발 10, 앞 발 20 (a는 가까운 다리가 앞, b는 뒤)
+      const [nearX, farX] = st === 'a' ? [20, 10] : [10, 20];
+      L.over(sideLeg(farX, F, true)).over(sideLeg(nearX, F, false));
+    } else if (st) {
+      // 지나감: 한 다리는 곧게, 다른 다리는 무릎을 들어 앞으로
+      const lifted = st === 'pa';
+      L.over(sideLeg(lifted ? 15 : 17, lifted ? F : F - 3, true)).over(sideLeg(lifted ? 17 : 15, lifted ? F - 3 : F, false));
+    } else L.over(sideLeg(15, F, false));
+    return L;
   }
-  L.outline();
+  const [l, r] = { a: [1, -1], b: [-1, 1], pa: [0, -3], pb: [-3, 0] }[st] ?? [0, 0];
+  // 뒤로 간 다리를 먼저 (앞으로 나온 다리가 위에)
+  const legs = [[12, F + l], [17, F + r]].sort((a, b) => a[1] - b[1]);
+  for (const [x, b] of legs) L.over(leg(x, b));
   return L;
 }
 
 /** 몸통 (제복·드레스) */
-function drawBody(p, view, dy) {
+function drawBody(p, view, dy, sway = 0, flare = 0) {
   const L = new Layer();
   const c = p.cloth;
   const y0 = 20 + dy;
@@ -293,10 +316,10 @@ function drawBody(p, view, dy) {
     // 흰 드레스: 몸통 + 바닥까지 퍼지는 치마
     if (view === 'right') {
       L.trap(y0, 31 + dy, 13, 19, 12, 19, (x, y, t) => sh(c, t, 0.3, 0.75));
-      L.trap(31 + dy, FOOT - 1, 12, 19, 10, 21, (x, y, t) => sh(c, t, 0.3, 0.72));
+      L.trap(31 + dy, FOOT - 1, 12, 19, 10 - flare, 21 - Math.min(flare, 1), (x, y, t) => sh(c, t, 0.3, 0.72));
     } else {
       L.trap(y0, 31 + dy, 11, 20, 11, 20, (x, y, t) => sh(c, t));
-      L.trap(31 + dy, FOOT - 1, 11, 20, 8, 23, (x, y, t, k) => ((x + y) % 7 === 0 && t > 0.6 ? c[2] : sh(c, t)));
+      L.trap(31 + dy, FOOT - 1, 11, 20, 8 + sway, 23 + sway, (x, y, t, k) => ((x + y) % 7 === 0 && t > 0.6 ? c[2] : sh(c, t)));
       // 치마 주름
       for (const x of [11, 20]) for (let y = 35 + dy; y < FOOT - 1; y++) if (L.get(x, y)) L.set(x, y, c[2]);
     }
@@ -312,7 +335,7 @@ function drawBody(p, view, dy) {
     if (p.accent) for (let x = 0; x < 32; x++) if (L.get(x, FOOT - 1)) L.set(x, FOOT - 1, p.accent[1]);
     L.outline({ skipBottom: false });
     // 금색 자수 점
-    if (view !== 'up' && p.gold) for (const [x, y] of view === 'right' ? [[18, 41]] : [[15, 41], [16, 41], [12, 42], [19, 42]]) L.set(x, y, p.gold[1]);
+    if (view !== 'up' && p.gold) for (const [x, y] of view === 'right' ? [[18, 41], [14, 36], [12, 41], [16, 33]] : [[15, 41], [16, 41], [12, 34], [19, 34], [10 + sway, 39], [21 + sway, 39], [13, 42], [18, 42]]) if (L.get(x, y)) L.set(x, y, p.gold[1]);
     return L;
   }
   // 제복 상의
@@ -351,7 +374,7 @@ function drawBody(p, view, dy) {
       L.rect(17, y0 + 2, 19, y0 + 6, (x, y) => (y === y0 + 2 ? pl[1] : x === 19 ? pl[3] : pl[2]));
       L.set(17, y0 + 3, pl[0]);
     } else {
-      L.trap(y0 + 2, y0 + 7, 12, 19, 13, 18, (x, y, t, k) => (k > 0.8 ? pl[3] : t < 0.35 ? pl[1] : t > 0.7 ? pl[3] : pl[2]));
+      L.trap(y0 + 3, y0 + 7, 13, 17, 13, 17, (x, y, t, k) => (k > 0.8 ? pl[3] : t < 0.35 ? pl[1] : t > 0.7 ? pl[3] : pl[2]));
       L.set(13, y0 + 3, pl[0]);
       L.set(14, y0 + 3, pl[0]);
     }
@@ -511,16 +534,19 @@ export function drawPerson(id, view, o = {}) {
   const p = PEOPLE[id];
   const flip = view === 'left';
   const v = flip ? 'right' : view;
-  const dy = o.dy ?? 0;
+  const drop = p.drop ?? 0; // 키 차이: 머리·몸을 이만큼 내림
+  const dy = (o.dy ?? 0) + drop;
+  const sway = o.sway ?? 0;
+  const flare = o.flare ?? 0;
   const out = new Layer();
   const parts = [];
 
-  parts.push(drawCape(p, v, dy));
-  parts.push(drawHairBack(p, v, dy));
+  parts.push(drawCape(p, v, dy, sway, flare));
+  parts.push(drawHairBack(p, v, dy, v === 'right' ? flare : sway));
   // 옆·뒤 보기: 몸 뒤쪽 팔
-  parts.push(drawLegs(p, v, { step: o.step, lift: o.lift }));
-  const body = drawBody(p, v, dy);
-  const arms = o.arms ? o.arms.map((a) => drawArm(p, a.from, a.to)) : standArms(p, v, dy, o.swing ?? 0);
+  parts.push(drawLegs(p, v, { step: o.step, lift: o.lift, drop }));
+  const body = drawBody(p, v, dy, sway, flare);
+  const arms = o.arms ? o.arms.map((a) => drawArm(p, [a.from[0], a.from[1] + drop], [a.to[0], a.to[1] + drop])) : standArms(p, v, dy, o.swing ?? 0);
   if (v === 'up') {
     parts.push(...arms);
     parts.push(body);
@@ -528,6 +554,7 @@ export function drawPerson(id, view, o = {}) {
     parts.push(body);
   }
   parts.push(drawCapelet(p, v, dy));
+  if (v === 'up' && p.hairStyle === 'long') parts.push(drawHairBack(p, v, dy, sway));
   if (v === 'up') parts.push(drawPauldron(p, v, dy));
   const head = drawHead(p, v, dy);
   drawFace(p, v, dy, head);

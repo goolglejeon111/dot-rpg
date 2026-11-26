@@ -13,7 +13,7 @@
 // 여기 있는 인물은 예전 생성기(outputs.mjs, gen-battle.mjs)가 덮어쓰지 않는다.
 import { writeFileSync, mkdirSync, existsSync, copyFileSync, readFileSync } from 'node:fs';
 import { readPNG } from './png-read.mjs';
-import { TILES, EXTRA, VARIANTS, SHADOW_BELOW, PROPS } from './hd/palace.mjs';
+import { TILES, EXTRA, VARIANTS, ALTERNATE, SHADOW_BELOW, PROPS } from './hd/palace.mjs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PEOPLE, drawPerson, drawWeapon, FOOT } from './hd/people.mjs';
@@ -33,13 +33,13 @@ const OLD_HEIGHT = 39;
 function fieldSheet(id) {
   const frames = [];
   for (const v of VIEWS) {
-    const sw = v === 'down' || v === 'up' ? 1 : 1;
+    // 서기, 걷기 4프레임: 발 닿음(몸이 1px 내려감, 팔·망토 크게 흔듦) → 한 발 들고 지나감 → 반대 발 닿음 → 지나감
     frames.push(
       drawPerson(id, v),
-      drawPerson(id, v, { step: 'a', dy: 1, swing: sw }),
-      drawPerson(id, v),
-      drawPerson(id, v, { step: 'b', dy: 1, swing: -sw }),
-      drawPerson(id, v),
+      drawPerson(id, v, { step: 'a', dy: 1, swing: 2, sway: -1, flare: 2 }),
+      drawPerson(id, v, { step: 'pa', swing: 0, flare: 1 }),
+      drawPerson(id, v, { step: 'b', dy: 1, swing: -2, sway: 1, flare: 2 }),
+      drawPerson(id, v, { step: 'pb', swing: 0, flare: 1 }),
     );
   }
   for (const v of VIEWS) {
@@ -117,7 +117,7 @@ function battleFrame(id, view, col) {
       arms.unshift({ from: other, to: [other[0] < 16 ? other[0] - 1 : other[0] + 1, 30] });
     }
     const body = drawPerson(id, v, { arms, dy: pz.dy ?? 0 });
-    const wp = drawWeapon(p.weapon, OX + hx + (pz.dx ?? 0), OY + hy + (pz.dy ?? 0), pz.ang);
+    const wp = drawWeapon(p.weapon, OX + hx + (pz.dx ?? 0), OY + hy + (pz.dy ?? 0) + (p.drop ?? 0), pz.ang);
     if (pz.behind) {
       cell.over(wp);
       put(body, pz.dx ?? 0);
@@ -214,7 +214,7 @@ if (!existsSync(oldTiles)) {
   extra.forEach((name, i) => put(EXTRA[name], NAMES.length + i));
   write(`public/${sprites.tiles.file}`, encodePNG(W, H, d));
 }
-const tileInfo = { extra: Object.keys(EXTRA), variants: VARIANTS, shadowBelow: SHADOW_BELOW };
+const tileInfo = { extra: Object.keys(EXTRA), variants: VARIANTS, alternate: ALTERNATE, shadowBelow: SHADOW_BELOW };
 
 // 물건: 예전 그림은 public/assets/_old/explore/로 옮겨 두고 같은 크기로 새로 그림
 const files = [];

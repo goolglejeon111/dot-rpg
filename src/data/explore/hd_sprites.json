@@ -10,18 +10,26 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 2
   },
   "_tiles": {
     "extra": [
       "floor_b",
-      "floor_c"
+      "floor_c",
+      "floor_d",
+      "floor_e",
+      "carpet_mid_b"
     ],
     "variants": {
       "floor": [
         "floor_b",
-        "floor_c"
+        "floor_c",
+        "floor_d",
+        "floor_e"
       ]
+    },
+    "alternate": {
+      "carpet_mid": "carpet_mid_b"
     },
     "shadowBelow": [
       "wall_low",

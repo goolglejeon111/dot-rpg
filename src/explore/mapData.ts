@@ -103,24 +103,28 @@ export function makeTilemap(scene: Phaser.Scene, id: string) {
  * 벽 아래 바닥 칸 위쪽에 그림자 띠를 깖. 그림자 띠 그림을 돌려줌
  */
 export function dressTiles(scene: Phaser.Scene, floor: Phaser.Tilemaps.TilemapLayer, walls: Phaser.Tilemaps.TilemapLayer) {
-  const info = (hd as { _tiles?: { extra: string[]; variants: Record<string, string[]>; shadowBelow: string[] } })._tiles;
+  const info = (hd as { _tiles?: { extra: string[]; variants: Record<string, string[]>; alternate?: Record<string, string>; shadowBelow: string[] } })._tiles;
   if (!info) return undefined;
   const gid = (name: string) => {
     const i = TILE_NAMES.indexOf(name);
     return i >= 0 ? i + 1 : TILE_NAMES.length + info.extra.indexOf(name) + 1;
   };
   const variants = new Map(Object.entries(info.variants).map(([k, v]) => [gid(k), v.map(gid)]));
+  const alternate = new Map(Object.entries(info.alternate ?? {}).map(([k, v]) => [gid(k), gid(v)]));
   const shade = new Set(info.shadowBelow.map(gid));
   const g = scene.add.graphics();
   let any = false;
   floor.forEachTile((t) => {
     const v = variants.get(t.index);
     if (v) {
-      // 칸 위치로 정해지는 난수: 절반은 그대로, 나머지는 갈래
+      // 칸 위치로 정해지는 난수: 40%는 그대로, 나머지는 갈래
       let h = Math.imul(t.x * 374761393 + t.y * 668265263, 1274126177);
       h = ((h ^ (h >>> 15)) >>> 0) % 100;
-      if (h >= 50) t.index = v[Math.floor(((h - 50) * v.length) / 50)];
+      if (h >= 40) t.index = v[Math.floor(((h - 40) * v.length) / 60)];
     }
+    // 번갈아 까는 타일 (홀수 칸)
+    const alt = alternate.get(t.index);
+    if (alt && t.x % 2 === 1) t.index = alt;
     if (t.index > 0 && !walls.getTileAt(t.x, t.y) && shade.has(walls.getTileAt(t.x, t.y - 1)?.index ?? 0)) {
       g.fillStyle(0x2a1a48, 0.35).fillRect(t.pixelX, t.pixelY, TS, 4);
       g.fillStyle(0x2a1a48, 0.18).fillRect(t.pixelX, t.pixelY + 4, TS, 4);

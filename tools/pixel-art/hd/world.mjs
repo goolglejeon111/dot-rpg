@@ -40,12 +40,12 @@ const WOOD = [...R.wood, '#2e2425'];
 // 맨땅: 얼룩 두 단계 + 작은 돌(위·왼쪽 밝게, 아래 그늘) + 티끌
 // ---------------------------------------------------------------------
 function ground(ramp, o = {}) {
-  const { base = 1, seed = 1, pebbles = 3, specks = 0.03, light = 0.1, extra } = o;
+  const { base = 1, seed = 1, pebbles = 3, specks = 0.03, light = 0.07, dark = 0.1, extra } = o;
   const L = new Layer(32, 32);
   L.rect(0, 0, 31, 31, (x, y) => {
     const b = blot(x, y, seed, 8);
     if (b > 1 - light) return ramp[base - 1] ?? ramp[base];
-    if (b < 0.16) return ramp[base + 1];
+    if (b < dark) return ramp[base + 1];
     return hash(x, y, seed + 50) < specks ? ramp[base + 1] : ramp[base];
   });
   for (let i = 0; i < pebbles; i++) {
@@ -260,9 +260,8 @@ function ripples(L, ramp, base, seed, n = 5, deep = false) {
     for (let k = 0; k < len; k++) {
       const x = (x0 + k) % 32;
       const y = y0 + Math.round(Math.sin((k / len) * Math.PI) * -1.5);
-      L.set(x, y, ramp[base + 1]);
-      L.set(x, y - 1, ramp[base - 1] ?? ramp[0]);
-      if (deep) L.set(x, y + 1, ramp[base + 1]);
+      L.set(x, y, ramp[base - 1] ?? ramp[0]);
+      if (deep || (k > 1 && k < len - 2 && hash(x, y, seed) < 0.5)) L.set(x, y + 1, ramp[base + 1]);
     }
   }
 }
@@ -364,11 +363,11 @@ const make = {
   shack_wall: (s = 18) => planks(WOOD, { base: 2, size: 8, vertical: true, seed: s }),
   bridge: (s = 19) => planks(WOOD, { base: 1, size: 8, seed: s }),
   grass: (s = 20) => grass(R.green, { base: 1, seed: s, flowers: 0 }),
-  sand: (s = 21) => ground(SAND, { base: 1, seed: s, pebbles: 2 }),
+  sand: (s = 21) => ground(SAND, { base: 1, seed: s, pebbles: 1, specks: 0.015, dark: 0.08 }),
   river: (s = 22) => water([R.sky[0], R.sky[1], R.sky[2], R.sky[3]], { base: 2, seed: s, glint: R.white[0] }),
-  desert: (s = 23) => ground(SAND, { base: 1, seed: s, pebbles: 1, extra: (L) => ripples(L, SAND, 1, s, 3) }),
-  desert2: (s = 24) => ground(SAND, { base: 1, seed: s, pebbles: 1, light: 0.14, extra: (L) => ripples(L, SAND, 1, s, 4) }),
-  dune: (s = 25) => ground(SAND, { base: 1, seed: s, pebbles: 0, light: 0.16, extra: (L) => ripples(L, SAND, 1, s, 7, true) }),
+  desert: (s = 23) => ground(SAND, { base: 1, seed: s, pebbles: 1, specks: 0.012, light: 0.06, dark: 0.06, extra: (L) => ripples(L, SAND, 1, s, 1) }),
+  desert2: (s = 24) => ground(SAND, { base: 1, seed: s, pebbles: 0, specks: 0.012, light: 0.08, dark: 0.06, extra: (L) => ripples(L, SAND, 1, s, 2) }),
+  dune: (s = 25) => ground(SAND, { base: 1, seed: s, pebbles: 0, specks: 0.012, light: 0.1, dark: 0.08, extra: (L) => ripples(L, SAND, 1, s, 3) }),
   sandstone: (s = 26) => bricks(SAND, { base: 2, h: 8, w: 32, rough: 1, seed: s, mortar: SAND[4] }),
   sandstone_top: () => wallTop(SAND, { base: 1 }),
   oasis_water: (s = 27) => water([R.white[0], R.sky[0], R.sky[1], R.sky[2]], { base: 2, seed: s, glint: R.white[0] }),
@@ -397,8 +396,9 @@ const make = {
   forest_floor: (s = 37) =>
     grass([R.green[2], R.green[3], DARK[3]], { base: 1, seed: s, tufts: 4, extra: (L) => dots(L, 8, s, [R.wood[2], R.wood[1], R.green[2]]) }),
   ruin_wall: (s = 38) => bricks(DARK, { base: 1, seed: s, rough: 1, moss: MOSS }),
-  frost_field: (s = 39) => ground(IVORY, { base: 2, seed: s, pebbles: 2, extra: (L) => patches(L, s + 2, [SNOW[0], SNOW[1]], 0.18) }),
-  frost_road: (s = 40) => ground(IVORY, { base: 3, seed: s, pebbles: 4, extra: (L) => patches(L, s + 2, [SNOW[1], SNOW[2]], 0.15) }),
+  // 서리 들판: 상아색 바탕에 서리 점(흰색)만 드문드문. 얼룩은 아주 옅게
+  frost_field: (s = 39) => ground(IVORY, { base: 2, seed: s, pebbles: 1, specks: 0.01, light: 0.05, dark: 0.03, extra: (L) => dots(L, 10, s + 3, [SNOW[0], SNOW[1]]) }),
+  frost_road: (s = 40) => ground(IVORY, { base: 3, seed: s, pebbles: 3, specks: 0.015, light: 0.1, dark: 0.02, extra: (L) => dots(L, 6, s + 3, [IVORY[2], SNOW[1]]) }),
   ice: (s = 41) => {
     const L = new Layer(32, 32);
     L.rect(0, 0, 31, 31, (x, y) => (blot(x, y, s, 16) < 0.4 ? R.sky[1] : R.sky[0]));
@@ -416,8 +416,8 @@ const make = {
     }
     return L;
   },
-  snow: (s = 42) => ground(SNOW, { base: 1, seed: s, pebbles: 0, specks: 0.02, extra: (L) => dots(L, 4, s, [SNOW[0], R.sky[0]]) }),
-  snow_path: (s = 43) => ground(SNOW, { base: 2, seed: s, pebbles: 3, extra: (L) => patches(L, s + 1, [SNOW[1], SNOW[1]], 0.25) }),
+  snow: (s = 42) => ground(SNOW, { base: 1, seed: s, pebbles: 0, specks: 0.015, light: 0.1, dark: 0.04, extra: (L) => dots(L, 4, s, [SNOW[0], R.sky[0]]) }),
+  snow_path: (s = 43) => ground(SNOW, { base: 2, seed: s, pebbles: 3, specks: 0.02, light: 0.1, dark: 0.03, extra: (L) => dots(L, 8, s + 1, [SNOW[1], SNOW[0]]) }),
   snow_rock: (s = 44) => bricks(GREY, { base: 3, mortar: GREY[4], seed: s, rough: 1, extra: (L) => snowCaps(L) }),
   dwarf_floor: (s = 45) => slabs(GREY, { base: 2, seed: s, crack: 1 }),
   stone_bridge: (s = 46) => slabs(IVORY, { base: 2, w: 32, h: 8, stagger: 12, seed: s, crack: 0 }),
@@ -429,11 +429,15 @@ const make = {
       seed: s,
       pebbles: 4,
       extra: (L) => {
+        // 짧은 붉은 금 (칸마다 자리·길이가 다르게, 없는 칸도 있음)
+        if (hash(2, 2, s) < 0.35) return;
         let x = Math.floor(hash(1, 1, s) * 20) + 4;
-        for (let y = 6; y < 26; y++) {
-          L.set(x, y, R.fire[3]);
-          if (hash(x, y, s) < 0.3) L.set(x + 1, y, R.red[3]);
-          x += hash(y, x, s) < 0.5 ? 1 : -1;
+        const y0 = Math.floor(hash(1, 2, s) * 16) + 4;
+        const len = 5 + Math.floor(hash(1, 3, s) * 6);
+        for (let y = y0; y < y0 + len; y++) {
+          L.set(x, y, R.red[3]);
+          if (y === y0 + 2) L.set(x, y, R.fire[3]);
+          x += hash(y, x, s) < 0.5 ? 1 : 0;
         }
       },
     }),
@@ -475,7 +479,9 @@ const VAR = {
   cobble: [63],
   grass: [64, 65],
   sand: [66],
-  desert: [67, 68],
+  desert: [67, 68, 84],
+  desert2: [85],
+  dune: [86],
   mud: [69],
   cellar_floor: [70],
   road: [71],
@@ -486,7 +492,8 @@ const VAR = {
   snow: [76, 77],
   snow_path: [78],
   dwarf_floor: [79],
-  black_rock: [80],
+  black_rock: [80, 87, 88],
+  frost_road: [89],
   sewer_floor: [81],
   adobe_floor: [82],
   cistern_floor: [83],

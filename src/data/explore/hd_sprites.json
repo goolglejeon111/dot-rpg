@@ -267,6 +267,9 @@
       "sand_v1",
       "desert_v1",
       "desert_v2",
+      "desert_v3",
+      "desert2_v1",
+      "dune_v1",
       "mud_v1",
       "cellar_floor_v1",
       "road_v1",
@@ -279,6 +282,9 @@
       "snow_path_v1",
       "dwarf_floor_v1",
       "black_rock_v1",
+      "black_rock_v2",
+      "black_rock_v3",
+      "frost_road_v1",
       "sewer_floor_v1",
       "adobe_floor_v1",
       "cistern_floor_v1"
@@ -306,7 +312,14 @@
       ],
       "desert": [
         "desert_v1",
-        "desert_v2"
+        "desert_v2",
+        "desert_v3"
+      ],
+      "desert2": [
+        "desert2_v1"
+      ],
+      "dune": [
+        "dune_v1"
       ],
       "mud": [
         "mud_v1"
@@ -340,7 +353,12 @@
         "dwarf_floor_v1"
       ],
       "black_rock": [
-        "black_rock_v1"
+        "black_rock_v1",
+        "black_rock_v2",
+        "black_rock_v3"
+      ],
+      "frost_road": [
+        "frost_road_v1"
       ],
       "sewer_floor": [
         "sewer_floor_v1"

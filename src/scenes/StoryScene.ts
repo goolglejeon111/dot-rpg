@@ -750,6 +750,10 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     return this.story.id !== 'prologue';
   }
 
+  actName() {
+    return this.story?.title.split(':')[0].trim() ?? '';
+  }
+
   fieldBattle(battle: string, done: (r?: BattleResult) => void, pos?: { x: number; y: number }) {
     this.fieldDone = done;
     // 어두운 수로에서 처음 싸울 때: 엘리시아가 빛을 밝힌 뒤 전투 (이후로는 계속 밝다)

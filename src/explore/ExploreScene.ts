@@ -35,6 +35,8 @@ export interface MapHost {
   fieldBattle(battle: string, done: (r?: { outcome: string }) => void, at?: { x: number; y: number }): void;
   /** 레온의 어깨에 상처가 있는 이야기인가 (1막부터. 없으면 없음) */
   wounded?(): boolean;
+  /** 지금 이야기의 막 이름 ("1막", "프롤로그"). 최대 레벨 안내에 씀 */
+  actName?(): string;
 }
 export interface ExploreStart {
   host: MapHost;
@@ -2103,6 +2105,14 @@ export class ExploreScene extends Phaser.Scene {
     });
   }
 
+  /** "1막을", "프롤로그를": 지금 막 이름 + 받침에 맞는 을/를. 모르면 "이 막을" */
+  private actToFinish() {
+    const act = this.host.actName?.() ?? '';
+    if (!act) return '이 막을';
+    const c = act.charCodeAt(act.length - 1) - 0xac00;
+    return `${act}${c >= 0 && c < 11172 && c % 28 ? '을' : '를'}`;
+  }
+
   private lookDone(l: Lookable) {
     const amount = EXP_REWARD.look(l.id);
     const ups = gainOnce(`look:${l.id}`, partyIds(), amount).filter((u) => u.id === 'leon');
@@ -2117,7 +2127,7 @@ export class ExploreScene extends Phaser.Scene {
     if (this.seg?.until && l.id === this.seg.until) return this.finish(this.actors.get('leon')!);
     if (!this.seg?.until) this.lookables = this.lookables.filter((x) => x !== l);
     this.near = null;
-    if (amount) this.toast(`경험치 +${amount}${isCapped('leon') && !ups.length ? '   (최대 레벨: 프롤로그를 마치면 반영)' : ''}`);
+    if (amount) this.toast(`경험치 +${amount}${isCapped('leon') && !ups.length ? `   (최대 레벨: ${this.actToFinish()} 마치면 반영)` : ''}`);
     for (const u of ups) this.time.delayedCall(1000, () => this.toast(`레벨 업!  Lv ${u.from} → Lv ${u.to}`));
     this.refreshHud();
     if (this.seg?.tutorial && this.tutStep <= 1) {

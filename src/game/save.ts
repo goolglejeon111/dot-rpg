@@ -44,6 +44,23 @@ interface Meta {
   choiceLog: ChoiceLogEntry[];
   /** 한 번이라도 고른 적 있는 선택지 ("이야기:장면:대사번호:선택지 글") */
   chosen: string[];
+  /** 이번 진행에서 이동 구간이 시작되던 순간 (조사 기록의 "다시 걷기") */
+  walks: WalkEntry[];
+  /** 한 번이라도 조사한 물건 (타이틀 "조사 기록"의 수집률) */
+  looked: string[];
+  /** 한 번이라도 걸어 본 이동 구간 */
+  segs: string[];
+}
+
+/** 이동 구간 시작 스냅샷 */
+export interface WalkEntry {
+  story: string;
+  scene: string;
+  node: number;
+  seg: string;
+  state: ChoiceState;
+  /** 그때의 선택지 기록 수 (다시 걸으면 그 뒤 선택지 기록도 지운다) */
+  choices: number;
 }
 
 /** 선택지 기록 하나: 그 선택지 화면을 다시 만들 수 있는 값 */
@@ -58,6 +75,8 @@ export interface ChoiceLogEntry {
   state: ChoiceState;
   /** 그때의 화면: 인물, 마지막 글, CG, 상처 맥박 */
   view: unknown;
+  /** 그때의 이동 구간 기록 수 */
+  walks?: number;
 }
 
 export interface ChoiceState {
@@ -88,6 +107,9 @@ const fresh = (): Meta => ({
   choices: {},
   choiceLog: [],
   chosen: [],
+  walks: [],
+  looked: [],
+  segs: [],
 });
 
 function load(): Meta {
@@ -107,6 +129,9 @@ function load(): Meta {
       // 예전 저장에는 없음 → 빈 기록
       choiceLog: Array.isArray(p.choiceLog) ? p.choiceLog : [],
       chosen: Array.isArray(p.chosen) ? p.chosen : [],
+      walks: Array.isArray(p.walks) ? p.walks : [],
+      looked: Array.isArray(p.looked) ? p.looked : [],
+      segs: Array.isArray(p.segs) ? p.segs : [],
     };
   } catch (err) {
     console.warn('[save] 기록을 읽지 못했습니다. 새로 시작합니다', err);
@@ -207,6 +232,38 @@ export const save = {
     write();
   },
   hasChosen: (key: string) => meta.chosen.includes(key),
+
+  get walkCount() {
+    return meta.walks.length;
+  },
+  get walks(): WalkEntry[] {
+    return JSON.parse(JSON.stringify(meta.walks));
+  },
+  /** 이동 구간 시작: 같은 구간을 다시 걸으면 그 자리부터 새로 */
+  addWalk(e: WalkEntry) {
+    const k = meta.walks.findIndex((w) => w.story === e.story && w.seg === e.seg);
+    if (k >= 0) meta.walks.length = k;
+    meta.walks.push(JSON.parse(JSON.stringify(e)));
+    if (!meta.segs.includes(e.seg)) meta.segs.push(e.seg);
+    write();
+  },
+  trimWalks(n: number) {
+    if (meta.walks.length <= n) return;
+    meta.walks.length = Math.max(0, n);
+    write();
+  },
+  clearWalks(story: string, all = false) {
+    meta.walks = all ? [] : meta.walks.filter((w) => w.story !== story);
+    write();
+  },
+  hasWalkedEver: (seg: string) => meta.segs.includes(seg),
+  hasLookedEver: (id: string) => meta.looked.includes(id),
+  /** 조사한 물건을 게임 밖 기록에 (이미 있으면 그대로) */
+  markLooked(ids: string[]) {
+    let changed = false;
+    for (const id of ids) if (!meta.looked.includes(id)) (meta.looked.push(id), (changed = true));
+    if (changed) write();
+  },
   setCheckpoint(c: Checkpoint) {
     meta.checkpoint = JSON.parse(JSON.stringify(c));
     write();

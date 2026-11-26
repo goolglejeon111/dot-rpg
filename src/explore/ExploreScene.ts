@@ -11,6 +11,7 @@ import { EXP_REWARD, activeParty, gainOnce, hpOf, isCapped, levelOf, levelProgre
 import charData from '../data/characters.json';
 import hd from '../data/explore/hd_sprites.json';
 import { gameState } from '../game/GameState';
+import { save } from '../game/save';
 import type { StoryFxDef } from '../scenes/StoryFx';
 import {
   FLAMES, MAPS, PROPS, TS, dressTiles, findObj, footOf, layerOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf, solidGrid, wadeGrid,
@@ -2105,6 +2106,7 @@ export class ExploreScene extends Phaser.Scene {
   private lookDone(l: Lookable) {
     const amount = EXP_REWARD.look(l.id);
     const ups = gainOnce(`look:${l.id}`, partyIds(), amount).filter((u) => u.id === 'leon');
+    save.markLooked([l.id]);
     if (LOOKS[l.id]?.pickup) {
       this.named.get(l.id)?.setVisible(false);
       const item = LOOKS[l.id].name.replace(/ 줍기$/, '');

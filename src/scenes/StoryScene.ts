@@ -9,6 +9,7 @@ import { characters, stories } from '../game/data';
 import { gameState, type StateData } from '../game/GameState';
 import { makeBodyPlaceholder, PORTRAIT_H, PORTRAIT_W } from '../game/placeholders';
 import { save, type ChoiceLogEntry } from '../game/save';
+import { openLookLog } from '../game/lookLog';
 import { cgKey, loadCgs } from '../game/cg';
 import { senseBeat } from '../game/beat';
 import { playLoop, playSe } from '../game/sound';
@@ -192,6 +193,9 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   private hist: Hist[] = [];
   private backBtn?: Button;
   private choiceBtn?: Button;
+  private lookBtn?: Button;
+  /** 지금 걷고 있는 이동 구간 (조사 기록에서 펼쳐 둠) */
+  private curSeg?: string;
   /** 선택지 기록 창이 열려 있으면 휠로 넘기기 */
   private choiceScroll?: (dy: number) => void;
 
@@ -209,6 +213,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.backlog = [];
     this.hist = [];
     this.choiceScroll = undefined;
+    this.curSeg = undefined;
     this.entered = false;
     this.choiceButtons = [];
     this.activeChoices = [];
@@ -365,6 +370,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
 
     // 오른쪽 위 메뉴
     const small = { w: 92, h: 36, fontSize: 17, depth: 9 };
+    this.lookBtn = makeButton(this, W - 490, 30, '조사 (J)', () => this.openLooks(), small);
     this.logBtn = makeButton(this, W - 392, 30, '로그 (L)', () => this.openLog(), small);
     this.autoBtn = makeButton(this, W - 294, 30, '자동 (A)', () => this.toggleAuto(), small);
     this.skipBtn = makeButton(this, W - 196, 30, '스킵 (S)', () => this.skipToNextPlace(), small);
@@ -402,6 +408,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       const si = e ? this.story.scenes.findIndex((s) => s.id === e.scene) : -1;
       if (e && si >= 0 && 'choices' in (this.story.scenes[si].nodes[e.node] ?? {})) {
         const base = gameState.snapshot();
+        if (e.walks !== undefined) save.trimWalks(e.walks);
         this.curtain.setVisible(true).setAlpha(1);
         this.restoreHist({
           scene: si,
@@ -424,6 +431,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       save.setCheckpoint({ story: this.story.id, scene: this.story.scenes[0].id, ...gameState.snapshot() });
       // 이 막을 처음부터: 그 막의 선택지 기록은 새로 (프롤로그면 전부)
       save.clearChoices(this.story.id, this.story.id === 'prologue');
+      save.clearWalks(this.story.id, this.story.id === 'prologue');
       this.showChapterCard(() => this.enterScene(0));
     }
   }
@@ -1167,9 +1175,13 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side, true);
     this.mode = 'explore';
     const def = STAGE.segments[seg];
+    // 조사 기록의 "다시 걷기": 이 구간이 시작되는 순간의 상태
+    this.curSeg = seg;
+    save.addWalk({ story: this.story.id, scene: this.scene_.id, node: this.nodeIdx, seg, state: gameState.snapshot(), choices: save.choiceCount });
     this.withMap((m) =>
       m.play(seg, () => {
         this.mode = 'busy';
+        this.curSeg = undefined;
         const after = def?.after ? STAGE.stages[def.after] : undefined;
         if (after?.dark)
           return this.curtainIn(450, () => {
@@ -1261,6 +1273,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     for (const b of [this.logBtn, this.autoBtn, this.skipBtn, this.backBtn, this.choiceBtn]) if (b && b.visible !== talk) b.setVisible(talk);
     const pb = this.mode === 'explore' && !this.looking && !this.overlay && gameState.progress.party.length > ACTIVE_MAX;
     if (this.partyBtn && this.partyBtn.visible !== pb) this.partyBtn.setVisible(pb);
+    const lb = (talk || this.mode === 'explore') && !this.looking && !this.overlay;
+    if (this.lookBtn && this.lookBtn.visible !== lb) this.lookBtn.setVisible(lb);
   }
 
   private onKey(ev: KeyboardEvent) {
@@ -1281,6 +1295,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     if (this.mode === 'explore' || this.looking) {
       if (k === 'p' && this.mode === 'explore' && !this.looking && !this.overlay) return this.openPartyFromMap();
       if (k === 'c' && this.mode === 'explore' && !this.looking && !this.overlay) return this.openChoiceLog();
+      if (k === 'j' && this.mode === 'explore' && !this.looking && !this.overlay) return this.openLooks();
       if (this.looking && !this.overlay && (ev.code === 'Space' || ev.code === 'Enter' || k === 'z' || k === 'f')) {
         ev.preventDefault();
         this.onPress();
@@ -1295,6 +1310,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     if (this.overlay) return;
     if (k === 'l') this.openLog();
     else if (k === 'c') this.openChoiceLog();
+    else if (k === 'j') this.openLooks();
     else if (k === 'a') this.toggleAuto();
     else if ((k === 's' || ev.key === 'Control') && !ev.repeat) this.skipToNextPlace(); // 누르고 있어도 한 번만
     else if (this.mode === 'choice') {
@@ -1646,6 +1662,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
         text: opt.text,
         state: cp.state,
         view: { stage: cp.stage, shown: cp.shown, place: cp.place, cg: this.cgId, sense: !!this.senseFx } satisfies HistView,
+        walks: save.walkCount,
       } satisfies ChoiceLogEntry);
     gameState.applyEffects(opt);
     if (opt.exp) {
@@ -1846,6 +1863,39 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     };
     if (sameMap) go();
     else this.applyMap(this.mapSteps(t.scene, t.node), true, go);
+  }
+
+  // ---------- 조사 기록 (J) ----------
+
+  /** 조사 기록: 대화·이동 중. 근처에 적이 있으면 열지 않는다 */
+  private openLooks() {
+    if (this.overlay || this.logView || this.looking || this.staging) return;
+    if (this.mode !== 'typing' && this.mode !== 'waiting' && this.mode !== 'choice' && this.mode !== 'explore') return;
+    const m = this.mapState === 'on' ? (this.scene.get('Explore') as ExploreScene) : null;
+    if (this.mode === 'explore' && m?.enemyNear()) return m.say('근처에 적이 있어 조사 기록을 열 수 없습니다');
+    const inMap = this.mode === 'explore';
+    if (inMap) m?.hold(true);
+    this.time.paused = true;
+    const v = openLookLog(this, {
+      current: this.curSeg,
+      onClose: () => {
+        this.overlay = undefined;
+        this.choiceScroll = undefined;
+        this.time.paused = false;
+        if (inMap) m?.hold(false);
+      },
+      onRewalk: (w, i) => {
+        // 그 구간이 시작되던 순간으로: 상태, 이어하기 지점, 그 뒤 기록을 되돌린다
+        const base = gameState.snapshot();
+        gameState.restore({ ...base, ...w.state, progress: w.state.progress ?? base.progress });
+        save.trimChoices(w.choices);
+        save.trimWalks(i);
+        save.setCheckpoint({ story: w.story, scene: w.scene, node: w.node, ...gameState.snapshot() });
+        this.scene.start('Story', { story: w.story, scene: w.scene, node: w.node, returnTo: this.start.returnTo } satisfies StoryStartData);
+      },
+    });
+    this.overlay = v.root;
+    this.choiceScroll = v.scroll;
   }
 
   // ---------- 선택지 기록 (C) ----------

@@ -5,6 +5,7 @@ import { allEndings, FIRST_STORY, stories } from '../game/data';
 import { freshProgress, gameState } from '../game/GameState';
 import { AUTO_SPEEDS, save, TEXT_SPEEDS } from '../game/save';
 import { FONT, makeButton, type Button } from '../game/ui';
+import { openLookLog } from '../game/lookLog';
 import { CG_LIST, cgKey, loadCgs } from '../game/cg';
 import { containFit, coverFit, endingKey, loadEndingArt } from '../game/assets';
 import type { StoryStartData } from './StoryScene';
@@ -46,15 +47,16 @@ export class TitleScene extends Phaser.Scene {
       ['이어하기', () => this.continueGame(), !!cp && !!stories[cp.story]],
       ['엔딩 목록', () => this.showEndings(), true],
       ['CG 회상', () => void this.showCgs(), true],
+      ['조사 기록', () => this.showLooks(), true],
       ['설정', () => this.showSettings(), true],
     ];
     // 개발 중에만: 전투·갈래 시험 메뉴
     if (import.meta.env.DEV) items.push(['개발 시험', () => this.showDevMenu(), true]);
     this.menu = items.map(([label, fn, enabled], i) =>
-      makeButton(this, W / 2, 300 + i * 62, label, fn, { w: 300, h: 50, fontSize: 23 }).setEnabled(enabled),
+      makeButton(this, W / 2, 290 + i * (items.length > 6 ? 54 : 62), label, fn, { w: 300, h: 46, fontSize: 23 }).setEnabled(enabled),
     );
     this.add
-      .text(W / 2, H - 40, '진행: 클릭 · 스페이스 · Z   /   로그 L · 자동 A · 스킵 S', {
+      .text(W / 2, H - 40, '진행: 클릭 · 스페이스 · Z   /   로그 L · 자동 A · 스킵 S · 뒤로 Backspace · 선택지 C · 조사 J', {
         fontFamily: FONT,
         fontSize: '16px',
         color: '#777777',
@@ -84,6 +86,22 @@ export class TitleScene extends Phaser.Scene {
       if (next && stories[next]) return this.go({ story: next });
     }
     this.go({ story: cp.story, scene: cp.scene, node: cp.node, finished: cp.finished });
+  }
+
+  /** 조사 기록: 한 번이라도 조사한 물건과 수집률 (다시 걷기 없음) */
+  private showLooks() {
+    if (this.panel) return;
+    this.menu.forEach((b) => b.setVisible(false));
+    const wheel = (_p: unknown, _o: unknown, _dx: number, dy: number) => v.scroll(dy);
+    const v = openLookLog(this, {
+      title: true,
+      depth: 50,
+      onClose: () => {
+        this.input.off('wheel', wheel);
+        this.menu.forEach((m) => m.setVisible(true));
+      },
+    });
+    this.input.on('wheel', wheel);
   }
 
   // ---------- 작은 창 (엔딩 목록, 설정) ----------

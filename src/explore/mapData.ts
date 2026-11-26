@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import sprites from '../data/explore/sprites.json';
+import hd from '../data/explore/hd_sprites.json';
 
 /**
  * 프롤로그 도트 맵 (Tiled JSON, src/data/maps/*.json — tools/maps/gen-maps.mjs가 만듦)
@@ -95,6 +96,42 @@ export function makeTilemap(scene: Phaser.Scene, id: string) {
   const tm = scene.make.tilemap({ key });
   const ts = tm.addTilesetImage('palace', 'palace_tiles', TS, TS, 0, 0)!;
   return { tm, ts };
+}
+
+/**
+ * 새 도트 타일(gen-hd.mjs): 바닥 무늬 갈래를 칸마다 섞어 깔고(맵 데이터는 그대로),
+ * 벽 아래 바닥 칸 위쪽에 그림자 띠를 깖. 그림자 띠 그림을 돌려줌
+ */
+export function dressTiles(scene: Phaser.Scene, floor: Phaser.Tilemaps.TilemapLayer, walls: Phaser.Tilemaps.TilemapLayer) {
+  const info = (hd as { _tiles?: { extra: string[]; variants: Record<string, string[]>; shadowBelow: string[] } })._tiles;
+  if (!info) return undefined;
+  const gid = (name: string) => {
+    const i = TILE_NAMES.indexOf(name);
+    return i >= 0 ? i + 1 : TILE_NAMES.length + info.extra.indexOf(name) + 1;
+  };
+  const variants = new Map(Object.entries(info.variants).map(([k, v]) => [gid(k), v.map(gid)]));
+  const shade = new Set(info.shadowBelow.map(gid));
+  const g = scene.add.graphics();
+  let any = false;
+  floor.forEachTile((t) => {
+    const v = variants.get(t.index);
+    if (v) {
+      // 칸 위치로 정해지는 난수: 절반은 그대로, 나머지는 갈래
+      let h = Math.imul(t.x * 374761393 + t.y * 668265263, 1274126177);
+      h = ((h ^ (h >>> 15)) >>> 0) % 100;
+      if (h >= 50) t.index = v[Math.floor(((h - 50) * v.length) / 50)];
+    }
+    if (t.index > 0 && !walls.getTileAt(t.x, t.y) && shade.has(walls.getTileAt(t.x, t.y - 1)?.index ?? 0)) {
+      g.fillStyle(0x2a1a48, 0.35).fillRect(t.pixelX, t.pixelY, TS, 4);
+      g.fillStyle(0x2a1a48, 0.18).fillRect(t.pixelX, t.pixelY + 4, TS, 4);
+      any = true;
+    }
+  });
+  if (!any) {
+    g.destroy();
+    return undefined;
+  }
+  return g;
 }
 
 /** 물건 그림 하나 (아래 가운데가 발밑). 횃불·촛불은 움직인다 */

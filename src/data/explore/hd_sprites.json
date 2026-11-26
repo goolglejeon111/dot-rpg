@@ -1,5 +1,5 @@
 {
-  "_설명": "tools/pixel-art/gen-hd.mjs가 만든 파일 (직접 고치지 말 것). 새 도트(32x48) 인물 목록. foot: 발끝 아래 빈 줄 수, rise: 예전 도트보다 키가 큰 만큼(머리 위 표시를 올림)",
+  "_설명": "tools/pixel-art/gen-hd.mjs가 만든 파일 (직접 고치지 말 것). 새 도트(32x48) 인물 목록. foot: 발끝 아래 빈 줄 수, rise: 예전 도트보다 키가 큰 만큼(머리 위 표시를 올림). _tiles: 황궁 타일 뒤에 덧붙인 무늬 갈래·벽 아래 그림자, _files: 여기서 만드는 물건 그림(예전 생성기가 덮어쓰지 않음)",
   "leon": {
     "w": 32,
     "h": 48,
@@ -11,5 +11,28 @@
     "h": 48,
     "foot": 2,
     "rise": 5
-  }
+  },
+  "_tiles": {
+    "extra": [
+      "floor_b",
+      "floor_c"
+    ],
+    "variants": {
+      "floor": [
+        "floor_b",
+        "floor_c"
+      ]
+    },
+    "shadowBelow": [
+      "wall_low",
+      "window_low"
+    ]
+  },
+  "_files": [
+    "public/assets/explore/pillar.png",
+    "public/assets/explore/torch.png",
+    "public/assets/explore/banner.png",
+    "public/assets/explore/vase.png",
+    "public/assets/explore/armor.png"
+  ]
 }

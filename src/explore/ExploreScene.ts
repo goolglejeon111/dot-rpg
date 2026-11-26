@@ -10,7 +10,7 @@ import { EXP_REWARD, gainOnce, isCapped, levelOf, levelProgress, partyIds } from
 import { gameState } from '../game/GameState';
 import type { StoryFxDef } from '../scenes/StoryFx';
 import {
-  FLAMES, MAPS, PROPS, TS, findObj, footOf, layerOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf, solidGrid, wadeGrid,
+  FLAMES, MAPS, PROPS, TS, dressTiles, findObj, footOf, layerOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf, solidGrid, wadeGrid,
   type TiledMap, type TiledObj,
 } from './mapData';
 
@@ -465,9 +465,11 @@ export class ExploreScene extends Phaser.Scene {
 
     const { tm, ts } = makeTilemap(this, id);
     this.tilemap = tm;
-    this.lightUp(this.world(tm.createLayer('floor', ts, 0, 0)!.setDepth(-20)));
+    const floorLayer = this.lightUp(this.world(tm.createLayer('floor', ts, 0, 0)!.setDepth(-20)));
     if (layerOf(md, 'blood')) this.blood = this.lightUp(this.world(tm.createLayer('blood', ts, 0, 0)!.setDepth(-19).setVisible(false)));
-    this.lightUp(this.world(tm.createLayer('walls', ts, 0, 0)!.setDepth(-15)));
+    const wallLayer = this.lightUp(this.world(tm.createLayer('walls', ts, 0, 0)!.setDepth(-15)));
+    const wallShade = dressTiles(this, floorLayer, wallLayer);
+    if (wallShade) this.world(wallShade.setDepth(-18));
 
     for (const o of objectsOf(md)) this.makeObject(o);
     this.makeSky(md);

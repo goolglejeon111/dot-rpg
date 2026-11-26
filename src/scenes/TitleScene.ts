@@ -274,6 +274,10 @@ export class TitleScene extends Phaser.Scene {
         gameState.progress.stage = 'prologue';
         gameState.progress.exp.leon = 700;
       })],
+      // 새 도트(32x48) 확인: 프롤로그 장면 2의 맵(east_hall)에서 레온·세레나가 함께 걷기
+      ['새 도트 샘플 (레온·세레나 걷기)', () => start({ story: FIRST_STORY, scene: 'scene1', node: at('scene1', (n) => 'explore' in n) }, () => {
+        gameState.progress.party = ['leon', 'serena'];
+      })],
       ['1막 시험 ▶', () => this.showAct1Menu()],
       ['2막 시험 ▶', () => this.showAct2Menu()],
       ['3막 시험 ▶', () => this.showAct3Menu()],
@@ -281,9 +285,9 @@ export class TitleScene extends Phaser.Scene {
       ['엔딩 화면 미리 보기 ▶', () => this.showEndingPreviewMenu()],
     ];
     this.openPanel('개발 시험', (add) => {
-      // 두 줄로 (한 줄에 7개)
+      // 두 줄로 (한 줄에 8개)
       rows.forEach(([label, fn], i) =>
-        add(makeButton(this, W / 2 + (i < 7 ? -170 : 170), 186 + (i % 7) * 46, label, fn, { w: 330, h: 40, fontSize: 15, depth: 0 })),
+        add(makeButton(this, W / 2 + (i < 8 ? -170 : 170), 186 + (i % 8) * 41, label, fn, { w: 330, h: 36, fontSize: 15, depth: 0 })),
       );
       add(
         this.add

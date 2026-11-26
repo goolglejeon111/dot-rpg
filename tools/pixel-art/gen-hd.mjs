@@ -11,7 +11,9 @@
 //   tools/pixel-art/preview_hd.png          확인용
 //
 // 여기 있는 인물은 예전 생성기(outputs.mjs, gen-battle.mjs)가 덮어쓰지 않는다.
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, existsSync, copyFileSync, readFileSync } from 'node:fs';
+import { readPNG } from './png-read.mjs';
+import { TILES, EXTRA, VARIANTS, SHADOW_BELOW, PROPS } from './hd/palace.mjs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PEOPLE, drawPerson, drawWeapon, FOOT } from './hd/people.mjs';
@@ -175,12 +177,63 @@ for (const id of Object.keys(PEOPLE)) {
   preview.push(...field.slice(0, 20).filter((_, i) => i % 5 !== 4));
 }
 write('tools/pixel-art/preview_hd.png', toPNG(preview, 32, 48, 16, 3, '#8fb08a'));
+
+// ---------------------------------------------------------------------
+// 황궁 타일: 예전 생성기(build.mjs)가 만든 palace_tiles.png에서 새로 그린 칸만 바꾸고,
+// 바닥 무늬 갈래를 맨 뒤 줄에 덧붙인다. 예전 그림은 public/assets/_old/explore/에 한 번 복사
+// ---------------------------------------------------------------------
+const sprites = JSON.parse(readFileSync(join(ROOT, 'src/data/explore/sprites.json'), 'utf8'));
+const NAMES = sprites.tiles.names;
+const COLS = sprites.tiles.columns;
+const tilesFile = join(ROOT, 'public', sprites.tiles.file);
+const oldTiles = join(ROOT, 'public/assets/_old/explore/palace_tiles.png');
+if (!existsSync(oldTiles)) {
+  mkdirSync(dirname(oldTiles), { recursive: true });
+  copyFileSync(tilesFile, oldTiles);
+}
+{
+  const src = readPNG(tilesFile);
+  const extra = Object.keys(EXTRA);
+  const total = NAMES.length + extra.length;
+  const W = COLS * 32;
+  const H = Math.ceil(total / COLS) * 32;
+  const d = new Uint8Array(W * H * 4);
+  // 예전 칸 (덧붙인 줄은 빼고 이름 수만큼)
+  const keepRows = Math.ceil(NAMES.length / COLS) * 32;
+  for (let y = 0; y < Math.min(keepRows, src.h); y++) d.set(src.data.subarray(y * src.w * 4, y * src.w * 4 + W * 4), y * W * 4);
+  const put = (L, n) => {
+    const ox = (n % COLS) * 32;
+    const oy = Math.floor(n / COLS) * 32;
+    for (let y = 0; y < 32; y++)
+      for (let x = 0; x < 32; x++) {
+        const c = L.d[y][x];
+        d.set(c ? [...rgb(c), 255] : [0, 0, 0, 0], ((oy + y) * W + ox + x) * 4);
+      }
+  };
+  for (const [name, L] of Object.entries(TILES)) put(L, NAMES.indexOf(name));
+  extra.forEach((name, i) => put(EXTRA[name], NAMES.length + i));
+  write(`public/${sprites.tiles.file}`, encodePNG(W, H, d));
+}
+const tileInfo = { extra: Object.keys(EXTRA), variants: VARIANTS, shadowBelow: SHADOW_BELOW };
+
+// 물건: 예전 그림은 public/assets/_old/explore/로 옮겨 두고 같은 크기로 새로 그림
+const files = [];
+for (const [name, frames] of Object.entries(PROPS)) {
+  const p = sprites.props[name];
+  const rel = `public/${p.file}`;
+  const old = join(ROOT, 'public/assets/_old/explore', `${name}.png`);
+  if (!existsSync(old)) copyFileSync(join(ROOT, rel), old);
+  write(rel, toPNG(frames, p.w, p.h, frames.length));
+  files.push(rel);
+}
 writeFileSync(
   join(ROOT, 'src/data/explore/hd_sprites.json'),
   JSON.stringify(
     {
-      _설명: 'tools/pixel-art/gen-hd.mjs가 만든 파일 (직접 고치지 말 것). 새 도트(32x48) 인물 목록. foot: 발끝 아래 빈 줄 수, rise: 예전 도트보다 키가 큰 만큼(머리 위 표시를 올림)',
+      _설명: 'tools/pixel-art/gen-hd.mjs가 만든 파일 (직접 고치지 말 것). 새 도트(32x48) 인물 목록. foot: 발끝 아래 빈 줄 수, rise: 예전 도트보다 키가 큰 만큼(머리 위 표시를 올림). _tiles: 황궁 타일 뒤에 덧붙인 무늬 갈래·벽 아래 그림자, _files: 여기서 만드는 물건 그림(예전 생성기가 덮어쓰지 않음)',
       ...list,
+      _tiles: tileInfo,
+      _files: files,
     },
     null,
     2,

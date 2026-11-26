@@ -107,8 +107,10 @@ const PREVIEW_FRAMES = ALL.flatMap(standRow).map(withShadow);
 
 // 새 도트(gen-hd.mjs, 32x48)로 바꾼 인물은 여기서 만들지 않는다 (덮어쓰지 않게)
 const HD_JSON = new URL('../../src/data/explore/hd_sprites.json', import.meta.url);
-const HD = existsSync(HD_JSON) ? Object.keys(JSON.parse(readFileSync(HD_JSON, 'utf8'))).filter((k) => !k.startsWith('_')) : [];
-const HD_FILES = new Set(HD.flatMap((id) => [`public/assets/sprites/${id}.png`, `public/assets/battle/chars/${id}.png`]));
+const HD_LIST = existsSync(HD_JSON) ? JSON.parse(readFileSync(HD_JSON, 'utf8')) : {};
+const HD = Object.keys(HD_LIST).filter((k) => !k.startsWith('_'));
+// _files: gen-hd.mjs가 새로 그린 물건 그림
+const HD_FILES = new Set([...HD.flatMap((id) => [`public/assets/sprites/${id}.png`, `public/assets/battle/chars/${id}.png`]), ...(HD_LIST._files ?? [])]);
 
 const ALL_OUTPUTS = [
   {

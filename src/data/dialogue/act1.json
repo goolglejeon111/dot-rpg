@@ -240,7 +240,7 @@
         {"explore":"a1_checkpoint"},
         {"speaker":"elysia","expression":"normal","text":"두 가지 방법이 있어요."},
         {"speaker":"elysia","expression":"normal","text":"정면으로 뚫거나. 아니면 제 마법으로 얼굴이랑 옷을 조금 바꿔 보이게 하거나요. 오래는 못 가지만, 다리 하나 건널 시간은 될 거예요."},
-        {"choices":[{"text":"정면으로 뚫는다","next":"s6_charge","flags":{"act1_scene6_choice":"s6_charge"}},{"text":"엘리시아의 마법에 맡긴다","next":"s6_disguise","flags":{"act1_scene6_choice":"s6_disguise"},"affection":{"elysia_leon":1},"exp":60}]}
+        {"choices":[{"text":"정면으로 뚫는다","next":"s6_charge","flags":{"act1_scene6_choice":"s6_charge","a1_alarm":true}},{"text":"엘리시아의 마법에 맡긴다","next":"s6_disguise","flags":{"act1_scene6_choice":"s6_disguise"},"affection":{"elysia_leon":1},"exp":60}]}
       ]
     },
     {

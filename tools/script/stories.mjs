@@ -99,7 +99,8 @@ export const STORIES = [
       { match: '장면 4-1.', id: 'scene4_1', place: '저수조', color: '#0a0c12' },
       { match: '장면 5.', id: 'scene5', place: '황도 외곽 빈민가', color: '#141c28' },
       { match: '장면 6.', id: 'scene6', place: '아우렐 강 다리 검문소', color: '#1c1c20' },
-      { match: '▶ 1. 정면으로 뚫는다', id: 's6_charge', place: '아우렐 강 다리 검문소', color: '#1c1c20' },
+      // 정면으로 뚫으면 추격이 빨라짐: 장면 6-1 "추격 기사" 전투의 적이 빨라짐 (battles.json의 hurry)
+      { match: '▶ 1. 정면으로 뚫는다', id: 's6_charge', place: '아우렐 강 다리 검문소', color: '#1c1c20', effects: { flags: { a1_alarm: true } } },
       { match: '▶ 2. 엘리시아의 마법에 맡긴다', id: 's6_disguise', place: '아우렐 강 다리 검문소', color: '#1c1c20', effects: { affection: { elysia_leon: 1 }, exp: 60 } },
       { match: '장면 6-1.', id: 'scene6_1', place: '강둑', color: '#2a160c' },
       { match: '장면 7.', id: 'scene7', place: '강둑', color: '#0c1018' },

@@ -1,7 +1,7 @@
 {
   "_설명": "적 수치. ai: 행동 방식 (경험치는 src/data/exp.json). 시간은 ms",
   "gnosis": {
-    "name": "그노시스회 하수인", "sprite": "mob_gnosis", "hp": 36, "atk": 9, "def": 1, "speed": 52,
+    "name": "그노시스회 하수인", "sprite": "mob_gnosis", "hp": 79, "atk": 20, "def": 1, "speed": 52,
     "ai": "rusher",
     "attack": { "range": 24, "windup": 420, "recover": 700, "cooldown": 900, "mult": 1.0, "fx": "hit" },
     "selfDestruct": { "below": 0.3, "signal": 1300, "radius": 46, "mult": 2.4, "unblockable": true }
@@ -21,18 +21,18 @@
     "attack": { "range": 30, "windup": 380, "recover": 600, "cooldown": 900, "mult": 1.0, "fx": "hit" }
   },
   "sewer_rat": {
-    "name": "수로 쥐", "sprite": "sewer_rat", "hp": 22, "atk": 6, "def": 0, "speed": 74,
+    "name": "수로 쥐", "sprite": "sewer_rat", "hp": 44, "atk": 12, "def": 0, "speed": 74,
     "ai": "rusher",
     "attack": { "range": 18, "windup": 320, "recover": 500, "cooldown": 800, "mult": 1.0, "fx": "hit" }
   },
   "sewer_leech": {
-    "name": "수로 거머리", "sprite": "sewer_leech", "hp": 30, "atk": 6, "def": 1, "speed": 40,
+    "name": "수로 거머리", "sprite": "sewer_leech", "hp": 60, "atk": 12, "def": 1, "speed": 40,
     "ai": "rusher",
     "attack": { "range": 16, "windup": 420, "recover": 600, "cooldown": 1000, "mult": 1.0, "fx": "hit" }
   },
   "_eel": "보스: 물속에 머리를 내민 채 움직이지 않음. bite 가까우면 물기(막을 수 있음), tail 넓은 촉수 쓸기(피할 수 없음, 시전 중 breakDamage만큼 때리면 끊김), spray 점액 뱉기(직선), dive 체력 이 비율 아래에서 물속으로 들어가 거머리를 내보내고 다 쓰러지면 올라옴",
   "sewer_eel": {
-    "name": "수로의 괴물", "sprite": "sewer_eel", "hp": 520, "atk": 13, "def": 4, "speed": 0, "boss": true,
+    "name": "수로의 괴물", "sprite": "sewer_eel", "hp": 676, "atk": 17, "def": 4, "speed": 0, "boss": true,
     "ai": "eel", "sink": true,
     "bite": { "range": 70, "windup": 650, "mult": 1.4, "cooldown": 1600 },
     "tail": { "every": 3, "cast": 1500, "radius": 230, "mult": 1.1, "breakDamage": 45 },
@@ -40,59 +40,59 @@
     "dive": { "below": 0.5, "leech": 4, "maxMs": 20000 }
   },
   "imperial_spear": {
-    "name": "제국 창병", "sprite": "imperial_spear", "hp": 64, "atk": 10, "def": 3, "speed": 54, "faint": true,
+    "name": "제국 창병", "sprite": "imperial_spear", "hp": 128, "atk": 20, "def": 3, "speed": 54, "faint": true,
     "ai": "rusher",
     "attack": { "range": 34, "windup": 460, "recover": 650, "cooldown": 1000, "mult": 1.0, "fx": "hit" }
   },
   "imperial_archer": {
-    "name": "제국 궁병", "sprite": "imperial_archer", "hp": 44, "atk": 9, "def": 1, "speed": 48, "faint": true,
+    "name": "제국 궁병", "sprite": "imperial_archer", "hp": 88, "atk": 18, "def": 1, "speed": 48, "faint": true,
     "ai": "caster",
     "keepAway": 110,
     "recover": 500,
     "bolt": { "cast": 650, "speed": 210, "mult": 1.0, "cooldown": 1700, "fx": "light_bolt", "tint": "#d8b070" }
   },
   "pursuit_sword": {
-    "name": "추격 기사 (검)", "sprite": "pursuit_sword", "hp": 96, "atk": 13, "def": 5, "speed": 62, "faint": true,
+    "name": "추격 기사 (검)", "sprite": "pursuit_sword", "hp": 144, "atk": 20, "def": 5, "speed": 62, "faint": true,
     "ai": "rusher",
     "attack": { "range": 30, "windup": 380, "recover": 600, "cooldown": 900, "mult": 1.0, "fx": "hit" }
   },
   "pursuit_shield": {
-    "name": "추격 기사 (방패)", "sprite": "pursuit_shield", "hp": 130, "atk": 10, "def": 9, "speed": 46, "faint": true,
+    "name": "추격 기사 (방패)", "sprite": "pursuit_shield", "hp": 195, "atk": 15, "def": 9, "speed": 46, "faint": true,
     "ai": "rusher",
     "attack": { "range": 26, "windup": 520, "recover": 700, "cooldown": 1200, "mult": 1.0, "fx": "hit" }
   },
   "_2막": "burrow = 모래 속(무적)에서 다가와 튀어나와 묾. shell = 정면 피해 배율. shield = 정면 공격을 막음(always 늘, stance 방패를 든 동안), 막을 수 없는 공격에 stagger ms 휘청. knight = 방패 돌진(charge)·베기·방패 들기(block)·한 번 치유의 빛(heal)",
   "sand_crawler": {
-    "name": "모래 괴물", "sprite": "sand_crawler", "hp": 40, "atk": 11, "def": 1, "speed": 70,
+    "name": "모래 괴물", "sprite": "sand_crawler", "hp": 80, "atk": 22, "def": 1, "speed": 70,
     "ai": "burrow",
     "burrow": { "range": 22, "emerge": 450, "mult": 1.2, "open": 1600 }
   },
   "desert_scorpion": {
-    "name": "사막 전갈", "sprite": "desert_scorpion", "hp": 56, "atk": 11, "def": 3, "speed": 56,
+    "name": "사막 전갈", "sprite": "desert_scorpion", "hp": 112, "atk": 22, "def": 3, "speed": 56,
     "ai": "rusher", "shell": 0.4,
     "attack": { "range": 22, "windup": 420, "recover": 600, "cooldown": 1000, "mult": 1.0, "fx": "hit" },
     "area": { "every": 3, "cast": 900, "radius": 34, "mult": 1.5, "breakDamage": 24 }
   },
   "bandit_blade": {
-    "name": "도적", "sprite": "bandit_blade", "hp": 60, "atk": 10, "def": 2, "speed": 66, "faint": true,
+    "name": "도적", "sprite": "bandit_blade", "hp": 120, "atk": 20, "def": 2, "speed": 66, "faint": true,
     "ai": "rusher",
     "attack": { "range": 24, "windup": 360, "recover": 600, "cooldown": 1000, "mult": 0.8, "fx": "hit", "hits": 2 }
   },
   "bandit_archer": {
-    "name": "도적 궁수", "sprite": "bandit_archer", "hp": 44, "atk": 10, "def": 1, "speed": 50, "faint": true,
+    "name": "도적 궁수", "sprite": "bandit_archer", "hp": 88, "atk": 20, "def": 1, "speed": 50, "faint": true,
     "ai": "caster",
     "keepAway": 110,
     "recover": 500,
     "bolt": { "cast": 650, "speed": 210, "mult": 1.0, "cooldown": 1800, "fx": "light_bolt", "tint": "#b89060" }
   },
   "paladin": {
-    "name": "성기사", "sprite": "mob_paladin", "hp": 110, "atk": 13, "def": 6, "speed": 54, "faint": true,
+    "name": "성기사", "sprite": "mob_paladin", "hp": 220, "atk": 26, "def": 6, "speed": 54, "faint": true,
     "ai": "rusher",
     "shield": { "mode": "always", "stagger": 1100 },
     "attack": { "range": 30, "windup": 420, "recover": 650, "cooldown": 1000, "mult": 1.0, "fx": "hit" }
   },
   "adrian_boss": {
-    "name": "아드리안", "sprite": "adrian", "hp": 420, "atk": 14, "def": 7, "speed": 66, "boss": true,
+    "name": "아드리안", "sprite": "adrian", "hp": 1050, "atk": 35, "def": 7, "speed": 66, "boss": true,
     "ai": "knight",
     "shield": { "mode": "stance", "stagger": 1400 },
     "attack": { "range": 30, "windup": 380, "recover": 600, "cooldown": 1100, "mult": 1.1, "fx": "adrian_slash" },
@@ -108,13 +108,13 @@
   },
   "_3막": "수치는 모두 임시. fade = every ms마다 ms 동안 흐려짐(맞지 않고 덮치지 않음). bolt.count/spread = 여러 갈래(도). summon = 체력 비율 at 아래마다 enemy count마리. selfDestruct.below 0 = 쓰러질 때 터짐",
   "mist_beast": {
-    "name": "안개 짐승", "sprite": "mist_beast", "hp": 50, "atk": 12, "def": 2, "speed": 66,
+    "name": "안개 짐승", "sprite": "mist_beast", "hp": 110, "atk": 26, "def": 2, "speed": 66,
     "ai": "rusher",
     "fade": { "every": 3500, "ms": 1500 },
     "attack": { "range": 26, "windup": 380, "recover": 600, "cooldown": 900, "mult": 1.0, "fx": "hit" }
   },
   "gnosis_captain": {
-    "name": "습격대장", "sprite": "raid_captain", "hp": 700, "atk": 16, "def": 5, "speed": 40, "boss": true,
+    "name": "습격대장", "sprite": "raid_captain", "hp": 1610, "atk": 37, "def": 5, "speed": 40, "boss": true,
     "ai": "caster",
     "keepAway": 70,
     "recover": 900,

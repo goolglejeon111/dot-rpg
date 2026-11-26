@@ -219,6 +219,8 @@ interface BattleDef {
   comboFull?: boolean;
   /** 연계 게이지 시작값 (0~100) */
   comboStart?: number;
+  /** 이 플래그가 켜져 있으면 적이 더 빨라짐 (1막 검문소를 정면으로 뚫으면 추격이 빨라짐). speed = 이동 속도 배율 */
+  hurry?: { flag: string; speed: number };
   /** 연계 게이지가 처음 가득 찼을 때 한 번 띄우는 안내 */
   comboGuide?: string;
   /** 지켜야 하는 대상 */
@@ -901,7 +903,9 @@ export class BattleScene extends Phaser.Scene {
         : undefined,
     };
     const f = new Fighter(key, e.sprite, 'enemy', d, e);
-    Object.assign(f, { hp: e.hp, maxHp: e.hp, atk: e.atk, defense: e.def, speed: e.speed });
+    const hurry = this.bdef?.hurry;
+    const fast = hurry && gameState.getFlag(hurry.flag) ? hurry.speed : 1;
+    Object.assign(f, { hp: e.hp, maxHp: e.hp, atk: e.atk, defense: e.def, speed: e.speed * fast });
     f.aiCd = 600 + Math.random() * 600;
     this.spawn(f, x, y);
     // 모래 괴물은 모래 속에서 시작

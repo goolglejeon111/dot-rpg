@@ -106,7 +106,7 @@
     "guide": "쓰러진 병사는 기절할 뿐입니다"
   },
   "추격 기사": {
-    "title": "추격 기사",
+    "title": "추격 기사", "hurry": { "flag": "a1_alarm", "speed": 1.25 },
     "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffb98a", "map": "riverbank" },
     "party": ["leon", "elysia"],
     "start": { "leon": [240, 112], "elysia": [272, 144] },

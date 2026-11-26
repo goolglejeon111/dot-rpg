@@ -2188,6 +2188,8 @@ export class ExploreScene extends Phaser.Scene {
 
     const touch = this.sys.game.device.input.touch || new URLSearchParams(location.search).has('touch');
     if (!touch) return;
+    // 휴대폰: 안내 글이 아래쪽 이동 스틱과 겹치지 않게 위로 (전투 화면과 같은 높이)
+    this.guideBox.setY(250);
     const base = this.ui(this.add.image(130, H - 150, 'ui_stick_base').setScale(2).setAlpha(0.85));
     const knob = (this.stickKnob = this.ui(this.add.image(130, H - 150, 'ui_stick_knob').setScale(2)));
     const btn = this.ui(this.add.image(W - 110, H - 150, 'ui_btn', 0).setScale(2).setInteractive());

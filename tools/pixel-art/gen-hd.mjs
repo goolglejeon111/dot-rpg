@@ -1,0 +1,189 @@
+// 새 도트 생성기 (32x48 인물). 기준: docs/도트기준.md
+// 실행: npm run art:hd
+//
+// 만드는 파일
+//   public/assets/sprites/{id}.png          필드 시트 32x48, 5열 x 8행 (예전 32x40과 같은 배치)
+//     0~3행: 걷기(서기, 걷기1~4) 아래, 왼쪽, 오른쪽, 위
+//     4~7행: 점프(웅크림, 뛰어오름, 꼭대기, 착지, 서기) 같은 방향 순서
+//   public/assets/battle/chars/{id}.png     전투 시트 48x48, 12열 x 4행 (예전과 같은 배치, 인물만 커짐)
+//   (발밑 그림자는 엔진이 팔레트 그림자색 #2a1a48 35%로 타원을 깖: ExploreScene SHADOW_HD)
+//   src/data/explore/hd_sprites.json        새 도트 목록과 크기 (엔진·outputs.mjs가 읽음)
+//   tools/pixel-art/preview_hd.png          확인용
+//
+// 여기 있는 인물은 예전 생성기(outputs.mjs, gen-battle.mjs)가 덮어쓰지 않는다.
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { PEOPLE, drawPerson, drawWeapon, FOOT } from './hd/people.mjs';
+import { Layer } from './hd/layer.mjs';
+import { encodePNG } from './png.mjs';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const ROOT = resolve(HERE, '../..');
+const VIEWS = ['down', 'left', 'right', 'up'];
+
+// 예전 도트(32x40)의 키(발끝~정수리)는 39, 새 도트는 44 → 머리 위 표시를 이만큼 올림
+const OLD_HEIGHT = 39;
+
+// ---------------------------------------------------------------------
+// 필드 시트
+// ---------------------------------------------------------------------
+function fieldSheet(id) {
+  const frames = [];
+  for (const v of VIEWS) {
+    const sw = v === 'down' || v === 'up' ? 1 : 1;
+    frames.push(
+      drawPerson(id, v),
+      drawPerson(id, v, { step: 'a', dy: 1, swing: sw }),
+      drawPerson(id, v),
+      drawPerson(id, v, { step: 'b', dy: 1, swing: -sw }),
+      drawPerson(id, v),
+    );
+  }
+  for (const v of VIEWS) {
+    frames.push(
+      drawPerson(id, v, { dy: 2 }),
+      drawPerson(id, v, { lift: 3 }),
+      drawPerson(id, v, { lift: 4 }),
+      drawPerson(id, v, { dy: 2 }),
+      drawPerson(id, v),
+    );
+  }
+  return frames;
+}
+
+// ---------------------------------------------------------------------
+// 전투 시트 (48x48 칸, 32x48 인물을 (8, 2)에 놓아 발끝이 칸 아래 끝에 닿음)
+// 열: 0 공격1 준비, 1 공격1, 2 공격2 준비, 3 공격2, 4 공격3 준비, 5 공격3,
+//     6 막기, 7 피격, 8~9 시전(서기), 10 무릎 꿇음, 11 쓰러짐
+// ---------------------------------------------------------------------
+const OX = 8;
+const OY = 2;
+// 손 위치(인물 32x48 기준)와 칼 각도. up 보기는 칼을 몸 뒤에
+const POSES = {
+  down: {
+    a1w: { h: [25, 24], ang: -60 }, a1s: { h: [20, 33], ang: 125 },
+    a2w: { h: [6, 26], ang: -120 }, a2s: { h: [12, 33], ang: 55 },
+    a3w: { h: [16, 17], ang: -90, dy: -1 }, a3s: { h: [16, 35], ang: 90, dy: 2 },
+    guard: { h: [7, 29], ang: 0 },
+  },
+  right: {
+    a1w: { h: [14, 25], ang: -130 }, a1s: { h: [22, 30], ang: 15 },
+    a2w: { h: [14, 33], ang: 150 }, a2s: { h: [22, 26], ang: -25 },
+    a3w: { h: [17, 19], ang: -100, dx: -1 }, a3s: { h: [24, 30], ang: 3, dx: 2 },
+    guard: { h: [22, 35], ang: -90 },
+  },
+  up: {
+    a1w: { h: [25, 24], ang: -30, behind: true }, a1s: { h: [12, 20], ang: -120 },
+    a2w: { h: [6, 24], ang: -150, behind: true }, a2s: { h: [20, 20], ang: -60 },
+    a3w: { h: [16, 14], ang: -90 }, a3s: { h: [16, 10], ang: -90, dy: -2 },
+    guard: { h: [6, 24], ang: 0, behind: true },
+  },
+};
+const SHOULDERS = { down: [[9, 22], [22, 22]], up: [[9, 22], [22, 22]], right: [[15, 22]] };
+const HANG = { down: [[9, 22], [8, 30]], up: [[22, 22], [23, 30]] };
+
+function battleFrame(id, view, col) {
+  const p = PEOPLE[id];
+  const v = view === 'left' ? 'right' : view;
+  const cell = new Layer(48, 48);
+  const fwd = { down: [0, 1], right: [1, 0], up: [0, -1] }[v];
+  const put = (body, dx = 0, dy = 0) => cell.over(body, OX + dx, OY + dy);
+  let res;
+  if (col === 11) {
+    const lying = drawPerson(id, 'down').rot90();
+    cell.over(lying, 0, 48 - 32 - 0);
+    res = cell;
+  } else if (col === 10) {
+    put(drawPerson(id, v, { dy: 5, lift: 0 }));
+    res = cell;
+  } else if (col === 7) {
+    put(drawPerson(id, v), -fwd[0] * 2, -fwd[1] * 2 + 1);
+    res = cell;
+  } else if (col >= 8) {
+    put(drawPerson(id, v, { dy: col === 9 ? -1 : 0 }));
+    res = cell;
+  } else {
+    const pose = ['a1w', 'a1s', 'a2w', 'a2s', 'a3w', 'a3s', 'guard'][col];
+    const pz = POSES[v][pose];
+    const [hx, hy] = pz.h;
+    // 칼 쥔 팔: 손에 가까운 어깨에서
+    const sh = SHOULDERS[v].reduce((a, b) => (Math.abs(b[0] - hx) < Math.abs(a[0] - hx) ? b : a));
+    const arms = [{ from: sh, to: [hx, hy - 1] }];
+    if (v !== 'right') {
+      const other = SHOULDERS[v].find((s) => s !== sh);
+      arms.unshift({ from: other, to: [other[0] < 16 ? other[0] - 1 : other[0] + 1, 30] });
+    }
+    const body = drawPerson(id, v, { arms, dy: pz.dy ?? 0 });
+    const wp = drawWeapon(p.weapon, OX + hx + (pz.dx ?? 0), OY + hy + (pz.dy ?? 0), pz.ang);
+    if (pz.behind) {
+      cell.over(wp);
+      put(body, pz.dx ?? 0);
+    } else {
+      put(body, pz.dx ?? 0);
+      cell.over(wp);
+    }
+    res = cell;
+  }
+  return view === 'left' ? res.flipX() : res;
+}
+
+function battleSheet(id) {
+  const frames = [];
+  for (const v of VIEWS) for (let col = 0; col < 12; col++) frames.push(battleFrame(id, v, col));
+  return frames;
+}
+
+// ---------------------------------------------------------------------
+// PNG
+// ---------------------------------------------------------------------
+const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+function toPNG(frames, cw, ch, cols, scale = 1, bg = null) {
+  const rows = Math.ceil(frames.length / cols);
+  const W = cw * cols * scale;
+  const H = ch * rows * scale;
+  const d = new Uint8Array(W * H * 4);
+  if (bg) for (let i = 0; i < W * H; i++) d.set([...rgb(bg), 255], i * 4);
+  frames.forEach((L, n) => {
+    if (!L) return;
+    const ox = (n % cols) * cw;
+    const oy = Math.floor(n / cols) * ch;
+    for (let y = 0; y < Math.min(L.h, ch); y++)
+      for (let x = 0; x < Math.min(L.w, cw); x++) {
+        const c = L.d[y][x];
+        if (!c) continue;
+        for (let sy = 0; sy < scale; sy++) for (let sx = 0; sx < scale; sx++) d.set([...rgb(c), 255], (((oy + y) * scale + sy) * W + (ox + x) * scale + sx) * 4);
+      }
+  });
+  return encodePNG(W, H, d);
+}
+const write = (rel, buf) => {
+  const f = join(ROOT, rel);
+  mkdirSync(dirname(f), { recursive: true });
+  writeFileSync(f, buf);
+  console.log('만듦', rel);
+};
+
+const list = {};
+const preview = [];
+for (const id of Object.keys(PEOPLE)) {
+  const field = fieldSheet(id);
+  write(`public/assets/sprites/${id}.png`, toPNG(field, 32, 48, 5));
+  write(`public/assets/battle/chars/${id}.png`, toPNG(battleSheet(id), 48, 48, 12));
+  const top = Math.min(...field.slice(0, 1).map((f) => f.bounds().y0));
+  list[id] = { w: 32, h: 48, foot: 48 - 1 - FOOT, rise: FOOT - top + 1 - OLD_HEIGHT };
+  preview.push(...field.slice(0, 20).filter((_, i) => i % 5 !== 4));
+}
+write('tools/pixel-art/preview_hd.png', toPNG(preview, 32, 48, 16, 3, '#8fb08a'));
+writeFileSync(
+  join(ROOT, 'src/data/explore/hd_sprites.json'),
+  JSON.stringify(
+    {
+      _설명: 'tools/pixel-art/gen-hd.mjs가 만든 파일 (직접 고치지 말 것). 새 도트(32x48) 인물 목록. foot: 발끝 아래 빈 줄 수, rise: 예전 도트보다 키가 큰 만큼(머리 위 표시를 올림)',
+      ...list,
+    },
+    null,
+    2,
+  ) + '\n',
+);
+console.log('만듦 src/data/explore/hd_sprites.json');

@@ -1,12 +1,13 @@
 import Phaser from 'phaser';
 import sprites from '../data/battle/sprites.json';
+import { fieldFrame } from '../game/hdSprites';
 
 /**
  * 전투 그림 불러오기. 목록은 src/data/battle/sprites.json (tools/pixel-art/gen-battle.mjs가 만듦)
  *   이펙트  fx_{이름}   → 애니메이션 키도 같음
  *   UI      ui_{이름}
  *   전투 동작 bt_{인물}  (48x48, 12열 x 4행)
- *   필드 걷기 {인물}     (32x40, 5열 x 8행)
+ *   필드 걷기 {인물}     (32x40, 5열 x 8행. 새 도트는 32x48: src/data/explore/hd_sprites.json)
  */
 type Sheet = { file: string; w: number; h: number; frames?: number; rate?: number; loop?: boolean; columns?: number };
 const FX = sprites.fx as Record<string, Sheet>;
@@ -35,7 +36,7 @@ export function preloadBattle(scene: Phaser.Scene) {
   for (const [k, s] of Object.entries(UI)) load(`ui_${k}`, s);
   for (const [k, s] of Object.entries(CHARS)) load(`bt_${k}`, s);
   for (const id of WALK_SPRITES) {
-    if (!scene.textures.exists(id)) scene.load.spritesheet(id, `assets/sprites/${id}.png`, { frameWidth: 32, frameHeight: 40 });
+    if (!scene.textures.exists(id)) scene.load.spritesheet(id, `assets/sprites/${id}.png`, fieldFrame(id));
   }
   if (!scene.textures.exists('terrain_tiles')) {
     scene.load.spritesheet('terrain_tiles', 'assets/tilesets/terrain.png', { frameWidth: 32, frameHeight: 32 });

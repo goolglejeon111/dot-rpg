@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import battles from '../data/battle/battles.json';
+import { rise } from '../game/hdSprites';
 import enemies from '../data/battle/enemies.json';
 import fighters from '../data/battle/fighters.json';
 import combos from '../data/battle/combos.json';
@@ -3567,10 +3568,11 @@ export class BattleScene extends Phaser.Scene {
     f.buffFx?.setPosition(f.x, f.y - BODY - f.z).setDepth(f.y + 1);
     if (f.hpBar) {
       const show = f.hp < f.maxHp && f.state !== 'prep' && !f.dived;
-      f.hpBar.frame.setVisible(show).setPosition(Math.round(f.x), Math.round(f.y - 44 - f.z)).setDepth(10000);
+      const up = rise(f.sprite.texture.key);
+      f.hpBar.frame.setVisible(show).setPosition(Math.round(f.x), Math.round(f.y - 44 - up - f.z)).setDepth(10000);
       f.hpBar.fill
         .setVisible(show)
-        .setPosition(Math.round(f.x) - 10, Math.round(f.y - 43 - f.z))
+        .setPosition(Math.round(f.x) - 10, Math.round(f.y - 43 - up - f.z))
         .setCrop(0, 0, Math.max(0, Math.round((20 * f.hp) / f.maxHp)), 2)
         .setDepth(10001);
     }
@@ -3619,7 +3621,7 @@ export class BattleScene extends Phaser.Scene {
   /** 맞은 자리 위에 뜨는 숫자 */
   damageNumber(t: Fighter, n: number, hurtsUs: boolean) {
     const digits = String(Math.max(0, Math.round(n))).split('').map(Number);
-    const c = this.add.container(Math.round(t.x), Math.round(t.y - 40 - t.z)).setDepth(12000);
+    const c = this.add.container(Math.round(t.x), Math.round(t.y - 40 - rise(t.sprite.texture.key) - t.z)).setDepth(12000);
     digits.forEach((d, i) => {
       const im = this.add.image((i - (digits.length - 1) / 2) * 6, 0, 'ui_digits', d);
       im.setTint(hurtsUs ? 0xff7060 : 0xfff2c0);
@@ -3630,7 +3632,7 @@ export class BattleScene extends Phaser.Scene {
 
   /** PARRY, BREAK 같은 글자 */
   word(w: 'parry' | 'break' | 'block', f: Fighter) {
-    const im = this.add.image(Math.round(f.x), Math.round(f.y - 50), `ui_word_${w}`).setDepth(12001);
+    const im = this.add.image(Math.round(f.x), Math.round(f.y - 50 - rise(f.sprite.texture.key)), `ui_word_${w}`).setDepth(12001);
     this.tweens.add({ targets: im, y: im.y - 10, alpha: { from: 1, to: 0 }, duration: 900, delay: 200, onComplete: () => im.destroy() });
   }
 

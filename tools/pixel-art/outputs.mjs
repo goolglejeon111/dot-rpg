@@ -105,7 +105,12 @@ const ALL = [LEON, { id: 'leon_hood', legs: {} }, { id: 'leon_blade', legs: {} }
 const withShadow = (f) => ({ ...f, layers: [{ art: 'shadow', x: 6, y: 34 }, ...f.layers] });
 const PREVIEW_FRAMES = ALL.flatMap(standRow).map(withShadow);
 
-export const OUTPUTS = [
+// 새 도트(gen-hd.mjs, 32x48)로 바꾼 인물은 여기서 만들지 않는다 (덮어쓰지 않게)
+const HD_JSON = new URL('../../src/data/explore/hd_sprites.json', import.meta.url);
+const HD = existsSync(HD_JSON) ? Object.keys(JSON.parse(readFileSync(HD_JSON, 'utf8'))).filter((k) => !k.startsWith('_')) : [];
+const HD_FILES = new Set(HD.flatMap((id) => [`public/assets/sprites/${id}.png`, `public/assets/battle/chars/${id}.png`]));
+
+const ALL_OUTPUTS = [
   {
     file: 'public/assets/tilesets/terrain.png',
     cell: [32, 32],
@@ -160,3 +165,4 @@ export const OUTPUTS = [
   ...BATTLE_OUTPUTS,
   ...PALACE_OUTPUTS,
 ];
+export const OUTPUTS = ALL_OUTPUTS.filter((o) => !HD_FILES.has(o.file));

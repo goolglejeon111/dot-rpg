@@ -5,6 +5,7 @@ import looksData from '../data/explore/looks.json';
 import stageData from '../data/explore/stage.json';
 import battlesData from '../data/battle/battles.json';
 import { makeBattleAnims, preloadBattle } from '../battle/assets';
+import { fieldFrame, footOrigin, isHd, rise } from '../game/hdSprites';
 import { EXP_REWARD, gainOnce, isCapped, levelOf, levelProgress, partyIds } from '../battle/progress';
 import { gameState } from '../game/GameState';
 import type { StoryFxDef } from '../scenes/StoryFx';
@@ -167,6 +168,9 @@ export const lookPages = (id: string) =>
   (LOOKS[id]?.text ?? '').split(/\n\s*\n/).map((p) => p.split('\n').filter((l) => l.trim()));
 
 const DIRS: Dir[] = ['down', 'left', 'right', 'up'];
+/** 발밑 그림자. 새 도트(32x48)는 팔레트 그림자색(#2a1a48, 35%)으로 조금 넓게 */
+const SHADOW_OLD = { w: 16, h: 6, color: 0x0a0810, alpha: 0.4 };
+const SHADOW_HD = { w: 18, h: 6, color: 0x2a1a48, alpha: 0.35 };
 const W = 960;
 const H = 720;
 const ZOOM = 2;
@@ -385,7 +389,7 @@ export class ExploreScene extends Phaser.Scene {
   preload() {
     preloadBattle(this);
     preloadMapArt(this);
-    if (!this.textures.exists('oswald')) this.load.spritesheet('oswald', 'assets/sprites/oswald.png', { frameWidth: 32, frameHeight: 40 });
+    if (!this.textures.exists('oswald')) this.load.spritesheet('oswald', 'assets/sprites/oswald.png', fieldFrame('oswald'));
   }
 
   create() {
@@ -1000,7 +1004,7 @@ export class ExploreScene extends Phaser.Scene {
     const to = this.point(f.to);
     if (!from || !to) return;
     const frame = (4 + DIRS.indexOf('down')) * 5 + 2;
-    const spr = this.lightUp(this.world(this.add.sprite(from.x, from.y, f.sprite, frame).setOrigin(0.5, 1).setDepth(to.y + 50)));
+    const spr = this.lightUp(this.world(this.add.sprite(from.x, from.y, f.sprite, frame).setOrigin(0.5, footOrigin(f.sprite)).setDepth(to.y + 50)));
     this.tweens.add({
       targets: spr, x: to.x, y: to.y, duration: f.ms ?? 900, ease: 'Quad.easeIn',
       onComplete: () => {
@@ -1046,8 +1050,10 @@ export class ExploreScene extends Phaser.Scene {
       const start = at ?? this.point(spec.walk);
       if (!start) return console.warn(`[map] 처음 나오는 인물은 자리(at)가 필요합니다: ${id}`);
       const key = spec.sprite ?? this.costumeOf(id);
-      const shadow = this.world(this.add.ellipse(start.x, start.y, 16, 6, 0x0a0810, 0.4).setDepth(-13));
-      const spr = this.lightUp(this.world(this.add.sprite(start.x, start.y, key, 0).setOrigin(0.5, 1)));
+      // 발밑 그림자: 새 도트는 팔레트의 푸른 보라 그림자 (docs/도트기준.md)
+      const sc = isHd(key) ? SHADOW_HD : SHADOW_OLD;
+      const shadow = this.world(this.add.ellipse(start.x, start.y, sc.w, sc.h, sc.color, sc.alpha).setDepth(-13));
+      const spr = this.lightUp(this.world(this.add.sprite(start.x, start.y, key, 0).setOrigin(0.5, footOrigin(key))));
       a = { id, key, spr, shadow, facing: 'down', down: false, walking: false };
       this.actors.set(id, a);
     }
@@ -1092,7 +1098,7 @@ export class ExploreScene extends Phaser.Scene {
       act.down = false;
       this.setWriting(act, false);
       const dir: Dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
-      act.spr.setOrigin(0.5, 1).play(`${act.key}-walk-${dir}`, true);
+      act.spr.setOrigin(0.5, footOrigin(act.key)).play(`${act.key}-walk-${dir}`, true);
       this.tweens.add({ targets: act.spr, x: to.x, y: to.y, duration: (dist / (spec.speed ?? WALK_SPEED)) * 1000, onComplete: arrive });
     };
     this.tweens.killTweensOf(act.spr);
@@ -1307,7 +1313,7 @@ export class ExploreScene extends Phaser.Scene {
     a.spr.anims.stop();
     const row = DIRS.indexOf(a.facing);
     if (a.down && this.textures.exists(`bt_${a.key}`)) a.spr.setTexture(`bt_${a.key}`, row * 12 + (a.kneel ? 10 : 11)).setOrigin(0.5, 0.86);
-    else a.spr.setTexture(a.key, row * 5).setOrigin(0.5, 1);
+    else a.spr.setTexture(a.key, row * 5).setOrigin(0.5, footOrigin(a.key));
     if (a.lift) a.spr.setOrigin(0.5, a.spr.originY + a.lift / a.spr.height);
   }
 
@@ -1442,7 +1448,7 @@ export class ExploreScene extends Phaser.Scene {
     if (!this.map) return null;
     if (who) {
       const a = this.actors.get(who);
-      return a ? { x: a.spr.x, y: a.spr.y - 30 } : null;
+      return a ? { x: a.spr.x, y: a.spr.y - 30 - rise(a.key) / 2 } : null;
     }
     const def = (battlesData as unknown as Record<string, { arena: { map?: string; zone?: string } }>)[battle];
     if (!def?.arena.map || def.arena.map !== this.mapId) return null;
@@ -1525,7 +1531,7 @@ export class ExploreScene extends Phaser.Scene {
       this.untilFx.push(glow, pin);
     }
     this.mark?.destroy();
-    this.mark = this.world(this.add.sprite(leon.spr.x, leon.spr.y - 44, 'ex_look', 0).setDepth(9500).setAlpha(0).play('ex_look'));
+    this.mark = this.world(this.add.sprite(leon.spr.x, leon.spr.y - 44 - rise(leon.key), 'ex_look', 0).setDepth(9500).setAlpha(0).play('ex_look'));
     this.hud.setVisible(true);
     this.touchUi.forEach((t) => t.setVisible(true));
     this.refreshHud();
@@ -1593,7 +1599,7 @@ export class ExploreScene extends Phaser.Scene {
     for (const a of this.actors.values()) {
       a.spr.setDepth(a.spr.y + (a.lift && !a.jumping ? 2 : 0));
       a.shadow.setPosition(Math.round(a.spr.x), Math.round(a.spr.y)).setVisible(!a.down && (!a.lift || !!a.jumping) && a.spr.visible);
-      if (a.lift !== undefined && (a.walking || a.jumping || a.id === 'leon') && !a.down) a.spr.setOrigin(0.5, 1 + a.lift / a.spr.height);
+      if (a.lift !== undefined && (a.walking || a.jumping || a.id === 'leon') && !a.down) a.spr.setOrigin(0.5, footOrigin(a.spr.texture.key) + a.lift / a.spr.height);
       this.wadeLook(a);
       if (a.drag && a.walking) this.dragMark(a);
     }
@@ -1853,7 +1859,8 @@ export class ExploreScene extends Phaser.Scene {
     const inWater = s.visible && !a.lift && this.wadeAt(s.x, s.y);
     if (!inWater) {
       if (s.isCropped) s.setCrop();
-      a.shadow.setFillStyle(0x0a0810, 0.4).setSize(16, 6).setDepth(-13);
+      const sc = isHd(a.key) ? SHADOW_HD : SHADOW_OLD;
+      a.shadow.setFillStyle(sc.color, sc.alpha).setSize(sc.w, sc.h).setDepth(-13);
       return;
     }
     const feet = s.originY * s.frame.height;
@@ -1900,8 +1907,8 @@ export class ExploreScene extends Phaser.Scene {
       this.tweens.add({ targets: mark, alpha: best ? 1 : 0, duration: 150 });
     }
     this.near = best;
-    // 표시는 레온 머리 위 (서 있는 그림 높이 40)
-    mark?.setPosition(Math.round(a.spr.x), Math.round(a.spr.y - 48));
+    // 표시는 레온 머리 위 (예전 도트 키 40, 새 도트는 rise만큼 더 큼)
+    mark?.setPosition(Math.round(a.spr.x), Math.round(a.spr.y - 48 - rise(a.key)));
     if (!best || !mark) return this.prompt.setVisible(false);
     const cam = this.cameras.main;
     const sx = (mark.x - cam.worldView.x) * ZOOM;

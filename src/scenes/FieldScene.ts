@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { characters } from '../game/data';
+import { fieldFrame } from '../game/hdSprites';
 import type { StoryStartData } from './StoryScene';
 
 /** 화면 배율: 32px 타일을 2배로 보여 준다 (960x720 화면에 월드 480x360) */
@@ -60,7 +61,7 @@ export class FieldScene extends Phaser.Scene {
     this.load.tilemapTiledJSON('village', 'assets/maps/village.json');
     this.load.image('terrain', 'assets/tilesets/terrain.png');
     for (const id of CHARACTER_SPRITES) {
-      this.load.spritesheet(id, `assets/sprites/${id}.png`, { frameWidth: 32, frameHeight: 40 });
+      this.load.spritesheet(id, `assets/sprites/${id}.png`, fieldFrame(id));
     }
     for (const k of ['tree', 'house', 'crate', 'sign', 'shadow', 'shadow_large', 'talk_icon']) {
       this.load.image(k, `assets/sprites/${k}.png`);

@@ -13,7 +13,8 @@
     "map": "node tools/map/make-village.mjs",
     "maps": "node tools/maps/gen-maps.mjs",
     "script": "node tools/script/convert.mjs",
-    "script:check": "node tools/script/check.mjs"
+    "script:check": "node tools/script/check.mjs",
+    "art:hd": "node tools/pixel-art/gen-hd.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { addGuest, EXP_REWARD, gainExp, joinParty, levelOf, unlock, type Unlock } from '../battle/progress';
+import { addGuest, EXP_REWARD, gainExp, joinParty, leaveParty, levelOf, unlock, type Unlock } from '../battle/progress';
+import expData from '../data/exp.json';
 import { allEndings, FIRST_STORY, stories } from '../game/data';
 import { freshProgress, gameState } from '../game/GameState';
 import { AUTO_SPEEDS, save, TEXT_SPEEDS } from '../game/save';
@@ -276,6 +277,7 @@ export class TitleScene extends Phaser.Scene {
       ['1막 시험 ▶', () => this.showAct1Menu()],
       ['2막 시험 ▶', () => this.showAct2Menu()],
       ['3막 시험 ▶', () => this.showAct3Menu()],
+      ['4막 시험 ▶', () => this.showAct4Menu()],
       ['엔딩 화면 미리 보기 ▶', () => this.showEndingPreviewMenu()],
     ];
     this.openPanel('개발 시험', (add) => {
@@ -499,6 +501,132 @@ export class TitleScene extends Phaser.Scene {
         const step = Math.min(33, Math.floor(330 / Math.max(1, rows.length - 1)));
         rows.forEach(([label, fn], i) =>
           add(makeButton(this, x, 206 + i * step, label, fn, { w: 196, h: step - 3, fontSize: step < 30 ? 13 : 14, depth: 0 })),
+        );
+      });
+    });
+  }
+
+  /**
+   * 4막 시험: 장면, 선택지·결과, 전투, 이동 구간, 엘리시아 분기로 바로 간다.
+   * 3막을 깬 상태(파티 레온·엘리시아·카르크, 갈리아는 위의 단추로)에서 1~3막과 그 지점까지의 4막 노드를 미리 적용한다.
+   * 경험치는 장면 순서에 맞춰 17 → 21레벨만큼 쌓는다(4막 중에는 최대 17레벨, 4막을 깨면 넘친 만큼 오름). 호감도(엘리시아-레온, 엘리시아-카르크)는 위의 단추로 고른다
+   */
+  private showAct4Menu() {
+    const [act1, act2, act3, act4] = [stories.act1, stories.act2, stories.act3, stories.act4];
+    if (!act1 || !act2 || !act3 || !act4) return;
+    const stages = (stageData as unknown as { stages: Record<string, { once?: string; rune?: string }> }).stages;
+    const opt = { galia: true, rel: [1, 0] as [number, number] };
+    const apply = (n: Record<string, unknown>) => {
+      const p = gameState.progress;
+      if ('unlock' in n) unlock(n.unlock as Unlock);
+      if ('unlock' in n && n.unlock === 'weapon') p.costume.leon = 'leon_blade';
+      if ('join' in n) joinParty(String(n.join));
+      if ('leave' in n) leaveParty(String(n.leave));
+      if ('costume' in n) p.costume[String(n.who ?? 'leon')] = String(n.costume);
+      if ('stage' in n) {
+        const d = stages[String(n.stage)];
+        const keys = [d?.once, d?.rune === 'break' ? 'a3:rune_break' : d?.rune === 'layer' ? 'a3:layered' : undefined];
+        for (const k of keys) if (k && !p.once.includes(k)) p.once.push(k);
+      }
+    };
+    const where = (pred: (n: object) => boolean) => {
+      for (const sc of act4.scenes) {
+        const i = sc.nodes.findIndex(pred);
+        if (i >= 0) return { scene: sc.id, node: i };
+      }
+      return { scene: act4.scenes[0].id, node: 0 };
+    };
+    const main = act4.scenes.filter((sc) => !sc.branch);
+    /** via: 지나온 것으로 칠 갈래 장면 (엘리시아 결과, 탈출 결과) */
+    const jump = (scene: string, node: number, setup?: () => void, via: string[] = []) => {
+      gameState.reset();
+      const p = gameState.progress;
+      p.stage = 'act3';
+      unlock('evade');
+      for (const sc of [...act1.scenes, ...act2.scenes, ...act3.scenes]) {
+        if (sc.branch) continue;
+        for (const n of sc.nodes as unknown as Record<string, unknown>[]) if (!('guest' in n) && !('join' in n && n.join === 'galia')) apply(n);
+      }
+      p.party = ['leon', 'elysia', 'karg'];
+      if (opt.galia) p.party.push('galia');
+      p.guests = {};
+      gameState.setFlag('galia_alive', opt.galia);
+      gameState.addAffection('elysia_leon', opt.rel[0]);
+      gameState.addAffection('elysia_karg', opt.rel[1]);
+      // 경험치: 장면 순서에 맞춰 17 → 21레벨만큼 (4막 중에는 17레벨에서 멈추고 쌓임)
+      const at = act4.scenes.findIndex((x) => x.id === scene);
+      const main = act4.scenes.findIndex((x) => x.id === 'scene12');
+      const lv = 17 + Math.floor((4 * Math.min(at, main)) / Math.max(1, main));
+      for (const id of ['leon', 'elysia', 'karg', 'serena', 'galia']) p.exp[id] = expData.levels[lv - 1];
+      for (const sc of act4.scenes) {
+        if (sc.branch && sc.id !== scene && !via.includes(sc.id)) continue;
+        if (!sc.branch && act4.scenes.indexOf(sc) > at) break;
+        if (via.includes(sc.id) && sc.id !== scene) gameState.applyEffects(sc.effects);
+        const end = sc.id === scene ? node : sc.nodes.length;
+        for (const n of sc.nodes.slice(0, end) as unknown as Record<string, unknown>[]) apply(n);
+        if (sc.id === scene) break;
+      }
+      setup?.();
+      this.go({ story: 'act4', scene, node });
+    };
+    const short = (t: string) => t.replace(/^장면 /, '').replace(/^▶ /, '').replace(/^결과: /, '').replace(/^막간\. /, '막간 ').slice(0, 13);
+    const choiceAt = (id: string) => {
+      const sc = act4.scenes.find((x) => x.id === id);
+      return Math.max(0, sc?.nodes.findIndex((n) => 'choice' in n || 'choices' in n) ?? 0);
+    };
+    const nodeOf = (id: string, pred: (n: object) => boolean) => Math.max(0, act4.scenes.find((x) => x.id === id)?.nodes.findIndex(pred) ?? 0);
+    const title = (id: string) => short(act4.scenes.find((x) => x.id === id)?.title ?? id);
+    const battles = ['산길의 도적', '용암의 수호자', '마탑 파견대', '아스트라 탈출'];
+    const segs = ['a4_plain', 'a4_pass', 'a4_tablet1', 'a4_tablet2', 'a4_tablet3', 'a4_tablet4', 'a4_grimhelm_night', 'a4_grimhelm_night_in', 'a4_volcano'];
+    // 엘리시아 분기: 장면 10의 마지막 독백(발소리가 멀어졌다) 앞에서, 호감도를 정해 시작
+    const s10 = nodeOf('scene10', (n) => 'stage' in n && (n as { stage: string }).stage === 'a4_wait') - 1;
+    const rel = (lbl: string, l: number, k: number): [string, () => void] => [lbl, () => { opt.rel = [l, k]; jump('scene10', Math.max(0, s10)); }];
+    const cols: [string, [string, () => void][]][] = [
+      ['장면', main.map((sc): [string, () => void] => [short(sc.title), () => jump(sc.id, 0)])],
+      ['선택지 · 결과', [
+        ...['scene1', 'scene4', 'scene6'].map((id): [string, () => void] => [`${id.replace('scene', '장면 ')} 선택지`, () => jump(id, choiceAt(id))]),
+        ...['e_stand', 'e_together', 'e_betray'].map((id): [string, () => void] => [title(id), () => jump(id, 0)]),
+        ...['g1', 'g2', 'g9', 'g11'].map((id): [string, () => void] => [`갈래 ${id}`, () => { opt.galia = true; jump(id, 0); }]),
+        [title('r11_stay'), () => jump('scene11_1', nodeOf('scene11_1', (n) => 'battle' in n) + 1, undefined, ['e_stand'])],
+        [title('r11_die'), () => jump('scene11_1', nodeOf('scene11_1', (n) => 'battle' in n) + 1, undefined, ['e_together'])],
+        ['장면 12 (엘리시아 남음)', () => jump('scene12', 0, undefined, ['e_stand', 'r11_stay'])],
+        ['장면 12 (엘리시아 죽음)', () => jump('scene12', 0, undefined, ['e_together', 'r11_die'])],
+      ]],
+      ['전투', battles.map((b): [string, () => void] => [b, () => { const w = where((n) => (n as { battle?: string }).battle === b); jump(w.scene, w.node, undefined, b === '아스트라 탈출' ? ['e_stand'] : []); }])],
+      ['이동 구간', segs.map((g): [string, () => void] => [g.replace('a4_', ''), () => { const w = where((n) => (n as { explore?: string }).explore === g); jump(w.scene, w.node); }])],
+      ['엘리시아 분기', [
+        rel('남는다 (2, 1)', 2, 1),
+        rel('함께 (2, 0)', 2, 0),
+        rel('함께 (1, 1)', 1, 1),
+        rel('배신 (1, 0)', 1, 0),
+        ['카르크 -1로 장면 1', () => { opt.rel = [0, -1]; jump('scene1', 0); }],
+      ]],
+    ];
+    this.openPanel('4막 시험', (add) => {
+      // 위: 갈리아 생존 여부, 호감도(엘리시아-레온, 엘리시아-카르크)
+      const gBtns: Button[] = [];
+      const gRefresh = () => gBtns.forEach((b, i) => b.setOn(opt.galia === (i === 0)));
+      ['갈리아 있음', '갈리아 없음'].forEach((l, i) => {
+        const b = makeButton(this, 160 + i * 130, 168, l, () => ((opt.galia = i === 0), gRefresh()), { w: 120, h: 28, fontSize: 13, depth: 0 });
+        gBtns.push(b);
+        add(b);
+      });
+      gRefresh();
+      const presets: [string, [number, number]][] = [['관계 (1, 0)', [1, 0]], ['관계 (2, 1)', [2, 1]], ['관계 (0, -1)', [0, -1]]];
+      const rBtns: Button[] = [];
+      const rRefresh = () => rBtns.forEach((b, i) => b.setOn(opt.rel[0] === presets[i][1][0] && opt.rel[1] === presets[i][1][1]));
+      presets.forEach(([l, v], i) => {
+        const b = makeButton(this, 470 + i * 130, 168, l, () => ((opt.rel = [...v] as [number, number]), rRefresh()), { w: 120, h: 28, fontSize: 13, depth: 0 });
+        rBtns.push(b);
+        add(b);
+      });
+      rRefresh();
+      cols.forEach(([head, rows], c) => {
+        const x = 104 + c * 188;
+        add(this.add.text(x, 198, head, { fontFamily: FONT, fontSize: '16px', color: '#a89a78' }).setOrigin(0.5));
+        const step = Math.min(33, Math.floor(310 / Math.max(1, rows.length - 1)));
+        rows.forEach(([label, fn], i) =>
+          add(makeButton(this, x, 222 + i * step, label, fn, { w: 180, h: step - 2, fontSize: step < 24 ? 12 : 14, depth: 0 })),
         );
       });
     });

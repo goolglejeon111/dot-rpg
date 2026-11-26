@@ -39,6 +39,10 @@ export function castSpec(id, p) {
   if (hs === 'braid') s.braid = Math.round(mapY(p.hairLen ?? 36));
   if (hs === 'braids') s.braids = true;
   if (hs === 'curly' && p.sideLen) s.side = Math.round(mapY(p.sideLen));
+  // 어깨 아래까지 오는 곱슬 긴 머리 (브람)
+  if (hs === 'curly' && p.hairLen) { s.hair = 'curlylong'; s.long = Math.round(mapY(p.hairLen)); }
+  if (p.squash) { s.squash = p.squash; s.headK = p.headK ?? 1.15; } // 드워프: 몸을 위아래로 줄임 (그림 칸)
+  if (p.stoop) s.stoop = p.stoop; // 굽은 허리
   return s;
 }
 
@@ -243,6 +247,12 @@ export function outfitGeneric(c, H) {
       if (o) return o;
       if (p.royalBand && v === 'down' && Math.abs(x + 0.5 - CX) < 1.6) return R.gold[1];
       if (p.starRobe && !side && (x * 7 + r * 13) % 31 === 0) return R.gold[0];
+      if (p.silverStripes && !side) {
+        const k = Math.abs(x + 0.5 - CX);
+        if (k < 2.2) return R.violet[2]; // 앞트임 사이로 보라 안감
+        if (Math.abs(k - 5) < 0.6 || Math.abs(k - 9) < 0.6) return R.ash[1];
+        if (r > 84) return R.ash[1];
+      }
       if (!side && r > 60 && Math.round(x - CX) % 5 === 0) return C[2];
       return clothCol(x, y, t);
     });
@@ -270,6 +280,24 @@ export function outfitGeneric(c, H) {
     }
     if (p.belt) band(T, Y(50), Y(52), (x, y) => (y === Y(50) ? p.belt[0] : p.belt[1]));
     if (p.buckle) T.rect(30, Y(50), 33, Y(52), (x, y) => (y === Y(50) ? p.buckle[0] : p.buckle[1]));
+    if (p.aiguillette) {
+      // 금 장식 끈: 오른쪽 어깨(그림 왼쪽)에서 가슴으로 두 줄 고리
+      for (const [dy, bend] of [[0, 3], [3, 4]]) {
+        const a = [CX - shw + 2, Y(36 + dy)];
+        const b = [CX - 2, Y(40 + dy)];
+        for (let i = 0; i <= 12; i++) {
+          const k = i / 12;
+          T.set(Math.round(a[0] + (b[0] - a[0]) * k), Math.round(a[1] + (b[1] - a[1]) * k + Math.sin(k * Math.PI) * bend), i % 3 ? R.gold[1] : R.gold[0]);
+        }
+      }
+    }
+    if (p.medals) for (const [i, x] of [[0, 36], [1, 38]]) { T.rect(x, Y(38), x + 1, Y(39), i ? R.red[1] : R.sky[1]); T.rect(x, Y(40), x + 1, Y(41), R.gold[i]); }
+    if (p.star) {
+      // 가슴의 보라 별
+      const sx = CX + 0.5;
+      const sy = Y(40);
+      for (const [dx, dy] of [[0, -3], [0, -2], [-1, -1], [0, -1], [1, -1], [-3, 0], [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0], [3, 0], [-1, 1], [0, 1], [1, 1], [-2, 2], [2, 2]]) T.set(Math.round(sx + dx), sy + dy, dx === 0 && dy === 0 ? R.white[0] : Math.abs(dx) + Math.abs(dy) <= 1 ? R.violet[0] : R.violet[1]);
+    }
     if (p.crossColor && !p.tabard) {
       T.rect(30, Y(36), 33, Y(48), (x) => (x < 32 ? p.crossColor[0] : p.crossColor[1]));
       T.rect(26, Y(39), 37, Y(41), (x, y) => (y === Y(39) ? p.crossColor[0] : p.crossColor[1]));
@@ -360,7 +388,8 @@ export function outfitGeneric(c, H) {
       if (skip === sd) continue;
       const sw = sd * swing * (v === 'up' ? -1 : 1);
       const x0 = CX + sd * ax;
-      res.push(arm(x0, Y(36), x0 + sd * 1.6, Y(45), x0 + sd * 1.3, Y(53) + sw * 0.5, sleeve, hand, ar, cuff));
+      const sq = s.squash ? 0.35 : 1; // 드워프는 몸을 줄이면 팔이 옆으로 벌어지므로 덜 벌림
+      res.push(arm(x0, Y(36), x0 + sd * 2.8 * sq, Y(45), x0 + sd * 3.6 * sq, Y(52) + sw * 0.5, sleeve, hand, ar, cuff));
     }
     return res;
   };
@@ -426,9 +455,9 @@ export function outfitGeneric(c, H) {
   for (const kind of p.held ?? []) {
     const L = lay();
     if (kind === 'spear' || kind.startsWith('staff')) {
-      const ramp = { spear: R.wood, staff_wood: R.wood, staff_gold: R.gold, staff_moon: R.slate, staff_scepter: R.gold }[kind] ?? R.wood;
-      const x = Math.round(side ? 34 : rh[0]);
-      const top = kind === 'spear' ? Y(2) : Y(16);
+      const ramp = { spear: R.wood, staff_wood: R.wood, staff_gold: R.gold, staff_moon: R.slate, staff_star: [R.ash[0], R.slate[2], R.slate[3]], staff_scepter: R.gold }[kind] ?? R.wood;
+      const x = Math.round(side ? 34 : rh[0] - (kind === 'staff_star' ? 6 : 0));
+      const top = kind === 'spear' ? Y(2) : kind === 'staff_star' ? Y(18) : Y(16);
       for (let y = kind === 'spear' ? Y(12) : top; y <= FOOT_T - 2; y++) { L.set(x, y, ramp[1]); L.set(x + 1, y, ramp[2]); }
       if (kind === 'spear') {
         lock(L, x - 1, x + 2, Y(12), x, Y(2), (xx, yy, t) => (t < 0.5 ? R.white[0] : R.white[2]));
@@ -439,6 +468,14 @@ export function outfitGeneric(c, H) {
       } else if (kind === 'staff_wood') {
         lock(L, x - 4, x + 1, top, x - 5, top - 4, () => R.wood[1]);
         L.rect(x + 3, top + 3, x + 3, top + 9, R.ivory[1]);
+      } else if (kind === 'staff_star') {
+        // 검은 지팡이 끝에 초승달과 큰 별 (카시우스)
+        lock(L, x - 6, x - 4, top - 4, x - 1, top - 16, () => R.ash[1]);
+        lock(L, x - 5, x - 4, top - 6, x - 3, top - 14, () => R.white[1]);
+        const sx = x + 1.5;
+        const sy = top - 11;
+        ell(L, sx, sy, 3, 3, (xx, yy, nx, ny) => (nx * nx + ny * ny < 0.3 ? R.white[0] : R.violet[0]));
+        for (const [dx, dy] of [[0, -6], [0, -5], [0, -4], [0, 4], [0, 5], [-6, 0], [-5, 0], [-4, 0], [4, 0], [5, 0], [6, 0], [-3, -3], [3, -3], [-3, 3], [3, 3]]) L.set(Math.round(sx - 0.5) + dx, sy + dy, Math.abs(dx) + Math.abs(dy) > 5 ? R.violet[1] : R.violet[0]);
       } else if (kind === 'staff_moon') {
         for (const [dx, dy] of [[-4, -9], [-4, -8], [-4, -7], [-3, -10], [-3, -6], [-2, -11], [-2, -5], [-1, -12], [-1, -4], [0, -12], [1, -12], [2, -11]]) L.set(x + dx, top + dy, R.gold[1]);
         L.set(x + 3, top - 8, R.white[0]);
@@ -448,6 +485,7 @@ export function outfitGeneric(c, H) {
       }
       out(L);
       if (side) back.push(held(L, kind));
+      else if (kind === 'staff_star') front.unshift(held(L, kind)); // 별이 머리카락에 가리지 않게
       else body.push(held(L, kind));
     } else if (kind === 'shield' || kind === 'kiteShield') {
       const kite = kind === 'kiteShield';

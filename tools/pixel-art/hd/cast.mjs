@@ -37,6 +37,7 @@ const CLOTH = {
   silver: R.white,
   red: [R.red[0], R.red[1], R.red[2], R.red[3], R.red[3]],
   slate: [R.ash[0], R.slate[0], R.slate[1], R.slate[2], R.slate[3]], // 검은 옷도 밝은 회남색이 기본
+  black: [R.slate[1], R.slate[2], R.slate[3], R.slate[3], R.slate[3]], // 카시우스 검은 로브 (가장 어두운 칸은 #1d2735)
   grey: [R.white[2], R.ash[0], R.ash[1], R.ash[2], R.ash[3]],
   iron: [R.ash[0], R.ash[1], R.ash[2], R.ash[3], R.ash[4]],
   violet: [R.violet[0], R.violet[1], R.violet[2], R.violet[3], R.violet[4]],
@@ -97,7 +98,7 @@ export const CAST = {
   bram: {
     ...base, ...navyCoat, hair: HAIR.navy, hairStyle: 'curly', hairLen: 28, sideLen: 22, eye: EYE.green, smile: true,
     cape: [R.navy[2], R.navy[2], R.navy[3], R.navy[3], R.navy[4]], capeTrim: R.gold, goldTrim: true, buttons: R.gold,
-    held: ['swordHip'], pose: 'cross',
+    held: ['swordHip'], pose: 'cross', epaulettes: true, aiguillette: true, medals: true, cuff: R.gold,
     battle: { weapon: 'sword' },
   },
   oswald: {
@@ -128,11 +129,11 @@ export const CAST = {
   },
   cassius: {
     ...base, hair: HAIR.silver, hairStyle: 'long', hairLen: 34, sideLen: 28, eye: EYE.violet, brow: 'plain', beard: HAIR.silver, beardLen: 3,
-    circlet: true, cloth: CLOTH.slate, dress: true, skirtW: 2, starRobe: true, star: true, cuff: R.violet, held: ['staff_moon'], drop: 1,
+    circlet: true, cloth: CLOTH.black, dress: true, skirtW: 2, silverStripes: true, star: true, cuff: R.violet, held: ['staff_star'], drop: 1,
   },
   ursha: {
     ...base, skin: CLOTH.tan, hair: HAIR.white, hairStyle: 'braid', hairLen: 40, ears: true, tail: true, eye: EYE.yellow, brow: 'plain',
-    cloth: CLOTH.sand, dress: true, skirtW: 2, outer: CLOTH.wood, necklace: 'beads', glove: CLOTH.tan, held: ['staff_wood'], drop: 3,
+    cloth: CLOTH.sand, dress: true, skirtW: 2, outer: CLOTH.wood, necklace: 'beads', glove: CLOTH.tan, held: ['staff_wood'], drop: 3, stoop: 1,
   },
   blacksmith: {
     ...base, hair: HAIR.white, hairStyle: 'short', brow: 'heavy', beard: HAIR.grey, beardLen: 3,
@@ -142,12 +143,12 @@ export const CAST = {
   dwarf_smith: {
     ...base, hair: HAIR.ginger, hairStyle: 'braids', eye: EYE.amber, smile: true, freckles: true, goggles: true,
     cloth: CLOTH.sand, sleeve: R.skin, lower: 'tunic', coat: 35, lowerRamp: CLOTH.wood, apron: CLOTH.wood, apronRunes: true,
-    glove: CLOTH.wood, pants: CLOTH.brown, shoes: CLOTH.wood, held: ['runeHammer'], drop: 5, wide: 1,
+    glove: CLOTH.wood, pants: CLOTH.brown, shoes: CLOTH.wood, held: ['runeHammer'], drop: 2, wide: 1.5, squash: 30,
   },
   dwarf_gatekeeper: {
     ...base, hair: HAIR.brown, hairStyle: 'short', brow: 'heavy', beard: HAIR.brown, beardLen: 6,
     cloth: CLOTH.iron, armor: true, lower: 'tunic', coat: 36, belt: CLOTH.wood, buckle: R.gold, glove: CLOTH.iron, pants: CLOTH.brown, shoes: R.slate,
-    held: ['spear'], drop: 5, wide: 1,
+    held: ['spear'], drop: 2, wide: 1.5, squash: 24,
   },
   dwarf_kid: { ...base, hair: HAIR.ginger, hairStyle: 'short', smile: true, freckles: true, cloth: CLOTH.green, lower: 'tunic', coat: 34, pants: CLOTH.brown, shoes: CLOTH.wood, drop: 9 },
   dwarf_kid2: { ...base, hair: HAIR.wood, hairStyle: 'curly', sideLen: 17, smile: true, cloth: CLOTH.sky, lower: 'tunic', coat: 34, pants: CLOTH.brown, shoes: CLOTH.wood, drop: 9 },

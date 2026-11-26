@@ -13,6 +13,7 @@ import { RAMPS } from '../palette.mjs';
 import { Layer } from './layer.mjs';
 import { PEOPLE } from './people.mjs';
 import { castSpec, headwear, beard, outfitGeneric } from './tall_cast.mjs';
+import { stampBig } from './bigface.mjs';
 
 const R = RAMPS;
 const W = 64;
@@ -29,6 +30,23 @@ const sh = (r, s, a = -0.4, b = 0.45) => (s < a ? r[0] : s > b ? r[2] : r[1]);
 // ---------------------------------------------------------------------
 /** 줄마다 [왼쪽, 오른쪽]을 주는 모양. col(x, y, t) t: 0(왼)~1(오른) */
 function spans(L, y0, y1, f, col) {
+  if (L.tf) {
+    const T = L.tf;
+    const [Y0, Y1] = L.rows(Math.round(y0), Math.round(y1));
+    for (let Y = Y0; Y <= Y1; Y++) {
+      const yf = snap(T.iy(Y));
+      const s = f(yf);
+      if (!s) continue;
+      const yr = Math.round(yf);
+      const l = Math.round(T.fx(s[0], yf));
+      const r = Math.round(T.fx(s[1], yf));
+      for (let X = l; X <= r; X++) {
+        const c = col(Math.round(T.ix(X, yf)), yr, r === l ? 0.5 : (X - l) / (r - l));
+        if (c) L.setHi(X, Y, c);
+      }
+    }
+    return L;
+  }
   for (let y = Math.round(y0); y <= Math.round(y1); y++) {
     const s = f(y);
     if (!s) continue;
@@ -43,6 +61,17 @@ function spans(L, y0, y1, f, col) {
 }
 /** 팔·다리: a에서 b로 굵기 r0→r1. col(s, t, x, y) s: 가로 -1~1(오른쪽·아래가 그늘), t: 0~1 */
 function limb(L, ax, ay, bx, by, r0, r1, col) {
+  if (L.tf) {
+    const T = L.tf;
+    const P = lay();
+    const q = T.sx(ay);
+    limb(P, T.fx(ax, ay), T.fy(ay), T.fx(bx, by), T.fy(by), r0 * q, r1 * q, (s2, t, x, y) => {
+      const hy = Math.round(T.iy(y));
+      return col(s2, t, Math.round(T.ix(x, hy)), hy);
+    });
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (P.d[y][x]) L.setHi(x, y, P.d[y][x]);
+    return L;
+  }
   const dx = bx - ax;
   const dy = by - ay;
   const len2 = dx * dx + dy * dy || 1;
@@ -66,6 +95,21 @@ function limb(L, ax, ay, bx, by, r0, r1, col) {
 }
 /** 뾰족한 조각(머리 갈래): 밑변 (x0~x1, y0) → 끝 (tx, ty). col(x, y, t, k) */
 function lock(L, x0, x1, y0, tx, ty, col) {
+  if (L.tf) {
+    const T = L.tf;
+    const [Y0, Y1] = L.rows(Math.min(y0, ty), Math.max(y0, ty));
+    for (let Y = Y0; Y <= Y1; Y++) {
+      const y = T.iy(Y);
+      const k = Math.max(0, Math.min(1, ty === y0 ? 0 : (y - y0) / (ty - y0)));
+      const l = Math.round(T.fx(x0 + (tx - x0) * k, y));
+      const r = Math.round(T.fx(x1 + (tx - x1) * k, y));
+      for (let X = l; X <= r; X++) {
+        const c = col(Math.round(T.ix(X, y)), Math.round(y), r === l ? 0.5 : (X - l) / (r - l), k);
+        if (c) L.setHi(X, Y, c);
+      }
+    }
+    return L;
+  }
   const n = Math.max(1, Math.abs(ty - y0));
   const dir = ty >= y0 ? 1 : -1;
   for (let i = 0; i <= n; i++) {
@@ -105,6 +149,103 @@ function band(L, y0, y1, col) {
 const out = (L, o = {}) => L.outline(o);
 
 // ---------------------------------------------------------------------
+// 큰 머리 (docs/도트기준.md 2절): 머리 그림은 예전 표(턱 31줄) 그대로 그리고, 그릴 때 좌표를 키워 찍는다.
+// 키운 좌표에서 모양을 바로 칠하므로(가장자리 매끄러움) 외곽선도 한 칸 굵기 그대로.
+// 몸은 BODY_DOWN칸 내려가고 다리가 그만큼 짧아짐(발끝 91줄은 그대로)
+// ---------------------------------------------------------------------
+export const HEAD_K = 1.3;
+export const BODY_DOWN = 5;
+const KX_LOW = 1.12; // 턱 아래(긴 머리)의 가로 배율
+function headWarp(oy, kk = HEAD_K) {
+  const A = 31.5 + oy; // 턱 아래 경계(예전 좌표)
+  const A2 = A + BODY_DOWN;
+  const k = kk;
+  const kb = (FOOT_T - 3 - A2) / (FOOT_T - 3 - A);
+  const kx = (y) => (y <= A ? k : Math.max(KX_LOW, k - (y - A) * 0.03));
+  return {
+    k,
+    fy: (y) => (y <= A ? A2 + (y - A) * k : A2 + (y - A) * kb),
+    iy: (Y) => (Y <= A2 ? A + (Y - A2) / k : A + (Y - A2) / kb),
+    fx: (x, y) => CX + (x - CX) * kx(y),
+    ix: (X, y) => CX + (X - CX) / kx(y),
+    sy: (y) => (y <= A ? k : kb),
+    sx: kx,
+  };
+}
+const snap = (v) => (Math.abs(v - Math.round(v)) < 0.3 ? Math.round(v) : v);
+class WLayer extends Layer {
+  constructor(tf) {
+    super(W, H, 1);
+    this.tf = tf;
+  }
+  rows(y0, y1) {
+    const T = this.tf;
+    const a = Math.round(T.fy(y0 - 0.5));
+    const b = Math.max(a, Math.round(T.fy(y1 + 0.5)) - 1);
+    return [a, b];
+  }
+  cols(x0, x1, y) {
+    const T = this.tf;
+    const a = Math.round(T.fx(x0 - 0.5, y));
+    const b = Math.max(a, Math.round(T.fx(x1 + 0.5, y)) - 1);
+    return [a, b];
+  }
+  block(x, y, fn) {
+    x = Math.round(x);
+    y = Math.round(y);
+    const [Y0, Y1] = this.rows(y, y);
+    const [X0, X1] = this.cols(x, x, y);
+    for (let Y = Y0; Y <= Y1; Y++) for (let X = X0; X <= X1; X++) fn(X, Y);
+  }
+  set(x, y, c) {
+    if (c) this.block(x, y, (X, Y) => this.setHi(X, Y, c));
+  }
+  clear(x, y) {
+    this.block(x, y, (X, Y) => { if (X >= 0 && Y >= 0 && X < this.w && Y < this.h) this.d[Y][X] = null; });
+  }
+  getHi(x, y) {
+    const T = this.tf;
+    const X = Math.round(T.fx(x, y));
+    const Y = Math.round(T.fy(y));
+    return X >= 0 && Y >= 0 && X < this.w && Y < this.h ? this.d[Y][X] : null;
+  }
+  under(o) {
+    for (let y = 0; y < o.h; y++) for (let x = 0; x < o.w; x++) if (o.d[y][x] && !this.d[y][x]) this.d[y][x] = o.d[y][x];
+    return this;
+  }
+  rect(x0, y0, x1, y1, c) {
+    const T = this.tf;
+    const [Y0, Y1] = this.rows(Math.round(y0), Math.round(y1));
+    for (let Y = Y0; Y <= Y1; Y++) {
+      const y = Math.round(T.iy(Y));
+      const [X0, X1] = this.cols(Math.round(x0), Math.round(x1), y);
+      for (let X = X0; X <= X1; X++) {
+        const col = typeof c === 'function' ? c(Math.round(T.ix(X, y)), y) : c;
+        if (col) this.setHi(X, Y, col);
+      }
+    }
+    return this;
+  }
+  ellipse(cx, cy, rx, ry, c) {
+    const T = this.tf;
+    // 타원 가운데는 칸 가장자리 좌표(칸 x의 가운데 = x + 0.5)
+    const X = T.fx(cx - 0.5, cy) + 0.5;
+    const Y = T.fy(cy - 0.5) + 0.5;
+    return super.ellipse(X, Y, rx * T.sx(cy), ry * T.sy(cy), (x, y, nx, ny) => {
+      const hy = Math.round(T.iy(y));
+      return typeof c === 'function' ? c(Math.round(T.ix(x, hy)), hy, nx, ny) : c;
+    });
+  }
+  clone() {
+    const l = new Layer(W, H, 1);
+    l.d = this.d.map((r) => [...r]);
+    return l;
+  }
+}
+/** 머리 쪽 그림판 (c.warp가 있으면 키워 찍음) */
+const wl = (c) => (c.warp ? new WLayer(c.warp) : lay());
+
+// ---------------------------------------------------------------------
 // 인물 표
 // ---------------------------------------------------------------------
 // build: [어깨 반폭, 허리 반폭, 엉덩이 반폭, 팔 굵기(반지름)], drop: 키 차이(고해상도 칸), girl: 턱이 좁음
@@ -115,9 +256,9 @@ export const TALL = {
   serena: { hair: 'straight', build: [10.5, 6.5, 7.5, 2.1], girl: true, skirt: true, eyes: 'round', brow: 'soft', drop: 3 },
   serena_hood: { as: 'serena', hood: true },
   elysia: { hair: 'wavy', build: [10.5, 7, 8, 2.3], girl: true, skirt: true, eyes: 'calm', brow: 'thin', drop: 2 },
-  karg: { hair: 'wild', build: [13.5, 9, 9.5, 3], eyes: 'sharp', brow: 'heavy', ears: true, boot: 77, thick: true },
+  karg: { hair: 'wild', build: [13.5, 9, 9.5, 3], eyes: 'fierce', brow: 'heavy', ears: true, boot: 77, thick: true },
   adrian: { hair: 'slick', build: [13, 9.5, 9.5, 2.6], eyes: 'sharp', brow: 'plain', boot: 81, knee: true },
-  galia: { hair: 'bob', build: [11.5, 7.5, 8.5, 2.3], girl: true, skirt: true, eyes: 'sharp', brow: 'sharp', drop: 1 },
+  galia: { hair: 'short', side: 21, build: [11.5, 7.5, 8.5, 2.3], girl: true, skirt: true, eyes: 'sharp', brow: 'sharp', drop: 1 },
 };
 export function specOf(id) {
   const s = TALL[id];
@@ -146,7 +287,7 @@ export const sideAt = (r) => SIDE[Math.round(r) - 6];
 const SIDE_CX = 30.5; // 옆 보기 머리 가운데(귀 조금 앞)
 
 function drawHead(c) {
-  const L = lay();
+  const L = wl(c);
   const sk = c.p.skin;
   const { oy, v, s } = c;
   if (v === 'right') {
@@ -155,7 +296,6 @@ function drawHead(c) {
       if (r >= 28 && t > 0.5) return sk[2];
       return r > 14 && r < 25 && t > 0.62 && t < 0.82 ? sk[0] : sk[1];
     });
-    L.rect(27, 29 + oy, 33, 35 + oy, (x, y) => (x > 31 || y < 31 + oy ? sk[2] : sk[1])); // 목
     ell(L, 28.5, 21.5 + oy, 2, 2.8, (x, y, nx) => (nx < 0 ? sk[1] : sk[2])); // 귀
     out(L);
     L.set(28, 21 + oy, sk[3]);
@@ -172,11 +312,32 @@ function drawHead(c) {
     if (t < 0.12 && r > 13 && r < 26) return sk[0];
     return sk[1];
   });
-  L.rect(28, 29 + oy, 35, 35 + oy, (x, y) => (y < 32 + oy || x > 33 ? sk[2] : sk[1])); // 목 (턱 밑 그늘)
   if (v === 'down') for (const ex of [20.5, 42.5]) ell(L, ex, 21.5 + oy, 1.5, 2.5, (x) => (x < 31 ? sk[1] : sk[2])); // 귀
   out(L);
   if (v === 'down') { L.set(21, 21 + oy, sk[3]); L.set(42, 21 + oy, sk[3]); }
   return L;
+}
+
+/** 큰 얼굴: 인물마다 얼굴 지도(faces/{id}.mjs 의 big)를 찍음. 없으면 설정으로 만든 기본 얼굴 */
+function drawFaceBig(c, L) {
+  const { p, s, oy, v, id } = c;
+  if (v === 'up') return;
+  const browOf = { sharp: 'sharp', heavy: 'heavy', plain: 'flat', soft: 'soft', thin: 'thin' };
+  const fb = {
+    eyes: s.eyes ?? 'small', brow: browOf[s.brow] ?? 'flat', girl: !!s.girl,
+    mouth: p.smile ? 'smile' : s.girl ? 'small' : 'line', blush: !!p.blush, freckles: !!p.freckles, scar: !!p.scar,
+  };
+  stampBig(L, p, p.face ?? s.faceId ?? id.replace(/_vd$/, ''), v, oy, fb);
+}
+
+/** 목 (몸 쪽 좌표) */
+function drawNeck(c) {
+  const L = lay();
+  const sk = c.p.skin;
+  const { oy, v } = c;
+  if (v === 'right') L.rect(27, 29 + oy, 33, 35 + oy, (x, y) => (x > 31 || y < 31 + oy ? sk[2] : sk[1]));
+  else L.rect(28, 29 + oy, 35, 35 + oy, (x, y) => (y < 32 + oy || x > 33 ? sk[2] : sk[1]));
+  return out(L);
 }
 
 // ---------------------------------------------------------------------
@@ -247,6 +408,7 @@ const STYLE = {
   wavy: { hl: 12, side: 46, th: 3, nape: 31, long: 66 },
   short: { hl: 12, side: 20, th: 1.5, nape: 26 },
   curly: { hl: 11, side: 24, th: 3, nape: 28 },
+  curlylong: { hl: 11, side: 40, th: 3.5, nape: 31, long: 48 },
   long: { hl: 11, side: 40, th: 2.5, nape: 31, long: 56 },
   bald: { none: true, hl: 12, side: 0, th: 0, nape: 0 },
 };
@@ -260,8 +422,9 @@ const roundShade = (h, nx, ny) => {
 const lockShade = (h, dark = false) => (x, y, t) => (t > 0.66 ? h[dark ? 3 : 2] : h[dark ? 2 : 1]);
 
 /** 몸 뒤로 늘어지는 긴 머리. 폭은 머리 폭(덮개)을 넘지 않게 */
-function drawHairBack(c) {
-  const L = lay();
+function drawHairBack(cB) {
+  const c = cB.H ?? cB;
+  const L = wl(c);
   const { s, p, oy, v, sway } = c;
   const h = p.hair;
   const st = styleOf(s);
@@ -276,9 +439,10 @@ function drawHairBack(c) {
     return out(L);
   }
   if (s.hood || st.none || !st.long) return L;
-  const wavy = s.hair === 'wavy';
+  const wavy = s.hair === 'wavy' || s.hair === 'curlylong';
+  const curls = s.hair === 'curlylong';
   const bot = wavy || s.generic ? st.long + oy : st.long;
-  const wave = (y) => (wavy ? Math.sin((y - oy) / 5) * 1 : 0);
+  const wave = (y) => (curls ? Math.abs(Math.sin((y - oy) / 2.2)) * 1.6 : wavy ? Math.sin((y - oy) / 5) * 1 : 0);
   if (v === 'right') {
     // 뒤통수(20칸)에서 등 뒤로
     spans(L, 14 + oy, bot, (y) => {
@@ -293,8 +457,19 @@ function drawHairBack(c) {
       return [CX - hw + 0.5 + sway * k, CX + hw - 0.5 + sway * k];
     }, (x, y, t) => {
       if (v === 'up') {
-        if ((x + 1) % 4 === 0 && y > 18 + oy) return t > 0.6 ? h[3] : h[2];
-        return t < 0.18 ? h[1] : t > 0.78 ? h[2] : h[1];
+        // 머리 결: 굵은 다발 4개(경계 3줄). 다발마다 왼쪽은 밝고 오른쪽 끝은 그늘, 정수리 아래에 빛 띠
+        const r = y - oy;
+        const bend = Math.sin(r / 9) * 0.025 * (wavy ? 1.6 : 1);
+        const tt = t + bend * (1 - Math.abs(t - 0.5) * 2);
+        const B = [0, 0.27, 0.5, 0.73, 1];
+        let i = 0;
+        while (i < 3 && tt > B[i + 1]) i++;
+        const u = (tt - B[i]) / (B[i + 1] - B[i]);
+        if (r > 15 && u > 0.86) return h[3];
+        if (r > 15 && u > 0.6) return h[2];
+        if (r >= 11 && r <= 13 && u > 0.15 && u < 0.6) return h[0];
+        if (t > 0.9) return h[2];
+        return t < 0.08 || (u < 0.25 && r > 15 && r < bot - oy - 8) ? h[0] : h[1];
       }
       return t < 0.2 ? h[2] : t > 0.8 ? h[3] : h[2];
     });
@@ -305,7 +480,7 @@ function drawHairBack(c) {
 
 /** 정수리·앞머리·옆머리 (얼굴 위) */
 function drawHairFront(c) {
-  const L = lay();
+  const L = wl(c);
   const { s, p, oy, v } = c;
   const h = p.hair;
   if (s.hood || s.helmet) return L;
@@ -345,7 +520,7 @@ function drawHairFront(c) {
         const f = r <= 31 ? Math.max(faceHW(s.girl, r), r < 16 ? 10.5 : 0) : 8;
         const inner = (r <= 31 ? f - 1 : 8);
         const outer = (r < 16.8 ? (capHW(r) * (f + st.th)) / 12.6 : f + st.th) // 덮개 둥근 선을 따름 (관자놀이에서 각지게 튀어나오지 않게)
-           + (name === 'wavy' ? Math.sin(r / 4) * 0.7 : 0);
+           + (name === 'wavy' ? Math.sin(r / 4) * 0.7 : name === 'curlylong' ? Math.abs(Math.sin(r / 2.2)) * 1.5 : 0);
         const a = CX + side * inner;
         const b = CX + side * outer;
         return side < 0 ? [b + 0.5, a + 0.5] : [a - 0.5, b - 0.5];
@@ -383,7 +558,7 @@ function drawHairFront(c) {
       lock(L, 37, 42, Y(hl - 1), 42, Y(19), lockShade(h, true));
     } else if (name === 'short') {
       for (const [x0, x1, tx, ty] of [[21, 26, 22, 16], [25, 31, 27, 15], [30, 35, 32, 14], [34, 40, 39, 15], [39, 42, 42, 16]]) lock(L, x0, x1, Y(hl - 1), tx, Y(ty), sh2);
-    } else if (name === 'curly') {
+    } else if (name === 'curly' || name === 'curlylong') {
       for (const x of [22, 26.5, 31.5, 36.5, 41]) ell(L, x, Y(hl + 0.5), 2.6, 2.4, (xx, yy, nx, ny) => roundShade(h, nx, ny));
       for (const x of [21, 42]) ell(L, x, Y(hl + 5), 2.2, 2.6, (xx, yy, nx, ny) => roundShade(h, nx, ny));
     } else if (name === 'long') {
@@ -419,7 +594,7 @@ function drawHairFront(c) {
   } else if (name === 'straight') {
     spans(L, Y(10), Y(17), () => [33, 41.5], (x, y) => (y === Y(17) && x % 3 === 0 ? null : x % 3 === 0 ? h[2] : y === Y(12) ? h[0] : h[1]));
     spans(L, Y(14), Y(46), () => [29, 33], (x, y, t) => (t > 0.7 ? h[3] : x % 3 === 0 ? h[2] : h[1]));
-  } else if (name === 'short' || name === 'curly') {
+  } else if (name === 'short' || name === 'curly' || name === 'curlylong') {
     for (const [x0, x1, tx, ty] of [[34, 38, 38, 16], [37, 40, 41, 14]]) lock(L, x0, x1, Y(10), tx, Y(ty), sh2);
   } else if (name === 'long') {
     for (const [x0, x1, tx, ty] of [[33, 39, 40, 17], [30, 34, 33, 19]]) lock(L, x0, x1, Y(10), tx, Y(ty), sh2);
@@ -434,7 +609,7 @@ function drawHairFront(c) {
 
 /** 늑대 귀 (카르크): 머리 덮개 위 */
 function drawEars(c) {
-  const L = lay();
+  const L = wl(c);
   if (!c.s.ears) return L;
   const h = c.p.hair;
   const { oy, v } = c;
@@ -661,7 +836,7 @@ function outfit(c) {
       if (skip === side) continue;
       const sw = side * swing * (v === 'up' ? -1 : 1);
       const x0 = CX + side * ax;
-      res.push(arm(x0, 36 + oy, x0 + side * 1.6, 45 + oy, x0 + side * 1.3, 53 + oy + sw * 0.5, sleeve, hand, r, cuff));
+      res.push(arm(x0, 36 + oy, x0 + side * 2.8, 45 + oy, x0 + side * 3.6, 52 + oy + sw * 0.5, sleeve, hand, r, cuff));
     }
     return res;
   };
@@ -920,8 +1095,9 @@ function outfit(c) {
 }
 
 /** 두건 (1막 망토): 머리를 덮고 어깨까지. 머리 덮개보다 1칸 크게 */
-function hoodFront(c, h, shade = false) {
-  const L = lay();
+function hoodFront(cB, h, shade = false) {
+  const c = cB.H ?? cB;
+  const L = wl(c);
   const { oy, v } = c;
   if (v === 'right') {
     spans(L, 3 + oy, 32 + oy, (y) => {
@@ -961,8 +1137,12 @@ export function drawTall(id, view, o = {}) {
   const v = flip ? 'right' : view;
   const oy = (o.dy ?? 0) * 2 + (s.drop ?? 0);
   const pp = s.darkHair ? { ...p, hair: [p.hair[1], p.hair[2], p.hair[3], p.hair[4], p.hair[4]] } : p;
-  const c = { id, p: pp, s, v, oy, step: o.step, swing: o.swing ?? 0, sway: o.sway ?? 0, flare: o.flare ?? 0, lift: o.lift ?? 0 };
+  const base = { id, p: pp, s, v, step: o.step, swing: o.swing ?? 0, sway: o.sway ?? 0, flare: o.flare ?? 0, lift: o.lift ?? 0 };
+  const cH = { ...base, oy, warp: headWarp(oy, s.headK ?? HEAD_K) };
+  const c = { ...base, oy: oy + BODY_DOWN, H: cH };
+  const HH = { ...HELP, lay: () => wl(cH) };
   let { back, body, front } = TALL[s.look] ? outfit(c) : outfitGeneric(c, HELP);
+  if (!TALL[s.look]) back.unshift(drawHairBack(c)); // 조연의 긴 머리·땋은 머리
   if (o.battle) {
     const keep = (l) => !l?.isHeld || ['shield', 'kiteShield', 'quiver'].includes(l.isHeld);
     back = back.filter(keep);
@@ -976,27 +1156,62 @@ export function drawTall(id, view, o = {}) {
     for (const a of o.arms) {
       const [fx, fy] = a.from;
       const [tx, ty] = a.to;
-      front.push(arm(fx, fy + oy, (fx + tx) / 2 + (a.bend ?? 0), (fy + ty) / 2 + 2 + oy, tx, ty + oy, sleeve, hand, r));
+      front.push(arm(fx, fy + c.oy, (fx + tx) / 2 + (a.bend ?? 0), (fy + ty) / 2 + 2 + c.oy, tx, ty + c.oy, sleeve, hand, r));
     }
   }
   const parts = [];
-  const head = drawHead(c);
+  const head = drawHead(cH);
   if (v === 'up') {
     const hood = front.filter((l) => l?.isHood);
-    parts.push(drawLegs(c), ...body, ...front.filter((l) => !l?.isHood), head, drawHairFront(c), drawEars(c), headwear(c, HELP), ...back, ...hood);
+    parts.push(drawLegs(c), ...body, ...front.filter((l) => !l?.isHood), drawNeck(c), head, drawHairFront(cH), drawEars(cH), headwear(cH, HH), ...back, ...hood);
   } else {
-    drawFace(c, head);
-    beard(c, head, HELP);
-    parts.push(...back, drawLegs(c), ...body, head, drawHairFront(c), drawEars(c), headwear(c, HELP), ...front);
+    beard(cH, head, HH);
+    drawFaceBig(cH, head);
+    parts.push(...back, drawLegs(c), ...body, drawNeck(c), head, drawHairFront(cH), drawEars(cH), headwear(cH, HH), ...front);
   }
   const res = lay();
   for (const l of parts) if (l) res.over(l);
+  if (s.squash) squashBody(res, 36 + oy, s.squash);
+  if (s.stoop) stoopBody(res, v, oy);
   const fin = flip ? res.flipX() : res;
   const L2 = new Layer(32, 48);
   L2.d = fin.d;
   return L2;
 }
 export const isTall = (id) => !!PEOPLE[id];
+
+/** 드워프: 턱 아래 몸을 q줄 줄이고 위(머리)는 q줄 내림. 신발 4줄은 그대로 */
+function squashBody(L, ys, q) {
+  const src = L.d.map((r) => [...r]);
+  const f = (FOOT_T - 4 - ys) / (FOOT_T - 4 - ys - q);
+  for (let Y = 0; Y <= FOOT_T; Y++) {
+    let y;
+    if (Y < ys + q) y = Y - q;
+    else if (Y > FOOT_T - 4) y = Y;
+    else y = Math.round(FOOT_T - 4 - (FOOT_T - 4 - Y) * f);
+    L.d[Y] = y >= 0 && y < H ? [...src[y]] : Array(W).fill(null);
+  }
+}
+/** 굽은 허리: 옆 보기는 허리 위를 앞으로 기울이고, 앞뒤 보기는 머리를 3줄 내림 */
+function stoopBody(L, v, oy) {
+  const src = L.d.map((r) => [...r]);
+  const hip = 60 + oy;
+  if (v === 'right') {
+    for (let Y = 0; Y < hip; Y++) {
+      const dx = Math.round((hip - Y) * 0.11);
+      L.d[Y] = Array(W).fill(null);
+      for (let X = 0; X < W; X++) if (src[Y][X] && X + dx < W) L.d[Y][X + dx] = src[Y][X];
+    }
+  } else {
+    const ys = 37 + oy;
+    for (let Y = ys + 2; Y >= 0; Y--) for (let X = 0; X < W; X++) {
+      const c = Y - 3 >= 0 ? src[Y - 3][X] : null;
+      if (Y < 3) L.d[Y][X] = null;
+      else if (c) L.d[Y][X] = c;
+      else if (Y < ys) L.d[Y][X] = null;
+    }
+  }
+}
 
 // ---------------------------------------------------------------------
 // 전투 시트 (48x48 칸 = 그림 96x96, 인물은 고해상도 (16, 4)에)
@@ -1075,7 +1290,7 @@ function battleFrameT(id, view, col) {
   const drop = s.drop ?? 0;
   const ax = s.build[0] - 0.7;
   // 시전 손: 엘리시아는 지팡이 쥔 손 위
-  const castHand = { down: [CX + s.build[0] + 4, 44], right: [44, 46], up: [CX - s.build[0] - 4, 44] }[v];
+  const castHand = { down: [CX + s.build[0] + 4, 44 + BODY_DOWN], right: [44, 46 + BODY_DOWN], up: [CX - s.build[0] - 4, 44 + BODY_DOWN] }[v];
   if (col === 11) {
     cell.over(P('down').rot90(), 0, 48 - 32);
   } else if (col === 10) {
@@ -1101,13 +1316,13 @@ function battleFrameT(id, view, col) {
     if (v !== 'right') {
       const other = shoulders.find((q) => q !== sh0);
       const side = other[0] < CX ? -1 : 1;
-      arms.push({ from: other, to: [other[0] + side * 1.3, 53], bend: side * 1.6 });
+      arms.push({ from: other, to: [other[0] + side * 3.6, 52], bend: side * 2.2 });
     }
     arms.push({ from: sh0, to: [hx, hy - drop] });
     const body = P(v, { arms, dy: pz.dy ?? 0 });
-    const wp = weaponHi(cfg.weapon, PX + hx + (pz.dx ?? 0) * 2, PY + hy + (pz.dy ?? 0) * 2, pz.ang);
+    const wp = weaponHi(cfg.weapon, PX + hx + (pz.dx ?? 0) * 2, PY + hy + BODY_DOWN + (pz.dy ?? 0) * 2, pz.ang);
     if (pz.behind) { cell.over(wp); put(body, pz.dx ?? 0); } else { put(body, pz.dx ?? 0); cell.over(wp); }
-    if (cfg.dual && col !== 6) cell.under(weaponHi(cfg.weapon, PX + (v === 'right' ? hx - 12 : 64 - hx), PY + hy + 4, 180 - pz.ang));
+    if (cfg.dual && col !== 6) cell.under(weaponHi(cfg.weapon, PX + (v === 'right' ? hx - 12 : 64 - hx), PY + hy + BODY_DOWN + 4, 180 - pz.ang));
   }
   return view === 'left' ? cell.flipX() : cell;
 }
@@ -1119,4 +1334,4 @@ export function tallBattleSheet(id) {
 void hash01;
 
 // 조연 그리기(hd/tall_cast.mjs)에 넘기는 도구
-const HELP = { spans, limb, lock, ell, stamp, band, out, lay, CX, FOOT_T, faceHW, capHW, sideAt, SIDE_CX, roundShade, torso, skirtL, collar, pauldron, arm, capeBack, hoodFront, drawTail };
+const HELP = { wl, BODY_DOWN, spans, limb, lock, ell, stamp, band, out, lay, CX, FOOT_T, faceHW, capHW, sideAt, SIDE_CX, roundShade, torso, skirtL, collar, pauldron, arm, capeBack, hoodFront, drawTail };

@@ -25,7 +25,7 @@ for (const f of readdirSync(DIR).sort()) {
   FACES[f.slice(0, -4)] = (await import(new URL(f, DIR))).default;
 }
 
-function palette(p, extra = {}) {
+export function palette(p, extra = {}) {
   const h = p.hair ?? R.hair;
   const s = p.skin;
   const e = p.eye ?? [R.wood[1], R.wood[2], R.hair[4]];

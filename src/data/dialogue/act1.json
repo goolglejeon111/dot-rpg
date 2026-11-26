@@ -45,6 +45,7 @@
         {"monologue":["여자가 돌아본다."]},
         {"cg":null},
         {"speaker":"elysia","expression":"surprised","text":"…이런 곳에 사람이라니."},
+        {"monologue":["연보라색 눈동자가, 위아래로 나를 훑었다.","겁먹은 눈이 아니었다. 처음 보는 책의 첫 장을 넘기는 사람의 눈이었다."]},
         {"speaker":"leon","expression":"angry","text":"누구냐."},
         {"speaker":"elysia","expression":"normal","text":"그건 제가 먼저 물어야 할 것 같은데요. 이 시간에, 이런 곳에서, 칼을 든 채로 기어 나온 쪽은 그쪽이니까요."},
         {"stage":"a1_rune_aim"},
@@ -185,6 +186,7 @@
         {"stage":"a1_fever_violet"},
         {"monologue":["가끔 차가운 손이 이마에 닿았다.","보랏빛이 눈꺼풀 너머로 번졌다."]},
         {"speaker":"elysia","expression":"normal","text":"…버텨요. 표본이 죽으면 곤란하니까."},
+        {"monologue":["흐려지는 시야 너머에서, 그 목소리만은 이상할 만큼 또렷했다.","차가운 말과 달리, 상처를 누르는 손끝은 떨리고 있었다."]},
         {"monologue":["그 목소리만이, 어둠 속에서 또렷했다."]},
         {"stage":"a1_hideout_wake"},
         {"monologue":["눈을 떴을 때, 사흘이 지나 있었다."]},
@@ -215,6 +217,7 @@
         {"monologue":["황녀."]},
         {"monologue":["그날 밤, 순례를 떠난 황녀.","단장님이 호위하던."]},
         {"speaker":"leon","expression":"angry","text":"말도 안 돼. 단장님이 그럴 리가…."},
+        {"monologue":["입 밖으로 낸 말이, 내 귀에도 변명처럼 들렸다."]},
         {"speaker":"elysia","expression":"normal","text":"기사님이 폐하를 죽였을 리도 없죠. 그런데 전단엔 그렇게 적혀 있어요."},
         {"speaker":"elysia","expression":"normal","text":"누군가 그날 밤 일을, 아주 빠르게 정리하고 있다는 뜻이에요."},
         {"monologue":["서쪽."]},
@@ -272,6 +275,7 @@
         {"speaker":"elysia","expression":"normal","text":"숨 쉬어도 돼요. 이제."},
         {"speaker":"leon","expression":"normal","text":"…고마워."},
         {"speaker":"elysia","expression":"surprised","text":"방금, 고맙다고 했어요?"},
+        {"monologue":["처음으로, 그녀의 얼굴에서 계산이 사라졌다.","셈을 하다 말고 답을 잊어버린 사람처럼."]},
         {"speaker":"leon","expression":"normal","text":"못 들었으면 됐어."}
       ]
     },

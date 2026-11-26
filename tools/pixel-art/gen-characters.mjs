@@ -227,6 +227,7 @@ function head(g, c, v) {
   }
   if (c.mitre) mitre(g, c, v);
   if (c.laurel) laurel(g, v);
+  if (c.crown) crown(g, v);
   if (c.circlet) {
     if (v === 'right') g.rect(13, 8, 21, 8, 'k');
     else {
@@ -322,6 +323,25 @@ function laurel(g, v) {
   }
   g.set(15, 5, 'y');
   g.set(16, 5, 'y');
+}
+
+/** 붉은 보석 금관: 이마 위 금 띠, 위로 솟은 뾰족한 장식, 앞 가운데 붉은 보석 (알드릭 황제) */
+function crown(g, v) {
+  if (v === 'right') {
+    g.rect(10, 6, 20, 8, (x, y) => (y === 6 ? 'y' : 'Y'));
+    for (const x of [11, 15, 19]) g.rect(x, 3, x, 5, 'Y');
+    for (const x of [11, 15, 19]) g.set(x, 2, 'y');
+    g.set(19, 7, 'X');
+    return;
+  }
+  g.rect(9, 6, 22, 8, (x, y) => (y === 6 ? 'y' : x >= 20 ? 'O' : 'Y'));
+  for (const x of [9, 12, 19, 22]) g.rect(x, 4, x, 5, 'Y');
+  g.rect(15, 2, 16, 5, (x) => (x === 15 ? 'y' : 'Y'));
+  for (const x of [9, 12, 19, 22]) g.set(x, 3, 'y');
+  if (v === 'down') {
+    g.rect(15, 7, 16, 7, 'X');
+    g.set(15, 6, 'x');
+  }
 }
 
 function torso(g, c, v) {
@@ -661,6 +681,21 @@ const PROPS = {
     g.set(x0, 1, 'y');
     g.set(x0, 0, 'Y');
   },
+  /** 금 홀: 긴 금 막대, 꼭대기에 둥근 금 구슬 (알드릭) */
+  orbScepter(g, c, v, front) {
+    if (v === 'up' ? front : !front) return;
+    const x0 = v === 'right' ? 23 : 4;
+    g.rect(x0, 5, x0, 34, (x, y) => (y % 6 === 0 ? 'y' : 'Y'));
+    g.ellipse(x0, 3, 1.8, 1.8, (x, y) => (x < x0 || y < 3 ? 'y' : 'Y'));
+    g.set(x0, 0, 'Y');
+  },
+  /** 쇠망치: 나무 자루와 검은 쇠머리 (대장장이) */
+  hammer(g, c, v, front) {
+    if (v === 'up' ? front : !front) return;
+    const x0 = v === 'right' ? 23 : 27;
+    g.rect(x0, 14, x0, 30, (x, y) => (y % 4 ? 'd' : 'D'));
+    g.rect(x0 - 3, 10, x0 + 3, 14, (x, y) => (y === 10 || x === x0 - 3 ? 'R' : 'K'));
+  },
   /** 금 지팡이 + 십자 (이그나티우스) */
   goldStaff(g, c, v, front) {
     if (v === 'up' ? front : !front) return;
@@ -866,6 +901,7 @@ function draw(c, v) {
   // 머리
   if (c.helmet) helmet(g, c, v);
   else head(g, c, v);
+  if (c.decorTop) for (const d of c.decorTop) DECOR[d](g, c, v);
   // 뒷모습: 망토, 긴 머리가 몸을 덮음
   if (v === 'up') {
     cape(g, c, v, true);
@@ -960,13 +996,14 @@ export const CHARS = [
     props: ['sword'],
   },
   {
-    id: 'aldric', kind: 'npc', legs: { K: 'v', k: 'V', L: 'Y', M: 'y' }, // 금 월계관, 흰 비단옷과 금 자수, 담비털을 두른 붉은 망토, 독수리 홀
-    hair: { ramp: ['h', 'H', 'J', 'k'], style: 'short' },
-    laurel: true, eye: 'A', brow: 'J', gloves: 'v',
+    id: 'aldric', kind: 'npc', legs: { K: 'X', k: 'Z', L: 'Y', M: 'y' }, // 붉은 보석 금관, 긴 흑갈색 머리와 짧은 수염, 진홍 예복과 금 자수 띠, 금 홀
+    hair: { ramp: ['H', 'J', 'k', 'k'], style: 'straight', long: 24 },
+    crown: true, eye: 'A', brow: 'k',
+    beard: ['H', 'J', 'k'], beardLen: -2,
     cape: R.red,
-    outfit: { ramp: R.white, lower: 'robe', collar: 'v', cuff: 'Y', hem: 'Y' },
-    decor: ['ermine'],
-    props: ['scepter'],
+    outfit: { ramp: R.red, lower: 'robe', collar: 'v', cuff: 'Y', hem: 'Y' },
+    decor: ['royalBand'],
+    props: ['orbScepter'],
   },
   {
     id: 'marcion_hooded', kind: 'npc', legs: { K: 'k', k: 'k' }, // 검은 후드, 그림자 진 얼굴, 하얀 빛
@@ -1079,7 +1116,8 @@ export const CHARS = [
     id: 'ursha', kind: 'npc', legs: { K: 'D', k: 'C', L: 'D', M: 'd' }, // 흰 털, 굽은 허리, 흙빛 로브 + 나무 지팡이
     hair: { ramp: ['v', 'v', 'V', 'T'], style: 'straight', long: 22 },
     ears: true, eye: 'y', brow: 'V', stoop: true,
-    outfit: { ramp: R.tan, lower: 'robe', collar: 'D', belt: ['o', 'O'], cuff: 'D' },
+    outfit: { ramp: R.white, sleeve: R.leather, lower: 'robe', collar: 'v', belt: ['H', 'J'], cuff: 'O' },
+    decor: ['openRobe', 'braid'],
     props: ['woodStaff', 'tail'],
   },
   {
@@ -1117,10 +1155,12 @@ export const CHARS = [
     outfit: { ramp: R.white, lower: 'robe', collar: 'o', cuff: 'x', hem: 'x' },
   },
   {
-    id: 'blacksmith', kind: 'npc', legs: { K: 'O', k: 'P', L: 'C', M: 'D' }, // 대장장이 노인: 흰 머리와 수염, 가죽 앞치마
-    hair: { ramp: ['v', 'V', 't', 'T'], style: 'short' }, brow: 'V', stoop: true,
-    beard: ['v', 'V', 't', 'T'],
-    outfit: { ramp: R.brown, sleeve: R.skin, lower: 'tunic', lowerRamp: R.leather, belt: ['O', 'P'], cuff: 'S' },
+    id: 'blacksmith', kind: 'npc', legs: { K: 'K', k: 'k', L: 'R', M: 'K' }, // 대장장이 노인: 회색 머리와 수염, 흰 셔츠, 갈색 가죽 앞치마, 망치
+    hair: { ramp: ['r', 't', 'T', 'R'], style: 'short' }, brow: 'T', stoop: true,
+    beard: ['r', 't', 'T', 'R'],
+    outfit: { ramp: R.white, lower: 'tunic', lowerRamp: R.tan, collar: 'V', cuff: 'V' },
+    decor: ['apron'],
+    props: ['hammer'],
   },
   {
     id: 'paladin_captain', kind: 'mob', name: '성기사 대장', legs: { K: 'm', k: 'M', L: 'L', M: 'l' }, // 성기사 + 금장식(금 깃털, 금 장갑, 흰 망토)
@@ -1134,7 +1174,8 @@ export const CHARS = [
     id: 'raid_captain', kind: 'mob', name: '습격대장', legs: { K: 'k', k: 'k' }, // 가면을 쓴 사제: 검은 두건, 흰 가면, 희게 빛나는 손과 팔뚝 문양
     hood: R.black, eye: 'k',
     outfit: { ramp: R.black, lower: 'robe', belt: ['k', 'R'], cuff: 'l' },
-    decor: ['whiteMask', 'armMark', 'glowHand'],
+    decor: ['cross', 'armMark', 'glowHand'], crossColor: 'v',
+    decorTop: ['whiteMask'],
   },
 ];
 
@@ -1236,11 +1277,71 @@ Object.assign(DECOR, {
     g.set(18, 12, 'k');
     g.rect(15, 15, 16, 15, 'V');
   },
-  /** 팔뚝에 새긴 문양 (희게 빛남) */
+  /** 팔뚝에 새긴 문양 (푸르게 빛남): 맨 팔뚝에 빛 문양 */
   armMark(g, c, v) {
     if (v === 'up') return;
-    const xs = v === 'right' ? [17] : [6, 25];
-    for (const x of xs) for (let y = 23; y <= 27; y += 2) g.set(x, y, 'l');
+    const xs = v === 'right' ? [[14, 17]] : [[5, 7], [24, 26]];
+    for (const [x0, x1] of xs) g.rect(x0, 23, x1, 26, (x, y) => ((x + y) % 3 === 0 ? 'w' : (x + y) % 3 === 1 ? 'a' : 'v'));
+  },
+  /** 진홍 예복 가운데 금 자수 띠와 금 구슬 목걸이 (알드릭 황제) */
+  royalBand(g, c, v) {
+    if (v === 'up') return;
+    if (v === 'right') {
+      g.rect(18, 26, 19, 34, (x, y) => (y % 3 === 0 ? 'y' : x === 19 ? 'O' : 'Y'));
+      for (const x of [16, 18, 20]) g.set(x, 19, 'Y');
+      return;
+    }
+    g.rect(14, 26, 17, 34, (x, y) => (x === 14 || x === 17 ? 'Y' : (x + y) % 2 ? 'Z' : 'y'));
+    for (const x of [11, 13, 15, 16, 18, 20]) g.set(x, x === 15 || x === 16 ? 20 : 19, 'Y');
+  },
+  /** 흰 속옷 위에 걸친 갈색 겉옷 (우르샤): 앞은 양옆 자락, 뒤는 전부, 어깨에 짙은 숄 */
+  openRobe(g, c, v) {
+    const O = R.leather;
+    const keep = (x, y) => g.get(x, y) !== '.';
+    if (v === 'up') {
+      g.rect(0, 18, 31, 34, (x, y) => (keep(x, y) ? shadeT(O, (x - 5) / 21, 0.15, 0.75) : '.'));
+    } else if (v === 'right') {
+      g.rect(9, 18, 14, 34, (x, y) => (keep(x, y) ? (x < 11 ? O[2] : O[1]) : '.'));
+    } else {
+      g.rect(0, 18, 11, 34, (x, y) => (keep(x, y) ? (x < 8 ? O[0] : O[1]) : '.'));
+      g.rect(20, 18, 31, 34, (x, y) => (keep(x, y) ? (x > 23 ? O[2] : O[1]) : '.'));
+      for (let y = 22; y <= 34; y += 3) {
+        g.set(10, y, 'C');
+        g.set(21, y, 'C');
+      }
+    }
+    // 어깨 숄 (짙은 갈색)
+    const H = R.brown;
+    if (v === 'right') g.rect(10, 17, 20, 18, (x) => (x > 17 ? H[2] : H[1]));
+    else g.rect(7, 17, 24, 18, (x) => (x < 10 ? H[1] : x > 21 ? H[2] : H[1]));
+    // 붉은 구슬 목걸이
+    if (v === 'down') for (const x of [13, 15, 16, 18]) g.set(x, x === 15 || x === 16 ? 20 : 19, 'X');
+  },
+  /** 흰 땋은 머리를 앞으로 늘어뜨림 (우르샤) */
+  braid(g, c, v) {
+    if (v === 'up') return;
+    const x0 = v === 'right' ? 14 : 10;
+    for (let y = 17; y <= 26; y++) g.rect(x0, y, x0 + 1, y, (x) => ((x + y) % 2 ? 'v' : 'V'));
+  },
+  /** 갈색 가죽 앞치마와 어깨끈 (대장장이) */
+  apron(g, c, v) {
+    const A = R.tan;
+    if (v === 'up') {
+      g.line(10, 18, 21, 26, A[2]);
+      g.line(21, 18, 10, 26, A[2]);
+      g.rect(9, 27, 22, 27, A[2]);
+      return;
+    }
+    if (v === 'right') {
+      g.rect(18, 20, 21, 31, (x) => (x === 21 ? A[2] : A[1]));
+      g.rect(16, 18, 16, 20, A[2]);
+      return;
+    }
+    g.rect(11, 18, 11, 20, A[2]);
+    g.rect(20, 18, 20, 20, A[2]);
+    g.trap(20, 31, 11, 20, 10, 21, (x, y, t) => shadeT(A, t, 0.15, 0.75));
+    g.rect(10, 26, 21, 26, A[2]);
+    g.rect(16, 28, 18, 30, A[2]);
   },
   raggedHem(g, c, v) {
     for (let x = 4; x <= 27; x++) if (x % 3 === 0) g.set(x, 34, '.');

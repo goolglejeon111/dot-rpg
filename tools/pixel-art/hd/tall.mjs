@@ -195,8 +195,10 @@ function drawFace(c, L) {
   const brow = p.browColor ?? p.hair[3];
   const ey = 19 + oy;
   if (v === 'down') {
-    stamp(L, 24, ey, T.down, map);
-    stamp(L, 35, ey, T.down, map, true);
+    // 둥근 눈(세레나·엘리시아)은 두 눈을 한 칸씩 안쪽으로 (눈 사이 4칸)
+    const ei = s.eyes === 'round' || s.eyes === 'calm' ? 1 : 0;
+    stamp(L, 24 + ei, ey, T.down, map);
+    stamp(L, 35 - ei, ey, T.down, map, true);
     const bw = s.brow === 'heavy' ? 2 : 1;
     const by = ey - (s.brow === 'soft' ? 3 : 2);
     const BROW = {
@@ -206,11 +208,11 @@ function drawFace(c, L) {
       soft: [[25, 0], [26, 0], [27, 0]],
       thin: [[24, 1], [25, 0], [26, 0], [27, 0]],
     }[s.brow] ?? [];
-    for (const [x, d] of BROW) for (let k = 0; k < bw; k++) { L.set(x, by + d + k, brow); L.set(63 - x, by + d + k, brow); }
+    for (const [x, d] of BROW) for (let k = 0; k < bw; k++) { L.set(x + ei, by + d + k, brow); L.set(63 - x - ei, by + d + k, brow); }
     L.set(32, 24 + oy, sk[2]);
     L.set(31, 25 + oy, sk[2]);
     if (s.girl) { L.set(31, 27 + oy, sk[3]); L.set(32, 27 + oy, sk[3]); } else L.rect(30, 27 + oy, 33, 27 + oy, sk[3]);
-    if (p.blush) for (const x of [24, 25, 38, 39]) L.set(x, 24 + oy, R.red[0]);
+    if (p.blush) for (const x of [24, 25, 38, 39]) L.set(x + (x < 31 ? ei : -ei), 24 + oy, R.red[0]);
     if (p.scar) for (const [x, y] of [[38, 23], [37, 24], [36, 25]]) L.set(x, y + oy, sk[3]);
     return;
   }
@@ -261,7 +263,7 @@ function drawHairBack(c) {
       return [20.5 - k * (1.5 + c.flare * 1.5) + wave(y), 29];
     }, (x, y, t) => ((x * 2 + Math.floor((y - oy) / 5)) % 7 === 0 ? h[2] : t < 0.3 ? h[1] : t > 0.75 ? h[3] : h[2]));
   } else {
-    spans(L, 12 + oy, bot, (y) => {
+    spans(L, (v === 'up' ? 5 : 12) + oy, bot, (y) => {
       const r = y - oy;
       const k = clamp((y - 34 - oy) / (bot - 34 - oy), 0, 1);
       const hw = (r < 16 ? capHW(r) : 12.4) + k * (wavy ? 0.6 : 1.2) + wave(y);
@@ -366,7 +368,8 @@ function drawHairFront(c) {
     // 머리 덮개: 옆 보기 두개골을 2칸 키운 타원 (가운데 30.5, 16.5)
     const ry = (r - 16.8) / 11.8;
     const w = ry > -1 && ry < 1 ? 12.3 * Math.sqrt(1 - ry * ry) : 0;
-    const back = r < 16.5 ? 30.5 - w : Math.min(f[0] - 2, 30.5 - Math.max(w, 9));
+    let back = r < 16.5 ? 30.5 - w : Math.min(f[0] - 2, 30.5 - Math.max(w, 9));
+    if (!st.long && r > nape - 4) back += (r - (nape - 4)) * 1.3; // 뒷목으로 둥글게 모아짐
     let front;
     if (r <= st.hl) front = Math.min(30.5 + w, f[1] + 1);
     else front = r <= st.side ? 33 : name === 'bob' ? 31 : 26;
@@ -376,9 +379,6 @@ function drawHairFront(c) {
   }, (x, y, t) => roundShade(h, t * 2 - 1, (y - oy - 16) / 12.6));
   if (name === 'messy' || name === 'wild') {
     for (const [x0, x1, tx, ty] of [[34, 38, 37, 17], [37, 40, 41, 15], [31, 34, 32, 19]]) lock(L, x0, x1, Y(11), tx, Y(ty), sh2);
-    lock(L, 28, 32, Y(7), 30, Y(5), sh2);
-    for (const [x0, x1, tx, ty] of [[19, 22, 18, 26], [21, 25, 21, 28]]) lock(L, x0, x1, Y(22), tx, Y(ty), lockShade(h, true));
-    if (name === 'wild') lock(L, 20, 24, Y(8), 16, Y(6), sh2);
   } else if (name === 'slick') {
     for (const x of [28, 32, 36]) for (let k = 0; k < 6; k++) if (L.getHi(x - k, Y(5 + k))) L.set(x - k, Y(5 + k), h[2]);
   } else if (name === 'bob') {

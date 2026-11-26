@@ -25,6 +25,22 @@ import { RAMPS as R } from './palette.mjs';
 import { Layer, K, scale2x } from './hd/layer.mjs';
 import { WORLD_TILES, WORLD_EXTRA, WORLD_VARIANTS, WORLD_SHADOW } from './hd/world.mjs';
 import { remapData } from './hd/remap.mjs';
+import { palaceHi, creaturesHi } from './hd/redraw.mjs';
+import { finish, putRGBA } from './hd/hicv.mjs';
+import { SMALLS } from './hd/smalls.mjs';
+// 예전 그림 코드(gen-palace.mjs, creatures.mjs)를 고해상도 캔버스로 다시 실행한 결과
+const PAL_HI = await palaceHi();
+const CRE_HI = (await creaturesHi()).CREATURES;
+const HI_TILE = Object.fromEntries(PAL_HI.TILES.map((t) => [t.key, t.cv]));
+const HI_PROP = Object.fromEntries(PAL_HI.PROPS.map((p) => [p.key, p.frames]));
+/** 고해상도 Layer 여러 장 → 시트 PNG (cw, ch: 논리 칸 크기) */
+function hiSheet(layers, cw, ch, cols) {
+  const W = cw * K * cols;
+  const H = ch * K * Math.ceil(layers.length / cols);
+  const d = new Uint8Array(W * H * 4);
+  layers.forEach((L, n) => L && putRGBA(d, W, L, (n % cols) * cw * K, Math.floor(n / cols) * ch * K));
+  return encodePNG(W, H, d);
+}
 import { encodePNG } from './png.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -302,7 +318,9 @@ if (!existsSync(oldTiles)) {
         const c = L.d[y][x];
         d.set(c ? [...rgb(c), 255] : [0, 0, 0, 0], ((oy + y) * W + ox + x) * 4);
       }
+    if (L.alpha) putRGBA(d, W, { w: 0, h: 0, d: [], alpha: L.alpha }, ox, oy);
   };
+  for (const name of NAMES) if (HI_TILE[name] && !TILES[name] && !WORLD_TILES[name]) put(finish(HI_TILE[name], { wrap: true, grain: 0.025 }), NAMES.indexOf(name));
   for (const [name, L] of Object.entries({ ...TILES, ...WORLD_TILES })) {
     if (!NAMES.includes(name)) throw new Error(`타일 이름 없음: ${name}`);
     put(L, NAMES.indexOf(name));
@@ -338,7 +356,27 @@ const remapFile = (rel) => {
   write(rel, encodePNG(im.w * K, im.h * K, up));
   files.push(rel);
 };
-for (const [name, p] of Object.entries(sprites.props)) if (!PROPS[name]) remapFile(`public/${p.file}`);
+for (const [name, p] of Object.entries(sprites.props)) {
+  if (PROPS[name]) continue;
+  const rel = `public/${p.file}`;
+  if (!HI_PROP[name]) {
+    remapFile(rel);
+    continue;
+  }
+  keepOld(rel);
+  write(rel, hiSheet(HI_PROP[name].map((f) => finish(f)), p.w, p.h, HI_PROP[name].length));
+  files.push(rel);
+}
+// 생물(필드 걷기 32x40 5열, 전투 12열)과 작은 그림
+const HI_FILES = {};
+for (const [id, cr] of Object.entries(CRE_HI)) {
+  if (cr.walk) HI_FILES[`public/assets/sprites/${id}.png`] = () => hiSheet(cr.walk.map((f) => finish(f)), 32, 40, 5);
+  HI_FILES[`public/assets/battle/chars/${id}.png`] = () => hiSheet(cr.battle.map((f) => finish(f)), cr.cell, cr.cell, 12);
+}
+for (const [id, draw] of Object.entries(SMALLS)) {
+  const cv = draw();
+  HI_FILES[`public/assets/sprites/${id}.png`] = () => hiSheet([finish(cv, { grain: 0.03 })], cv.w, cv.h, 1);
+}
 const SKIP = new Set(['shadow', 'shadow_large', '.gitkeep']);
 for (const dir of ['public/assets/sprites', 'public/assets/battle/chars']) {
   const seen = new Set();
@@ -347,7 +385,15 @@ for (const dir of ['public/assets/sprites', 'public/assets/battle/chars']) {
       const id = f.replace(/.png$/, '');
       if (!f.endsWith('.png') || SKIP.has(id) || PEOPLE[id] || seen.has(id) || id.endsWith('_2.5')) continue; // _2.5: 예전 2.5등신 인물 보관본
       seen.add(id);
-      remapFile(`${dir}/${f}`);
+      const rel = `${dir}/${f}`;
+      if (HI_FILES[rel]) {
+        keepOld(rel);
+        write(rel, HI_FILES[rel]());
+        files.push(rel);
+      } else {
+        console.log('다시 그리지 않음(색만 옮김):', rel);
+        remapFile(rel);
+      }
     }
 }
 writeFileSync(

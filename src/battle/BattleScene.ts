@@ -14,6 +14,7 @@ import { fxInfo, makeBattleAnims, preloadBattle } from './assets';
 import { activeParty, EXP_REWARD, gainExp, isUnlocked, levelOf, partyIds, statsOf, type LevelUp, type Unlock } from './progress';
 import { MAPS, findObj, footOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf } from '../explore/mapData';
 import type { ExploreScene } from '../explore/ExploreScene';
+import { FacePicker } from '../game/faces';
 
 // =====================================================================
 // 종류
@@ -499,6 +500,8 @@ export class BattleScene extends Phaser.Scene {
   private chainG?: Phaser.GameObjects.Graphics;
   /** 끝없이 나오는 적: 다음에 채울 때 */
   private endlessCd = 0;
+  /** 엑스트라 얼굴 돌려쓰기 (src/game/faces.ts) */
+  private faces = new FacePicker();
   /** HUD가 읽는 알림 (보여 준 뒤 비움) */
   notices: { kind: 'toast' | 'guide' | 'guideOff' | 'levelup' | 'unlock' | 'word' | 'cutin' | 'ultcut'; text: string; what?: Unlock; ms?: number }[] = [];
   wheelOpen = false;
@@ -996,7 +999,7 @@ export class BattleScene extends Phaser.Scene {
           }
         : undefined,
     };
-    const f = new Fighter(key, e.sprite, 'enemy', d, e);
+    const f = new Fighter(key, this.faces.pick(e.sprite), 'enemy', d, e);
     const hurry = this.bdef?.hurry;
     const fast = hurry && gameState.getFlag(hurry.flag) ? hurry.speed : 1;
     Object.assign(f, { hp: e.hp, maxHp: e.hp, atk: e.atk, defense: e.def, speed: e.speed * fast });

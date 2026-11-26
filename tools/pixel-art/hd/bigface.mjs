@@ -103,17 +103,69 @@ export function makeSide(o) {
 }
 
 /** 얼굴 지도 → 그림판에 찍기 (L: 64x96 그림판, oy: 키 차이·출렁임) */
-export function stampBig(L, p, faceId, view, oy, fallback) {
+export function stampBig(L, p, faceId, view, oy, fallback, fit) {
   const F = FACES[faceId] ?? {};
   const map = F.big?.[view] ?? (view === 'down' ? make(fallback) : makeSide(fallback));
   const col = palette(p, F.colors);
+  const { rs, cs } = fitShift(map, fit);
   map.rows.forEach((r, j) => [...r].forEach((ch, i) => {
     if (ch === '.' || ch === ' ') return;
     const c = col[ch];
     if (!c) throw new Error(`큰 얼굴 ${faceId}.${view} ${j + 1}줄 ${i + 1}칸: 모르는 글자 "${ch}"`);
-    const X = map.at[0] + i;
-    const Y = map.at[1] + j + oy;
+    const X = map.at[0] + i + cs[i];
+    const Y = map.at[1] + j + oy + rs[j];
     if (L.getHi === undefined) return;
-    if (X >= 0 && Y >= 0 && X < L.w && Y < L.h) L.d[Y][X] = c;
+    if (X >= 0 && Y >= 0 && X < L.w && Y < L.h && L.d[Y][X]) L.d[Y][X] = c; // 머리(피부) 위에만
   }));
+}
+
+/**
+ * 머리 배율이 얼굴 지도를 그린 때(fit.k0)와 다르면 얼굴 덩어리(눈썹·눈·코·입)는 크기 그대로 두고
+ * 덩어리 사이 빈칸만 줄이거나 늘려 자리를 옮긴다. 세로는 턱 기준(fit.ao → fit.an), 가로는 얼굴 가운데(fit.cx) 기준.
+ * 원래 떨어져 있던 덩어리는 적어도 한 칸 떨어진 채로 둔다
+ */
+function fitShift(map, fit) {
+  const H = map.rows.length;
+  const Wd = Math.max(...map.rows.map((r) => r.length));
+  const rs = new Array(H).fill(0);
+  const cs = new Array(Wd).fill(0);
+  if (!fit || fit.r === 1 && fit.ao === fit.an) return { rs, cs };
+  const ink = (ch) => ch && ch !== '.' && ch !== ' ';
+  const rowOn = map.rows.map((r) => [...r].some(ink));
+  const colOn = [...Array(Wd)].map((_, i) => map.rows.some((r) => ink(r[i])));
+  const blocks = (on) => {
+    const b = [];
+    on.forEach((v, i) => { if (v && (i === 0 || !on[i - 1])) b.push([i, i]); else if (v) b[b.length - 1][1] = i; });
+    return b;
+  };
+  // 세로: 위에서 아래로, 이상 자리(턱 기준 배율)에 두되 앞 덩어리와 겹치지 않게
+  let prevEnd = -1e9, prevOrigEnd = -1e9;
+  for (const [a, b] of blocks(rowOn)) {
+    const Y0 = map.at[1] + a + (fit.oy ?? 0);
+    const Yc = Y0 + (b - a) / 2;
+    const want = fit.an + (Yc - fit.ao) * fit.r - (b - a) / 2;
+    const gap = a - prevOrigEnd - 1;
+    let ns = Math.round(want);
+    if (gap >= 1) ns = Math.max(ns, prevEnd + 2);
+    else ns = Math.max(ns, prevEnd + 1);
+    const d = ns - Y0;
+    for (let j = a; j <= b; j++) rs[j] = d;
+    for (let j = b + 1; j < H; j++) rs[j] = d; // 빈 줄은 앞 덩어리를 따라감
+    prevEnd = ns + (b - a);
+    prevOrigEnd = b;
+  }
+  // 가로: 가운데를 품은 덩어리는 그대로, 바깥 덩어리는 좌우 대칭으로 안쪽(또는 바깥)으로
+  const cb = blocks(colOn);
+  const X = (i) => map.at[0] + i;
+  for (let k = 0; k < cb.length; k++) {
+    const [a, b] = cb[k];
+    const Xc = (X(a) + X(b)) / 2 - fit.cx;
+    if (X(a) <= fit.cx + 0.5 && X(b) >= fit.cx - 0.5) continue;
+    let d = Math.sign(Xc) * Math.round(Math.abs(Xc) * (fit.r - 1));
+    // 안쪽 이웃과 한 칸은 떼어 둠
+    if (d < 0 && Xc > 0 && k > 0) d = Math.max(d, -(a - cb[k - 1][1] - 2));
+    if (d > 0 && Xc < 0 && k + 1 < cb.length) d = Math.min(d, cb[k + 1][0] - b - 2);
+    for (let i = a; i <= b; i++) cs[i] = d;
+  }
+  return { rs, cs };
 }

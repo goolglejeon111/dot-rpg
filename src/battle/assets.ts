@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import sprites from '../data/battle/sprites.json';
 import { fieldFrame } from '../game/hdSprites';
+import { FACE_VARIANTS, faceBase } from '../game/faces';
 
 /**
  * 전투 그림 불러오기. 목록은 src/data/battle/sprites.json (tools/pixel-art/gen-battle.mjs가 만듦)
@@ -23,6 +24,8 @@ export const WALK_SPRITES = [
   // 4막
   'leon_blade', 'dwarf_smith', 'dwarf_gatekeeper', 'dwarf_kid', 'dwarf_kid2', 'dwarf_kid3', 'astra_mage', 'astra_captain', 'astra_binder',
   'crag_lizard', 'fire_spirit', 'magma_slug',
+  // 엑스트라 얼굴 갈래 (src/game/faces.ts)
+  ...FACE_VARIANTS,
 ];
 
 export const fxInfo = (key: string) => FX[key];
@@ -35,6 +38,11 @@ export function preloadBattle(scene: Phaser.Scene) {
   for (const [k, s] of Object.entries(FX)) load(`fx_${k}`, s);
   for (const [k, s] of Object.entries(UI)) load(`ui_${k}`, s);
   for (const [k, s] of Object.entries(CHARS)) load(`bt_${k}`, s);
+  // 얼굴 갈래의 전투 시트: 원래 그림과 같은 칸 크기, 파일은 assets/battle/chars/{갈래}.png
+  for (const v of FACE_VARIANTS) {
+    const b = CHARS[faceBase(v)];
+    if (b) load(`bt_${v}`, { ...b, file: b.file.replace(/[^/]+.png$/, `${v}.png`) });
+  }
   for (const id of WALK_SPRITES) {
     if (!scene.textures.exists(id)) scene.load.spritesheet(id, `assets/sprites/${id}.png`, fieldFrame(id));
   }

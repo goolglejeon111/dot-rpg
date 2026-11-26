@@ -5,6 +5,7 @@ import looksData from '../data/explore/looks.json';
 import stageData from '../data/explore/stage.json';
 import battlesData from '../data/battle/battles.json';
 import { makeBattleAnims, preloadBattle } from '../battle/assets';
+import { FacePicker } from '../game/faces';
 import { fieldFrame, footOrigin, isHd, rise } from '../game/hdSprites';
 import { EXP_REWARD, gainOnce, isCapped, levelOf, levelProgress, partyIds } from '../battle/progress';
 import { gameState } from '../game/GameState';
@@ -317,6 +318,8 @@ export class ExploreScene extends Phaser.Scene {
   private fogFx?: { img: Phaser.GameObjects.Image; off: number; k: number };
   /** 이름(key) 붙은 표식 나무와 지금 빛나는 중인 것 */
   private marks: { key: string; s: Phaser.GameObjects.Sprite }[] = [];
+  /** 엑스트라 얼굴 돌려쓰기 (맵마다 새로) */
+  private faces = new FacePicker();
   private marksLit = new Set<string>();
   private zoneFx?: Phaser.GameObjects.Ellipse;
   private grayFx?: Phaser.FX.ColorMatrix;
@@ -443,6 +446,7 @@ export class ExploreScene extends Phaser.Scene {
   setMap(id: string) {
     if (this.mapId === id) return;
     this.clearWorld();
+    this.faces.reset();
     const md = MAPS[id];
     if (!md) return console.error(`[map] 없는 맵: ${id}`);
     this.mapId = id;
@@ -571,9 +575,10 @@ export class ExploreScene extends Phaser.Scene {
     if (!this.textures.exists(key)) return;
     const sprs: Phaser.GameObjects.Sprite[] = [];
     for (const [dx, dy] of [[-10, -4], [10, 2], [0, 10]]) {
-      const s = this.lightUp(this.world(this.add.sprite(o.x + dx, o.y + dy, key, 5).setOrigin(0.5, 1).setDepth(o.y + dy)));
+      const fk = this.faces.pick(key, o.x + dx, o.y + dy);
+      const s = this.lightUp(this.world(this.add.sprite(o.x + dx, o.y + dy, fk, 5).setOrigin(0.5, 1).setDepth(o.y + dy)));
       const dir = dx < 0 ? 'right' : 'left';
-      if (this.anims.exists(`${key}-walk-${dir}`)) s.play({ key: `${key}-walk-${dir}`, startFrame: Math.floor(Math.random() * 4) });
+      if (this.anims.exists(`${fk}-walk-${dir}`)) s.play({ key: `${fk}-walk-${dir}`, startFrame: Math.floor(Math.random() * 4) });
       this.tweens.add({ targets: s, x: s.x + (dx < 0 ? 8 : -8), duration: 900 + Math.random() * 400, yoyo: true, repeat: -1, ease: 'Sine.inOut', onYoyo: () => s.toggleFlipX() });
       sprs.push(s);
     }
@@ -1050,7 +1055,7 @@ export class ExploreScene extends Phaser.Scene {
     if (!a) {
       const start = at ?? this.point(spec.walk);
       if (!start) return console.warn(`[map] 처음 나오는 인물은 자리(at)가 필요합니다: ${id}`);
-      const key = spec.sprite ?? this.costumeOf(id);
+      const key = this.faces.pick(spec.sprite ?? this.costumeOf(id), start.x, start.y);
       // 발밑 그림자: 새 도트는 팔레트의 푸른 보라 그림자 (docs/도트기준.md)
       const sc = isHd(key) ? SHADOW_HD : SHADOW_OLD;
       const shadow = this.world(this.add.ellipse(start.x, start.y, sc.w, sc.h, sc.color, sc.alpha).setDepth(-13));

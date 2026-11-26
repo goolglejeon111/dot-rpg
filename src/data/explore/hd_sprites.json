@@ -4,37 +4,37 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 5
   },
   "serena": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 3
   },
   "leon_hood": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "leon_blade": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 5
   },
   "serena_hood": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 4
   },
   "elysia": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 4
   },
   "karg": {
     "w": 32,
@@ -46,25 +46,25 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 5
   },
   "galia": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 5
   },
   "bram": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 5
   },
   "oswald": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 5
   },
   "aldric": {
     "w": 32,
@@ -76,13 +76,13 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "marcion": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "ignatius": {
     "w": 32,
@@ -94,55 +94,55 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 5
   },
   "cassius": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "ursha": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 2
   },
   "blacksmith": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 4
+    "rise": 3
   },
   "dwarf_smith": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": -13
+    "rise": -10
   },
   "dwarf_gatekeeper": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": -10
+    "rise": -7
   },
   "dwarf_kid": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": -3
+    "rise": -4
   },
   "dwarf_kid2": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": -3
+    "rise": -4
   },
   "dwarf_kid3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": -3
+    "rise": -4
   },
   "mob_royal_knight": {
     "w": 32,
@@ -166,13 +166,13 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "raid_captain": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "imperial_spear": {
     "w": 32,
@@ -184,7 +184,7 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "pursuit_sword": {
     "w": 32,
@@ -202,7 +202,7 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 5
   },
   "mob_wolf": {
     "w": 32,
@@ -226,31 +226,31 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "bandit_archer": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "astra_mage": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "astra_captain": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "astra_binder": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "mob_royal_knight_v2": {
     "w": 32,
@@ -292,13 +292,13 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "mob_gnosis_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "imperial_spear_v2": {
     "w": 32,
@@ -316,13 +316,13 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "imperial_archer_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "pursuit_sword_v2": {
     "w": 32,
@@ -352,19 +352,19 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 5
   },
   "mob_citizen_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 5
   },
   "mob_citizen_v4": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 5
   },
   "mob_wolf_v2": {
     "w": 32,
@@ -382,37 +382,37 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "bandit_blade_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "bandit_archer_v2": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "bandit_archer_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "astra_mage_v2": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "astra_mage_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 7
+    "rise": 6
   },
   "_tiles": {
     "anim": {

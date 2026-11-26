@@ -153,9 +153,10 @@ const out = (L, o = {}) => L.outline(o);
 // 키운 좌표에서 모양을 바로 칠하므로(가장자리 매끄러움) 외곽선도 한 칸 굵기 그대로.
 // 몸은 BODY_DOWN칸 내려가고 다리가 그만큼 짧아짐(발끝 91줄은 그대로)
 // ---------------------------------------------------------------------
-export const HEAD_K = 1.3;
-export const BODY_DOWN = 5;
-const KX_LOW = 1.12; // 턱 아래(긴 머리)의 가로 배율
+export const HEAD_K = 1.0;
+export const BODY_DOWN = 0;
+const FACE_K0 = 1.3; // 얼굴 지도(faces/{id}.mjs big)를 그린 때의 머리 배율
+const KX_LOW = Math.min(1.12, HEAD_K + 0.04); // 턱 아래(긴 머리)의 가로 배율
 function headWarp(oy, kk = HEAD_K) {
   const A = 31.5 + oy; // 턱 아래 경계(예전 좌표)
   const A2 = A + BODY_DOWN;
@@ -327,7 +328,10 @@ function drawFaceBig(c, L) {
     eyes: s.eyes ?? 'small', brow: browOf[s.brow] ?? 'flat', girl: !!s.girl,
     mouth: p.smile ? 'smile' : s.girl ? 'small' : 'line', blush: !!p.blush, freckles: !!p.freckles, scar: !!p.scar,
   };
-  stampBig(L, p, p.face ?? s.faceId ?? id.replace(/_vd$/, ''), v, oy, fb);
+  // 얼굴 지도는 머리 배율 FACE_K0(드워프는 설정 headK), 몸 내림 5칸일 때 그렸음 → 지금 배율로 맞춰 찍음
+  const k0 = s.headK ?? FACE_K0;
+  const fit = { r: c.warp.k / k0, ao: 31.5 + oy + 5, an: 31.5 + oy + BODY_DOWN, cx: CX, oy };
+  stampBig(L, p, p.face ?? s.faceId ?? id.replace(/_vd$/, ''), v, oy, fb, fit);
 }
 
 /** 목 (몸 쪽 좌표) */

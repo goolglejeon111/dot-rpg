@@ -223,7 +223,39 @@ export class StoryFx {
     const g = this.s.add.graphics();
     g.fillStyle(BURN_INK, 0.92);
     const cx = W / 2;
-    if (name.includes('back')) {
+    if (name.includes('crown_turn')) {
+      // 돌아본 금관의 사람 (4막): 얼굴은 검은 실루엣, 붉은 눈과 웃는 입만 또렷
+      const foot = 640;
+      g.fillPoints([new Phaser.Geom.Point(cx - 200, foot), new Phaser.Geom.Point(cx - 170, 470), new Phaser.Geom.Point(cx - 80, 430), new Phaser.Geom.Point(cx + 80, 430), new Phaser.Geom.Point(cx + 170, 470), new Phaser.Geom.Point(cx + 200, foot)], true);
+      g.fillRect(cx - 40, 380, 80, 60);
+      g.fillEllipse(cx, 310, 190, 220);
+      const y = 190;
+      g.fillPoints(
+        [{ x: cx - 90, y: y + 40 }, { x: cx - 100, y: y - 20 }, { x: cx - 50, y: y + 12 }, { x: cx - 28, y: y - 44 }, { x: cx, y: y + 4 }, { x: cx + 28, y: y - 44 }, { x: cx + 50, y: y + 12 }, { x: cx + 100, y: y - 20 }, { x: cx + 90, y: y + 40 }].map((p) => new Phaser.Geom.Point(p.x, p.y)),
+        true,
+      );
+      g.fillStyle(0xd0202a, 1);
+      g.fillEllipse(cx - 42, 300, 30, 12);
+      g.fillEllipse(cx + 42, 300, 30, 12);
+      g.fillStyle(BURN_BG, 1);
+      g.fillEllipse(cx, 362, 84, 22);
+      g.fillStyle(BURN_INK, 0.92);
+      g.fillEllipse(cx, 354, 92, 20);
+    } else if (name.includes('dorin')) {
+      // 울면서 돌에 망치질하는 작은 사람 (4막): 큰 돌판 앞의 작은 몸, 치켜든 망치, 떨어지는 눈물
+      g.fillRect(cx + 10, 180, 220, 420);
+      const foot = 600;
+      g.fillEllipse(cx - 110, 470, 120, 150);
+      g.fillCircle(cx - 100, 370, 46);
+      g.fillRect(cx - 160, 520, 40, foot - 520);
+      g.fillRect(cx - 90, 520, 40, foot - 520);
+      g.lineStyle(18, BURN_INK, 0.92);
+      g.lineBetween(cx - 70, 440, cx - 10, 330);
+      g.fillRect(cx - 30, 300, 50, 34);
+      g.fillStyle(BURN_BG, 1);
+      for (const [x, y] of [[cx - 82, 392], [cx - 76, 420], [cx - 70, 450]]) g.fillEllipse(x, y, 6, 10);
+      for (let i = 0; i < 5; i++) g.fillRect(cx + 50 + i * 34, 240 + (i % 2) * 30, 18, 160 - (i % 3) * 30);
+    } else if (name.includes('back')) {
       // 금관을 쓴 사람의 뒷모습 (얼굴은 보이지 않음): 어깨·머리 위에 관
       const foot = 620;
       g.fillPoints([new Phaser.Geom.Point(cx - 170, foot), new Phaser.Geom.Point(cx - 150, 430), new Phaser.Geom.Point(cx - 70, 390), new Phaser.Geom.Point(cx + 70, 390), new Phaser.Geom.Point(cx + 150, 430), new Phaser.Geom.Point(cx + 170, foot)], true);

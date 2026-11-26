@@ -19,6 +19,6 @@
     { "id": "blacksmith", "name": "대장장이", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 504, "y": 245, "scale": 2.2 } },
     { "id": "raid_captain", "name": "습격대장", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 503, "y": 150, "scale": 2.2 } },
     { "id": "first_emperor", "name": "시황제", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 518, "y": 275, "scale": 2.2 } },
-    { "id": "dwarf_smith", "name": "장인의 후손", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 543, "y": 228, "scale": 2.2 } }
+    { "id": "dwarf_smith", "name": "브리다", "expressions": ["normal", "smile", "angry", "sad", "surprised"], "cutin": { "x": 543, "y": 228, "scale": 2.2 } }
   ]
 }

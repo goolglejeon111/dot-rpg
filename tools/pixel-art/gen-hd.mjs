@@ -345,7 +345,7 @@ for (const dir of ['public/assets/sprites', 'public/assets/battle/chars']) {
   for (const where of [dir, dir.replace('public/assets/', 'public/assets/_old/')])
     for (const f of existsSync(join(ROOT, where)) ? readdirSync(join(ROOT, where)) : []) {
       const id = f.replace(/.png$/, '');
-      if (!f.endsWith('.png') || SKIP.has(id) || PEOPLE[id] || seen.has(id)) continue;
+      if (!f.endsWith('.png') || SKIP.has(id) || PEOPLE[id] || seen.has(id) || id.endsWith('_2.5')) continue; // _2.5: 예전 2.5등신 인물 보관본
       seen.add(id);
       remapFile(`${dir}/${f}`);
     }

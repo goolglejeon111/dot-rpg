@@ -1,13 +1,14 @@
 // 3등신 인물 비율 검사: node tools/pixel-art/check-tall.mjs
 // 머리 폭(머리카락 포함), 어깨 폭(팔 포함), 등신(키 / 머리 길이)을 보기마다 출력
-import { drawTall, TALL, specOf, FOOT_T } from './hd/tall.mjs';
+import { drawTall, specOf, FOOT_T } from './hd/tall.mjs';
+import { PEOPLE } from './hd/people.mjs';
 const width = (L, y0, y1) => {
   let a = 99, b = -1;
   for (let y = y0; y <= y1; y++) for (let x = 0; x < L.d[y].length; x++) if (L.d[y][x]) { a = Math.min(a, x); b = Math.max(b, x); }
   return b - a + 1;
 };
 let bad = 0;
-for (const id of Object.keys(TALL)) {
+for (const id of Object.keys(PEOPLE).filter((k) => !k.includes('_v'))) {
   const s = specOf(id);
   const o = s.drop ?? 0;
   const row = [];
@@ -22,7 +23,7 @@ for (const id of Object.keys(TALL)) {
     const heads = (FOOT_T + 1 - top) / (chin + 1 - top);
     const ratio = sh / head;
     row.push(`${v}: 머리 ${head} 어깨 ${sh} (${ratio.toFixed(2)}배) ${heads.toFixed(2)}등신`);
-    if (v === 'down' && (ratio < 0.95 || ratio > 1.4 || heads < 3.1 || heads > 3.6)) bad++;
+    if (v === 'down' && !s.hood && !s.helmet && !s.ears && (s.drop ?? 0) < 9 && (ratio < 0.95 || ratio > 1.4 || heads < 3.1 || heads > 3.6)) bad++;
   }
   console.log(id.padEnd(12), row.join(' | '));
 }

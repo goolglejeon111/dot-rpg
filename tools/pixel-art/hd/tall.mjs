@@ -12,6 +12,7 @@
 import { RAMPS } from '../palette.mjs';
 import { Layer } from './layer.mjs';
 import { PEOPLE } from './people.mjs';
+import { castSpec, headwear, beard, outfitGeneric } from './tall_cast.mjs';
 
 const R = RAMPS;
 const W = 64;
@@ -111,15 +112,16 @@ export const TALL = {
   leon: { hair: 'messy', build: [12.5, 8.5, 9, 2.5], eyes: 'sharp', brow: 'sharp', darkHair: true },
   leon_blade: { as: 'leon' },
   leon_hood: { as: 'leon', hood: true },
-  serena: { hair: 'straight', build: [10.5, 6.5, 7.5, 2.1], girl: true, eyes: 'round', brow: 'soft', drop: 3 },
+  serena: { hair: 'straight', build: [10.5, 6.5, 7.5, 2.1], girl: true, skirt: true, eyes: 'round', brow: 'soft', drop: 3 },
   serena_hood: { as: 'serena', hood: true },
-  elysia: { hair: 'wavy', build: [10.5, 7, 8, 2.3], girl: true, eyes: 'calm', brow: 'thin', drop: 2 },
-  karg: { hair: 'wild', build: [13.5, 9, 9.5, 3], eyes: 'sharp', brow: 'heavy' },
-  adrian: { hair: 'slick', build: [13, 9.5, 9.5, 2.6], eyes: 'sharp', brow: 'plain' },
-  galia: { hair: 'bob', build: [11.5, 7.5, 8.5, 2.3], girl: true, eyes: 'sharp', brow: 'sharp', drop: 1 },
+  elysia: { hair: 'wavy', build: [10.5, 7, 8, 2.3], girl: true, skirt: true, eyes: 'calm', brow: 'thin', drop: 2 },
+  karg: { hair: 'wild', build: [13.5, 9, 9.5, 3], eyes: 'sharp', brow: 'heavy', ears: true, boot: 77, thick: true },
+  adrian: { hair: 'slick', build: [13, 9.5, 9.5, 2.6], eyes: 'sharp', brow: 'plain', boot: 81, knee: true },
+  galia: { hair: 'bob', build: [11.5, 7.5, 8.5, 2.3], girl: true, skirt: true, eyes: 'sharp', brow: 'sharp', drop: 1 },
 };
 export function specOf(id) {
   const s = TALL[id];
+  if (!s) return castSpec(id, PEOPLE[id]);
   return s?.as ? { ...TALL[s.as], ...s, look: s.as } : { ...s, look: id };
 }
 
@@ -185,6 +187,8 @@ const EYES = {
   sharp: { down: ['LLLLL', '.wGWG', '..FEF'], right: ['LLL', 'GW.', 'FE.'] },
   round: { down: ['.LLLL', 'LGGWw', '.FGFw', '.EFE.'], right: ['LLL', 'GWw', 'FGw', 'EE.'] },
   calm: { down: ['LLLL.', 'LLLLL', '.GWFw', '.EFE.'], right: ['LLLL', 'GWF.', 'EF..'] },
+  small: { down: ['LLLL', '.GWG', '.FEF'], right: ['LL.', 'GW.', 'FE.'] },
+  narrow: { down: ['LLLLL', '.LGWG'], right: ['LLL', 'LGW'] },
 };
 function drawFace(c, L) {
   const { p, s, oy, v } = c;
@@ -198,7 +202,8 @@ function drawFace(c, L) {
   if (v === 'down') {
     // 둥근 눈(세레나·엘리시아)은 두 눈을 한 칸씩 안쪽으로 (눈 사이 4칸)
     const ei = s.eyes === 'round' || s.eyes === 'calm' ? 1 : 0;
-    stamp(L, 24 + ei, ey, T.down, map);
+    const ew = T.down[0].length;
+    stamp(L, 29 - ew + ei, ey, T.down, map);
     stamp(L, 35 - ei, ey, T.down, map, true);
     const bw = s.brow === 'heavy' ? 2 : 1;
     const by = ey - (s.brow === 'soft' ? 3 : 2);
@@ -212,7 +217,8 @@ function drawFace(c, L) {
     for (const [x, d] of BROW) for (let k = 0; k < bw; k++) { L.set(x + ei, by + d + k, brow); L.set(63 - x - ei, by + d + k, brow); }
     L.set(32, 24 + oy, sk[2]);
     L.set(31, 25 + oy, sk[2]);
-    if (s.girl) { L.set(31, 27 + oy, sk[3]); L.set(32, 27 + oy, sk[3]); } else L.rect(30, 27 + oy, 33, 27 + oy, sk[3]);
+    if (s.girl) { L.set(31, 27 + oy, sk[3]); L.set(32, 27 + oy, sk[3]); } else if (p.smile) { L.set(29, 26 + oy, sk[3]); L.rect(30, 27 + oy, 33, 27 + oy, sk[3]); L.set(34, 26 + oy, sk[3]); } else L.rect(30, 27 + oy, 33, 27 + oy, sk[3]);
+    if (p.freckles) for (const x of [25, 27, 36, 38]) L.set(x, 23 + oy, R.fire[2]);
     if (p.blush) for (const x of [24, 25, 38, 39]) L.set(x + (x < 31 ? ei : -ei), 24 + oy, R.red[0]);
     if (p.scar) for (const [x, y] of [[38, 23], [37, 24], [36, 25]]) L.set(x, y + oy, sk[3]);
     return;
@@ -239,7 +245,13 @@ const STYLE = {
   bob: { hl: 12, side: 29, th: 3, nape: 29 },
   straight: { hl: 12, side: 50, th: 3, nape: 31, long: 88 },
   wavy: { hl: 12, side: 46, th: 3, nape: 31, long: 66 },
+  short: { hl: 12, side: 20, th: 1.5, nape: 26 },
+  curly: { hl: 11, side: 24, th: 3, nape: 28 },
+  long: { hl: 11, side: 40, th: 2.5, nape: 31, long: 56 },
+  bald: { none: true, hl: 12, side: 0, th: 0, nape: 0 },
 };
+/** 인물 설정의 길이(조연: long·side)를 덮어쓴 머리 모양 */
+const styleOf = (s) => ({ ...STYLE[s.hair], ...(s.long ? { long: s.long } : {}), ...(s.side ? { side: s.side } : {}) });
 /** 둥근 면 명암 (nx, ny: -1~1, 왼쪽 위가 밝음) */
 const roundShade = (h, nx, ny) => {
   const l = -(nx * 0.55 + ny * 0.8);
@@ -252,10 +264,20 @@ function drawHairBack(c) {
   const L = lay();
   const { s, p, oy, v, sway } = c;
   const h = p.hair;
-  const st = STYLE[s.hair];
-  if (s.hood || !st.long) return L;
+  const st = styleOf(s);
+  if (s.braid && !s.hood) {
+    // 한 갈래로 땋아 등 뒤로 (뒤 보기·옆 보기에서 보임)
+    const bx = v === 'right' ? 21 : CX;
+    for (let y = 26 + oy; y <= s.braid + oy; y++) {
+      const k = Math.floor((y - oy) / 3) % 2;
+      const w = y > s.braid + oy - 3 ? 1 : 2;
+      for (let dx = -w; dx <= w; dx++) L.set(Math.round(bx + sway * 0.5) + dx + k - 1, y, dx < 0 ? h[1] : h[2]);
+    }
+    return out(L);
+  }
+  if (s.hood || st.none || !st.long) return L;
   const wavy = s.hair === 'wavy';
-  const bot = wavy ? st.long + oy : st.long;
+  const bot = wavy || s.generic ? st.long + oy : st.long;
   const wave = (y) => (wavy ? Math.sin((y - oy) / 5) * 1 : 0);
   if (v === 'right') {
     // 뒤통수(20칸)에서 등 뒤로
@@ -286,9 +308,10 @@ function drawHairFront(c) {
   const L = lay();
   const { s, p, oy, v } = c;
   const h = p.hair;
-  if (s.hood) return L;
+  if (s.hood || s.helmet) return L;
   const name = s.hair;
-  const st = STYLE[name];
+  const st = styleOf(s);
+  if (st.none) return L;
   const Y = (n) => n + oy;
   const sh2 = lockShade(h);
   if (v === 'up') {
@@ -358,6 +381,14 @@ function drawHairFront(c) {
     } else if (name === 'wavy') {
       for (const [x0, x1, tx, ty] of [[21, 26, 21, 19], [25, 32, 24, 17], [31, 37, 29, 16]]) lock(L, x0, x1, Y(hl - 1), tx, Y(ty), sh2);
       lock(L, 37, 42, Y(hl - 1), 42, Y(19), lockShade(h, true));
+    } else if (name === 'short') {
+      for (const [x0, x1, tx, ty] of [[21, 26, 22, 16], [25, 31, 27, 15], [30, 35, 32, 14], [34, 40, 39, 15], [39, 42, 42, 16]]) lock(L, x0, x1, Y(hl - 1), tx, Y(ty), sh2);
+    } else if (name === 'curly') {
+      for (const x of [22, 26.5, 31.5, 36.5, 41]) ell(L, x, Y(hl + 0.5), 2.6, 2.4, (xx, yy, nx, ny) => roundShade(h, nx, ny));
+      for (const x of [21, 42]) ell(L, x, Y(hl + 5), 2.2, 2.6, (xx, yy, nx, ny) => roundShade(h, nx, ny));
+    } else if (name === 'long') {
+      for (const [x0, x1, tx, ty] of [[21, 27, 21, 18], [26, 32, 25, 16]]) lock(L, x0, x1, Y(hl - 1), tx, Y(ty), sh2);
+      for (const [x0, x1, tx, ty] of [[32, 37, 37, 16], [36, 42, 42, 18]]) lock(L, x0, x1, Y(hl - 1), tx, Y(ty), lockShade(h, true));
     }
     for (const [x, y] of [[25, 7], [26, 6], [27, 6], [28, 5], [29, 5]]) if (L.getHi(x, Y(y))) L.set(x, Y(y), h[0]);
     return out(L);
@@ -388,6 +419,11 @@ function drawHairFront(c) {
   } else if (name === 'straight') {
     spans(L, Y(10), Y(17), () => [33, 41.5], (x, y) => (y === Y(17) && x % 3 === 0 ? null : x % 3 === 0 ? h[2] : y === Y(12) ? h[0] : h[1]));
     spans(L, Y(14), Y(46), () => [29, 33], (x, y, t) => (t > 0.7 ? h[3] : x % 3 === 0 ? h[2] : h[1]));
+  } else if (name === 'short' || name === 'curly') {
+    for (const [x0, x1, tx, ty] of [[34, 38, 38, 16], [37, 40, 41, 14]]) lock(L, x0, x1, Y(10), tx, Y(ty), sh2);
+  } else if (name === 'long') {
+    for (const [x0, x1, tx, ty] of [[33, 39, 40, 17], [30, 34, 33, 19]]) lock(L, x0, x1, Y(10), tx, Y(ty), sh2);
+    spans(L, Y(14), Y(Math.min(st.side, 40)), () => [29, 33], (x, y, t) => (t > 0.7 ? h[3] : h[1]));
   } else if (name === 'wavy') {
     for (const [x0, x1, tx, ty] of [[33, 39, 40, 18], [30, 34, 34, 20]]) lock(L, x0, x1, Y(11), tx, Y(ty), sh2);
     spans(L, Y(14), Y(36), (y) => [29 + Math.sin((y - oy) / 4) * 0.8, 33 + Math.sin((y - oy) / 4) * 0.8], (x, y, t) => (t > 0.7 ? h[3] : h[1]));
@@ -399,7 +435,7 @@ function drawHairFront(c) {
 /** 늑대 귀 (카르크): 머리 덮개 위 */
 function drawEars(c) {
   const L = lay();
-  if (c.s.look !== 'karg') return L;
+  if (!c.s.ears) return L;
   const h = c.p.hair;
   const { oy, v } = c;
   const ear = (bx0, bx1, tx, ty, inner) => {
@@ -464,13 +500,13 @@ function drawLegs(c) {
   const F = FOOT_T - (c.lift ?? 0) * 2;
   const hipY = 55 + oy;
   const st = c.step;
-  const boot = s.look === 'karg' ? 77 : s.look === 'adrian' ? 81 : 85;
+  const boot = s.boot ?? 85;
   const legCol = (ramp) => (sx, t, x, y) => {
     if (y >= boot + (F - FOOT_T)) return sx < -0.3 ? so[0] : sx > 0.5 ? so[2] : so[1];
-    if (s.look === 'adrian' && Math.abs(y - (73 + (F - FOOT_T) / 2)) <= 1) return sx < 0 ? ramp[0] : ramp[1];
+    if (s.knee && Math.abs(y - (73 + (F - FOOT_T) / 2)) <= 1) return sx < 0 ? ramp[0] : ramp[1];
     return sh(ramp, sx);
   };
-  const thick = s.look === 'karg' ? [4.8, 4, 3] : s.girl ? [3.4, 2.6, 2.2] : [3.8, 3, 2.4];
+  const thick = s.thick ? [4.8, 4, 3] : s.girl ? [3.4, 2.6, 2.2] : [3.8, 3, 2.4];
   const leg = (hx, fx, fy, ramp, far) => {
     const P = lay();
     const ky = (hipY + fy) / 2 + 1;
@@ -483,7 +519,7 @@ function drawLegs(c) {
     return out(P);
   };
   const dim = (ramp) => [ramp[1], ramp[2], ramp[3] ?? ramp[2]];
-  if (isSkirt(s.look)) {
+  if (s.skirt) {
     const foot = (fx, up, far) => {
       const P = lay();
       spans(P, F - 3 - up, F - up, () => (v === 'right' ? [fx - 3, fx + 3] : [fx - 3, fx + 3]), (x, y, t) => (far ? so[2] : y === F - 3 - up && t < 0.5 ? so[0] : so[1]));
@@ -506,7 +542,7 @@ function drawLegs(c) {
     return L;
   }
   const [l, r] = { a: [0, 3], b: [3, 0], pa: [0, 5], pb: [5, 0] }[st] ?? [0, 0];
-  const gap = s.look === 'karg' ? 4.8 : 4;
+  const gap = s.thick ? 4.8 : 4;
   const legs = [[CX - gap, l], [CX + gap, r]].sort((a, b) => b[1] - a[1]);
   for (const [x, up] of legs) L.over(leg(x, x, F - up, pa));
   return L;
@@ -884,14 +920,20 @@ function outfit(c) {
 }
 
 /** 두건 (1막 망토): 머리를 덮고 어깨까지. 머리 덮개보다 1칸 크게 */
-function hoodFront(c, h) {
+function hoodFront(c, h, shade = false) {
   const L = lay();
   const { oy, v } = c;
   if (v === 'right') {
     spans(L, 3 + oy, 32 + oy, (y) => {
       const r = y - oy;
-      const f = r < 6 ? [SIDE_CX - capHW(r), SIDE_CX + capHW(r)] : sideAt(r) ?? [20, 33];
-      return [Math.min(f[0], 20) - 3, r < 12 ? f[1] + 1 : 34];
+      // 위는 머리 덮개를 따라 둥글게, 아래는 뒷목까지
+      const ry = (r - 16.8) / 13.2;
+      const w = ry > -1 && ry < 1 ? 13.5 * Math.sqrt(1 - ry * ry) : 0;
+      if (r < 16.8 && w < 1) return null;
+      const f = sideAt(r) ?? [20, 33];
+      const back = r < 16.8 ? SIDE_CX - w : 17;
+      const fr = r < 12 ? Math.min(SIDE_CX + w, f[1] + 1) : 34;
+      return [back, fr];
     }, (x, y, t) => (t < 0.3 ? h[0] : t > 0.75 ? h[2] : h[1]));
   } else {
     spans(L, 3 + oy, 32 + oy, (y) => {
@@ -900,7 +942,7 @@ function hoodFront(c, h) {
       return [CX - hw + 0.5, CX + hw - 0.5];
     }, (x, y, t) => {
       const r = y - oy;
-      if (v === 'down' && r > 9 && Math.abs(x + 0.5 - CX) < Math.min(10.5, faceHW(false, r) + 0.5)) return null;
+      if (v === 'down' && r > 9 && Math.abs(x + 0.5 - CX) < Math.min(10.5, faceHW(false, r) + 0.5)) return shade && r <= 17 ? h[2] : null;
       return t < 0.2 ? h[0] : t > 0.8 ? h[2] : h[1];
     });
   }
@@ -920,9 +962,9 @@ export function drawTall(id, view, o = {}) {
   const oy = (o.dy ?? 0) * 2 + (s.drop ?? 0);
   const pp = s.darkHair ? { ...p, hair: [p.hair[1], p.hair[2], p.hair[3], p.hair[4], p.hair[4]] } : p;
   const c = { id, p: pp, s, v, oy, step: o.step, swing: o.swing ?? 0, sway: o.sway ?? 0, flare: o.flare ?? 0, lift: o.lift ?? 0 };
-  let { back, body, front } = outfit(c);
+  let { back, body, front } = TALL[s.look] ? outfit(c) : outfitGeneric(c, HELP);
   if (o.battle) {
-    const keep = (l) => !l?.isHeld || l.isHeld === 'shield';
+    const keep = (l) => !l?.isHeld || ['shield', 'kiteShield', 'quiver'].includes(l.isHeld);
     back = back.filter(keep);
     body = body.filter(keep);
     front = front.filter(keep);
@@ -940,10 +982,12 @@ export function drawTall(id, view, o = {}) {
   const parts = [];
   const head = drawHead(c);
   if (v === 'up') {
-    parts.push(drawLegs(c), ...body, ...front, head, drawHairFront(c), drawEars(c), ...back);
+    const hood = front.filter((l) => l?.isHood);
+    parts.push(drawLegs(c), ...body, ...front.filter((l) => !l?.isHood), head, drawHairFront(c), drawEars(c), headwear(c, HELP), ...back, ...hood);
   } else {
     drawFace(c, head);
-    parts.push(...back, drawLegs(c), ...body, head, drawHairFront(c), drawEars(c), ...front);
+    beard(c, head, HELP);
+    parts.push(...back, drawLegs(c), ...body, head, drawHairFront(c), drawEars(c), headwear(c, HELP), ...front);
   }
   const res = lay();
   for (const l of parts) if (l) res.over(l);
@@ -952,7 +996,7 @@ export function drawTall(id, view, o = {}) {
   L2.d = fin.d;
   return L2;
 }
-export const isTall = (id) => !!TALL[id];
+export const isTall = (id) => !!PEOPLE[id];
 
 // ---------------------------------------------------------------------
 // 전투 시트 (48x48 칸 = 그림 96x96, 인물은 고해상도 (16, 4)에)
@@ -1073,3 +1117,6 @@ export function tallBattleSheet(id) {
   return frames;
 }
 void hash01;
+
+// 조연 그리기(hd/tall_cast.mjs)에 넘기는 도구
+const HELP = { spans, limb, lock, ell, stamp, band, out, lay, CX, FOOT_T, faceHW, capHW, sideAt, SIDE_CX, roundShade, torso, skirtL, collar, pauldron, arm, capeBack, hoodFront, drawTail };

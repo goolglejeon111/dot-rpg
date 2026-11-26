@@ -4,37 +4,37 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "serena": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 2
+    "rise": 4
   },
   "leon_hood": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "leon_blade": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "serena_hood": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 3
+    "rise": 4
   },
   "elysia": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 3
+    "rise": 5
   },
   "karg": {
     "w": 32,
@@ -46,43 +46,43 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 7
   },
   "galia": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 4
+    "rise": 6
   },
   "bram": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "oswald": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 7
   },
   "aldric": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 7
   },
   "marcion_hooded": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "marcion": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "ignatius": {
     "w": 32,
@@ -94,31 +94,31 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 7
   },
   "cassius": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "ursha": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 4
   },
   "blacksmith": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 4
+    "rise": 5
   },
   "dwarf_smith": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 1
+    "rise": 2
   },
   "dwarf_gatekeeper": {
     "w": 32,
@@ -130,19 +130,19 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": -3
+    "rise": -2
   },
   "dwarf_kid2": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": -3
+    "rise": -2
   },
   "dwarf_kid3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": -3
+    "rise": -2
   },
   "mob_royal_knight": {
     "w": 32,
@@ -166,13 +166,13 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "raid_captain": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "imperial_spear": {
     "w": 32,
@@ -184,7 +184,7 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "pursuit_sword": {
     "w": 32,
@@ -202,7 +202,7 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "mob_wolf": {
     "w": 32,
@@ -226,19 +226,19 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "bandit_archer": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "astra_mage": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "astra_captain": {
     "w": 32,
@@ -247,6 +247,168 @@
     "rise": 6
   },
   "astra_binder": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_royal_knight_v2": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_royal_knight_v3": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_royal_knight_v4": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_paladin_v2": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_paladin_v3": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_paladin_v4": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_gnosis_v2": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_gnosis_v3": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "imperial_spear_v2": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "imperial_spear_v3": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "imperial_archer_v2": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "imperial_archer_v3": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "pursuit_sword_v2": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "pursuit_sword_v3": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "pursuit_shield_v2": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "pursuit_shield_v3": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_citizen_v2": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_citizen_v3": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "mob_citizen_v4": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_wolf_v2": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_wolf_v3": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "bandit_blade_v2": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "bandit_blade_v3": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "bandit_archer_v2": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "bandit_archer_v3": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "astra_mage_v2": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "astra_mage_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
@@ -521,5 +683,319 @@
     "public/assets/battle/chars/sewer_eel.png",
     "public/assets/battle/chars/sewer_leech.png",
     "public/assets/battle/chars/sewer_rat.png"
-  ]
+  ],
+  "_faces": {
+    "mob_royal_knight": [
+      "mob_royal_knight",
+      "mob_royal_knight_v2",
+      "mob_royal_knight_v3",
+      "mob_royal_knight_v4"
+    ],
+    "mob_paladin": [
+      "mob_paladin",
+      "mob_paladin_v2",
+      "mob_paladin_v3",
+      "mob_paladin_v4"
+    ],
+    "mob_gnosis": [
+      "mob_gnosis",
+      "mob_gnosis_v2",
+      "mob_gnosis_v3"
+    ],
+    "imperial_spear": [
+      "imperial_spear",
+      "imperial_spear_v2",
+      "imperial_spear_v3"
+    ],
+    "imperial_archer": [
+      "imperial_archer",
+      "imperial_archer_v2",
+      "imperial_archer_v3"
+    ],
+    "pursuit_sword": [
+      "pursuit_sword",
+      "pursuit_sword_v2",
+      "pursuit_sword_v3"
+    ],
+    "pursuit_shield": [
+      "pursuit_shield",
+      "pursuit_shield_v2",
+      "pursuit_shield_v3"
+    ],
+    "mob_citizen": [
+      "mob_citizen",
+      "mob_citizen_v2",
+      "mob_citizen_v3",
+      "mob_citizen_v4"
+    ],
+    "mob_wolf": [
+      "mob_wolf",
+      "mob_wolf_v2",
+      "mob_wolf_v3"
+    ],
+    "bandit_blade": [
+      "bandit_blade",
+      "bandit_blade_v2",
+      "bandit_blade_v3"
+    ],
+    "bandit_archer": [
+      "bandit_archer",
+      "bandit_archer_v2",
+      "bandit_archer_v3"
+    ],
+    "astra_mage": [
+      "astra_mage",
+      "astra_mage_v2",
+      "astra_mage_v3"
+    ]
+  },
+  "_hd": {
+    "assets/sprites/leon.png": 2,
+    "assets/battle/chars/leon.png": 2,
+    "assets/sprites/serena.png": 2,
+    "assets/battle/chars/serena.png": 2,
+    "assets/sprites/leon_hood.png": 2,
+    "assets/battle/chars/leon_hood.png": 2,
+    "assets/sprites/leon_blade.png": 2,
+    "assets/battle/chars/leon_blade.png": 2,
+    "assets/sprites/serena_hood.png": 2,
+    "assets/sprites/elysia.png": 2,
+    "assets/battle/chars/elysia.png": 2,
+    "assets/sprites/karg.png": 2,
+    "assets/battle/chars/karg.png": 2,
+    "assets/sprites/adrian.png": 2,
+    "assets/battle/chars/adrian.png": 2,
+    "assets/sprites/galia.png": 2,
+    "assets/battle/chars/galia.png": 2,
+    "assets/sprites/bram.png": 2,
+    "assets/battle/chars/bram.png": 2,
+    "assets/sprites/oswald.png": 2,
+    "assets/sprites/aldric.png": 2,
+    "assets/sprites/marcion_hooded.png": 2,
+    "assets/battle/chars/marcion_hooded.png": 2,
+    "assets/sprites/marcion.png": 2,
+    "assets/sprites/ignatius.png": 2,
+    "assets/sprites/herman.png": 2,
+    "assets/sprites/cassius.png": 2,
+    "assets/sprites/ursha.png": 2,
+    "assets/sprites/blacksmith.png": 2,
+    "assets/sprites/dwarf_smith.png": 2,
+    "assets/sprites/dwarf_gatekeeper.png": 2,
+    "assets/sprites/dwarf_kid.png": 2,
+    "assets/sprites/dwarf_kid2.png": 2,
+    "assets/sprites/dwarf_kid3.png": 2,
+    "assets/sprites/mob_royal_knight.png": 2,
+    "assets/battle/chars/mob_royal_knight.png": 2,
+    "assets/sprites/mob_paladin.png": 2,
+    "assets/battle/chars/mob_paladin.png": 2,
+    "assets/sprites/paladin_captain.png": 2,
+    "assets/battle/chars/paladin_captain.png": 2,
+    "assets/sprites/mob_gnosis.png": 2,
+    "assets/battle/chars/mob_gnosis.png": 2,
+    "assets/sprites/raid_captain.png": 2,
+    "assets/battle/chars/raid_captain.png": 2,
+    "assets/sprites/imperial_spear.png": 2,
+    "assets/battle/chars/imperial_spear.png": 2,
+    "assets/sprites/imperial_archer.png": 2,
+    "assets/battle/chars/imperial_archer.png": 2,
+    "assets/sprites/pursuit_sword.png": 2,
+    "assets/battle/chars/pursuit_sword.png": 2,
+    "assets/sprites/pursuit_shield.png": 2,
+    "assets/battle/chars/pursuit_shield.png": 2,
+    "assets/sprites/mob_citizen.png": 2,
+    "assets/sprites/mob_wolf.png": 2,
+    "assets/battle/chars/mob_wolf.png": 2,
+    "assets/sprites/wolf_scout.png": 2,
+    "assets/sprites/wolf_scout_tied.png": 2,
+    "assets/sprites/bandit_blade.png": 2,
+    "assets/battle/chars/bandit_blade.png": 2,
+    "assets/sprites/bandit_archer.png": 2,
+    "assets/battle/chars/bandit_archer.png": 2,
+    "assets/sprites/astra_mage.png": 2,
+    "assets/battle/chars/astra_mage.png": 2,
+    "assets/sprites/astra_captain.png": 2,
+    "assets/sprites/astra_binder.png": 2,
+    "assets/battle/chars/astra_binder.png": 2,
+    "assets/sprites/mob_royal_knight_v2.png": 2,
+    "assets/battle/chars/mob_royal_knight_v2.png": 2,
+    "assets/sprites/mob_royal_knight_v3.png": 2,
+    "assets/battle/chars/mob_royal_knight_v3.png": 2,
+    "assets/sprites/mob_royal_knight_v4.png": 2,
+    "assets/battle/chars/mob_royal_knight_v4.png": 2,
+    "assets/sprites/mob_paladin_v2.png": 2,
+    "assets/battle/chars/mob_paladin_v2.png": 2,
+    "assets/sprites/mob_paladin_v3.png": 2,
+    "assets/battle/chars/mob_paladin_v3.png": 2,
+    "assets/sprites/mob_paladin_v4.png": 2,
+    "assets/battle/chars/mob_paladin_v4.png": 2,
+    "assets/sprites/mob_gnosis_v2.png": 2,
+    "assets/battle/chars/mob_gnosis_v2.png": 2,
+    "assets/sprites/mob_gnosis_v3.png": 2,
+    "assets/battle/chars/mob_gnosis_v3.png": 2,
+    "assets/sprites/imperial_spear_v2.png": 2,
+    "assets/battle/chars/imperial_spear_v2.png": 2,
+    "assets/sprites/imperial_spear_v3.png": 2,
+    "assets/battle/chars/imperial_spear_v3.png": 2,
+    "assets/sprites/imperial_archer_v2.png": 2,
+    "assets/battle/chars/imperial_archer_v2.png": 2,
+    "assets/sprites/imperial_archer_v3.png": 2,
+    "assets/battle/chars/imperial_archer_v3.png": 2,
+    "assets/sprites/pursuit_sword_v2.png": 2,
+    "assets/battle/chars/pursuit_sword_v2.png": 2,
+    "assets/sprites/pursuit_sword_v3.png": 2,
+    "assets/battle/chars/pursuit_sword_v3.png": 2,
+    "assets/sprites/pursuit_shield_v2.png": 2,
+    "assets/battle/chars/pursuit_shield_v2.png": 2,
+    "assets/sprites/pursuit_shield_v3.png": 2,
+    "assets/battle/chars/pursuit_shield_v3.png": 2,
+    "assets/sprites/mob_citizen_v2.png": 2,
+    "assets/sprites/mob_citizen_v3.png": 2,
+    "assets/sprites/mob_citizen_v4.png": 2,
+    "assets/sprites/mob_wolf_v2.png": 2,
+    "assets/battle/chars/mob_wolf_v2.png": 2,
+    "assets/sprites/mob_wolf_v3.png": 2,
+    "assets/battle/chars/mob_wolf_v3.png": 2,
+    "assets/sprites/bandit_blade_v2.png": 2,
+    "assets/battle/chars/bandit_blade_v2.png": 2,
+    "assets/sprites/bandit_blade_v3.png": 2,
+    "assets/battle/chars/bandit_blade_v3.png": 2,
+    "assets/sprites/bandit_archer_v2.png": 2,
+    "assets/battle/chars/bandit_archer_v2.png": 2,
+    "assets/sprites/bandit_archer_v3.png": 2,
+    "assets/battle/chars/bandit_archer_v3.png": 2,
+    "assets/sprites/astra_mage_v2.png": 2,
+    "assets/battle/chars/astra_mage_v2.png": 2,
+    "assets/sprites/astra_mage_v3.png": 2,
+    "assets/battle/chars/astra_mage_v3.png": 2,
+    "assets/explore/palace_tiles.png": 2,
+    "assets/explore/pillar.png": 2,
+    "assets/explore/torch.png": 2,
+    "assets/explore/banner.png": 2,
+    "assets/explore/vase.png": 2,
+    "assets/explore/armor.png": 2,
+    "assets/explore/portrait.png": 2,
+    "assets/explore/board.png": 2,
+    "assets/explore/honor.png": 2,
+    "assets/explore/prayer.png": 2,
+    "assets/explore/sanctum.png": 2,
+    "assets/explore/door_gold.png": 2,
+    "assets/explore/bed.png": 2,
+    "assets/explore/curtain.png": 2,
+    "assets/explore/candle.png": 2,
+    "assets/explore/pendant.png": 2,
+    "assets/explore/window_open.png": 2,
+    "assets/explore/table.png": 2,
+    "assets/explore/belltower.png": 2,
+    "assets/explore/grate.png": 2,
+    "assets/explore/torchpost.png": 2,
+    "assets/explore/look.png": 2,
+    "assets/explore/scorch.png": 2,
+    "assets/explore/bones.png": 2,
+    "assets/explore/coins.png": 2,
+    "assets/explore/ladder.png": 2,
+    "assets/explore/rune_float.png": 2,
+    "assets/explore/dye_vat.png": 2,
+    "assets/explore/rune_table.png": 2,
+    "assets/explore/straw_bed.png": 2,
+    "assets/explore/cloth.png": 2,
+    "assets/explore/measure_paper.png": 2,
+    "assets/explore/notice.png": 2,
+    "assets/explore/wanted.png": 2,
+    "assets/explore/palisade.png": 2,
+    "assets/explore/reeds.png": 2,
+    "assets/explore/boat.png": 2,
+    "assets/explore/well.png": 2,
+    "assets/explore/well_cracked.png": 2,
+    "assets/explore/palm.png": 2,
+    "assets/explore/rock.png": 2,
+    "assets/explore/big_rock.png": 2,
+    "assets/explore/rock_arrow.png": 2,
+    "assets/explore/camel_bones.png": 2,
+    "assets/explore/dune.png": 2,
+    "assets/explore/campfire.png": 2,
+    "assets/explore/campfire_out.png": 2,
+    "assets/explore/horse.png": 2,
+    "assets/explore/tent.png": 2,
+    "assets/explore/crates.png": 2,
+    "assets/explore/cache.png": 2,
+    "assets/explore/white_cloth.png": 2,
+    "assets/explore/notebook.png": 2,
+    "assets/explore/shield_down.png": 2,
+    "assets/explore/shoes.png": 2,
+    "assets/explore/toll_notice.png": 2,
+    "assets/explore/wall_marks.png": 2,
+    "assets/explore/hut_door.png": 2,
+    "assets/explore/torch_stand.png": 2,
+    "assets/explore/dark_tree.png": 2,
+    "assets/explore/mark_tree.png": 2,
+    "assets/explore/forge.png": 2,
+    "assets/explore/blade_rack.png": 2,
+    "assets/explore/spirit_stone.png": 2,
+    "assets/explore/white_herbs.png": 2,
+    "assets/explore/greatsword_planted.png": 2,
+    "assets/explore/broken_greatsword.png": 2,
+    "assets/explore/cairn1.png": 2,
+    "assets/explore/cairn2.png": 2,
+    "assets/explore/cairn3.png": 2,
+    "assets/explore/folded_cloak.png": 2,
+    "assets/explore/stone_wall.png": 2,
+    "assets/explore/far_mountains.png": 2,
+    "assets/explore/smoke.png": 2,
+    "assets/explore/village_window.png": 2,
+    "assets/explore/village_shutter.png": 2,
+    "assets/explore/border_stone.png": 2,
+    "assets/explore/trade_cart.png": 2,
+    "assets/explore/snow_pine.png": 2,
+    "assets/explore/snow_boulder.png": 2,
+    "assets/explore/stone_gate.png": 2,
+    "assets/explore/stone_gate_open.png": 2,
+    "assets/explore/forge_lit.png": 2,
+    "assets/explore/anvil.png": 2,
+    "assets/explore/shelf.png": 2,
+    "assets/explore/mural.png": 2,
+    "assets/explore/stone_tablet1.png": 2,
+    "assets/explore/stone_tablet2.png": 2,
+    "assets/explore/stone_tablet3.png": 2,
+    "assets/explore/broken_tablet.png": 2,
+    "assets/explore/tablet_glow.png": 2,
+    "assets/explore/name_wall.png": 2,
+    "assets/explore/rusty_hammers.png": 2,
+    "assets/explore/small_hammer.png": 2,
+    "assets/explore/steam_vent.png": 2,
+    "assets/explore/melted_helm.png": 2,
+    "assets/explore/red_crystal.png": 2,
+    "assets/explore/lava_mound.png": 2,
+    "assets/explore/cooled_guardian.png": 2,
+    "assets/explore/portal_circle.png": 2,
+    "assets/explore/stone_ring.png": 2,
+    "assets/explore/ring_light.png": 2,
+    "assets/explore/lab_window.png": 2,
+    "assets/explore/violet_lamp.png": 2,
+    "assets/explore/bookcase.png": 2,
+    "assets/explore/cathedral_far.png": 2,
+    "assets/sprites/crag_lizard.png": 2,
+    "assets/sprites/crate.png": 2,
+    "assets/sprites/desert_scorpion.png": 2,
+    "assets/sprites/fire_spirit.png": 2,
+    "assets/sprites/house.png": 2,
+    "assets/sprites/magma_slug.png": 2,
+    "assets/sprites/mist_beast.png": 2,
+    "assets/sprites/sand_crawler.png": 2,
+    "assets/sprites/sewer_leech.png": 2,
+    "assets/sprites/sewer_rat.png": 2,
+    "assets/sprites/sign.png": 2,
+    "assets/sprites/talk_icon.png": 2,
+    "assets/sprites/tree.png": 2,
+    "assets/battle/chars/astra_golem.png": 2,
+    "assets/battle/chars/crag_lizard.png": 2,
+    "assets/battle/chars/desert_scorpion.png": 2,
+    "assets/battle/chars/fire_spirit.png": 2,
+    "assets/battle/chars/lava_guardian.png": 2,
+    "assets/battle/chars/magma_slug.png": 2,
+    "assets/battle/chars/mist_beast.png": 2,
+    "assets/battle/chars/sand_crawler.png": 2,
+    "assets/battle/chars/sewer_eel.png": 2,
+    "assets/battle/chars/sewer_leech.png": 2,
+    "assets/battle/chars/sewer_rat.png": 2
+  }
 }

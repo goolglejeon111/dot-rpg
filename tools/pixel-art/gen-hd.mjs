@@ -1,4 +1,5 @@
-// 새 도트 생성기 (32x48 인물). 기준: docs/도트기준.md
+// 새 도트 생성기 (32x48 인물, 그림은 K배 고해상도). 기준: docs/도트기준.md
+// 모든 그림 파일은 K배(2배)로 쓰고 hd_sprites.json의 _hd에 적는다 → 엔진(src/game/hdTex.ts)이 논리 크기로 다룸
 // 실행: npm run art:hd
 //
 // 만드는 파일
@@ -16,9 +17,9 @@ import { readPNG } from './png-read.mjs';
 import { TILES, EXTRA, VARIANTS, ALTERNATE, SHADOW_BELOW, PROPS } from './hd/palace.mjs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PEOPLE, drawPerson, drawWeapon, FOOT } from './hd/people.mjs';
+import { PEOPLE, FACE_SETS, drawPerson, drawWeapon, FOOT } from './hd/people.mjs';
 import { RAMPS as R } from './palette.mjs';
-import { Layer } from './hd/layer.mjs';
+import { Layer, K, scale2x } from './hd/layer.mjs';
 import { WORLD_TILES, WORLD_EXTRA, WORLD_VARIANTS, WORLD_SHADOW } from './hd/world.mjs';
 import { remapData } from './hd/remap.mjs';
 import { encodePNG } from './png.mjs';
@@ -188,6 +189,8 @@ function battleSheet(id) {
 // ---------------------------------------------------------------------
 const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 function toPNG(frames, cw, ch, cols, scale = 1, bg = null) {
+  cw *= K;
+  ch *= K;
   const rows = Math.ceil(frames.length / cols);
   const W = cw * cols * scale;
   const H = ch * rows * scale;
@@ -210,8 +213,22 @@ const write = (rel, buf) => {
   const f = join(ROOT, rel);
   mkdirSync(dirname(f), { recursive: true });
   writeFileSync(f, buf);
+  if (rel.startsWith('public/assets/')) HD[rel.slice('public/'.length)] = K;
   console.log('만듦', rel);
 };
+
+/** 1배 RGBA → K배 (Scale2x: 계단 모서리를 둥글게) */
+function upscale(w, h, data) {
+  const rows = Array.from({ length: h }, (_, y) => Array.from({ length: w }, (_, x) => {
+    const i = (y * w + x) * 4;
+    return data[i + 3] ? (data[i] << 24 | data[i + 1] << 16 | data[i + 2] << 8 | data[i + 3]) >>> 0 : null;
+  }));
+  let g = rows;
+  for (let s = 1; s < K; s *= 2) g = scale2x(g);
+  const out = new Uint8Array(w * K * h * K * 4);
+  g.forEach((r, y) => r.forEach((v, x) => { if (v !== null) out.set([v >>> 24, (v >>> 16) & 255, (v >>> 8) & 255, v & 255], (y * w * K + x) * 4); }));
+  return out;
+}
 
 // 예전 그림을 public/assets/_old/ 아래 같은 자리로 한 번 복사
 function keepOld(rel) {
@@ -221,6 +238,8 @@ function keepOld(rel) {
   copyFileSync(join(ROOT, rel), old);
 }
 const list = {};
+// 고해상도로 쓴 파일 (public 아래 경로 → 배수). write()가 public/assets/ 아래 파일을 적음
+const HD = {};
 const preview = [];
 for (const id of Object.keys(PEOPLE)) {
   const field = fieldSheet(id);
@@ -228,7 +247,8 @@ for (const id of Object.keys(PEOPLE)) {
   write(`public/assets/sprites/${id}.png`, toPNG(field, 32, 48, 5));
   // 전투 시트는 예전에 전투 시트가 있던 인물만 (예전 그림은 _old로 옮겨 둠)
   const bt = `public/assets/battle/chars/${id}.png`;
-  if (existsSync(join(ROOT, bt)) || existsSync(join(ROOT, 'public/assets/_old/battle/chars', `${id}.png`))) {
+  const base = PEOPLE[id].variantOf ?? id;
+  if (existsSync(join(ROOT, `public/assets/battle/chars/${base}.png`)) || existsSync(join(ROOT, 'public/assets/_old/battle/chars', `${base}.png`))) {
     keepOld(bt);
     write(bt, toPNG(battleSheet(id), 48, 48, 12));
   }
@@ -258,17 +278,23 @@ if (!existsSync(oldTiles)) {
   const ALL_EXTRA = { ...EXTRA, ...WORLD_EXTRA };
   const extra = Object.keys(ALL_EXTRA);
   const total = NAMES.length + extra.length;
-  const W = COLS * 32;
-  const H = Math.ceil(total / COLS) * 32;
+  const T = 32 * K;
+  const W = COLS * T;
+  const H = Math.ceil(total / COLS) * T;
   const d = new Uint8Array(W * H * 4);
   // 예전 칸 (덧붙인 줄은 빼고 이름 수만큼)
+  // 예전 칸은 K배로 키움 (타일 경계가 어긋나지 않게 가장 가까운 칸 그대로)
   const keepRows = Math.ceil(NAMES.length / COLS) * 32;
-  for (let y = 0; y < Math.min(keepRows, src.h); y++) d.set(src.data.subarray(y * src.w * 4, y * src.w * 4 + W * 4), y * W * 4);
+  for (let y = 0; y < Math.min(keepRows, src.h) * K; y++)
+    for (let x = 0; x < Math.min(COLS * 32, src.w) * K; x++) {
+      const i = (Math.floor(y / K) * src.w + Math.floor(x / K)) * 4;
+      d.set(src.data.subarray(i, i + 4), (y * W + x) * 4);
+    }
   const put = (L, n) => {
-    const ox = (n % COLS) * 32;
-    const oy = Math.floor(n / COLS) * 32;
-    for (let y = 0; y < 32; y++)
-      for (let x = 0; x < 32; x++) {
+    const ox = (n % COLS) * T;
+    const oy = Math.floor(n / COLS) * T;
+    for (let y = 0; y < T; y++)
+      for (let x = 0; x < T; x++) {
         const c = L.d[y][x];
         d.set(c ? [...rgb(c), 255] : [0, 0, 0, 0], ((oy + y) * W + ox + x) * 4);
       }
@@ -279,6 +305,7 @@ if (!existsSync(oldTiles)) {
   }
   extra.forEach((name, i) => put(ALL_EXTRA[name], NAMES.length + i));
   write(`public/${sprites.tiles.file}`, encodePNG(W, H, d));
+  HD[sprites.tiles.file] = K;
 }
 const tileInfo = {
   extra: Object.keys({ ...EXTRA, ...WORLD_EXTRA }),
@@ -303,7 +330,8 @@ const remapFile = (rel) => {
   const old = join(ROOT, rel.replace('public/assets/', 'public/assets/_old/'));
   if (!existsSync(old)) return;
   const im = readPNG(old);
-  write(rel, encodePNG(im.w, im.h, remapData(im.data)));
+  const up = upscale(im.w, im.h, remapData(im.data));
+  write(rel, encodePNG(im.w * K, im.h * K, up));
   files.push(rel);
 };
 for (const [name, p] of Object.entries(sprites.props)) if (!PROPS[name]) remapFile(`public/${p.file}`);
@@ -326,6 +354,8 @@ writeFileSync(
       ...list,
       _tiles: tileInfo,
       _files: files,
+      _faces: FACE_SETS,
+      _hd: HD,
     },
     null,
     2,

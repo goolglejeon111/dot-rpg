@@ -4,6 +4,7 @@
 import { RAMPS } from '../palette.mjs';
 import { Layer, darker } from './layer.mjs';
 import { CAST } from './cast.mjs';
+import { FACES, drawFaceMap } from './face.mjs';
 
 const R = RAMPS;
 export const FOOT = 45; // 발끝 줄
@@ -66,6 +67,19 @@ export const PEOPLE = {
 Object.assign(PEOPLE, CAST);
 // like: 다른 인물 설정을 바탕으로 몇 가지만 바꿈
 for (const [id, p] of Object.entries(PEOPLE)) if (p.like) { const { like, ...rest } = p; PEOPLE[id] = { ...PEOPLE[like], ...rest }; }
+// 엑스트라 얼굴 돌려쓰기: faces: [얼굴 지도...], hairs: [머리 색...] → {id}_v2, {id}_v3 ... (엔진이 차례로 골라 옆 사람과 겹치지 않게)
+export const FACE_SETS = {};
+for (const [id, p] of Object.entries({ ...PEOPLE })) {
+  if (!p.faces) continue;
+  p.face = p.faces[0];
+  if (p.hairs) p.hair = p.hairs[0];
+  FACE_SETS[id] = [id];
+  p.faces.slice(1).forEach((f, i) => {
+    const vid = `${id}_v${i + 2}`;
+    PEOPLE[vid] = { ...p, face: f, hair: p.hairs?.[i + 1] ?? p.hair, variantOf: id };
+    FACE_SETS[id].push(vid);
+  });
+}
 // 두건·투구로 머리를 다 가린 인물: 머리카락 없음 (속눈썹·눈썹 색만 씀)
 for (const p of Object.values(PEOPLE)) if (!p.hair) Object.assign(p, { hair: R.hair, hairStyle: 'bald' });
 
@@ -143,8 +157,8 @@ function drawHairBack(p, view, dy, sway = 0) {
 
 /** 곱슬머리 가장자리를 울퉁불퉁하게 */
 function bumpy(L, bottom) {
-  for (let y = 0; y < L.h; y++) {
-    const xs = L.d[y].map((c, x) => (c ? x : -1)).filter((x) => x >= 0);
+  for (let y = 0; y < L.lh; y++) {
+    const xs = [...Array(L.lw).keys()].filter((x) => L.get(x, y));
     if (!xs.length) continue;
     if (y % 3 === 0) {
       L.clear(xs[0], y);
@@ -795,8 +809,8 @@ function drawHeadwear(p, view, dy) {
   }
   if (p.circlet && view !== 'up') {
     // 이마의 검은 장식 관과 보라 보석
-    for (let x = side ? 13 : 8; x <= 23; x++) L.set(x, Y(9), R.slate[1]);
-    for (const x of side ? [22] : [15, 16]) L.set(x, Y(9), R.violet[0]);
+    for (let x = side ? 13 : 8; x <= 23; x++) L.set(x, Y(8), R.slate[1]);
+    for (const x of side ? [22] : [15, 16]) L.set(x, Y(8), R.violet[0]);
   }
   if (p.goggles) {
     // 이마에 올린 보호 안경
@@ -959,7 +973,13 @@ function drawHeld(p, view, dy, battle = false) {
         }
         T.outline();
       }
-      hand(T, side ? 18 : rx);
+      // 옆 보기: 긴 막대는 얼굴을 가리지 않게 머리·몸 뒤로 (손만 앞에)
+      if (side) {
+        back.over(T);
+        hand(front, 18);
+        continue;
+      }
+      hand(T, rx);
     } else if (kind === 'hammer' || kind === 'runeHammer') {
       const x = side ? 16 : rx;
       pole(T, x, hy + 1, hy + 7, R.wood);
@@ -1250,12 +1270,17 @@ export function drawPerson(id, view, o = {}) {
   parts.push(drawCapelet(p, v, dy));
   if (v === 'up' && p.hairStyle === 'long' && !p.hood) parts.push(drawHairBack(p, v, dy, sway));
   if (v === 'up') parts.push(drawPauldron(p, v, dy));
-  const head = drawHead(p, v, dy);
-  drawFace(p, v, dy, head);
-  parts.push(head);
-  parts.push(drawBeard(p, v, dy));
-  parts.push(drawHairFront(p, v, dy));
-  parts.push(drawEars(p, v, dy));
+  // 얼굴·머리: 인물마다 손으로 정한 얼굴 지도 (hd/faces/{id}.mjs, 수염·늑대 귀 포함)
+  const faceId = p.face ?? (FACES[id] ? id : null);
+  if (faceId) parts.push(drawFaceMap(p, faceId, v, dy));
+  else {
+    const head = drawHead(p, v, dy);
+    drawFace(p, v, dy, head);
+    parts.push(head);
+    parts.push(drawBeard(p, v, dy));
+    parts.push(drawHairFront(p, v, dy));
+    parts.push(drawEars(p, v, dy));
+  }
   parts.push(drawHeadwear(p, v, dy));
   parts.push(drawHairOver(p, v, dy));
   if (v !== 'up') {

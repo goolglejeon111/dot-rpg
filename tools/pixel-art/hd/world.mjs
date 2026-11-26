@@ -342,7 +342,7 @@ const make = {
           const xx = ((x % 32) + 32) % 32;
           const yy = ((y % 32) + 32) % 32;
           const c = nx + ny < -0.9 ? GREY[tone - 1] : nx + ny > 0.8 ? GREY[tone + 1] : GREY[tone];
-          L.d[yy][xx] = c;
+          L.set(xx, yy, c);
           return null;
         });
       }

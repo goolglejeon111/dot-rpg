@@ -6,6 +6,7 @@ import { FieldScene } from './scenes/FieldScene';
 import { ExploreScene } from './explore/ExploreScene';
 import { StoryScene } from './scenes/StoryScene';
 import { TitleScene } from './scenes/TitleScene';
+import { installHdTextures } from './game/hdTex';
 
 const WIDTH = 960;
 const HEIGHT = 720;
@@ -38,6 +39,7 @@ const game = new Phaser.Game({
   // 첫 장면 = 타이틀. 필드(FieldScene)는 1막에서 이어 붙일 예정
   scene: [TitleScene, StoryScene, FieldScene, ExploreScene, BattleScene, BattleHUD],
 });
+installHdTextures(game);
 
 window.addEventListener('resize', () => game.scale.setZoom(fitZoom()));
 

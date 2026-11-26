@@ -60,14 +60,14 @@ const base = { skin: R.skin, eye: EYE.brown, pants: R.slate, shoes: R.slate, glo
 export const CAST = {
   // ================= 파티 =================
   // 1막 두건 망토 레온: 갈색 두건과 망토
-  leon_hood: {
+  leon_hood: { face: 'leon',
     ...base, ...navyCoat, hair: R.hair, hairStyle: 'short', eye: [R.sky[2], R.sky[3], R.hair[4]], brow: 'sharp',
     plate: true, pauldron: true, buttons: R.gold, hood: CLOTH.wood, cape: cape(CLOTH.wood),
     battle: { weapon: 'sword' },
   },
   // 4막 각인 무기 레온: 필드 모습은 레온과 같음, 전투 무기만 다름
-  leon_blade: { like: 'leon', battle: { weapon: 'runesword' } },
-  serena_hood: { like: 'serena', capelet: false, hood: CLOTH.wood, cape: cape(CLOTH.wood) },
+  leon_blade: { face: 'leon', like: 'leon', battle: { weapon: 'runesword' } },
+  serena_hood: { face: 'serena', like: 'serena', capelet: false, hood: CLOTH.wood, cape: cape(CLOTH.wood) },
   elysia: {
     ...base, hair: HAIR.pale, hairStyle: 'long', hairLen: 33, sideLen: 26, eye: EYE.violet, brow: 'soft', blush: true,
     cloth: CLOTH.robe, dress: true, skirtW: 2, runes: [R.sky[0], R.sky[1]], belt: CLOTH.wood, pouch: true, cuff: [R.sky[0], R.sky[1]],
@@ -78,7 +78,6 @@ export const CAST = {
     ...base, skin: CLOTH.tan, hair: HAIR.grey, hairStyle: 'short', ears: true, tail: true, eye: EYE.yellow, brow: 'heavy',
     cloth: CLOTH.tan, lower: 'tunic', coat: 37, lowerRamp: CLOTH.sand, pants: CLOTH.grey, shoes: R.slate, glove: CLOTH.tan,
     scarf: CLOTH.grey, necklace: 'teeth', pauldron: true, pauldronRamp: CLOTH.wood, bracer: [R.wood[1], R.wood[2]], belt: CLOTH.wood,
-    pose: 'cross',
     battle: { weapon: 'dagger', dual: true },
   },
   adrian: {
@@ -110,7 +109,7 @@ export const CAST = {
     beard: HAIR.dark, beardLen: 1, cloth: CLOTH.red, dress: true, skirtW: 2, royalBand: true, cuff: R.gold, cape: cape(CLOTH.red),
     held: ['staff_scepter'],
   },
-  marcion_hooded: {
+  marcion_hooded: { face: 'marcion',
     ...base, cloth: CLOTH.slate, dress: true, skirtW: 2, hood: CLOTH.slate, hoodShade: true, cape: cape(CLOTH.slate), ragged: true,
     glove: glowGlove, glow: R.sky[2],
     battle: { cast: [R.white[0], R.sky[0], R.sky[1]] },
@@ -136,7 +135,7 @@ export const CAST = {
     cloth: CLOTH.sand, dress: true, skirtW: 2, outer: CLOTH.wood, necklace: 'beads', glove: CLOTH.tan, held: ['staff_wood'], drop: 3,
   },
   blacksmith: {
-    ...base, hair: HAIR.grey, hairStyle: 'short', brow: 'heavy', beard: HAIR.grey, beardLen: 3,
+    ...base, hair: HAIR.white, hairStyle: 'short', brow: 'heavy', beard: HAIR.grey, beardLen: 3,
     cloth: CLOTH.ivory, lower: 'tunic', coat: 35, lowerRamp: CLOTH.ivory, apron: CLOTH.wood, pants: CLOTH.brown, shoes: CLOTH.wood,
     held: ['hammer'], drop: 2, wide: 1,
   },
@@ -156,92 +155,92 @@ export const CAST = {
 
   // ================= 적·모브 =================
   // 근위기사 (프롤로그 근위병과 같은 모습)
-  mob_royal_knight: {
+  mob_royal_knight: { faces: ['extra_a', 'extra_b', 'extra_c', 'extra_d'],
     ...base, ...navyCoat, hair: R.hair, hairStyle: 'short', helmet: { plume: [R.sky[0], R.sky[1], R.sky[2]], nose: true },
     cape: [R.navy[2], R.navy[2], R.navy[3], R.navy[3], R.navy[4]], pauldron: 'both', buttons: R.gold, held: ['spear'],
     battle: { lunge: true },
   },
-  mob_paladin: {
+  mob_paladin: { faces: ['extra_b', 'extra_a', 'extra_d', 'extra_c'],
     ...base, hair: R.hair, hairStyle: 'short', helmet: { plume: [R.gold[0], R.gold[1], R.gold[2]], nose: true },
     cloth: CLOTH.silver, armor: true, lower: 'tunic', coat: 37, tabard: R.white, crossColor: [R.gold[0], R.gold[1]], glove: CLOTH.iron, pants: CLOTH.silver,
     held: ['spear'],
     battle: { lunge: true },
   },
-  paladin_captain: {
+  paladin_captain: { face: 'extra_d',
     ...base, hair: R.hair, hairStyle: 'short', helmet: { plume: [R.gold[0], R.gold[1], R.gold[2]], nose: true },
     cloth: CLOTH.silver, armor: true, lower: 'tunic', coat: 37, tabard: R.white, crossColor: [R.gold[0], R.gold[1]], glove: R.gold, pants: CLOTH.silver,
     pauldron: 'both', pauldronTrim: R.gold, cape: cape(R.white), held: ['spear'],
     battle: { lunge: true },
   },
-  mob_gnosis: {
+  mob_gnosis: { faces: ['extra_c', 'extra_a', 'extra_b'],
     ...base, cloth: CLOTH.slate, lower: 'tunic', coat: 37, hood: CLOTH.slate, faceCloth: CLOTH.slate, eye: [R.sky[0], R.sky[1], R.sky[2]],
     belt: CLOTH.slate, eyePendant: true, glove: CLOTH.slate, held: ['darkdagger'],
     battle: { weapon: 'darkdagger', prep: true },
   },
-  raid_captain: {
+  raid_captain: { face: 'extra_b',
     ...base, cloth: CLOTH.slate, dress: true, skirtW: 2, hood: CLOTH.slate, hoodShade: true, mask: true, crossColor: [R.white[0], R.white[1]],
     sleeve: CLOTH.slate, armMark: [R.white[0], R.sky[0]], glove: glowGlove, glow: R.sky[2], drop: 0,
     battle: { cast: [R.white[0], R.white[1], R.white[2]] },
   },
-  imperial_spear: {
+  imperial_spear: { faces: ['extra_a', 'extra_c', 'extra_b'], hairs: [R.hair, HAIR.ginger, HAIR.black],
     ...base, hair: R.hair, hairStyle: 'short', helmet: { plume: [R.red[0], R.red[1], R.red[2]] },
     cloth: CLOTH.red, lower: 'tunic', coat: 37, plate: true, belt: CLOTH.wood, glove: CLOTH.wood, pants: CLOTH.brown, shoes: CLOTH.wood,
     held: ['spear'],
     battle: { lunge: true },
   },
-  imperial_archer: {
+  imperial_archer: { faces: ['extra_c', 'extra_d', 'extra_a'], hairs: [R.hair, HAIR.wood, HAIR.sand],
     ...base, hair: R.hair, hairStyle: 'short', helmet: {},
     cloth: CLOTH.wood, lower: 'tunic', coat: 37, belt: R.red, cuff: R.red, glove: CLOTH.wood, pants: CLOTH.brown, shoes: CLOTH.wood,
     held: ['bow', 'quiver'],
     battle: { lunge: true },
   },
-  pursuit_sword: {
+  pursuit_sword: { faces: ['extra_b', 'extra_a', 'extra_d'],
     ...base, hair: R.hair, hairStyle: 'short', helmet: { plume: [R.ash[0], R.slate[0], R.slate[1]], nose: true },
     cloth: CLOTH.slate, lower: 'tunic', coat: 37, plate: true, pauldron: 'both', cape: cape(CLOTH.slate), belt: CLOTH.slate, glove: CLOTH.iron,
     held: ['swordHip'],
     battle: { lunge: true },
   },
-  pursuit_shield: {
+  pursuit_shield: { faces: ['extra_d', 'extra_b', 'extra_c'],
     ...base, hair: R.hair, hairStyle: 'short', helmet: { plume: [R.ash[0], R.slate[0], R.slate[1]], nose: true },
     cloth: CLOTH.slate, lower: 'tunic', coat: 37, plate: true, pauldron: 'both', cape: cape(CLOTH.slate), belt: CLOTH.slate, glove: CLOTH.iron,
     held: ['kiteShield'],
     battle: { lunge: true },
   },
-  mob_citizen: {
+  mob_citizen: { faces: ['extra_a', 'extra_c', 'extra_d', 'extra_b'], hairs: [HAIR.wood, HAIR.ginger, HAIR.grey, HAIR.black],
     ...base, hair: HAIR.wood, hairStyle: 'short', cloth: CLOTH.green, lower: 'tunic', coat: 36, belt: CLOTH.wood, pants: CLOTH.sand, shoes: CLOTH.wood,
     held: ['basket'],
   },
-  mob_wolf: {
+  mob_wolf: { faces: ['wolf_a', 'wolf_b', 'wolf_c'], hairs: [HAIR.grey, HAIR.wood, HAIR.silver],
     ...base, skin: CLOTH.tan, hair: HAIR.grey, hairStyle: 'short', ears: true, tail: true, eye: EYE.yellow, brow: 'heavy',
     cloth: CLOTH.tan, lower: 'tunic', coat: 37, lowerRamp: CLOTH.wood, sash: CLOTH.wood, glove: CLOTH.tan, pants: CLOTH.grey, shoes: CLOTH.wood,
     held: ['spear'],
     battle: { lunge: true },
   },
-  wolf_scout: {
+  wolf_scout: { face: 'wolf_c',
     ...base, skin: CLOTH.tan, hair: HAIR.grey, hairStyle: 'short', ears: true, tail: true, eye: EYE.yellow, brow: 'heavy',
     cloth: CLOTH.wood, sleeve: CLOTH.tan, lower: 'tunic', coat: 36, lowerRamp: CLOTH.sand, belt: CLOTH.wood, glove: CLOTH.tan, pants: CLOTH.grey, shoes: CLOTH.wood,
   },
   wolf_scout_tied: { like: 'wolf_scout', ropes: true, pose: 'cross' },
-  bandit_blade: {
+  bandit_blade: { faces: ['extra_b', 'extra_a', 'extra_c'],
     ...base, hood: CLOTH.sand, faceCloth: CLOTH.sand, cloth: CLOTH.wood, lower: 'tunic', coat: 37, belt: R.red, glove: CLOTH.wood, pants: CLOTH.brown, shoes: CLOTH.wood,
     held: ['dagger'],
     battle: { weapon: 'dagger', dual: true },
   },
-  bandit_archer: {
+  bandit_archer: { faces: ['extra_c', 'extra_d', 'extra_b'], hairs: [HAIR.wood, HAIR.black, HAIR.ginger],
     ...base, hood: CLOTH.sand, cloth: CLOTH.brown, lower: 'tunic', coat: 37, belt: R.red, glove: CLOTH.wood, pants: CLOTH.brown, shoes: CLOTH.wood,
     held: ['bow', 'quiver'],
     battle: { lunge: true },
   },
-  astra_mage: {
+  astra_mage: { faces: ['extra_c', 'extra_a', 'extra_d'], hairs: [HAIR.pale, HAIR.wood, HAIR.grey],
     ...base, eye: EYE.violet, hood: CLOTH.white, cloth: CLOTH.white, dress: true, skirtW: 2, belt: CLOTH.violet, cuff: R.violet, hemTrim: R.violet,
     runes: [R.sky[0], R.sky[1]],
     battle: { cast: [R.violet[0], R.violet[1], R.violet[2]] },
   },
-  astra_captain: {
+  astra_captain: { face: 'extra_d',
     ...base, eye: EYE.yellow, hood: CLOTH.violet, cloth: CLOTH.violet, dress: true, skirtW: 2, belt: R.gold, cuff: R.gold, hemTrim: R.gold,
     runes: [R.sky[0], R.sky[1]],
   },
-  astra_binder: {
+  astra_binder: { face: 'extra_b',
     ...base, eye: EYE.violet, hood: CLOTH.slate, cloth: CLOTH.slate, dress: true, skirtW: 2, cuff: R.violet, hemTrim: R.violet,
     chains: [R.violet[0], R.violet[1], R.violet[2]],
     battle: { cast: [R.violet[0], R.violet[1], R.violet[3]] },

@@ -40,6 +40,24 @@ interface Meta {
   checkpoint: Checkpoint | null;
   /** 장면의 첫 선택지를 처음 볼 때의 상태 ("이야기:장면" → 상태). 엔딩의 retry가 그 선택지 앞으로 돌아갈 때 쓴다 */
   choices: Record<string, ChoiceState>;
+  /** 지나온 선택지 (선택지 기록 C). 고를 때마다 하나씩, 그 선택지 화면으로 돌아갈 때 쓴다 */
+  choiceLog: ChoiceLogEntry[];
+  /** 한 번이라도 고른 적 있는 선택지 ("이야기:장면:대사번호:선택지 글") */
+  chosen: string[];
+}
+
+/** 선택지 기록 하나: 그 선택지 화면을 다시 만들 수 있는 값 */
+export interface ChoiceLogEntry {
+  story: string;
+  scene: string;
+  node: number;
+  place: string;
+  /** 고른 선택지 글 */
+  text: string;
+  /** 선택지가 뜰 때의 상태 (경험치, 레벨, 파티, 해금 포함) */
+  state: ChoiceState;
+  /** 그때의 화면: 인물, 마지막 글, CG, 상처 맥박 */
+  view: unknown;
 }
 
 export interface ChoiceState {
@@ -68,6 +86,8 @@ const fresh = (): Meta => ({
   cgs: [],
   checkpoint: null,
   choices: {},
+  choiceLog: [],
+  chosen: [],
 });
 
 function load(): Meta {
@@ -84,6 +104,9 @@ function load(): Meta {
       cgs: Array.isArray(p.cgs) ? p.cgs : [],
       checkpoint: p.checkpoint ?? null,
       choices: p.choices && typeof p.choices === 'object' ? p.choices : {},
+      // 예전 저장에는 없음 → 빈 기록
+      choiceLog: Array.isArray(p.choiceLog) ? p.choiceLog : [],
+      chosen: Array.isArray(p.chosen) ? p.chosen : [],
     };
   } catch (err) {
     console.warn('[save] 기록을 읽지 못했습니다. 새로 시작합니다', err);
@@ -161,6 +184,29 @@ export const save = {
     meta.choices[key] = JSON.parse(JSON.stringify(s));
     write();
   },
+  get choiceCount() {
+    return meta.choiceLog.length;
+  },
+  get choiceLog(): ChoiceLogEntry[] {
+    return JSON.parse(JSON.stringify(meta.choiceLog));
+  },
+  addChoice(e: ChoiceLogEntry) {
+    meta.choiceLog.push(JSON.parse(JSON.stringify(e)));
+    if (!meta.chosen.includes(`${e.story}:${e.scene}:${e.node}:${e.text}`)) meta.chosen.push(`${e.story}:${e.scene}:${e.node}:${e.text}`);
+    write();
+  },
+  /** 선택지 기록을 n개만 남긴다 (되감기·돌아가기로 그 뒤 진행이 사라질 때) */
+  trimChoices(n: number) {
+    if (meta.choiceLog.length <= n) return;
+    meta.choiceLog.length = Math.max(0, n);
+    write();
+  },
+  /** 이 이야기를 처음부터 다시 시작할 때: 그 이야기의 기록을 지운다 (프롤로그면 전부) */
+  clearChoices(story: string, all = false) {
+    meta.choiceLog = all ? [] : meta.choiceLog.filter((e) => e.story !== story);
+    write();
+  },
+  hasChosen: (key: string) => meta.chosen.includes(key),
   setCheckpoint(c: Checkpoint) {
     meta.checkpoint = JSON.parse(JSON.stringify(c));
     write();

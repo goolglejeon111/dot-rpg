@@ -2379,7 +2379,7 @@
       "se": "se_barrier_off",
       "screen": { "flash": "#ffffff" },
       "ambient": "#dfe4f4",
-      "actors": { "elysia": { "at": "elysia_from", "walk": "elysia_visit", "facing": "up" }, "galia": { "pose": "stand" } }
+      "actors": { "elysia": { "at": "elysia_from", "walk": "elysia_visit", "facing": "up" }, "galia": { "pose": "stand", "if": "galia_alive" } }
     },
     "a4_s10c": {
       "map": "astra_cell",

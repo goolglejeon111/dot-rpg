@@ -84,8 +84,8 @@
     "act4:s1_stop": "a4_s1b",
     "act4:s1_calm": "a4_s1b",
     "act4:s1_ask": "a4_s1b",
-    "act4:scene1_1": "a4_s11",
-    "act4:g1": "a4_s11",
+    "act4:scene1_1": "a4_s1_1",
+    "act4:g1": "a4_s1_1",
     "act4:scene2": "a4_s2",
     "act4:g2": "a4_s2b",
     "act4:scene3": "a4_s3",
@@ -2040,6 +2040,15 @@
       "amb": null,
       "se": "se_alarm",
       "actors": { "leon": { "at": "leon_start", "facing": "right", "walk": [800, 208], "speed": 120 }, "elysia": { "at": "elysia_start", "facing": "right", "walk": [768, 240], "speed": 120 }, "karg": { "at": "karg_start", "facing": "right", "walk": [832, 240], "speed": 120 }, "serena": { "at": "serena_start", "facing": "right", "walk": [752, 208], "speed": 120 }, "galia": { "at": "galia_start", "facing": "right", "if": "galia_alive", "walk": [720, 224], "speed": 120 } }
+    },
+    "a4_s1_1": {
+      "map": "lowen_north",
+      "ambient": "#2a3050",
+      "focus": "leon_camp",
+      "once": "a3:start",
+      "bgm": "bgm_camp",
+      "amb": "amb_night",
+      "actors": { "leon": { "at": "leon_camp", "facing": "right", "pose": "kneel" }, "elysia": { "at": "elysia_camp", "facing": "left", "pose": "kneel" }, "karg": { "at": "karg_camp", "facing": "left" }, "serena": { "at": "serena_camp", "facing": "down" }, "galia": { "at": "galia_camp", "facing": "down", "if": "galia_alive" } }
     },
     "a4_dagger": {
       "actors": { "leon": { "pose": "stand" }, "serena": { "walk": "serena_dagger", "facing": "left" } }

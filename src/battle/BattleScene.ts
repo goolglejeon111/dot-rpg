@@ -2118,7 +2118,9 @@ export class BattleScene extends Phaser.Scene {
 
   /** 공격 한 타의 진행 */
   private updateAttack(f: Fighter, dt: number) {
-    const hits = f.def.attack!.hits;
+    // 근접 공격이 없는 적(마법사 등)도 체력 0 연출에서는 때리는 시늉만 한다 (끝은 연출 쪽 타이머가 정함)
+    if (!f.def.attack) return void (f.stateT += dt);
+    const hits = f.def.attack.hits;
     const h = hits[f.combo];
     f.stateT += dt;
     if (!f.hitDone && f.stateT >= h.windup) {
@@ -3493,8 +3495,11 @@ export class BattleScene extends Phaser.Scene {
         setBt(f.moveCol);
         break;
       case 'attack': {
-        const h = f.def.attack!.hits[f.combo];
-        if (!h) break;
+        const h = f.def.attack?.hits[f.combo];
+        if (!h) {
+          setBt(9);
+          break;
+        }
         setBt(f.stateT < h.windup ? h.cols[0] : h.cols[1]);
         break;
       }

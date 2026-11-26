@@ -152,6 +152,8 @@ export interface SegmentDef {
   speed?: number;
   /** 파티원이 레온 뒤를 따라 걷는다 (기본: 지금 파티) */
   follow?: boolean;
+  /** 필수 조사: 이 물건을 조사하는 순간 구간이 끝난다 (출구 없이). 이 구간에서는 이미 본 물건도 다시 조사할 수 있다 */
+  until?: string;
 }
 export const STAGE = stageData as unknown as {
   scenes: Record<string, string | null>;
@@ -1506,8 +1508,21 @@ export class ExploreScene extends Phaser.Scene {
         console.warn(`[map] ${seg.map}에 조사할 곳이 없습니다: ${id}`);
         continue;
       }
-      if (this.seen(id)) continue;
+      if (this.seen(id) && !seg.until) continue;
       this.lookables.push({ id, x: o.x, y: o.y });
+    }
+    // 필수 조사: 조사할 차례인 물건이 은은하게 빛나고 머리 위에 작은 표시
+    this.untilFx.forEach((o) => o.destroy());
+    this.untilFx = [];
+    const uo = seg.until && this.map ? findObj(this.map, 'look', seg.until) : undefined;
+    if (uo) {
+      const glow = this.world(this.add.ellipse(uo.x, uo.y - 6, 40, 22, 0xfff0b0, 0.35).setDepth(uo.y - 1).setBlendMode(Phaser.BlendModes.ADD));
+      this.tweens.add({ targets: glow, alpha: 0.12, scaleX: 1.2, scaleY: 1.2, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+      const top = uo.y - Number(propOf(uo, 'iconY') ?? 40);
+      const pin = this.world(this.add.sprite(uo.x, top, 'ex_look', 0).setDepth(9400).setScale(0.75).setTint(0xffe9a8).play('ex_look'));
+      this.tweens.add({ targets: pin, y: top - 4, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+      this.untilLight = this.addLight(uo.x, uo.y - 10, 60, 0xfff0b0, 0.9, true)?.light;
+      this.untilFx.push(glow, pin);
     }
     this.mark?.destroy();
     this.mark = this.world(this.add.sprite(leon.spr.x, leon.spr.y - 44, 'ex_look', 0).setDepth(9500).setAlpha(0).play('ex_look'));
@@ -1518,7 +1533,20 @@ export class ExploreScene extends Phaser.Scene {
     else if (seg.hint) this.guide(seg.hint, 5000);
   }
 
+  /** 필수 조사 표시 (빛, 머리 위 표시) */
+  private untilFx: Phaser.GameObjects.GameObject[] = [];
+  private untilLight?: Phaser.GameObjects.Light;
+
+  /** 이동을 잠깐 멈춤 (파티 선택 화면이 떠 있는 동안) */
+  hold(on: boolean) {
+    this.reading = on;
+  }
+
   private stopPlay() {
+    this.untilFx.forEach((o) => o.destroy());
+    this.untilFx = [];
+    this.untilLight?.setVisible(false);
+    this.untilLight = undefined;
     this.seg = null;
     this.near = null;
     this.lookables = [];
@@ -1959,7 +1987,9 @@ export class ExploreScene extends Phaser.Scene {
       const c = item.charCodeAt(item.length - 1) - 0xac00;
       this.toast(`${item}${c >= 0 && c < 11172 && c % 28 ? '을' : '를'} 얻었습니다`);
     }
-    this.lookables = this.lookables.filter((x) => x !== l);
+    // 필수 조사: 그 물건이면 구간 끝. 다른 물건은 다시 조사할 수 있게 남겨 둔다
+    if (this.seg?.until && l.id === this.seg.until) return this.finish(this.actors.get('leon')!);
+    if (!this.seg?.until) this.lookables = this.lookables.filter((x) => x !== l);
     this.near = null;
     if (amount) this.toast(`경험치 +${amount}${isCapped('leon') && !ups.length ? '   (최대 레벨: 프롤로그를 마치면 반영)' : ''}`);
     for (const u of ups) this.time.delayedCall(1000, () => this.toast(`레벨 업!  Lv ${u.from} → Lv ${u.to}`));

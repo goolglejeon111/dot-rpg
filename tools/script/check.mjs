@@ -89,7 +89,34 @@ for (const cfg of STORIES) {
     fxBad++;
     console.log(`  연출 수가 다름: 설정 ${fxIns.length}개·강조 ${(cfg.emphasis ?? []).length}개 / 데이터 ${fxCount}개·강조 ${emCount}개`);
   }
-  console.log(`[${cfg.id}] 추가 연출 ${fxIns.length}개 · 강조 ${(cfg.emphasis ?? []).length}개 → ${fxBad ? `다른 곳 ${fxBad}개` : '모두 같음'}`);
+  // 자동 분기(branch)·파티 이탈(leave)·파티 선택(party): 적은 자리(앞 대사 또는 장면 끝)에 그대로, 가는 장면이 있는지
+  const flowIns = (cfg.inserts ?? []).filter((i) => ['branch', 'leave', 'party'].some((k) => k in i.node));
+  for (const ins of flowIns) {
+    const sc = data.scenes.find((s) => s.id === ins.scene);
+    let ok = false;
+    if (sc && ins.atEnd) {
+      for (let k = sc.nodes.length - 1; k >= 0 && !isLine(sc.nodes[k]); k--) if (same(sc.nodes[k], ins.node)) ok = true;
+    } else if (sc) {
+      const at = sc.nodes.findIndex((n) => n.monologue?.[0] === ins.before || n.text === ins.before);
+      for (let k = at - 1; at >= 0 && k >= 0 && !isLine(sc.nodes[k]); k--) if (same(sc.nodes[k], ins.node)) ok = true;
+    }
+    if (!ok) {
+      fxBad++;
+      console.log(`  분기·이탈이 빠짐: ${ins.scene} / ${ins.before ?? '(장면 끝)'} / ${JSON.stringify(ins.node)}`);
+    }
+    for (const r of ins.node.branch ?? []) {
+      if (!data.scenes.some((s) => s.id === r.next)) {
+        fxBad++;
+        console.log(`  분기가 가는 장면이 없음: ${ins.scene} → ${r.next}`);
+      }
+    }
+  }
+  const flowCount = data.scenes.flatMap((s) => s.nodes).filter((n) => 'branch' in n || 'leave' in n || 'party' in n).length;
+  if (flowCount !== flowIns.length) {
+    fxBad++;
+    console.log(`  분기·이탈 수가 다름: 설정 ${flowIns.length}개 / 데이터 ${flowCount}개`);
+  }
+  console.log(`[${cfg.id}] 추가 연출 ${fxIns.length}개${flowIns.length ? ` · 분기·이탈 ${flowIns.length}개` : ''} · 강조 ${(cfg.emphasis ?? []).length}개 → ${fxBad ? `다른 곳 ${fxBad}개` : '모두 같음'}`);
   bad += fxBad;
 }
 if (bad) process.exitCode = 1;

@@ -38,6 +38,14 @@ interface Meta {
   /** 한 번 본 이벤트 CG (타이틀의 CG 회상) */
   cgs: string[];
   checkpoint: Checkpoint | null;
+  /** 장면의 첫 선택지를 처음 볼 때의 상태 ("이야기:장면" → 상태). 엔딩의 retry가 그 선택지 앞으로 돌아갈 때 쓴다 */
+  choices: Record<string, ChoiceState>;
+}
+
+export interface ChoiceState {
+  affection: Record<string, number>;
+  flags: Record<string, FlagValue>;
+  progress?: Progress;
 }
 
 export const TEXT_SPEEDS = [
@@ -59,6 +67,7 @@ const fresh = (): Meta => ({
   read: [],
   cgs: [],
   checkpoint: null,
+  choices: {},
 });
 
 function load(): Meta {
@@ -74,6 +83,7 @@ function load(): Meta {
       read: Array.isArray(p.read) ? p.read : [],
       cgs: Array.isArray(p.cgs) ? p.cgs : [],
       checkpoint: p.checkpoint ?? null,
+      choices: p.choices && typeof p.choices === 'object' ? p.choices : {},
     };
   } catch (err) {
     console.warn('[save] 기록을 읽지 못했습니다. 새로 시작합니다', err);
@@ -144,6 +154,12 @@ export const save = {
 
   get checkpoint(): Checkpoint | null {
     return meta.checkpoint ? JSON.parse(JSON.stringify(meta.checkpoint)) : null;
+  },
+  /** 선택지 앞 상태 (엔딩의 retry). 같은 장면이면 새로 덮는다 */
+  choiceState: (key: string): ChoiceState | null => (meta.choices[key] ? JSON.parse(JSON.stringify(meta.choices[key])) : null),
+  setChoiceState(key: string, s: ChoiceState) {
+    meta.choices[key] = JSON.parse(JSON.stringify(s));
+    write();
   },
   setCheckpoint(c: Checkpoint) {
     meta.checkpoint = JSON.parse(JSON.stringify(c));

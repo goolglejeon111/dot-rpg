@@ -4,7 +4,7 @@ import { STAGE, type ExploreScene, type ExploreStart, type MapHost, type StageDe
 import { makeBattleAnims, preloadBattle } from '../battle/assets';
 import battlesData from '../data/battle/battles.json';
 import { StoryFx } from './StoryFx';
-import { addGuest, clearStory, gainOnce, joinParty, maxLevel, partyIds, unlock, unlockInfo, type Unlock } from '../battle/progress';
+import { ACTIVE_MAX, activeParty, addGuest, clearStory, gainOnce, joinParty, leaveParty, levelOf, maxLevel, partyIds, setActive, unlock, unlockInfo, type Unlock } from '../battle/progress';
 import { characters, stories } from '../game/data';
 import { gameState, type StateData } from '../game/GameState';
 import { makeBodyPlaceholder, PORTRAIT_H, PORTRAIT_W } from '../game/placeholders';
@@ -56,6 +56,10 @@ const fxList = (s?: EmphasisStyle): Emphasis[] => (!s ? [] : Array.isArray(s) ? 
 const bodyKey = (id: string) => `${id}_body`;
 const itemKey = (id: string) => `item_${id}`;
 const faceKey = (id: string, e: Expression) => `${id}_face_${e}`;
+/** 각인 무기를 얻은 뒤 레온의 도트 (4막 장면 7) */
+const WEAPON_COSTUME = 'leon_blade';
+/** 파티 선택 화면을 처음 열 때의 안내 (4막_연출.md "새로 필요한 기능" 3) */
+const PARTY_GUIDE = '동료가 5명이 되었습니다. 함께 싸울 4명을 고르세요. 레온은 뺄 수 없습니다. 이동 중에는 파티 (P)로 언제든 바꿀 수 있습니다';
 /** 장면 ID로 정하는 특별한 장면: 꿈(dream…), 막간(interlude…) */
 const sceneKind = (id?: string) => (id?.startsWith('dream') ? 'dream' : id?.startsWith('interlude') ? 'interlude' : '');
 
@@ -151,6 +155,10 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   private looking: { pages: string[][]; page: number; line: number; done: () => void; name?: string } | null = null;
   /** 맵 위 몹과의 짧은 전투가 끝나면 이동으로 돌아간다 */
   private fieldDone: (() => void) | null = null;
+  /** 강제 출전(force) 때문에 바꾼 파티: 전투 전 대기 목록 (전투가 끝나면 되돌린다) */
+  private benchBefore: string[] | null = null;
+  /** 이동 중에 여는 파티 선택 버튼 (동료가 5명 이상일 때) */
+  private partyBtn?: Button;
 
   constructor() {
     super('Story');
@@ -324,6 +332,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     this.autoBtn = makeButton(this, W - 294, 30, '자동 (A)', () => this.toggleAuto(), small);
     this.skipBtn = makeButton(this, W - 196, 30, '스킵 (S)', () => this.skipToNextPlace(), small);
     makeButton(this, W - 72, 30, '타이틀로', () => this.confirmLeave(), { ...small, w: 112 });
+    this.partyBtn = makeButton(this, W - 196, 30, '파티 (P)', () => this.openPartyFromMap(), small).setVisible(false);
 
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (p.rightButtonDown()) return;
@@ -973,6 +982,25 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     } else if ('join' in node) {
       joinParty(node.join);
       this.nextNode();
+    } else if ('leave' in node) {
+      leaveParty(node.leave);
+      this.nextNode();
+    } else if ('party' in node) {
+      // 동료가 5명 이상일 때만 파티 선택 화면 (처음 한 번은 안내 글과 함께)
+      if (gameState.progress.party.length <= ACTIVE_MAX) return this.nextNode();
+      this.mode = 'busy';
+      this.toggleAuto(false);
+      this.clearText();
+      for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side);
+      this.openParty({ guide: PARTY_GUIDE, done: () => this.nextNode() });
+    } else if ('branch' in node) {
+      // 자동 분기: 처음 맞는 장면으로. 없으면 다음 ## 장면 (runNode의 장면 끝 처리)
+      const hit = node.branch.find((b) => gameState.check(b.condition));
+      const target = hit ? this.story.scenes.findIndex((s) => s.id === hit.next) : -1;
+      if (hit && target < 0) console.error(`[story] 자동 분기의 장면이 없습니다: ${hit.next}`);
+      if (target >= 0) return this.enterScene(target);
+      this.nodeIdx = this.scene_.nodes.length;
+      this.runNode();
     } else if ('guest' in node) {
       addGuest(node.guest);
       this.nextNode();
@@ -1005,6 +1033,18 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   private startBattle(b: Omit<BattleStart, 'onEnd' | 'map'>) {
     this.mode = 'busy';
     this.toggleAuto(false);
+    // 강제 출전: 대기 중이고 파티가 이미 4명이면 한 명을 빼도록 안내 (전투가 끝나면 원래 파티로)
+    const force = (battlesData as unknown as Record<string, { force?: string[] }>)[b.battle]?.force ?? [];
+    const p = gameState.progress;
+    const need = b.hpZero ? [] : force.filter((id) => p.party.includes(id) && !activeParty().includes(id));
+    if (need.length && activeParty().length >= ACTIVE_MAX) {
+      this.benchBefore ??= [...p.bench];
+      p.bench = p.bench.filter((id) => !need.includes(id));
+      const names = need.map((id) => characters[id]?.name ?? id).join(', ');
+      this.clearText();
+      for (const side of ['left', 'right'] as Side[]) this.hidePortrait(side);
+      return this.openParty({ guide: `${names}은(는) 이번 싸움에 반드시 나갑니다. 대신 쉴 동료를 한 명 빼 주세요`, force: need, done: () => this.startBattle(b) });
+    }
     // 맵이 떠 있으면 화면을 바꾸지 않고, 카메라만 전투장으로 옮겨 그 자리에서 싸운다
     const m = this.mapState === 'on' ? (this.scene.get('Explore') as ExploreScene) : null;
     let center = m?.battleCenter(b.battle, b.hpZero?.who);
@@ -1079,6 +1119,10 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   private afterBattle(r: BattleResult) {
     this.scene.wake();
     const a = r.action;
+    if (this.benchBefore) {
+      gameState.progress.bench = this.benchBefore;
+      this.benchBefore = null;
+    }
     if (a === 'gameover-retry') {
       // 가장 최근 저장 지점부터 다시
       const cp = save.checkpoint;
@@ -1144,6 +1188,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   update() {
     const talk = this.mode !== 'explore' && this.mode !== 'end' && !this.looking && !this.staging;
     for (const b of [this.logBtn, this.autoBtn, this.skipBtn]) if (b && b.visible !== talk) b.setVisible(talk);
+    const pb = this.mode === 'explore' && !this.looking && !this.overlay && gameState.progress.party.length > ACTIVE_MAX;
+    if (this.partyBtn && this.partyBtn.visible !== pb) this.partyBtn.setVisible(pb);
   }
 
   private onKey(ev: KeyboardEvent) {
@@ -1156,6 +1202,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     }
     // 이동 중에는 이동 키(WASD)가 겹치므로 대화 단축키를 쓰지 않는다. 살펴보기 독백은 F·스페이스 등으로 넘김
     if (this.mode === 'explore' || this.looking) {
+      if (k === 'p' && this.mode === 'explore' && !this.looking && !this.overlay) return this.openPartyFromMap();
       if (this.looking && !this.overlay && (ev.code === 'Space' || ev.code === 'Enter' || k === 'z' || k === 'f')) {
         ev.preventDefault();
         this.onPress();
@@ -1198,14 +1245,16 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     let i = this.nodeIdx + 1;
     for (; i < nodes.length; i++) {
       const n = nodes[i];
-      if ('place' in n || 'choices' in n || 'ending' in n || 'chapter' in n || 'battle' in n || 'hpZero' in n || 'explore' in n) break; // 전투·이동 맵은 건너뛰지 않음
+      if ('place' in n || 'choices' in n || 'ending' in n || 'chapter' in n || 'battle' in n || 'hpZero' in n || 'explore' in n || 'branch' in n || 'party' in n) break; // 전투·이동 맵·자동 분기·파티 선택은 건너뛰지 않음
       if ('text' in n) gameState.applyEffects(n);
       if ('stage' in n) passed.push(n.stage);
       // 건너뛰어도 효과는 남는다 (아이템 확대는 닫힌 채로)
       if ('unlock' in n) unlock(n.unlock);
       if ('join' in n) joinParty(n.join);
+      if ('leave' in n) leaveParty(n.leave);
       if ('guest' in n) addGuest(n.guest);
       if ('costume' in n) this.setCostume(n.who ?? 'leon', n.costume);
+      if ('unlock' in n && n.unlock === 'weapon') this.setCostume('leon', WEAPON_COSTUME);
       if ('cg' in n) cg = n.cg;
       if ('wound' in n && (n.wound === 'sense' || n.wound === 'off')) sense = n.wound === 'sense';
     }
@@ -1477,6 +1526,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       shown: this.lastShown,
       place: this.place,
     };
+    // 장면의 첫 선택지 앞 상태 (엔딩의 "선택지로 돌아가기"가 이 장면으로 정해져 있을 때)
+    if (this.scene_.nodes.findIndex((n) => 'choices' in n) === this.nodeIdx) save.setChoiceState(`${this.story.id}:${this.scene_.id}`, this.lastChoice.state);
 
     const bh = 54;
     const gap = 12;
@@ -1523,6 +1574,31 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       const sc = this.story.scenes[si];
       const ni = sc.nodes.findIndex((n) => 'choices' in n && n.choices.some((c) => c.next === target));
       if (ni < 0) continue;
+      const state = gameState.snapshot();
+      const opt = (sc.nodes[ni] as { choices: ChoiceOption[] }).choices.find((c) => c.next === target);
+      for (const k of Object.keys(opt?.flags ?? {})) delete state.flags[k];
+      return this.rebuildPoint(si, ni, state);
+    }
+    return null;
+  }
+
+  /** 엔딩의 retry: 정해 둔 장면의 첫 선택지 앞 (그때 남긴 상태. 없으면 지금 상태) */
+  private retryPoint(sceneId: string): ChoicePoint | null {
+    const si = this.story.scenes.findIndex((s) => s.id === sceneId);
+    const ni = si < 0 ? -1 : this.story.scenes[si].nodes.findIndex((n) => 'choices' in n);
+    if (ni < 0) {
+      console.error(`[story] 엔딩의 retry 장면에 선택지가 없습니다: ${sceneId}`);
+      return null;
+    }
+    const s = save.choiceState(`${this.story.id}:${sceneId}`);
+    const base = gameState.snapshot();
+    return this.rebuildPoint(si, ni, s ? { ...base, ...s, progress: s.progress ?? base.progress } : base);
+  }
+
+  /** 장면 si의 대사 ni 직전 화면(인물, 마지막 글, 장소)을 데이터에서 다시 만든다 */
+  private rebuildPoint(si: number, ni: number, state: StateData): ChoicePoint {
+    {
+      const sc = this.story.scenes[si];
       const stage: ChoicePoint['stage'] = { left: null, right: null };
       let shown: LastShown = null;
       let place = sc.place;
@@ -1539,12 +1615,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
         } else if ('monologue' in n) shown = { kind: 'mono', lines: n.monologue };
         else if ('place' in n) place = n.place;
       }
-      const state = gameState.snapshot();
-      const opt = (sc.nodes[ni] as { choices: ChoiceOption[] }).choices.find((c) => c.next === target);
-      for (const k of Object.keys(opt?.flags ?? {})) delete state.flags[k];
       return { scene: si, node: ni, state, stage, shown, place };
     }
-    return null;
   }
 
   /** 엔딩 화면에서 "선택지로 돌아가기": 선택 직전 화면과 상태로 되돌린다 */
@@ -1578,6 +1650,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
   /** 조작 해금: 화면 가운데 "스킬 해금: 오러 찌르기 (E)" 2초 뒤 다음으로 */
   private showUnlock(what: Unlock) {
     const fresh = unlock(what);
+    if (what === 'weapon') this.setCostume('leon', WEAPON_COSTUME);
     if (!fresh) return this.nextNode();
     this.mode = 'busy';
     this.toggleAuto(false);
@@ -1605,6 +1678,74 @@ export class StoryScene extends Phaser.Scene implements MapHost {
         },
       });
     });
+  }
+
+  /** 이동 중 파티 (P) */
+  private openPartyFromMap() {
+    if (this.overlay || gameState.progress.party.length <= ACTIVE_MAX) return;
+    const m = this.mapState === 'on' ? (this.scene.get('Explore') as ExploreScene) : null;
+    m?.hold(true);
+    this.openParty({ done: () => m?.hold(false) });
+  }
+
+  /**
+   * 파티 선택: 출전할 4명을 고른다 (레온과 force는 뺄 수 없음). 숫자 키나 클릭으로 넣고 빼고, 확정 (Enter)
+   */
+  private openParty(o: { guide?: string; force?: string[]; done: () => void }) {
+    const p = gameState.progress;
+    const members = p.party.length ? p.party : ['leon'];
+    const locked = new Set(['leon', ...(o.force ?? [])]);
+    const want = Math.min(ACTIVE_MAX, members.length);
+    const picked = new Set(activeParty());
+    for (const id of locked) picked.add(id);
+    // 강제 출전으로 넘친 만큼은 고르게 비워 둔다
+    while (picked.size > want) {
+      const drop = [...picked].reverse().find((id) => !locked.has(id));
+      if (!drop) break;
+      picked.delete(drop);
+    }
+    const shade = this.add.rectangle(0, 0, W, H, 0x05050a, 0.9).setOrigin(0).setInteractive();
+    const head = this.add.text(W / 2, 86, '파티', { fontFamily: FONT, fontSize: '34px', color: '#e0c27a', fontStyle: 'bold' }).setOrigin(0.5);
+    const guide = this.add
+      .text(W / 2, 140, o.guide ?? '함께 싸울 4명을 고르세요. 레온은 뺄 수 없습니다', { fontFamily: FONT, fontSize: '20px', color: '#e8e8e8', align: 'center', wordWrap: { width: W - 200, useAdvancedWrap: true } })
+      .setOrigin(0.5, 0);
+    const count = this.add.text(W / 2, H - 170, '', { fontFamily: FONT, fontSize: '20px', color: '#cdb88a' }).setOrigin(0.5);
+    const cards: Button[] = [];
+    const cw = 150;
+    const gap = 16;
+    const x0 = W / 2 - ((members.length - 1) * (cw + gap)) / 2;
+    const ok = makeButton(this, W / 2, H - 110, '확정 (Enter)', () => close(), { w: 220, h: 52, fontSize: 22, depth: 0 });
+    const refresh = () => {
+      members.forEach((id, i) => {
+        const on = picked.has(id);
+        cards[i].setOn(on).setLabel(`${i + 1}. ${characters[id]?.name ?? id}
+Lv ${levelOf(id)}${locked.has(id) ? '  고정' : on ? '' : '  대기'}`);
+      });
+      count.setText(`출전 ${picked.size} / ${want}`);
+      ok.setEnabled(picked.size === want);
+    };
+    const toggle = (id: string) => {
+      if (locked.has(id)) return;
+      if (picked.has(id)) picked.delete(id);
+      else if (picked.size < want) picked.add(id);
+      refresh();
+    };
+    members.forEach((id, i) => cards.push(makeButton(this, x0 + i * (cw + gap), H / 2 - 10, '', () => toggle(id), { w: cw, h: 110, fontSize: 20, depth: 0 })));
+    const onKey = (ev: KeyboardEvent) => {
+      const n = Number(ev.key);
+      if (n >= 1 && n <= members.length) toggle(members[n - 1]);
+      else if (ev.key === 'Enter' && picked.size === want) close();
+    };
+    const close = () => {
+      if (picked.size !== want) return;
+      this.input.keyboard!.off('keydown', onKey);
+      setActive([...picked]);
+      this.closeOverlay();
+      o.done();
+    };
+    refresh();
+    this.overlay = this.add.container(0, 0, [shade, head, guide, count, ...cards, ok]).setDepth(32);
+    this.time.delayedCall(200, () => this.input.keyboard!.on('keydown', onKey));
   }
 
   /** 도트 겉모습 바꾸기 (저장에 남고, 맵·전투 그림이 따른다) */
@@ -1646,7 +1787,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     if (!preview) save.markEnding(id);
     this.showCg(null);
     this.setSense(false);
-    if (!preview) this.lastChoice ??= this.findChoicePoint();
+    if (!preview) this.lastChoice = def?.retry ? this.retryPoint(def.retry) ?? this.lastChoice : this.lastChoice ?? this.findChoicePoint();
     // 이어하기는 엔딩 갈래를 다시 보지 않도록 선택지가 있던 곳부터
     if (this.lastChoice && !preview) {
       const sc = this.story.scenes[this.lastChoice.scene];

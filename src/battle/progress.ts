@@ -8,7 +8,7 @@ import { gameState, type Progress } from '../game/GameState';
  * 경험치는 넘쳐도 그대로 쌓아 두고, 레벨은 "경험치로 닿는 레벨"과 "지금 구간의 최대 레벨" 중 작은 값.
  * 그래서 최대 레벨에서 넘친 경험치는 다음 구간이 열리면 저절로 반영된다.
  */
-export type Unlock = 'move' | 'evade' | 'skill' | 'ult' | 'combo';
+export type Unlock = 'move' | 'evade' | 'skill' | 'ult' | 'combo' | 'weapon';
 
 export const PARTY_IDS = Object.keys(fighters.party);
 const EXP: number[] = expTable.levels;
@@ -60,10 +60,12 @@ export function levelProgress(id: string) {
 /** 조작은 대본의 unlock 지점에서 열린다 (파티 전원 공통). id는 예전 호출과 맞추려고 남겨 둠 */
 export const isUnlocked = (_id: string, what: Unlock, p: Progress = gameState.progress) => what === 'move' || p.unlocks.includes(what);
 
-const UNLOCK_KEY: Record<Unlock, string> = { move: '', evade: 'Shift', skill: 'E', ult: 'Q', combo: 'R' };
+const UNLOCK_KEY: Record<Unlock, string> = { move: '', evade: 'Shift', skill: 'E', ult: 'Q', combo: 'R', weapon: '' };
 
 /** 해금 알림 글. 레온의 기술 이름이 있으면 함께 ("스킬 해금: 오러 찌르기 (E)") */
 export function unlockInfo(what: Unlock) {
+  // 각인 무기 (4막 장면 7): 알림 글은 4막_연출.md 그대로
+  if (what === 'weapon') return { name: '각인 무기', guide: '', banner: '각인 무기: 맹세의 검이 오러를 머금었다' };
   const u = levels.unlocks.find((x) => x.what === what);
   const leon = (fighters.party as Record<string, Record<string, { name?: string }>>).leon;
   const move = what === 'evade' || what === 'skill' || what === 'ult' ? leon?.[what]?.name : undefined;
@@ -101,6 +103,32 @@ export function addGuest(id: string, p: Progress = gameState.progress) {
   p.guests[id] = levelOf('leon', p);
   p.party.push(id);
   return true;
+}
+
+/** 파티 이탈: 파티와 대기 목록에서 뺀다. 경험치 기록은 남김 (다시 합류할 수 있음) */
+export function leaveParty(id: string, p: Progress = gameState.progress) {
+  if (!p.party.includes(id)) return false;
+  p.party = p.party.filter((m) => m !== id);
+  p.bench = (p.bench ?? []).filter((m) => m !== id);
+  if (p.guests) delete p.guests[id];
+  return true;
+}
+
+/** 한 번에 출전하는 인원 */
+export const ACTIVE_MAX = 4;
+
+/** 출전하는 파티 (대기 동료 빼고 최대 4명, 레온은 늘 맨 앞) */
+export function activeParty(p: Progress = gameState.progress) {
+  const all = p.party?.length ? p.party : ['leon'];
+  const on = all.filter((id) => id === 'leon' || !(p.bench ?? []).includes(id));
+  const list = ['leon', ...on.filter((id) => id !== 'leon')].filter((id) => all.includes(id) || id === 'leon');
+  return list.slice(0, ACTIVE_MAX);
+}
+
+/** 출전할 사람을 정한다 (나머지는 대기). 레온은 늘 들어간다 */
+export function setActive(ids: string[], p: Progress = gameState.progress) {
+  const keep = new Set(['leon', ...ids]);
+  p.bench = p.party.filter((id) => !keep.has(id));
 }
 
 /** 지금 파티에서 경험치를 받는 인물 (조사, 전투 이벤트, 선택지 경험치. 임시 동료는 빠짐) */

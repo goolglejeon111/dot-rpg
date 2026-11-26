@@ -114,9 +114,24 @@ export interface PlaceNode {
   place: string;
 }
 
-/** 조작 해금 (회피, 스킬, 궁극기, 합동 기술). 화면 가운데 알림 뒤 다음으로 */
+/** 조작 해금 (회피, 스킬, 궁극기, 합동 기술), weapon = 각인 무기 (레온의 맹세의 검 강화, 도트 leon_blade). 화면 가운데 알림 뒤 다음으로 */
 export interface UnlockNode {
-  unlock: 'evade' | 'skill' | 'ult' | 'combo';
+  unlock: 'evade' | 'skill' | 'ult' | 'combo' | 'weapon';
+}
+
+/** 자동 분기: 위에서부터 조건을 보고 처음 맞는 장면으로 (조건 없는 항목 = 그 밖에). 하나도 안 맞으면 다음 ## 장면으로 */
+export interface BranchNode {
+  branch: { condition?: Condition; next: string }[];
+}
+
+/** 파티 이탈: 파티·대기 목록에서 뺀다 (경험치 기록은 남김) */
+export interface LeaveNode {
+  leave: string;
+}
+
+/** 파티 선택 화면 (동료가 5명 이상일 때만 열고 안내. 4명 이하면 그냥 다음으로) */
+export interface PartyNode {
+  party: 'select';
 }
 
 /** 파티 합류 (임시 동료였으면 정식 파티원으로) */
@@ -159,6 +174,9 @@ export type StoryNode =
   | PlaceNode
   | UnlockNode
   | JoinNode
+  | LeaveNode
+  | PartyNode
+  | BranchNode
   | GuestNode
   | CostumeNode
   | ItemNode
@@ -195,6 +213,8 @@ export interface EndingDef {
   epilogue?: string;
   /** 엔딩 일러스트 파일 (없으면 임시 화면) */
   illust?: string;
+  /** "선택지로 돌아가기"가 돌아갈 장면 ID (그 장면의 첫 선택지 앞). 없으면 마지막으로 고른 선택지 */
+  retry?: string;
 }
 
 export interface ChapterDef {

@@ -46,6 +46,8 @@ export class BattleHUD extends Phaser.Scene {
   private guard?: { bar: Bar; name: Phaser.GameObjects.Text };
   private vital?: { bar: Bar; name: Phaser.GameObjects.Text };
   private timerText!: Phaser.GameObjects.Text;
+  /** 버티기 전투: 시간이 갈수록 보랏빛으로 차오르는 화면 가장자리 */
+  private surviveEdge?: Phaser.GameObjects.Image;
   private toastText!: Phaser.GameObjects.Text;
   private guideBox!: Phaser.GameObjects.Container;
   private guideText!: Phaser.GameObjects.Text;
@@ -130,6 +132,7 @@ export class BattleHUD extends Phaser.Scene {
     this.expText = this.add.text(W / 2 + 122 * S + 10, H - 30, '', { fontFamily: FONT, fontSize: '15px', color: '#cfe8ee' }).setShadow(0, 2, '#000', 2);
     if (cut) for (const o of [this.expBar.frame, this.expBar.fill, this.lvText, this.expText]) o.setVisible(false);
 
+    if (this.b.bdef.survive && this.textures.exists('edge_all')) this.surviveEdge = this.add.image(0, 0, 'edge_all').setOrigin(0).setDepth(-1).setTint(0x7a3cff).setAlpha(0);
     this.timerText = this.add.text(W / 2, 16, '', { fontFamily: FONT, fontSize: '22px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5, 0).setShadow(0, 2, '#000', 3);
 
     // ---- 기술 아이콘 (PC) 또는 휴대폰 버튼 ----
@@ -363,6 +366,8 @@ export class BattleHUD extends Phaser.Scene {
     }
     if (this.vital) this.setBar(this.vital.bar, va ? va.hp / va.maxHp : 0);
 
+    const sv = b.bdef.survive;
+    if (sv && this.surviveEdge) this.surviveEdge.setAlpha(Math.min(0.85, (b.elapsed / 1000 / sv) * 0.85));
     const tl = b.timeLeft;
     this.timerText.setText(tl === null ? '' : `남은 시간 ${Math.ceil(tl)}`);
 

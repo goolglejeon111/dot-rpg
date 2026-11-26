@@ -12,6 +12,246 @@
     "foot": 2,
     "rise": 2
   },
+  "leon_hood": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "leon_blade": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "serena_hood": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 3
+  },
+  "elysia": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 3
+  },
+  "karg": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "adrian": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 5
+  },
+  "galia": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 4
+  },
+  "bram": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "oswald": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 5
+  },
+  "aldric": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 5
+  },
+  "marcion_hooded": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "marcion": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "ignatius": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "herman": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 5
+  },
+  "cassius": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 5
+  },
+  "ursha": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 5
+  },
+  "blacksmith": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 4
+  },
+  "dwarf_smith": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 1
+  },
+  "dwarf_gatekeeper": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 3
+  },
+  "dwarf_kid": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": -3
+  },
+  "dwarf_kid2": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": -3
+  },
+  "dwarf_kid3": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": -3
+  },
+  "mob_royal_knight": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_paladin": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "paladin_captain": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_gnosis": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "raid_captain": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "imperial_spear": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "imperial_archer": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "pursuit_sword": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "pursuit_shield": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "mob_citizen": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "mob_wolf": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "wolf_scout": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "wolf_scout_tied": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 7
+  },
+  "bandit_blade": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "bandit_archer": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "astra_mage": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "astra_captain": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
+  "astra_binder": {
+    "w": 32,
+    "h": 48,
+    "foot": 2,
+    "rise": 6
+  },
   "_tiles": {
     "extra": [
       "floor_b",

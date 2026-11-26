@@ -17,6 +17,7 @@ import { TILES, EXTRA, VARIANTS, ALTERNATE, SHADOW_BELOW, PROPS } from './hd/pal
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PEOPLE, drawPerson, drawWeapon, FOOT } from './hd/people.mjs';
+import { RAMPS as R } from './palette.mjs';
 import { Layer } from './hd/layer.mjs';
 import { encodePNG } from './png.mjs';
 
@@ -85,26 +86,66 @@ const POSES = {
 const SHOULDERS = { down: [[9, 22], [22, 22]], up: [[9, 22], [22, 22]], right: [[15, 22]] };
 const HANG = { down: [[9, 22], [8, 30]], up: [[22, 22], [23, 30]] };
 
+// 마력 구슬 (시전 손)
+function orb(cell, cx, cy, r, ramp) {
+  const O = new Layer(48, 48);
+  O.ellipse(cx, cy, r, r, (x, y, nx, ny) => (nx * nx + ny * ny < 0.25 ? ramp[0] : ny < 0 ? ramp[1] : ramp[2]));
+  O.outline();
+  O.set(cx - r * 0.4, cy - r * 0.4, ramp[0]);
+  cell.over(O);
+}
+// 시전 손 위치 (인물 32x48 기준)
+const CAST_HAND = { down: [24, 28], right: [22, 27], up: [7, 28] };
+const hash01 = (a, b) => {
+  const s = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
+  return s - Math.floor(s);
+};
+
 function battleFrame(id, view, col) {
   const p = PEOPLE[id];
+  const cfg = p.battle ?? { weapon: p.weapon };
   const v = view === 'left' ? 'right' : view;
   const cell = new Layer(48, 48);
   const fwd = { down: [0, 1], right: [1, 0], up: [0, -1] }[v];
   const put = (body, dx = 0, dy = 0) => cell.over(body, OX + dx, OY + dy);
-  let res;
+  // 칼을 휘두르는 인물은 손에 든 물건(허리 칼, 등의 칼)을 숨김. 찌르기·마법형은 그대로
+  const hide = !cfg.lunge && !cfg.cast;
+  const P = (vv, o = {}) => drawPerson(id, vv, { battle: hide, ...o });
+  const drop = p.drop ?? 0;
+  let res = cell;
   if (col === 11) {
-    const lying = drawPerson(id, 'down').rot90();
+    const lying = P('down').rot90();
     cell.over(lying, 0, 48 - 32 - 0);
-    res = cell;
   } else if (col === 10) {
-    put(drawPerson(id, v, { dy: 5, lift: 0 }));
-    res = cell;
+    put(P(v, { dy: 5, lift: 0 }));
   } else if (col === 7) {
-    put(drawPerson(id, v), -fwd[0] * 2, -fwd[1] * 2 + 1);
-    res = cell;
+    put(P(v), -fwd[0] * 2, -fwd[1] * 2 + 1);
   } else if (col >= 8) {
-    put(drawPerson(id, v, { dy: col === 9 ? -1 : 0 }));
-    res = cell;
+    if (cfg.prep) {
+      // 자폭 준비: 웅크리고 몸 안쪽에서 하얀 빛이 새어 나옴
+      const b = P(v, { dy: 2 });
+      for (let y = 0; y < b.h; y++)
+        for (let x = 0; x < b.w; x++) if (b.d[y][x] && hash01(x + col * 7, y + v.length) < (col === 8 ? 0.12 : 0.28)) b.d[y][x] = hash01(y, x) > 0.5 ? R.white[0] : R.sky[0];
+      put(b);
+    } else {
+      put(P(v, { dy: col === 9 ? -1 : 0 }));
+      if (cfg.cast) {
+        const [hx, hy] = CAST_HAND[v];
+        orb(cell, OX + hx, OY + hy + drop - (col === 9 ? 1 : 0), col === 8 ? 2.5 : 4, cfg.cast);
+      }
+    }
+  } else if (cfg.lunge) {
+    // 몸에 든 창·활을 내밀며 찌름 (홀수 열 = 찌름)
+    const d = col % 2 === 1 ? 3 : -1;
+    put(P(v), fwd[0] * d, fwd[1] * d);
+  } else if (cfg.cast) {
+    // 마법형: 손을 내밀어 마력을 쏨
+    const k = col % 2;
+    put(P(v), fwd[0] * k, fwd[1] * k);
+    if (k === 1 || col === 6) {
+      const [hx, hy] = CAST_HAND[v];
+      orb(cell, OX + hx + fwd[0] * 3 + fwd[0] * k, OY + hy + drop + fwd[1] * 3 + fwd[1] * k, 3, cfg.cast);
+    }
   } else {
     const pose = ['a1w', 'a1s', 'a2w', 'a2s', 'a3w', 'a3s', 'guard'][col];
     const pz = POSES[v][pose];
@@ -116,8 +157,8 @@ function battleFrame(id, view, col) {
       const other = SHOULDERS[v].find((s) => s !== sh);
       arms.unshift({ from: other, to: [other[0] < 16 ? other[0] - 1 : other[0] + 1, 30] });
     }
-    const body = drawPerson(id, v, { arms, dy: pz.dy ?? 0 });
-    const wp = drawWeapon(p.weapon, OX + hx + (pz.dx ?? 0), OY + hy + (pz.dy ?? 0) + (p.drop ?? 0), pz.ang);
+    const body = P(v, { arms, dy: pz.dy ?? 0 });
+    const wp = drawWeapon(cfg.weapon, OX + hx + (pz.dx ?? 0), OY + hy + (pz.dy ?? 0) + drop, pz.ang);
     if (pz.behind) {
       cell.over(wp);
       put(body, pz.dx ?? 0);
@@ -125,7 +166,11 @@ function battleFrame(id, view, col) {
       put(body, pz.dx ?? 0);
       cell.over(wp);
     }
-    res = cell;
+    if (cfg.dual && col !== 6) {
+      // 쌍단검: 반대 손에도 하나 (몸 뒤)
+      const w2 = drawWeapon(cfg.weapon, OX + (v === 'right' ? hx - 6 : 32 - hx), OY + hy + 2 + drop, 180 - pz.ang);
+      cell.under(w2);
+    }
   }
   return view === 'left' ? res.flipX() : res;
 }
@@ -166,12 +211,25 @@ const write = (rel, buf) => {
   console.log('만듦', rel);
 };
 
+// 예전 그림을 public/assets/_old/ 아래 같은 자리로 한 번 복사
+function keepOld(rel) {
+  const old = join(ROOT, rel.replace('public/assets/', 'public/assets/_old/'));
+  if (existsSync(old) || !existsSync(join(ROOT, rel))) return;
+  mkdirSync(dirname(old), { recursive: true });
+  copyFileSync(join(ROOT, rel), old);
+}
 const list = {};
 const preview = [];
 for (const id of Object.keys(PEOPLE)) {
   const field = fieldSheet(id);
+  keepOld(`public/assets/sprites/${id}.png`);
   write(`public/assets/sprites/${id}.png`, toPNG(field, 32, 48, 5));
-  write(`public/assets/battle/chars/${id}.png`, toPNG(battleSheet(id), 48, 48, 12));
+  // 전투 시트는 예전에 전투 시트가 있던 인물만 (예전 그림은 _old로 옮겨 둠)
+  const bt = `public/assets/battle/chars/${id}.png`;
+  if (existsSync(join(ROOT, bt)) || existsSync(join(ROOT, 'public/assets/_old/battle/chars', `${id}.png`))) {
+    keepOld(bt);
+    write(bt, toPNG(battleSheet(id), 48, 48, 12));
+  }
   const top = Math.min(...field.slice(0, 1).map((f) => f.bounds().y0));
   list[id] = { w: 32, h: 48, foot: 48 - 1 - FOOT, rise: FOOT - top + 1 - OLD_HEIGHT };
   preview.push(...field.slice(0, 20).filter((_, i) => i % 5 !== 4));

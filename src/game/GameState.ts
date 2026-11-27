@@ -16,6 +16,8 @@ export interface Progress {
   unlocks: string[];
   /** 인물별 도트 겉모습 (대본의 costume. 없으면 기본 그림) */
   costume: Record<string, string>;
+  /** 인물별 기술 묶음 (대본의 kit. 없으면 기본. fighters.json의 kits) */
+  kit?: Record<string, string>;
   /** 임시 동료: 인물 ID → 들어온 순간의 레온 레벨 (경험치를 받지 않고 이 레벨로 고정. 대본의 guest) */
   guests: Record<string, number>;
   /** 대기 동료: 파티에 있지만 출전하지 않는 인물 (파티 선택 화면. 동료가 5명 이상일 때) */
@@ -127,6 +129,7 @@ class GameState {
     if (!Array.isArray(p.party) || !p.party.length) p.party = ['leon'];
     if (!p.unlocks.includes('move')) p.unlocks.unshift('move');
     p.costume ??= {};
+    p.kit ??= {};
     p.guests ??= {};
     if (!Array.isArray(p.bench)) p.bench = [];
     if (!p.hp || typeof p.hp !== 'object') p.hp = {}; // 예전 저장: 가득 찬 상태로 시작

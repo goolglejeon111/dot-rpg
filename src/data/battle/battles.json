@@ -9,9 +9,8 @@
     "start": { "leon": [200, 170] },
     "allies": [{ "id": "bram", "x": 250, "y": 175 }],
     "waves": [
-      [{ "enemy": "gnosis", "actor": "g1" }, { "enemy": "gnosis", "actor": "g2" }, { "enemy": "gnosis", "actor": "g3" }],
-      [{ "enemy": "gnosis", "x": 40, "y": 110 }, { "enemy": "gnosis", "x": 410, "y": 230 }],
-      [{ "enemy": "gnosis", "x": 230, "y": 60 }]
+      [{ "enemy": "gnosis_first", "actor": "g1" }, { "enemy": "gnosis_first", "actor": "g2" }, { "enemy": "gnosis_first", "actor": "g3" }],
+      [{ "enemy": "gnosis_first", "x": 230, "y": 60 }]
     ],
     "guide": "WASD 이동 · 왼쪽 클릭 공격 (바라보는 쪽으로) · Space 점프"
   },
@@ -267,7 +266,7 @@
     "arena": { "w": 448, "h": 288, "floor": "grass", "tint": "#ffffff", "map": "astra_portal" },
     "party": "current",
     "force": ["elysia"],
-    "waves": [[{ "enemy": "astra_mage", "x": 380, "y": 60 }, { "enemy": "astra_mage", "x": 60, "y": 60 }, { "enemy": "astra_mage", "x": 400, "y": 220 }, { "enemy": "astra_mage", "x": 40, "y": 220 }], [{ "enemy": "astra_mage", "x": 380, "y": 40 }, { "enemy": "astra_mage", "x": 60, "y": 40 }, { "enemy": "astra_mage", "x": 224, "y": 20 }, { "enemy": "astra_binder", "x": 420, "y": 160 }, { "enemy": "astra_binder", "x": 30, "y": 160 }], [{ "enemy": "astra_golem", "x": 224, "y": 60 }]]
+    "waves": [[{ "enemy": "astra_mage", "x": 380, "y": 60 }, { "enemy": "astra_mage", "x": 60, "y": 60 }, { "enemy": "astra_mage", "x": 400, "y": 220 }, { "enemy": "astra_mage", "x": 40, "y": 220 }], [{ "enemy": "astra_binder", "x": 420, "y": 160 }, { "enemy": "astra_binder", "x": 30, "y": 160 }], [{ "enemy": "astra_golem", "x": 224, "y": 60 }]]
   },
   "산길 몹 1": {
     "title": "바위 도마뱀",

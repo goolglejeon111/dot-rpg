@@ -4,31 +4,31 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "serena": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 3
+    "rise": 4
   },
   "leon_hood": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "leon_blade": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "serena_hood": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 4
+    "rise": 5
   },
   "elysia": {
     "w": 32,
@@ -46,7 +46,7 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "galia": {
     "w": 32,
@@ -64,7 +64,7 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "aldric": {
     "w": 32,
@@ -76,13 +76,13 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "marcion": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "ignatius": {
     "w": 32,
@@ -94,19 +94,19 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "cassius": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 5
   },
   "ursha": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 2
+    "rise": 3
   },
   "blacksmith": {
     "w": 32,
@@ -118,13 +118,13 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": -10
+    "rise": -11
   },
   "dwarf_gatekeeper": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": -7
+    "rise": -8
   },
   "dwarf_kid": {
     "w": 32,
@@ -166,13 +166,13 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "raid_captain": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "imperial_spear": {
     "w": 32,
@@ -184,7 +184,7 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "pursuit_sword": {
     "w": 32,
@@ -226,31 +226,31 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "bandit_archer": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "astra_mage": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "astra_captain": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "astra_binder": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "mob_royal_knight_v2": {
     "w": 32,
@@ -292,13 +292,13 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "mob_gnosis_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "imperial_spear_v2": {
     "w": 32,
@@ -316,13 +316,13 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "imperial_archer_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "pursuit_sword_v2": {
     "w": 32,
@@ -382,37 +382,37 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "bandit_blade_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "bandit_archer_v2": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "bandit_archer_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "astra_mage_v2": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "astra_mage_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 6
+    "rise": 7
   },
   "_tiles": {
     "anim": {
@@ -513,7 +513,7 @@
       "cellar_wall": "#b7a49d",
       "mud": "#784930",
       "mud_snow": "#7e523b",
-      "shack_wall": "#754930",
+      "shack_wall": "#764930",
       "shack_roof": "#8b434a",
       "bridge": "#9e6a3f",
       "grass": "#6fba53",
@@ -521,7 +521,7 @@
       "river": "#486bb1",
       "desert": "#d7b778",
       "desert2": "#d8b879",
-      "dune": "#d6b677",
+      "dune": "#d5b576",
       "sandstone": "#a37f52",
       "sandstone_top": "#ccac73",
       "oasis_water": "#6da3dc",
@@ -649,7 +649,13 @@
       "lava2_a2",
       "lava2_a3",
       "mud_snow_v1",
-      "mud_snow_v2"
+      "mud_snow_v2",
+      "desert_v4",
+      "desert_v5",
+      "desert_v6",
+      "desert2_v2",
+      "desert2_v3",
+      "dune_v2"
     ],
     "variants": {
       "floor": [
@@ -677,13 +683,19 @@
       "desert": [
         "desert_v1",
         "desert_v2",
-        "desert_v3"
+        "desert_v3",
+        "desert_v4",
+        "desert_v5",
+        "desert_v6"
       ],
       "desert2": [
-        "desert2_v1"
+        "desert2_v1",
+        "desert2_v2",
+        "desert2_v3"
       ],
       "dune": [
-        "dune_v1"
+        "dune_v1",
+        "dune_v2"
       ],
       "mud": [
         "mud_v1",
@@ -1017,21 +1029,30 @@
   "_hd": {
     "assets/sprites/leon.png": 2,
     "assets/battle/chars/leon.png": 2,
+    "assets/battle/chars/leon_stance.png": 2,
     "assets/sprites/serena.png": 2,
     "assets/battle/chars/serena.png": 2,
+    "assets/battle/chars/serena_stance.png": 2,
     "assets/sprites/leon_hood.png": 2,
     "assets/battle/chars/leon_hood.png": 2,
+    "assets/battle/chars/leon_hood_stance.png": 2,
     "assets/sprites/leon_blade.png": 2,
     "assets/battle/chars/leon_blade.png": 2,
+    "assets/battle/chars/leon_blade_stance.png": 2,
     "assets/sprites/serena_hood.png": 2,
+    "assets/battle/chars/serena_hood_stance.png": 2,
     "assets/sprites/elysia.png": 2,
     "assets/battle/chars/elysia.png": 2,
+    "assets/battle/chars/elysia_stance.png": 2,
     "assets/sprites/karg.png": 2,
     "assets/battle/chars/karg.png": 2,
+    "assets/battle/chars/karg_stance.png": 2,
     "assets/sprites/adrian.png": 2,
     "assets/battle/chars/adrian.png": 2,
+    "assets/battle/chars/adrian_stance.png": 2,
     "assets/sprites/galia.png": 2,
     "assets/battle/chars/galia.png": 2,
+    "assets/battle/chars/galia_stance.png": 2,
     "assets/sprites/bram.png": 2,
     "assets/battle/chars/bram.png": 2,
     "assets/sprites/oswald.png": 2,

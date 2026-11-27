@@ -806,7 +806,7 @@
       ]
     },
     {
-      "id": "interlude4", "title": "막간. 성전의 깃발", "place": "루멘 신성국 대성당", "color": "#3a2c14",
+      "id": "interlude4", "title": "막간. 성전의 깃발", "place": "성도 대성당", "color": "#3a2c14",
       "nodes": [
         {"speaker":"ignatius","expression":"normal","text":"아드리안. 성전의 선봉을 맡아 주게."},
         {"monologue":["주름진 손이, 축복을 내리듯 아드리안의 어깨에 얹혔다."]},

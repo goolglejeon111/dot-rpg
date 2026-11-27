@@ -207,7 +207,9 @@ export const CAST = {
     held: ['kiteShield'],
     battle: { lunge: true },
   },
+  // 옷 색 3가지(초록·갈색·하늘)와 바구니 있음·없음을 돌려 씀 (점검_피드백 4절)
   mob_citizen: { faces: ['extra_a', 'extra_c', 'extra_d', 'extra_b'], hairs: [HAIR.wood, HAIR.ginger, HAIR.grey, HAIR.black],
+    cloths: [CLOTH.green, CLOTH.brown, CLOTH.sky, CLOTH.brown], helds: [['basket'], [], [], ['basket']],
     ...base, hair: HAIR.wood, hairStyle: 'short', cloth: CLOTH.green, lower: 'tunic', coat: 36, belt: CLOTH.wood, pants: CLOTH.sand, shoes: CLOTH.wood,
     held: ['basket'],
   },

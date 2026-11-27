@@ -163,6 +163,10 @@ export interface SegmentDef {
   until?: string;
   /** 점프 장애물 (docs/대본/점프_장애물.md). 칸 단위 */
   jumps?: JumpDef[];
+  /** 이 구간 동안 왼쪽 위에 띄울 장소 이름 (장면 장소와 맵이 다를 때). 구간이 끝나면 장면 장소로 돌아간다 */
+  place?: string;
+  /** 점프하면 이 안내 글을 띄우고 근처 엑스트라가 레온 쪽을 돌아본다 (벌칙 없음, 5막 순례자 구간) */
+  noJump?: string;
 }
 export interface JumpDef {
   type: 'hurdle' | 'gap';
@@ -206,6 +210,13 @@ const NEAR = 52; // 이만큼 가까우면 표시가 뜨고 F로 살펴볼 수 �
 const FOOT = { w: 14, h: 8 };
 /** 물속 걸음 빠르기 배율, 잠기는 깊이(px, 몸의 1/3쯤) */
 const WADE_SPEED = 0.55;
+/** 동료끼리 떨어져 서는 거리 (움직임_피드백 2절: 14~16px) */
+const FOLLOW_GAP = 15;
+/** 방향을 바꾸는 축 비율 (움직임_피드백 1절) */
+const TURN_K = 1.3;
+/** 걷기 그림 빠르기 배율: 기본 8장/초가 빠르기 80일 때 */
+const walkRate = (speed: number) => Math.max(0.45, Math.min(1.4, speed / 80));
+const DIRV: Record<string, [number, number]> = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] };
 const WADE_DEPTH = 12;
 /** 평상시 점프 높이(px), 걸리는 시간 */
 const JUMP_H = 14;
@@ -217,6 +228,10 @@ interface Actor {
   id: string;
   key: string;
   spr: Phaser.GameObjects.Sprite;
+  /** 착지 눌림 전 원래 세로 배율 */
+  baseSY?: number;
+  /** 동료: 따라가다 막혀 있은 시간 (ms) */
+  stuckT?: number;
   shadow: Phaser.GameObjects.Ellipse;
   facing: Dir;
   down: boolean;
@@ -342,6 +357,8 @@ export class ExploreScene extends Phaser.Scene {
   private seg: SegmentDef | null = null;
   private carry: { id: string; light: Phaser.GameObjects.Light; base: number; pulse: boolean; at?: { x: number; y: number } }[] = [];
   private trail: { x: number; y: number }[] = [];
+  /** 레온이 서 있은 시간 (ms) */
+  private leonStill = 0;
   private mobs: Mob[] = [];
   private npcs = new Set<string>();
   private auras = new Map<string, Phaser.GameObjects.Sprite>();
@@ -508,9 +525,7 @@ export class ExploreScene extends Phaser.Scene {
 
     const cam = this.cameras.main;
     cam.setBackgroundColor(propOf<string>(md, 'bg') ?? '#05040a');
-    const vw = W / ZOOM;
-    const vh = H / ZOOM;
-    cam.setBounds(Math.min(0, (this.mapW - vw) / 2), Math.min(0, (this.mapH - vh) / 2), Math.max(this.mapW, vw), Math.max(this.mapH, vh));
+    this.fitBounds();
 
     // 밤 조명
     if (this.lit) this.lights.enable().setAmbientColor(this.ambientOf(md));
@@ -1115,8 +1130,12 @@ export class ExploreScene extends Phaser.Scene {
       this.actors.set(id, a);
     }
     const act = a;
+    // 대사가 시작될 때 이미 화면에 서 있는 인물은 자리(at)로 순간이동하지 않고 걸어간다 (움직임_피드백 4절).
+    // 화면이 어두워진 동안(instant)·처음 나오는 인물·먼 자리는 그대로 옮김
+    const shown = act.spr.visible && !fresh;
+    const stroll = !!at && !instant && shown && !spec.walk && !spec.hop && !act.down && Math.hypot(at.x - act.spr.x, at.y - act.spr.y) > 2 && Math.hypot(at.x - act.spr.x, at.y - act.spr.y) < 160;
     act.spr.setVisible(true);
-    if (at) {
+    if (at && !stroll) {
       this.tweens.killTweensOf(act.spr);
       act.walking = false;
       act.spr.setPosition(at.x, at.y);
@@ -1129,7 +1148,7 @@ export class ExploreScene extends Phaser.Scene {
       else if (spec.pose === 'kneel') [act.down, act.kneel] = [true, true];
       else if (spec.pose === 'stand') [act.down, act.kneel] = [false, false];
     };
-    const to = this.point(spec.walk);
+    const to = stroll ? at : this.point(spec.walk);
     const hop = this.point(spec.hop);
     // 도착한 뒤: 자세, 고개 숙이기, 적기, 퇴장
     const arrive = () => {
@@ -1154,8 +1173,10 @@ export class ExploreScene extends Phaser.Scene {
       act.walking = true;
       act.down = false;
       this.setWriting(act, false);
-      const dir: Dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+      this.faceTo(act, dx, dy);
+      const dir = act.facing;
       act.spr.setOrigin(0.5, footOrigin(act.key)).play(`${act.key}-walk-${dir}`, true);
+      act.spr.anims.timeScale = walkRate(spec.speed ?? WALK_SPEED);
       this.tweens.add({ targets: act.spr, x: to.x, y: to.y, duration: (dist / (spec.speed ?? WALK_SPEED)) * 1000, onComplete: arrive });
     };
     this.tweens.killTweensOf(act.spr);
@@ -1415,6 +1436,20 @@ export class ExploreScene extends Phaser.Scene {
     return hex(propOf<string>(md, 'ambient') ?? '#5a6494');
   }
 
+  /**
+   * 인물 색 맞춤: 맵 바탕빛의 색은 25%만 인물에게 가게, 반대 색을 살짝 곱한다 (밝기는 그대로)
+   * (움직임_피드백 3절: 화산의 붉은빛에 흰 옷이 주황으로 보이지 않게)
+   */
+  private actorTint() {
+    const c = this.lights.ambientColor;
+    const a = [c.r, c.g, c.b];
+    const grey = 0.3 * a[0] + 0.59 * a[1] + 0.11 * a[2];
+    const t = a.map((v) => (0.25 * v + 0.75 * grey) / Math.max(v, 0.02));
+    const k = Math.max(...t, 1);
+    const [r, g, b] = t.map((v) => Math.round((v / k) * 255));
+    return (r << 16) | (g << 8) | b;
+  }
+
   private curAmbient() {
     const c = this.lights.ambientColor;
     return Phaser.Display.Color.GetColor(Math.round(c.r * 255), Math.round(c.g * 255), Math.round(c.b * 255));
@@ -1638,6 +1673,7 @@ export class ExploreScene extends Phaser.Scene {
 
   update(_t: number, rawDelta: number) {
     const dt = Math.min(50, rawDelta);
+    if (this.map && this.cameras.main.zoom !== this.boundsZoom) this.fitBounds();
     const leon = this.actors.get('leon');
     if (this.seg && leon) {
       if (this.touchLook) {
@@ -1647,7 +1683,7 @@ export class ExploreScene extends Phaser.Scene {
       if (!this.reading) this.move(leon, dt);
       else if (leon.spr.anims.isPlaying) this.pose(leon);
       if (this.seg && this.jumps.length) this.checkJumps(leon);
-      if (this.seg) this.follow(leon);
+      if (this.seg) this.follow(leon, dt);
       if (this.seg) this.findNear(leon);
       if (this.seg) this.checkGoal(leon);
       if (this.seg && !this.reading) this.checkMobs(leon);
@@ -1666,7 +1702,10 @@ export class ExploreScene extends Phaser.Scene {
       if (a) s.setPosition(a.spr.x, a.spr.y + 2).setTexture(a.spr.texture.key, a.spr.frame.name).setOrigin(a.spr.originX, a.spr.originY).setDepth(a.spr.depth - 0.5).setVisible(a.spr.visible);
       if (this.blinking.has(id)) s.setAlpha(Math.random() < 0.18 ? 0.05 : 0.2 + Math.random() * 0.3);
     }
+    const tint = this.lit ? this.actorTint() : 0xffffff;
     for (const a of this.actors.values()) {
+      if (a.spr.tintTopLeft !== tint) a.spr.setTint(tint);
+      this.breathe(a);
       a.spr.setDepth(a.spr.y + (a.lift && !a.jumping ? 2 : 0));
       a.shadow.setPosition(Math.round(a.spr.x), Math.round(a.spr.y)).setVisible(!a.down && (!a.lift || !!a.jumping) && a.spr.visible);
       if (a.lift !== undefined && (a.walking || a.jumping || a.id === 'leon') && !a.down) a.spr.setOrigin(0.5, footOrigin(a.spr.texture.key) + a.lift / a.spr.height);
@@ -1775,6 +1814,16 @@ export class ExploreScene extends Phaser.Scene {
     void H2;
   }
 
+  /** 카메라 범위: 맵이 화면보다 작으면 맵을 가운데에 두어 위아래(좌우) 여백을 고르게 (점검_피드백 3절). 실제 줌으로 계산 */
+  private boundsZoom = 0;
+  private fitBounds() {
+    const cam = this.cameras.main;
+    const vw = cam.width / cam.zoom;
+    const vh = cam.height / cam.zoom;
+    this.boundsZoom = cam.zoom;
+    cam.setBounds(Math.min(0, (this.mapW - vw) / 2), Math.min(0, (this.mapH - vh) / 2), Math.max(this.mapW, vw), Math.max(this.mapH, vh));
+  }
+
   /** 맵 속성에 따라 하늘 효과를 만든다 */
   private makeSky(md: NonNullable<typeof this.map>) {
     if (propOf(md, 'drift')) this.makeDrift(md);
@@ -1787,10 +1836,14 @@ export class ExploreScene extends Phaser.Scene {
       const oy = -20 + (cam.height - cam.height / cam.zoom) / 2;
       const parts: Phaser.GameObjects.GameObject[] = [this.add.rectangle(0, 0, vw, vh, 0xffc868, 0.13).setOrigin(0).setBlendMode(Phaser.BlendModes.ADD)];
       // 아지랑이: 옅은 빛 띠가 천천히 위로 오르며 흔들린다
-      for (let i = 0; i < 7; i++) {
-        const band = this.add.rectangle(0, vh * (i / 7), vw, 4 + (i % 3) * 2, 0xfff0c8, 0.07).setOrigin(0).setBlendMode(Phaser.BlendModes.ADD);
-        this.tweens.add({ targets: band, y: band.y - vh / 7, duration: 3200 + i * 260, repeat: -1, ease: 'Linear' });
-        this.tweens.add({ targets: band, alpha: 0.16, x: 3, duration: 900 + i * 130, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+      // 화면 전체를 가로지르는 고른 줄 대신, 폭·높이·간격이 제각각인 짧은 띠 (점검_피드백 3절: 가로 줄무늬처럼 보이지 않게)
+      const rnd = (i: number, k: number) => ((Math.sin(i * 127.1 + k * 311.7) * 43758.5453) % 1 + 1) % 1;
+      for (let i = 0; i < 9; i++) {
+        const w = vw * (0.18 + rnd(i, 1) * 0.3);
+        const band = this.add.ellipse(rnd(i, 2) * (vw - w) + w / 2, vh * rnd(i, 3), w, 3 + rnd(i, 4) * 5, 0xfff0c8, 0.04).setBlendMode(Phaser.BlendModes.ADD);
+        const rise = vh * (0.08 + rnd(i, 5) * 0.12);
+        this.tweens.add({ targets: band, y: band.y - rise, duration: 3000 + rnd(i, 6) * 2600, repeat: -1, ease: 'Linear' });
+        this.tweens.add({ targets: band, alpha: 0.09, x: band.x + 4, duration: 900 + rnd(i, 7) * 900, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
         parts.push(band);
       }
       this.haze = this.world(this.add.container(ox, oy, parts).setScrollFactor(0).setDepth(9500).setAlpha(0));
@@ -1813,33 +1866,129 @@ export class ExploreScene extends Phaser.Scene {
     }
   }
 
-  /** 동료: 레온이 지나간 자리를 조금 늦게 따라 걷는다 */
-  private follow(leon: Actor) {
+  /**
+   * 동료: 레온이 지나간 자리를 조금 늦게 따라 걷는다 (움직임_피드백 2절)
+   * - 실제 흐른 시간(dt)으로 움직여 화면 빠르기(30·60·144)와 상관없이 같은 빠르기
+   * - 서로·레온과 15px 안으로 겹치지 않게 밀어냄, 벽·물건 위에는 서지 않음
+   * - 레온이 멈추면 등 뒤에 반원으로 늘어섬
+   */
+  private follow(leon: Actor, dt: number) {
     const last = this.trail[this.trail.length - 1];
-    if (!last || Math.hypot(last.x - leon.spr.x, last.y - leon.spr.y) > 2) this.trail.push({ x: leon.spr.x, y: leon.spr.y });
+    if (!last || Math.hypot(last.x - leon.spr.x, last.y - leon.spr.y) > 2) {
+      this.trail.push({ x: leon.spr.x, y: leon.spr.y });
+      this.leonStill = 0;
+    } else this.leonStill += dt;
     if (this.trail.length > 60) this.trail.shift();
-    let k = 0;
-    for (const id of walkers()) {
-      if (id === 'leon') continue;
-      const a = this.actors.get(id);
-      if (!a || a.walking) continue;
-      k++;
-      const p = this.trail[Math.max(0, this.trail.length - 1 - 12 * k)];
-      if (!p) continue;
-      const dx = p.x - a.spr.x;
-      const dy = p.y - a.spr.y;
-      const d = Math.hypot(dx, dy);
-      if (d < 1 || Math.hypot(leon.spr.x - a.spr.x, leon.spr.y - a.spr.y) < 20) {
-        if (a.spr.anims.isPlaying) this.pose(a);
-        continue;
+    const team = walkers().filter((id) => id !== 'leon').map((id) => this.actors.get(id)).filter((a): a is Actor => !!a && !a.walking && a.spr.visible);
+    const base = SPEED * (this.seg?.speed ?? 1);
+    // 레온 등 뒤 자리: 바로 뒤, 왼쪽 뒤, 오른쪽 뒤, 그 뒤 줄
+    const [fx, fy] = DIRV[leon.facing];
+    const slotOf = (k: number) => {
+      const ring = k < 3 ? 24 : 42;
+      const ang = [0, -0.85, 0.85][k % 3];
+      const bx = -fx;
+      const by = -fy;
+      const c = Math.cos(ang);
+      const sn = Math.sin(ang);
+      return { x: leon.spr.x + (bx * c - by * sn) * ring, y: leon.spr.y + (bx * sn + by * c) * ring * 0.8 };
+    };
+    team.forEach((a, i) => {
+      const k = i + 1;
+      let p: { x: number; y: number } | undefined = this.trail[Math.max(0, this.trail.length - 1 - 12 * k)];
+      // 레온이 멈췄고 가까이 왔으면 등 뒤 자리로 (멀면 발자취를 따라 길을 돌아옴)
+      if (this.leonStill > 250 && Math.hypot(leon.spr.x - a.spr.x, leon.spr.y - a.spr.y) < 130) {
+        const sl = slotOf(i);
+        if (!this.blocked(sl.x, sl.y)) p = sl;
       }
-      a.facing = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
-      a.spr.play(`${a.key}-walk-${a.facing}`, true);
+      if (!p) return;
+      let dx = p.x - a.spr.x;
+      let dy = p.y - a.spr.y;
+      const d = Math.hypot(dx, dy);
+      const near = Math.hypot(leon.spr.x - a.spr.x, leon.spr.y - a.spr.y) < 20 && this.leonStill <= 250;
+      // 서로 밀어내기 (레온, 다른 동료)
+      let px = 0;
+      let py = 0;
+      for (const o of [leon, ...team]) {
+        if (o === a) continue;
+        const ox = a.spr.x - o.spr.x;
+        const oy = a.spr.y - o.spr.y;
+        const od = Math.hypot(ox, oy);
+        if (od < FOLLOW_GAP) {
+          const w = (FOLLOW_GAP - od) / FOLLOW_GAP;
+          px += (od > 0.01 ? ox / od : i % 2 ? 1 : -1) * w;
+          py += (od > 0.01 ? oy / od : 0) * w;
+        }
+      }
+      const pushing = Math.hypot(px, py) > 0.01;
+      const going = d >= 2 && !near;
+      if (!going && !pushing) {
+        if (a.spr.anims.isPlaying) this.pose(a);
+        return;
+      }
+      // 따라잡기: 멀수록 조금 빠르게 (레온보다 최대 25%)
+      const wade = this.wadeAt(a.spr.x, a.spr.y) ? WADE_SPEED : 1;
+      const sp = base * wade * (a.jumping ? JUMP_BOOST : 1) * (d > 40 ? 1.25 : 1);
+      const lim = (sp * dt) / 1000;
+      let mx = going ? (dx / d) * Math.min(d, lim) : 0;
+      let my = going ? (dy / d) * Math.min(d, lim) : 0;
+      if (pushing) {
+        mx += px * lim * 0.8;
+        my += py * lim * 0.8;
+      }
       // 장애물 앞에서 스스로 점프 (실패하지 않음)
-      if (!a.jumping && this.jumps.some((j) => a.spr.x + (dx / d) * 14 > j.x0 && a.spr.x + (dx / d) * 14 < j.x1 && a.spr.y + (dy / d) * 14 > j.y0 && a.spr.y + (dy / d) * 14 < j.y1)) this.jump(a, true);
-      const step = Math.min(d, Math.max(SPEED * (this.seg?.speed ?? 1), d * 0.15) * (16 / 1000) * 1.1);
-      a.spr.setPosition(a.spr.x + (dx / d) * step, a.spr.y + (dy / d) * step);
-    }
+      if (going && !a.jumping && this.jumps.some((j) => a.spr.x + (dx / d) * 14 > j.x0 && a.spr.x + (dx / d) * 14 < j.x1 && a.spr.y + (dy / d) * 14 > j.y0 && a.spr.y + (dy / d) * 14 < j.y1)) this.jump(a, true);
+      // 벽·물건 위에는 서지 않음 (가로·세로 따로 → 벽을 따라 미끄러짐). 이미 막힌 자리에 있으면 빠져나오게 둠
+      // 오래 막혀 있으면(발자취가 벽 모서리를 스침 등) 벽을 지나 따라옴. 막힌 자리에서는 서지 않음
+      const air = !!a.jumping || (a.stuckT ?? 0) > 500;
+      const stuck = this.blocked(a.spr.x, a.spr.y, air) || (a.stuckT ?? 0) > 500;
+      let x = a.spr.x;
+      let y = a.spr.y;
+      if (stuck || !this.blocked(x + mx, y, air)) x += mx;
+      if (stuck || !this.blocked(x, y + my, air)) y += my;
+      const moved = Math.hypot(x - a.spr.x, y - a.spr.y);
+      a.stuckT = going && moved < lim * 0.2 ? (a.stuckT ?? 0) + dt : this.blocked(x, y) ? a.stuckT : 0;
+      a.spr.setPosition(x, y);
+      if (going) {
+        dx = mx;
+        dy = my;
+        this.faceTo(a, dx, dy);
+      }
+      if (moved > 0.05 && going) {
+        a.spr.play(`${a.key}-walk-${a.facing}`, true);
+        a.spr.anims.timeScale = walkRate((moved / dt) * 1000);
+      } else if (a.spr.anims.isPlaying) this.pose(a);
+    });
+  }
+
+  /**
+   * 방향 떨림 막기 (움직임_피드백 1절): 한 축이 다른 축보다 1.3배 넘게 커질 때만 그 축 방향으로 바꿈.
+   * 같은 축 안에서 거꾸로 가는 것은 바로 바꿈
+   */
+  private faceTo(a: Actor, dx: number, dy: number) {
+    const ax = Math.abs(dx);
+    const ay = Math.abs(dy);
+    if (ax < 0.0001 && ay < 0.0001) return;
+    let horiz = a.facing === 'left' || a.facing === 'right';
+    if (horiz ? ay > ax * TURN_K : ax > ay * TURN_K) horiz = !horiz;
+    if (horiz && ax < 0.0001) horiz = false;
+    if (!horiz && ay < 0.0001) horiz = true;
+    a.facing = horiz ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+  }
+
+  /** 서 있을 때 숨쉬기: 2.6초마다 숨쉬기 칸(점프 줄 끝 칸)과 서기 칸을 번갈아 (움직임_피드백 1절) */
+  private breathe(a: Actor) {
+    if (a.down || a.jumping || a.walking || a.spr.anims.isPlaying || a.spr.texture.key !== a.key) return;
+    const tex = this.textures.get(a.key);
+    if (tex.frameTotal < 41) return;
+    const row = DIRS.indexOf(a.facing);
+    const cur = Number(a.spr.frame.name);
+    const stand = row * 5;
+    const air = (4 + row) * 5 + 4;
+    if (cur !== stand && cur !== air) return;
+    let h = 0;
+    for (let i = 0; i < a.id.length; i++) h = (h * 31 + a.id.charCodeAt(i)) % 2600;
+    const want = (this.time.now + h) % 2600 > 1600 ? air : stand;
+    if (cur !== want) a.spr.setFrame(want);
   }
 
   /** 몹 무리에 닿으면 짧은 전투. 이기면 그 무리는 사라지고 그 자리에서 이어서 움직인다 */
@@ -1869,6 +2018,9 @@ export class ExploreScene extends Phaser.Scene {
       } else for (const s of hit.sprs) s.destroy();
       // 맵 위에서 싸우느라 카메라가 전투장에 가 있었으면 다시 레온을 따라간다
       this.cameras.main.startFollow(leon.spr, true, 0.15, 0.15, 0, 20);
+      // 동료는 싸운 자리에서 레온 쪽으로 걸어 돌아온다 (지난 발자취는 버림. 움직임_피드백 4절)
+      this.trail = [{ x: leon.spr.x, y: leon.spr.y }];
+      this.leonStill = 1000;
       this.reading = false;
       this.lockUntil = this.time.now + 300;
       this.hud.setVisible(!!this.seg);
@@ -1889,9 +2041,12 @@ export class ExploreScene extends Phaser.Scene {
       mx /= l;
       my /= l;
     }
-    a.facing = Math.abs(mx) > Math.abs(my) ? (mx > 0 ? 'right' : 'left') : my > 0 ? 'down' : 'up';
+    this.faceTo(a, mx, my);
     a.spr.play(`${a.key}-walk-${a.facing}`, true);
-    const step = SPEED * (this.seg?.speed ?? 1) * (dt / 1000) * (a.jumping ? JUMP_BOOST : this.wadeAt(a.spr.x, a.spr.y) ? WADE_SPEED : 1);
+    const speed = SPEED * (this.seg?.speed ?? 1) * (a.jumping ? JUMP_BOOST : this.wadeAt(a.spr.x, a.spr.y) ? WADE_SPEED : 1);
+    // 걷는 그림 빠르기를 실제 빠르기에 맞춤 (92 → 약 9장/초, 물속 → 약 5장/초)
+    a.spr.anims.timeScale = walkRate(speed * Math.min(1, l));
+    const step = speed * (dt / 1000);
     const { x: ox, y: oy } = a.spr;
     let x = ox;
     let y = oy;
@@ -1929,6 +2084,10 @@ export class ExploreScene extends Phaser.Scene {
         a.jumping = false;
         if (this.wadeAt(a.spr.x, a.spr.y)) this.splash(a.spr.x, a.spr.y);
         else this.dust(a.spr.x, a.spr.y, 0x8a8070, 4);
+        // 착지: 1px 눌렸다 펴짐 (움직임_피드백 4절)
+        const sy = a.baseSY ?? (a.baseSY = a.spr.scaleY);
+        a.spr.setScale(a.spr.scaleX, sy * (1 - 1 / Math.max(24, a.spr.height)));
+        this.tweens.add({ targets: a.spr, scaleY: sy, duration: 90, delay: 40 });
       },
     });
   }
@@ -2275,9 +2434,15 @@ export class ExploreScene extends Phaser.Scene {
         for (let tx = j.at[0]; tx < j.at[0] + j.size[0]; tx++) {
           const art = j.art?.[n++ % (j.art?.length || 1)] ?? (j.type === 'hurdle' ? 'rock' : 'sand_pit');
           const f = kinds.indexOf(art);
-          if (f < 0 || !this.textures.exists('ex_jumps')) continue;
           const gap = j.type === 'gap';
-          const im = this.lightUp(this.world(this.add.image(tx * TS + 16, (ty + 1) * TS, 'ex_jumps', f).setOrigin(0.5, 1)));
+          if (f < 0 || !this.textures.exists('ex_jumps')) continue;
+          // 틈 그림은 칸마다 조금씩 어긋나고 크기가 달라 고르게 쌓인 것처럼 보이지 않게 (점검_피드백 3절). 판정 칸은 그대로
+          const jr = (k: number) => ((Math.sin(tx * 12.9898 + ty * 78.233 + k * 37.719) * 43758.5453) % 1 + 1) % 1;
+          const pit = art === 'sand_pit';
+          const jx = pit ? Math.round((jr(1) - 0.5) * 12) : 0;
+          const jy = pit ? Math.round((jr(2) - 0.5) * 8) : 0;
+          const im = this.lightUp(this.world(this.add.image(tx * TS + 16 + jx, (ty + 1) * TS + jy, 'ex_jumps', f).setOrigin(0.5, 1)));
+          if (pit) im.setScale(0.8 + jr(3) * 0.4).setFlipX(jr(4) < 0.5);
           // 틈은 바닥 높이(인물 아래), 넘는 것은 발 높이에 맞춰 앞뒤가 갈림
           im.setDepth(gap ? -15 : (ty + 1) * TS - 6);
           if (!gap && ((tx * 7 + ty * 3) & 1)) im.setFlipX(true);
@@ -2388,7 +2553,23 @@ export class ExploreScene extends Phaser.Scene {
   /** 직접 움직이는 구간에서만 점프 */
   private tryJump() {
     const leon = this.actors.get('leon');
-    if (this.seg && leon && !this.reading) this.jump(leon);
+    if (!this.seg || !leon || this.reading) return;
+    if (this.seg.noJump && !leon.jumping) this.pilgrimLook(leon, this.seg.noJump);
+    this.jump(leon);
+  }
+
+  /** noJump 구간: 점프하면 안내 글, 근처 엑스트라가 레온 쪽을 돌아본다 (벌칙 없음) */
+  private pilgrimLook(leon: Actor, text: string) {
+    this.guide(text, 2400);
+    for (const id of this.npcs) {
+      const a = this.actors.get(id);
+      if (!a || a.down || a.walking || !a.spr.visible) continue;
+      const dx = leon.spr.x - a.spr.x;
+      const dy = leon.spr.y - a.spr.y;
+      if (Math.hypot(dx, dy) > 180) continue;
+      a.facing = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+      this.pose(a);
+    }
   }
 
   private refreshHud() {

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import battles from '../data/battle/battles.json';
-import { rise } from '../game/hdSprites';
+import { footOrigin, rise } from '../game/hdSprites';
 import enemies from '../data/battle/enemies.json';
 import fighters from '../data/battle/fighters.json';
 import combos from '../data/battle/combos.json';
@@ -129,6 +129,8 @@ interface EnemyDef {
   faint?: boolean;
   /** 쓰러지면 물속으로 가라앉음 (수로의 괴물) */
   sink?: boolean;
+  /** 막기만 하는 적: 공격하지 않고 길만 막는다. 맞으면 밀려나기만 하고 쓰러지지 않으며 경험치를 주지 않는다 (5막 준비) */
+  blocker?: boolean;
   bite?: { range: number; windup: number; mult: number; cooldown: number };
   tail?: { every: number; cast: number; radius: number; mult: number; breakDamage: number };
   spray?: { cast: number; speed: number; mult: number; count: number };
@@ -389,6 +391,15 @@ export class Fighter {
   diveUntil = 0;
   poseCol = 0;
   poseUntil = 0;
+  // 움직임 (docs/claude_code/움직임_피드백.md 3절)
+  /** 밀려남: 실제 자리는 바로 옮기고, 그림만 이만큼 뒤에서 미끄러져 따라옴 */
+  kx = 0;
+  ky = 0;
+  /** 맞은 순간 하얗게 번쩍이는 끝 */
+  flashUntil = 0;
+  /** 쓰러지기 시작한 때 (무릎 → 쓰러짐), 일어나기 시작한 때 (쓰러짐 → 무릎 → 섬) */
+  fallAt = -1;
+  upAt = -1;
 
   /** 어두운 곳에서 이 인물을 비추는 빛 (보스) */
   light?: Phaser.GameObjects.Light;
@@ -486,6 +497,8 @@ export class BattleScene extends Phaser.Scene {
   ended = false;
   frozen = false;
   timeScale = 1;
+  /** 히트스톱: 강한 공격이 맞으면 잠깐 멈춤 (남은 ms, 실제 시간) */
+  private stopLeft = 0;
   /** 마지막 일격 때 장면 전체를 느리게 하는 배율 (setSlow) */
   slowK = 1;
   reviving: { target: Fighter; t: number } | null = null;
@@ -623,9 +636,13 @@ export class BattleScene extends Phaser.Scene {
       // 싸우는 인물은 이 장면이 따로 그리므로, 밝고 색이 진한 맵빛(화산의 붉은빛 등)은 색을 빼서 받는다
       // (맵 그림은 맵 화면이 그대로 붉게 그림). 그래야 머리·옷 색이 맵마다 달라 보이지 않음
       this.lights.enable().setAmbientColor(fighterAmbient(L.ambient));
-      for (const l of L.lights) this.lights.addLight(l.x - this.ox, l.y - this.oy, l.r, l.color, l.intensity);
+      // 불빛도 색을 덜어서 받음 (용암 맵의 붉은 불빛에 흰 머리·옷이 주황 덩어리로 보이지 않게)
+      for (const l of L.lights) this.lights.addLight(l.x - this.ox, l.y - this.oy, l.r, fighterLightColor(l.color), l.intensity);
       const c = m.carrier();
-      if (c) this.carry = { id: c.id, light: this.lights.addLight(0, 0, c.r, c.color, c.intensity), base: c.intensity, pulse: c.pulse };
+      // 빛을 든 인물 바로 위에 센 빛을 두면 그 인물(특히 흰 옷·은발)이 하얗게 타 버림. 바닥 빛은 맵 화면이 그리므로
+      // 싸우는 인물에게는 약하게만 (점검_피드백.md 2절)
+      const fi = c ? Math.min(c.intensity * 0.35, 0.6) : 0;
+      if (c) this.carry = { id: c.id, light: this.lights.addLight(0, 0, c.r, c.color, fi), base: fi, pulse: c.pulse };
     }
   }
 
@@ -969,8 +986,12 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private makePartyFighter(id: string, x: number, y: number) {
-    const d = (fighters.party as Record<string, FighterDef>)[id];
-    if (!d) return null;
+    const base = (fighters.party as Record<string, FighterDef>)[id];
+    if (!base) return null;
+    // 대본의 kit으로 바뀐 기술 묶음 (공격·회피·스킬·궁극기만 덮어씀)
+    const kit = gameState.progress.kit?.[id];
+    const kd = kit ? (fighters.kits as Record<string, Partial<FighterDef>>)[kit] : undefined;
+    const d: FighterDef = kd ? { ...base, ...kd } : base;
     const st = statsOf(id)!;
     // 대본의 costume으로 바뀐 겉모습 (그림이 없으면 기본)
     const c = gameState.progress.costume[id];
@@ -1230,6 +1251,18 @@ export class BattleScene extends Phaser.Scene {
       this.syncCamera();
       return this.renderAll();
     }
+    if (this.stopLeft > 0) {
+      // 히트스톱: 그림만 그리고 시간은 멈춤
+      this.stopLeft -= Math.min(50, rawDelta);
+      this.syncCamera();
+      return this.renderAll();
+    }
+    // 밀려난 그림이 실제 자리로 미끄러져 돌아옴 (40ms마다 반)
+    const kd = Math.pow(0.5, dt / 40);
+    for (const f of this.all) {
+      f.kx = Math.abs(f.kx) < 0.3 ? 0 : f.kx * kd;
+      f.ky = Math.abs(f.ky) < 0.3 ? 0 : f.ky * kd;
+    }
     this.now += dt;
     if (!this.cutscene && !this.ended) {
       this.elapsed += dt;
@@ -1482,6 +1515,7 @@ export class BattleScene extends Phaser.Scene {
     f.vz = JUMP_V;
     f.z = 0.01;
     f.sprite.play(`${f.spriteKey}-jump-${f.facing}`, true);
+    f.sprite.anims.timeScale = 1;
   }
 
   /** 순간이동 (엘리시아): 바라보는 쪽으로 짧게. 잠깐 맞지 않음 */
@@ -2217,7 +2251,10 @@ export class BattleScene extends Phaser.Scene {
       const buff = this.now < f.buffUntil;
       hit = this.damage(t, f, f.atk * h.mult * (buff ? 1.5 : 1), { heavy: h.heavy, push: h.push ?? (h.heavy ? 10 : 4), unblockable: buff || !!f.enemy?.attack?.unblockable }) || hit;
     }
-    if (hit && h.heavy) this.cameras.main.shake(90, 0.003);
+    if (hit && h.heavy) {
+      this.cameras.main.shake(90, 0.003);
+      this.stopLeft = Math.max(this.stopLeft, 50);
+    }
   }
 
   private foesOf(f: Fighter) {
@@ -2361,6 +2398,8 @@ export class BattleScene extends Phaser.Scene {
     if (t.team === 'ally' && !this.bdef.outcomes?.[`fall:${t.id}`]) dmg = Math.min(dmg, t.hp - 1);
     // 쓰러지지 않는 전투 (대본상 지면 안 되는 전투)
     if (t.team === 'party' && this.bdef.noFall) dmg = Math.min(dmg, t.hp - 1);
+    // 막기만 하는 적은 쓰러지지 않음
+    if (t.enemy?.blocker) dmg = Math.max(0, Math.min(dmg, t.hp - 1));
     // 마지막 일격 전에는 보스 체력이 그 아래로 내려가지 않음 (튜토리얼을 다 할 때까지)
     const fin = this.bdef.finisher;
     if (fin && t.enemy?.boss && !this.tutorialDone) dmg = Math.min(dmg, Math.max(0, t.hp - Math.ceil(t.maxHp * fin.at) - 1));
@@ -2413,13 +2452,21 @@ export class BattleScene extends Phaser.Scene {
     }
     if (t.state === 'cast' && (t.castKind === 'area' || t.castKind === 'tail')) t.castTaken += dmg;
 
-    // 밀려남
-    const push = steady ? 0 : o.push ?? 4;
+    // 번쩍임 (1프레임 남짓 하얗게)
+    t.flashUntil = this.now + 50;
+    // 밀려남: 자리는 바로 옮기고 그림은 원래 자리에서 미끄러져 감. 보스는 제자리에서 2px 움찔
+    const push = steady ? 0 : o.push ?? (o.heavy ? 6 : 4);
+    const px = t.x - from.x;
+    const py = t.y - from.y;
+    const pl = Math.hypot(px, py) || 1;
     if (push && !t.enemy?.boss) {
-      const px = t.x - from.x;
-      const py = t.y - from.y;
-      const pl = Math.hypot(px, py) || 1;
+      const [x0, y0] = [t.x, t.y];
       this.moveBy(t, (px / pl) * push, (py / pl) * push);
+      t.kx += x0 - t.x;
+      t.ky += y0 - t.y;
+    } else if (t.enemy?.boss) {
+      t.kx += (px / pl) * 2;
+      t.ky += (py / pl) * 2;
     }
 
     if (t.hp <= 0) {
@@ -2464,7 +2511,11 @@ export class BattleScene extends Phaser.Scene {
     const bt = `bt_${e.spriteKey}`;
     if ((e.enemy?.faint || e.enemy?.sink) && this.textures.exists(bt)) {
       // 사라지지 않고 쓰러진 모습으로 남음 (괴물은 물속으로 가라앉음)
-      e.sprite.stop().setTexture(bt, DIRS.indexOf(e.facing) * 12 + 11).setAlpha(1).clearTint().setDepth(e.y - 2);
+      // 피격 → 무릎 → 쓰러짐 (2~3장, 움직임_피드백 3절)
+      const r0 = DIRS.indexOf(e.facing) * 12;
+      e.sprite.stop().setTexture(bt, r0 + 7).setAlpha(1).clearTint().setDepth(e.y - 2);
+      this.time.delayedCall(110, () => e.sprite.active && e.sprite.texture.key === bt && e.sprite.setFrame(r0 + 10));
+      this.time.delayedCall(260, () => e.sprite.active && e.sprite.texture.key === bt && e.sprite.setFrame(r0 + 11));
       e.shadow.setVisible(false);
       this.fx('dust_land', e.x, e.y - 6, { depth: e.y - 1 });
       if (e.enemy.sink) {
@@ -2491,7 +2542,7 @@ export class BattleScene extends Phaser.Scene {
     // 나보다 많이 약한 몹은 경험치를 거의 주지 않는다 (파티 평균 레벨과 적 레벨 차이)
     const ids = this.party.map((p) => p.id);
     const avg = ids.reduce((a, id) => a + levelOf(id), 0) / (ids.length || 1);
-    const ex = e.enemy ? EXP_REWARD.enemy(e.id, avg) : 0;
+    const ex = e.enemy && !e.enemy.blocker ? EXP_REWARD.enemy(e.id, avg) : 0;
     if (ex && !this.cutscene) this.grantExp(ex);
   }
 
@@ -2538,6 +2589,7 @@ export class BattleScene extends Phaser.Scene {
     f.z = 0;
     f.vz = 0;
     f.combo = -1;
+    f.fallAt = this.now;
     const fl = levels.faint;
     // 일어난 지 얼마 안 돼서 다시 쓰러지면 기절 시간이 늘어난다
     f.faintStreak = this.now - f.lastGetUp < fl.refaintWindow * 1000 ? f.faintStreak + 1 : 0;
@@ -2559,6 +2611,7 @@ export class BattleScene extends Phaser.Scene {
   private getUp(f: Fighter) {
     this.clearExtra(f);
     f.state = 'idle';
+    f.upAt = this.now;
     f.hp = Math.max(1, Math.round(f.maxHp * levels.faint.reviveHp));
     f.lastGetUp = this.now;
     f.invulnUntil = this.now + 1000;
@@ -2737,6 +2790,13 @@ export class BattleScene extends Phaser.Scene {
 
   private enemyAI(e: Fighter, dt: number) {
     const ed = e.enemy!;
+    if (ed.blocker) {
+      // 제자리에서 가장 가까운 파티 쪽을 볼 뿐
+      const t = this.targetOf(e);
+      if (t) e.facing = dirOf(t.x - e.x, t.y - e.y);
+      e.state = 'idle';
+      return;
+    }
     if (ed.ai === 'eel') return this.eelAI(e, dt);
     if (ed.ai === 'burrow') return this.burrowAI(e, dt);
     if (ed.ai === 'knight') return this.knightAI(e, dt);
@@ -3398,7 +3458,7 @@ export class BattleScene extends Phaser.Scene {
       }
       return;
     }
-    const enemiesLeft = this.all.some((f) => f.team === 'enemy' && f.alive);
+    const enemiesLeft = this.all.some((f) => f.team === 'enemy' && f.alive && !f.enemy?.blocker);
     const spawning = this.pendingSpawns > 0;
     if (!enemiesLeft && !spawning) {
       if (this.waveIdx < (b.waves?.length ?? 0) - 1) {
@@ -3535,19 +3595,34 @@ export class BattleScene extends Phaser.Scene {
 
   private renderFighter(f: Fighter) {
     const s = f.sprite;
-    s.setPosition(Math.round(f.x), Math.round(f.y - f.z)).setDepth(f.y);
+    s.setPosition(Math.round(f.x + f.kx), Math.round(f.y + f.ky - f.z)).setDepth(f.y);
     f.shadow.setPosition(Math.round(f.x), Math.round(f.y)).setDepth(-4).setFrame(f.z > 12 ? 2 : f.z > 4 ? 1 : 0);
     f.shadow.setVisible(f.state !== 'fainted');
     const bt = `bt_${f.spriteKey}`;
     const row = DIRS.indexOf(f.facing);
-    const setBt = (col: number) => {
+    // 전투 자세 시트 (파티): 열 100+는 이 시트의 열
+    const stance = `bt_${f.spriteKey}_stance`;
+    const hasStance = f.team === 'party' && this.textures.exists(stance);
+    const setSt = (col: number) => {
+      if (s.texture.key !== stance) s.stop().setTexture(stance, row * 16 + col);
+      else if (s.anims.isPlaying) s.stop().setFrame(row * 16 + col);
+      else s.setFrame(row * 16 + col);
+      s.setOrigin(0.5, 1);
+    };
+    const setBt = (col: number): void => {
+      if (col >= 100) return hasStance ? setSt(col - 100) : setBt(col >= 113 ? 5 : 4);
       if (s.texture.key !== bt) s.stop().setTexture(bt, row * 12 + col);
       else s.setFrame(row * 12 + col);
+      s.setOrigin(0.5, 1);
     };
     const hasWalk = this.textures.exists(f.spriteKey);
+    // 걷기 시트는 발끝이 칸 아래에서 몇 줄 위 → 전투 시트와 발끝을 맞춤 (바꿔 그릴 때 튀지 않게)
     const walk = () => {
       if (hasWalk && s.texture.key !== f.spriteKey) s.setTexture(f.spriteKey, row * 5);
+      s.setOrigin(0.5, footOrigin(f.spriteKey));
     };
+    // 싸우는 중(가까이 적이 있음)이면 전투 자세로 서고 걷는다
+    const fighting = hasStance && this.all.some((e) => e.team === 'enemy' && e.alive && Math.hypot(e.x - f.x, e.y - f.y) < 170);
     if (f.enemy?.ai === 'eel') return this.renderEel(f, setBt);
     // 모래 괴물: 숨은 동안 10열, 튀어나오는 중 8 → 9열
     if (f.enemy?.burrow && (f.dived || f.state === 'cast')) {
@@ -3568,7 +3643,13 @@ export class BattleScene extends Phaser.Scene {
           setBt(9);
           break;
         }
-        setBt(f.stateT < h.windup ? h.cols[0] : h.cols[1]);
+        // 준비 → 휘두름 → 뒤따름(잔상) → 거둠 (전투 자세 시트가 있으면 3~4장)
+        const t0 = f.stateT;
+        const n = h.cols[1] >= 100 ? 2 : Math.max(0, Math.min(2, (h.cols[1] - 1) >> 1));
+        if (t0 < h.windup) setBt(h.cols[0]);
+        else if (!hasStance || t0 < h.windup + h.active) setBt(h.cols[1]);
+        else if (t0 < h.windup + h.active + h.recover * 0.45) setSt(6 + n);
+        else setSt(9 + n);
         break;
       }
       case 'guard':
@@ -3590,15 +3671,39 @@ export class BattleScene extends Phaser.Scene {
         setBt(f.state === 'revive' ? 10 : 10);
         break;
       case 'fainted':
-        setBt(11);
+        // 무릎 → 쓰러짐 (2~3장)
+        setBt(f.fallAt >= 0 && this.now - f.fallAt < 120 ? 7 : f.fallAt >= 0 && this.now - f.fallAt < 260 ? 10 : 11);
         break;
       default:
+        if (f.upAt >= 0 && this.now - f.upAt < 260 && f.z === 0) {
+          // 일어남: 쓰러짐 → 무릎 → 섬
+          setBt(this.now - f.upAt < 130 ? 11 : 10);
+          break;
+        }
+        if (fighting && f.z === 0) {
+          if (f.state === 'move') {
+            const key = `${stance}-${f.facing}`;
+            if (s.texture.key !== stance) s.setTexture(stance, row * 16 + 2);
+            s.setOrigin(0.5, 1);
+            s.play(key, true);
+            s.anims.timeScale = Math.max(0.5, f.speed / 80);
+          } else {
+            // 숨쉬기: 2.4초마다 1칸
+            const ph = (this.now + f.id.length * 397) % 2400;
+            setSt(ph > 1500 ? 1 : 0);
+          }
+          break;
+        }
         if (f.z > 0) {
           walk();
-          if (!s.anims.isPlaying || !s.anims.currentAnim?.key.includes('-jump-')) s.play(`${f.spriteKey}-jump-${f.facing}`, true);
+          if (!s.anims.isPlaying || !s.anims.currentAnim?.key.includes('-jump-')) {
+            s.play(`${f.spriteKey}-jump-${f.facing}`, true);
+            s.anims.timeScale = 1;
+          }
         } else if (f.state === 'move') {
           walk();
           s.play(`${f.spriteKey}-walk-${f.facing}`, true);
+          s.anims.timeScale = Math.max(0.5, f.speed / 80);
         } else {
           walk();
           s.stop();
@@ -3611,6 +3716,7 @@ export class BattleScene extends Phaser.Scene {
     f.barrierFx?.setPosition(f.x, f.y - BODY - f.z).setDepth(f.y + 1);
     if ((f.state === 'prep' && f.enemy?.selfDestruct) || charging) s.setTint(Math.floor(this.now / 120) % 2 ? 0xff9a9a : 0xffffff);
     else s.clearTint();
+    if (this.now < f.flashUntil && f.state !== 'fainted') s.setTintFill(0xffffff);
     f.glow?.setPosition(f.x, f.y - 22 - f.z).setDepth(f.y + 1);
     f.signal?.setPosition(f.x, f.y - BODY).setDepth(f.y + 2);
     // 걸어 들어갈 수 있는 물: 아랫몸이 잠기고 물결 띠 (탐색 맵과 같은 깊이)
@@ -3713,14 +3819,25 @@ export class BattleScene extends Phaser.Scene {
 }
 
 /** 싸우는 인물이 받는 맵빛: 밝고 색이 진하면 같은 밝기의 회색 쪽으로 70% 당김 (어두운 밤빛은 그대로) */
+/** 맵 불빛의 색을 싸우는 인물용으로 옅게 (색 절반 이상을 흰빛으로) */
+function fighterLightColor(c: number) {
+  const r = (c >> 16) & 255;
+  const g = (c >> 8) & 255;
+  const b = c & 255;
+  const grey = 0.3 * r + 0.59 * g + 0.11 * b;
+  // 맵 빛의 색은 25%만 인물에게 (움직임_피드백 3절)
+  const mix = (v: number) => Math.round(v + (grey - v) * 0.75);
+  return (mix(r) << 16) | (mix(g) << 8) | mix(b);
+}
 function fighterAmbient(c: number) {
   const r = (c >> 16) & 255;
   const g = (c >> 8) & 255;
   const b = c & 255;
   const l = (0.3 * r + 0.59 * g + 0.11 * b) / 255;
   const sat = (Math.max(r, g, b) - Math.min(r, g, b)) / 255;
-  if (l < 0.35 || sat < 0.15) return c;
+  if (sat < 0.05) return c;
   const grey = l * 255;
-  const mix = (v: number) => Math.round(v + (grey - v) * 0.7);
+  // 밝기는 그대로, 색은 25%만 (어두운 맵도 붉거나 푸르게 물들지 않게. 움직임_피드백 3절)
+  const mix = (v: number) => Math.round(v + (grey - v) * 0.75);
   return (mix(r) << 16) | (mix(g) << 8) | mix(b);
 }

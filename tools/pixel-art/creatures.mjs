@@ -590,53 +590,84 @@ function bigBattle(draw) {
   return frames;
 }
 
-/** 4막 용암의 수호자: 용암이 솟아 이룬 검은 바위 거인. 갈라진 틈마다 용암, 가슴 한가운데 붉은 핵 */
+/** 4막 용암의 수호자: 용암이 솟아 이룬 검은 바위 거인. 갈라진 틈마다 용암, 가슴 한가운데 붉은 핵
+ * (점검_피드백 2절) 흩뿌린 점 대신 큰 바위 덩어리 + 명암 3단계(R 밝음·K 중간·k 그늘, 빛은 왼쪽 위), 빛나는 건 정해 둔 용암 틈과 핵만 */
 function lavaGuardian(view, pose, col) {
   const c = new Cv(96, 96);
   const v = view === 'left' ? 'right' : view;
+  // 덩어리 하나의 명암: 왼쪽 위가 밝고 오른쪽 아래와 가장자리가 그늘
+  const mass = (cx, cy, rx, ry) => (d, x, y) => {
+    const lit = -((x - cx) / rx) * 0.6 - ((y - cy) / ry) * 0.8;
+    if (d > 0.86 || lit < -0.45) return 'k';
+    return lit > 0.3 && d < 0.8 ? 'R' : 'K';
+  };
+  const blob = (cx, cy, rx, ry) => c.ellipse(cx, cy, rx, ry, mass(cx, cy, rx, ry));
+  // 용암 틈: 어두운 테두리(X) 안에 밝은 줄(x), 굵은 틈 가운데만 금빛(y)
+  const crack = (pts, hot = false) => {
+    for (let i = 1; i < pts.length; i++) c.line(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], 'X', 2);
+    for (let i = 1; i < pts.length; i++) c.line(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], hot && i === 1 ? 'y' : 'x');
+  };
   if (pose === 'down') {
-    c.ellipse(48, 84, 34, 9, (d, x, y) => ((x * 7 + y * 3) % 9 === 0 ? 'x' : d < 0.6 ? 'K' : 'k'));
     c.ellipse(48, 88, 40, 5, (d) => (d < 0.6 ? 'X' : 'Z'));
+    blob(34, 80, 16, 9);
+    blob(60, 82, 18, 8);
+    blob(46, 74, 12, 7);
     c.outline('k');
+    crack([[30, 80], [38, 82], [44, 79]]);
+    crack([[56, 83], [64, 81]]);
     return view === 'left' ? c.flipX() : c;
   }
   const sink = pose === 'crouch' ? 8 : pose === 'hit' ? 2 : 0;
-  const rock = (d, x, y) => ((x * 5 + y * 11) % 13 === 0 ? 'x' : (x + y * 2) % 17 === 0 ? 'X' : d < 0.4 ? 'R' : d < 0.8 ? 'K' : 'k');
+  const s = sink;
   // 용암 웅덩이 (발밑)
   c.ellipse(48, 89, 34, 6, (d) => (d < 0.4 ? 'y' : d < 0.75 ? 'x' : 'X'));
-  // 다리
-  for (const x of [34, 60]) c.rect(x - 6, 66 + sink, x + 6, 88, (xx, yy) => rock(0.6, xx, yy));
-  // 몸통
-  c.ellipse(48, 50 + sink, 24, 22, rock);
-  // 가슴의 핵 (껍질 틈 사이로)
-  if (v !== 'up') {
-    const cx = v === 'right' ? 56 : 48;
-    c.disc(cx, 50 + sink, 6, (d) => (d < 0.35 ? 'v' : d < 0.7 ? 'y' : 'x'));
-    for (const [dx, dy] of [[-9, -6], [8, 7], [-7, 9], [9, -8]]) c.line(cx, 50 + sink, cx + dx, 50 + sink + dy, 'x');
+  // 다리: 바위 두 덩이씩
+  for (const x of [34, 60]) {
+    blob(x, 82, 8, 7);
+    blob(x, 72 + s * 0.5, 9, 8);
   }
-  // 머리 (작고 낮게 박힘), 눈 둘
-  c.ellipse(v === 'right' ? 58 : 48, 26 + sink, 10, 8, rock);
-  if (v !== 'up') {
-    const hx = v === 'right' ? 62 : 48;
-    c.rect(hx - 5, 25 + sink, hx - 3, 26 + sink, 'y');
-    if (v !== 'right') c.rect(hx + 3, 25 + sink, hx + 5, 26 + sink, 'y');
+  // 몸통: 큰 덩어리 하나 + 어깨 바위
+  blob(48, 50 + s, 24, 21);
+  if (v === 'right') blob(60, 36 + s, 11, 9);
+  else {
+    blob(30, 36 + s, 11, 9);
+    blob(66, 36 + s, 11, 9);
   }
+  // 머리 (작고 낮게 박힘)
+  const hx = v === 'right' ? 58 : 48;
+  blob(hx, 26 + s, 10, 8);
   // 팔: 치켜들면 머리 위로, 내려치면 앞 바닥으로
   const up = pose === 'wind' || pose === 'cast';
   const arm = (sx, dir) => {
     const ex = sx + dir * (pose === 'strike' ? 18 : 10);
-    const ey = up ? 10 + sink : pose === 'strike' ? 82 : 66 + sink;
-    c.line(sx, 40 + sink, ex, ey, 'K', 9);
-    c.disc(ex, ey, 7, (d, x, y) => rock(d, x, y));
+    const ey = up ? 10 + s : pose === 'strike' ? 82 : 66 + s;
+    c.line(sx, 40 + s, ex, ey, 'K', 9);
+    c.line(sx - 2, 38 + s, ex - 2, ey - 2, 'R', 3);
+    blob(ex, ey, 8, 7);
     if (pose === 'strike') c.ellipse(ex, 86, 12, 3, 'y');
+    return [ex, ey];
   };
-  if (v === 'right') arm(62, 1);
-  else {
-    arm(26, -1);
-    arm(70, 1);
-  }
-  if (pose === 'cast') c.disc(48, 8, 5, (d) => (d < 0.5 ? 'y' : 'x'));
+  const fists = v === 'right' ? [arm(62, 1)] : [arm(26, -1), arm(70, 1)];
   c.outline('k');
+  // 용암 틈 (정해 둔 자리만)
+  if (v !== 'up') {
+    const cx = v === 'right' ? 56 : 48;
+    const cy = 50 + s;
+    crack([[cx, cy], [cx - 9, cy - 7], [cx - 14, cy - 6]], true);
+    crack([[cx, cy], [cx + 8, cy + 8], [cx + 10, cy + 15]], true);
+    crack([[cx, cy], [cx - 6, cy + 10]], true);
+    // 가슴의 핵
+    c.disc(cx, cy, 5, (d) => (d < 0.4 ? 'v' : d < 0.75 ? 'y' : 'x'));
+    // 눈 둘
+    c.rect(hx + (v === 'right' ? 2 : -5), 25 + s, hx + (v === 'right' ? 5 : -3), 26 + s, 'y');
+    if (v !== 'right') c.rect(hx + 3, 25 + s, hx + 5, 26 + s, 'y');
+  } else {
+    // 등: 척추를 따라 한 줄
+    crack([[48, 34 + s], [46, 46 + s], [50, 58 + s], [47, 66 + s]]);
+  }
+  for (const x of [34, 60]) crack([[x - 3, 70 + s * 0.5], [x + 1, 76], [x - 1, 82]]);
+  for (const [fx, fy] of fists) crack([[fx - 4, fy - 2], [fx + 3, fy + 2]]);
+  if (pose === 'cast') c.disc(48, 8, 5, (d) => (d < 0.5 ? 'y' : 'x'));
   if (pose === 'hit') c.map((ch) => (ch === 'K' ? 'R' : ch));
   return view === 'left' ? c.flipX() : c;
 }

@@ -67,16 +67,18 @@ export const PEOPLE = {
 Object.assign(PEOPLE, CAST);
 // like: 다른 인물 설정을 바탕으로 몇 가지만 바꿈
 for (const [id, p] of Object.entries(PEOPLE)) if (p.like) { const { like, ...rest } = p; PEOPLE[id] = { ...PEOPLE[like], ...rest }; }
-// 엑스트라 얼굴 돌려쓰기: faces: [얼굴 지도...], hairs: [머리 색...] → {id}_v2, {id}_v3 ... (엔진이 차례로 골라 옆 사람과 겹치지 않게)
+// 엑스트라 얼굴 돌려쓰기: faces: [얼굴 지도...], hairs: [머리 색...], cloths: [옷 색...], helds: [든 물건...] → {id}_v2, {id}_v3 ... (엔진이 차례로 골라 옆 사람과 겹치지 않게)
 export const FACE_SETS = {};
 for (const [id, p] of Object.entries({ ...PEOPLE })) {
   if (!p.faces) continue;
   p.face = p.faces[0];
   if (p.hairs) p.hair = p.hairs[0];
+  if (p.cloths) p.cloth = p.cloths[0];
+  if (p.helds) p.held = p.helds[0];
   FACE_SETS[id] = [id];
   p.faces.slice(1).forEach((f, i) => {
     const vid = `${id}_v${i + 2}`;
-    PEOPLE[vid] = { ...p, face: f, hair: p.hairs?.[i + 1] ?? p.hair, variantOf: id };
+    PEOPLE[vid] = { ...p, face: f, hair: p.hairs?.[i + 1] ?? p.hair, cloth: p.cloths?.[i + 1] ?? p.cloth, held: p.helds?.[i + 1] ?? p.held, variantOf: id };
     FACE_SETS[id].push(vid);
   });
 }

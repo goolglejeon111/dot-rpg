@@ -18,7 +18,7 @@ import { TILES, EXTRA, VARIANTS, ALTERNATE, SHADOW_BELOW, PROPS } from './hd/pal
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PEOPLE, FACE_SETS, drawPerson as drawPerson25, drawWeapon, FOOT } from './hd/people.mjs';
-import { drawTall, isTall, tallBattleSheet } from './hd/tall.mjs';
+import { drawTall, isTall, tallBattleSheet, tallStanceSheet, STANCE_COLS } from './hd/tall.mjs';
 // 3등신 인물(hd/tall.mjs TALL 표)은 새 방식으로, 나머지는 2.5등신(hd/people.mjs)
 const drawPerson = (id, v, o) => (isTall(id) ? drawTall(id, v, o) : drawPerson25(id, v, o));
 import { RAMPS as R } from './palette.mjs';
@@ -73,7 +73,8 @@ function fieldSheet(id) {
       drawPerson(id, v, { lift: 3 }),
       drawPerson(id, v, { lift: 4 }),
       drawPerson(id, v, { dy: 2 }),
-      drawPerson(id, v),
+      // 마지막 칸: 숨쉬기 (몸 1칸 내려가고 망토·머리 끝이 1칸 흔들림). 엔진이 서 있을 때 서기 칸과 번갈아 씀 (움직임_피드백 1절)
+      isTall(id) ? drawPerson(id, v, { dy: 0.5, sway: 1 }) : drawPerson(id, v),
     );
   }
   return frames;
@@ -234,7 +235,16 @@ function toPNG(frames, cw, ch, cols, scale = 1, bg = null) {
 const write = (rel, buf) => {
   const f = join(ROOT, rel);
   mkdirSync(dirname(f), { recursive: true });
-  writeFileSync(f, buf);
+  // 개발 서버·백신이 파일을 잠깐 잡고 있으면 열기가 실패함: 조금 기다렸다 다시
+  for (let i = 0; ; i++) {
+    try {
+      writeFileSync(f, buf);
+      break;
+    } catch (e) {
+      if (i >= 8) throw e;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 150);
+    }
+  }
   if (rel.startsWith('public/assets/')) HD[rel.slice('public/'.length)] = K;
   console.log('만듦', rel);
 };
@@ -260,6 +270,7 @@ function keepOld(rel) {
   copyFileSync(join(ROOT, rel), old);
 }
 const list = {};
+const STANCE_IDS = ['leon', 'leon_hood', 'leon_blade', 'serena', 'serena_hood', 'elysia', 'karg', 'adrian', 'galia'];
 // 고해상도로 쓴 파일 (public 아래 경로 → 배수). write()가 public/assets/ 아래 파일을 적음
 const HD = {};
 const preview = [];
@@ -274,6 +285,8 @@ for (const id of Object.keys(PEOPLE)) {
     keepOld(bt);
     write(bt, toPNG(battleSheet(id), 48, 48, 12));
   }
+  // 전투 자세 시트 (파티만): 전투 자세 서기·걷기, 공격 뒤따름·거둠 (움직임_피드백 3절)
+  if (STANCE_IDS.includes(id)) write(`public/assets/battle/chars/${id}_stance.png`, toPNG(tallStanceSheet(id), 48, 48, STANCE_COLS));
   const top = Math.min(...field.slice(0, 1).map((f) => f.bounds().y0));
   list[id] = { w: 32, h: 48, foot: 48 - 1 - FOOT, rise: FOOT - top + 1 - OLD_HEIGHT };
   preview.push(...field.slice(0, 20).filter((_, i) => i % 5 !== 4));
@@ -401,7 +414,7 @@ for (const dir of ['public/assets/sprites', 'public/assets/battle/chars']) {
   for (const where of [dir, dir.replace('public/assets/', 'public/assets/_old/')])
     for (const f of existsSync(join(ROOT, where)) ? readdirSync(join(ROOT, where)) : []) {
       const id = f.replace(/.png$/, '');
-      if (!f.endsWith('.png') || SKIP.has(id) || PEOPLE[id] || seen.has(id) || id.endsWith('_2.5')) continue; // _2.5: 예전 2.5등신 인물 보관본
+      if (!f.endsWith('.png') || SKIP.has(id) || PEOPLE[id] || id.endsWith('_stance') || seen.has(id) || id.endsWith('_2.5')) continue; // _2.5: 예전 2.5등신 인물 보관본
       seen.add(id);
       const rel = `${dir}/${f}`;
       if (HI_FILES[rel]) {

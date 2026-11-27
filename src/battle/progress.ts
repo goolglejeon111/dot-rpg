@@ -209,3 +209,15 @@ export function statsOf(id: string, level = levelOf(id)) {
   const n = level - 1;
   return { hp: d.hp + d.grow.hp * n, atk: d.atk + d.grow.atk * n, def: d.def + d.grow.def * n };
 }
+
+/** 기술 묶음 바꾸기 (대본의 kit). 없는 묶음 이름은 경고만 하고 무시, null이면 기본으로 */
+export function setKit(m: Record<string, string | null>) {
+  const p = gameState.progress;
+  p.kit ??= {};
+  const kits = (fighters as { kits?: Record<string, unknown> }).kits ?? {};
+  for (const [who, k] of Object.entries(m)) {
+    if (k === null) delete p.kit[who];
+    else if (!kits[k]) console.warn(`[kit] fighters.json kits에 없는 묶음: ${k}`);
+    else p.kit[who] = k;
+  }
+}

@@ -156,7 +156,7 @@ function wallTop(ramp, o = {}) {
 // 널빤지: 판마다 위 1줄 밝게, 결은 드문드문, 못 자국
 // ---------------------------------------------------------------------
 function planks(ramp, o = {}) {
-  const { base = 1, size = 8, vertical = false, seed = 1, gap = true, extra } = o;
+  const { base = 1, size = 8, vertical = false, seed = 1, gap = true, grain = 0.12, extra } = o;
   const L = new Layer(32, 32);
   for (let y = 0; y < 32; y++)
     for (let x = 0; x < 32; x++) {
@@ -170,7 +170,7 @@ function planks(ramp, o = {}) {
       else if (v === 0) c = ramp[base - 1] ?? ramp[base];
       else if (end === 0) c = ramp[base + 2];
       else if (end === 1) c = ramp[base - 1] ?? ramp[base];
-      else if (hash(k, v, seed + 3) < 0.12 && hash(b >> 3, k * 7 + v, seed) < 0.5) c = ramp[base + 1]; // 결 (드문드문)
+      else if (hash(k, v, seed + 3) < grain && hash(b >> 3, k * 7 + v, seed) < 0.5) c = ramp[base + 1]; // 결 (드문드문)
       else c = ramp[base];
       L.set(x, y, c);
     }
@@ -257,16 +257,18 @@ function grass(ramp, o = {}) {
 }
 
 /** 모래 물결 (얕은 호를 여러 줄) */
-function ripples(L, ramp, base, seed, n = 5, deep = false) {
+function ripples(L, ramp, base, seed, n = 5, deep = false, soft = false) {
   for (let i = 0; i < n; i++) {
     const y0 = Math.floor(hash(i, 1, seed) * 30) + 1;
     const x0 = Math.floor(hash(i, 2, seed) * 32);
-    const len = 8 + Math.floor(hash(i, 3, seed) * 10);
+    const len = (soft ? 5 : 8) + Math.floor(hash(i, 3, seed) * (soft ? 6 : 10));
     for (let k = 0; k < len; k++) {
       const x = (x0 + k) % 32;
-      const y = y0 + Math.round(Math.sin((k / len) * Math.PI) * -1.5);
+      const y = y0 + Math.round(Math.sin((k / len) * Math.PI) * (soft ? -0.6 : -1.5));
+      // soft: 물결이 칸 가장자리에서 끊기지 않게 가장자리 2칸은 비우고, 밝은 칸도 드문드문 (같은 무늬가 칸마다 되풀이돼 보이지 않게)
+      if (soft && (x < 2 || x > 29 || hash(x, y, seed + 9) < 0.35)) continue;
       L.set(x, y, ramp[base - 1] ?? ramp[0]);
-      if (deep || (k > 1 && k < len - 2 && hash(x, y, seed) < 0.5)) L.set(x, y + 1, ramp[base + 1]);
+      if (deep || (k > 1 && k < len - 2 && hash(x, y, seed) < (soft ? 0.1 : 0.5))) L.set(x, y + 1, ramp[base + 1]);
     }
   }
 }
@@ -379,14 +381,14 @@ const make = {
   cellar_floor: (s = 15) => ground(DIRT, { base: 2, seed: s, pebbles: 2 }),
   mud: (s = 16) => ground(DIRT, { base: 2, seed: s, pebbles: 2, extra: (L) => patches(L, s + 3, [DIRT[3], DIRT[4]], 0.18) }),
   mud_snow: (s = 17) => ground(DIRT, { base: 2, seed: s, pebbles: 1, extra: (L) => snowBits(L, s + 4) }),
-  shack_wall: (s = 18) => planks(WOOD, { base: 2, size: 16, vertical: true, seed: s }),
+  shack_wall: (s = 18) => planks(WOOD, { base: 2, size: 16, vertical: true, seed: s, grain: 0.03 }), // 결은 아주 드문드문, 판자 이음매만 또렷하게
   bridge: (s = 19) => planks(WOOD, { base: 1, size: 8, seed: s }),
   grass: (s = 20) => grass(R.green, { base: 1, seed: s, flowers: 0 }),
   sand: (s = 21) => ground(SAND, { base: 1, seed: s, pebbles: 1, specks: 0.015, dark: 0.08 }),
   river: (s = 22) => water([R.sky[0], R.sky[1], R.sky[2], R.sky[3]], { base: 2, seed: s, glint: R.white[0] }),
-  desert: (s = 23) => ground(SAND, { base: 1, seed: s, pebbles: 1, specks: 0.012, light: 0.06, dark: 0.06, extra: (L) => ripples(L, SAND, 1, s, 1) }),
-  desert2: (s = 24) => ground(SAND, { base: 1, seed: s, pebbles: 0, specks: 0.012, light: 0.08, dark: 0.06, extra: (L) => ripples(L, SAND, 1, s, 2) }),
-  dune: (s = 25) => ground(SAND, { base: 1, seed: s, pebbles: 0, specks: 0.012, light: 0.1, dark: 0.08, extra: (L) => ripples(L, SAND, 1, s, 3) }),
+  desert: (s = 23) => ground(SAND, { base: 1, seed: s, pebbles: 1, specks: 0.012, light: 0.06, dark: 0.06, extra: (L) => ripples(L, SAND, 1, s, 1, false, true) }),
+  desert2: (s = 24) => ground(SAND, { base: 1, seed: s, pebbles: 0, specks: 0.012, light: 0.08, dark: 0.06, extra: (L) => ripples(L, SAND, 1, s, 2, false, true) }),
+  dune: (s = 25) => ground(SAND, { base: 1, seed: s, pebbles: 0, specks: 0.012, light: 0.1, dark: 0.08, extra: (L) => ripples(L, SAND, 1, s, 2, false, true) }),
   sandstone: (s = 26) => bricks(SAND, { base: 2, h: 8, w: 32, rough: 1, seed: s, mortar: SAND[4] }),
   sandstone_top: () => wallTop(SAND, { base: 1 }),
   oasis_water: (s = 27) => water([R.white[0], R.sky[0], R.sky[1], R.sky[2]], { base: 2, seed: s, glint: R.white[0] }),
@@ -542,12 +544,13 @@ for (const name of ['water', 'water2', 'sewer_water', 'sewer_water2', 'deep_wate
 }
 ANIM_F = 0;
 // 나중에 더한 갈래: 위 목록 뒤에 덧붙임 (앞의 타일 번호는 그대로)
-for (const [name, seeds] of Object.entries({ mud_snow: [107, 108] })) {
-  WORLD_VARIANTS[name] = seeds.map((s, i) => {
-    const key = `${name}_v${i + 1}`;
+for (const [name, seeds] of Object.entries({ mud_snow: [107, 108], desert: [109, 110, 111], desert2: [112, 113], dune: [114] })) {
+  const had = WORLD_VARIANTS[name] ?? [];
+  WORLD_VARIANTS[name] = [...had, ...seeds.map((s, i) => {
+    const key = `${name}_v${had.length + i + 1}`;
     WORLD_EXTRA[key] = make[name](s);
     return key;
-  });
+  })];
 }
 /** 벽 아래 그림자 띠를 까는 벽 */
 export const WORLD_SHADOW = [

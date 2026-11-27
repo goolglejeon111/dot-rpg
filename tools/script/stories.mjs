@@ -189,7 +189,7 @@ export const STORIES = [
       { match: '장면 9.', id: 'scene9', place: '루바 오아시스', color: '#2a1810' },
       { match: '꿈 2.', id: 'dream2', place: '꿈 — 아르덴의 장터', color: '#3a2e1c' },
       { match: '장면 9-1.', id: 'scene9_1', place: '루바 오아시스', color: '#10141e' },
-      { match: '막간.', id: 'interlude2', place: '루멘 신성국 대성당', color: '#2a2214' },
+      { match: '막간.', id: 'interlude2', place: '성도 대성당', color: '#2a2214' },
     ],
     inserts: [
       { scene: 'scene1', before: '그 말을 들은 것이, 이틀 전이었다.', node: { explore: 'a2_desert_walk' } },
@@ -483,7 +483,7 @@ export const STORIES = [
       { match: '결과: 문을 지키는 사람', id: 'r11_stay', place: '아스트라, 포탈실', color: '#3a3050', effects: { flags: { elysia_alive: true } } },
       { match: '결과: 마지막 마력', id: 'r11_die', place: '아스트라, 포탈실', color: '#3a3050', effects: { flags: { elysia_alive: false } } },
       { match: '장면 12.', id: 'scene12', place: '세라핀 구릉 근처', color: '#6a6a5a' },
-      { match: '막간. 성전의 깃발', id: 'interlude4', place: '루멘 신성국 대성당', color: '#3a2c14' },
+      { match: '막간. 성전의 깃발', id: 'interlude4', place: '성도 대성당', color: '#3a2c14' },
     ],
     inserts: [
       // 끼워 넣을 것 (4막_연출.md 표)

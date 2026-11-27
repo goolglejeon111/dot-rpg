@@ -497,7 +497,7 @@
       ]
     },
     {
-      "id": "interlude2", "title": "막간. 응답 없는 기도", "place": "루멘 신성국 대성당", "color": "#2a2214",
+      "id": "interlude2", "title": "막간. 응답 없는 기도", "place": "성도 대성당", "color": "#2a2214",
       "nodes": [
         {"speaker":"adrian","expression":"normal","text":"빛이시여. 길 잃은 저를, 다시 비추어 주소서."},
         {"speaker":"adrian","expression":"normal","text":"…."},

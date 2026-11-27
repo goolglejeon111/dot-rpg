@@ -4,8 +4,9 @@ import { STAGE, type ExploreScene, type ExploreStart, type MapHost, type StageDe
 import { makeBattleAnims, preloadBattle } from '../battle/assets';
 import battlesData from '../data/battle/battles.json';
 import { StoryFx } from './StoryFx';
-import { ACTIVE_MAX, activeParty, addGuest, clearStory, gainOnce, healAll, joinParty, lowToHalf, leaveParty, levelOf, maxLevel, partyIds, setActive, unlock, unlockInfo, type Unlock } from '../battle/progress';
+import { ACTIVE_MAX, activeParty, addGuest, clearStory, gainOnce, healAll, joinParty, lowToHalf, leaveParty, setKit, levelOf, maxLevel, partyIds, setActive, unlock, unlockInfo, type Unlock } from '../battle/progress';
 import { characters, stories } from '../game/data';
+import { fitToStory } from '../battle/storyFit';
 import { gameState, type StateData } from '../game/GameState';
 import { makeBodyPlaceholder, PORTRAIT_H, PORTRAIT_W } from '../game/placeholders';
 import { save, type ChoiceLogEntry } from '../game/save';
@@ -234,6 +235,8 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       return;
     }
     this.story = story;
+    // 중간에서 시작(개발 시험·선택지 기록)해도 파티·최대 레벨은 그 자리의 이야기대로
+    if (!this.start.finished && !this.start.previewEnding) fitToStory(story.id, this.start.scene, this.start.node, this.start.choiceAt === undefined);
     this.cameras.main.setBackgroundColor('#000000');
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.hideMap());
     void this.loadPortraits().then(() => this.build());
@@ -1085,6 +1088,9 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     } else if ('guest' in node) {
       addGuest(node.guest);
       this.nextNode();
+    } else if ('kit' in node) {
+      setKit(node.kit);
+      this.nextNode();
     } else if ('costume' in node) {
       this.setCostume(node.who ?? 'leon', node.costume);
       this.nextNode();
@@ -1184,11 +1190,14 @@ export class StoryScene extends Phaser.Scene implements MapHost {
     const def = STAGE.segments[seg];
     // 조사 기록의 "다시 걷기": 이 구간이 시작되는 순간의 상태
     this.curSeg = seg;
+    // 구간의 장소 이름 (구간이 끝나면 장면 장소로)
+    if (def?.place) this.placeLabel.setText(`◆ ${def.place}`);
     save.addWalk({ story: this.story.id, scene: this.scene_.id, node: this.nodeIdx, seg, state: gameState.snapshot(), choices: save.choiceCount });
     this.withMap((m) =>
       m.play(seg, () => {
         this.mode = 'busy';
         this.curSeg = undefined;
+        if (def?.place) this.setPlace(this.place);
         const after = def?.after ? STAGE.stages[def.after] : undefined;
         if (after?.dark)
           return this.curtainIn(450, () => {
@@ -1356,6 +1365,7 @@ export class StoryScene extends Phaser.Scene implements MapHost {
       if ('leave' in n) leaveParty(n.leave);
       if ('guest' in n) addGuest(n.guest);
       if ('costume' in n) this.setCostume(n.who ?? 'leon', n.costume);
+      if ('kit' in n) setKit(n.kit);
       if ('unlock' in n && n.unlock === 'weapon') this.setCostume('leon', WEAPON_COSTUME);
       if ('cg' in n) cg = n.cg;
       if ('wound' in n && (n.wound === 'sense' || n.wound === 'off')) sense = n.wound === 'sense';

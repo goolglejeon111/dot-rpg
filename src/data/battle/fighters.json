@@ -112,7 +112,7 @@
       "attack": { "chainWindow": 260, "hits": [
         { "mult": 0.6, "range": 26, "arc": 110, "windup": 50, "active": 50, "recover": 70, "step": 3, "fx": "karg_slash", "cols": [0, 1] },
         { "mult": 0.6, "range": 26, "arc": 110, "windup": 50, "active": 50, "recover": 70, "step": 3, "fx": "karg_slash", "cols": [2, 3], "flipFx": true },
-        { "mult": 0.7, "range": 26, "arc": 110, "windup": 50, "active": 50, "recover": 70, "step": 3, "fx": "karg_slash", "cols": [0, 1] },
+        { "mult": 0.7, "range": 26, "arc": 110, "windup": 50, "active": 50, "recover": 70, "step": 3, "fx": "karg_slash", "cols": [112, 113] },
         { "mult": 0.9, "range": 30, "arc": 120, "windup": 80, "active": 60, "recover": 180, "step": 6, "fx": "karg_slash", "cols": [4, 5], "flipFx": true }
       ] }
     },
@@ -128,6 +128,21 @@
         { "mult": 1.2, "range": 40, "arc": 170, "windup": 220, "active": 90, "recover": 240, "step": 4, "fx": "galia_cleave", "cols": [0, 1], "push": 14 },
         { "mult": 1.5, "range": 42, "arc": 170, "windup": 240, "active": 90, "recover": 320, "step": 6, "fx": "galia_cleave", "cols": [2, 3], "push": 18, "flipFx": true }
       ] }
+    }
+  },
+  "_kits": "kits = 대본의 { kit: { 인물: 묶음 } }으로 바꾸는 기술 묶음. attack·evade·skill·ult만 덮어씀. adrian_blade = 5막에서 신성력을 잃은 뒤의 아드리안. docs/전투.md에 정해질 때까지 지금 기술을 그대로 복사해 둠",
+  "kits": {
+    "adrian_blade": {
+        "attack": {
+          "chainWindow": 300,
+          "hits": [
+            { "mult": 1.0, "range": 30, "arc": 120, "windup": 110, "active": 70, "recover": 150, "step": 3, "fx": "adrian_slash", "cols": [0, 1] },
+            { "mult": 1.2, "range": 30, "arc": 120, "windup": 120, "active": 70, "recover": 220, "step": 5, "fx": "adrian_slash", "cols": [2, 3], "flipFx": true }
+          ]
+        },
+        "evade": { "type": "shield", "name": "방패 막기", "cooldown": 1500, "fx": "adrian_block", "after": { "name": "방패 밀치기", "fx": "adrian_bash" } },
+        "skill": { "name": "치유의 빛", "text": "주변 아군 회복", "aim": "self", "cooldown": 12000, "fx": "adrian_heal", "after": { "name": "방패 돌진", "text": "돌진해 적을 밀어내고 잠깐 기절", "aim": "facing", "fx": "adrian_charge" } },
+        "ult": { "name": "성역", "text": "안의 아군이 받는 피해 대폭 감소", "aim": "self", "fx": "adrian_sanctuary", "after": { "name": "끊어 내는 검", "text": "앞의 적을 크게 베고 신성력, 시황제의 강화 효과 제거", "aim": "facing", "fx": "adrian_sever" } }
     }
   }
 }

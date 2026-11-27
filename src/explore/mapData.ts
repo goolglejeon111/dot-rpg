@@ -219,6 +219,18 @@ export function dressTiles(scene: Phaser.Scene, floor: Phaser.Tilemaps.TilemapLa
     const r = 26 + hash(i, 4, 21) * 40;
     for (const [k, a] of [[1, 0.02], [0.75, 0.02], [0.5, 0.02]] as const) gm.fillStyle(dark ? 0x1d2735 : 0xfff6e0, a).fillEllipse(cx, cy, r * 2 * k, r * 1.4 * k);
   }
+  // 사막: 칸 무늬가 되풀이돼 보이지 않게 여러 칸에 걸친 더 큰 밝음·그늘 얼룩 (점검_피드백 3절)
+  const sandy = (n: string) => n.startsWith('desert') || n === 'dune';
+  const nd = Math.round((W * H) / 36);
+  for (let i = 0; i < nd; i++) {
+    const cx = hash(i, 1, 41) * W * TS;
+    const cy = hash(i, 2, 41) * H * TS;
+    if (!sandy(base[Math.floor(cy / TS) * W + Math.floor(cx / TS)] ?? '')) continue;
+    const dark = hash(i, 3, 41) < 0.5;
+    const r = 60 + hash(i, 4, 41) * 80;
+    const sq = 0.45 + hash(i, 5, 41) * 0.4;
+    for (const [k, a] of [[1, 0.025], [0.72, 0.02], [0.45, 0.02]] as const) gm.fillStyle(dark ? 0xb07a3e : 0xfff2c8, a).fillEllipse(cx, cy, r * 2 * k, r * 2 * sq * k);
+  }
 
   // 물·용암 움직임
   const anim = new Map(Object.entries(info.anim ?? {}).map(([k, v]) => [gid(k), v.map(gid)]));

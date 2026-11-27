@@ -1,5 +1,8 @@
 import charactersJson from '../data/characters.json';
-import { TEST_STORY } from '../dev/testStory';
+import { addAct5Test, TEST_ACT5, TEST_STORY } from '../dev/testStory';
+import stageJson from '../data/explore/stage.json';
+import battlesJson from '../data/battle/battles.json';
+import enemiesJson from '../data/battle/enemies.json';
 import type { CharacterDef, EndingDef, StoryData } from './types';
 
 export const characters: Record<string, CharacterDef> = {};
@@ -21,7 +24,11 @@ for (const [path, d] of Object.entries(modules)) {
 }
 
 // 개발 중에만: 시험 이야기 (타이틀의 "개발 시험" 메뉴)
-if (import.meta.env.DEV) stories[TEST_STORY.id] = TEST_STORY;
+if (import.meta.env.DEV) {
+  stories[TEST_STORY.id] = TEST_STORY;
+  stories[TEST_ACT5.id] = TEST_ACT5;
+  addAct5Test(stageJson as unknown as { segments: Record<string, unknown> }, battlesJson as Record<string, unknown>, enemiesJson as Record<string, unknown>);
+}
 
 /** 첫 이야기 (새 게임이 시작하는 곳) */
 export const FIRST_STORY = 'prologue';

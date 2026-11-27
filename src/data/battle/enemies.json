@@ -6,6 +6,13 @@
     "attack": { "range": 24, "windup": 420, "recover": 700, "cooldown": 900, "mult": 1.0, "fx": "hit" },
     "selfDestruct": { "below": 0.3, "signal": 1300, "radius": 46, "mult": 2.4, "unblockable": true }
   },
+  "gnosis_first": {
+    "_설명": "프롤로그 첫 전투(하수인들)만: 레온 혼자 Lv 2라 공격을 낮춤 (점검_피드백.md 2절: 기본 공격 20~25번, 12번 이상 버팀)",
+    "name": "그노시스회 하수인", "sprite": "mob_gnosis", "hp": 79, "atk": 13, "def": 1, "speed": 52,
+    "ai": "rusher",
+    "attack": { "range": 24, "windup": 420, "recover": 700, "cooldown": 900, "mult": 1.0, "fx": "hit" },
+    "selfDestruct": { "below": 0.3, "signal": 1300, "radius": 46, "mult": 2.4, "unblockable": true }
+  },
   "marcion_hooded": {
     "name": "침입자", "sprite": "marcion_hooded", "hp": 260, "atk": 12, "def": 3, "speed": 38, "boss": true,
     "ai": "caster",
@@ -187,7 +194,7 @@
   "lava_guardian": {
     "name": "용암의 수호자",
     "sprite": "lava_guardian",
-    "hp": 4200,
+    "hp": 2500,
     "atk": 44,
     "def": 8,
     "speed": 30,
@@ -227,7 +234,7 @@
   "astra_golem": {
     "name": "포탈실 수호 골렘",
     "sprite": "astra_golem",
-    "hp": 3200,
+    "hp": 1600,
     "atk": 46,
     "def": 9,
     "speed": 30,

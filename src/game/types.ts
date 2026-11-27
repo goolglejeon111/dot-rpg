@@ -150,6 +150,11 @@ export interface CostumeNode {
   who?: string;
 }
 
+/** 기술 묶음 바꾸기: { kit: { adrian: 'adrian_blade' } } (fighters.json의 kits. 값이 null이면 기본으로) */
+export interface KitNode {
+  kit: Record<string, string | null>;
+}
+
 /** 화면 가운데 아이템 그림 확대 (null이면 닫기) */
 export interface ItemNode {
   item: string | null;
@@ -179,6 +184,7 @@ export type StoryNode =
   | BranchNode
   | GuestNode
   | CostumeNode
+  | KitNode
   | ItemNode
   | CutinNode
   | CgNode

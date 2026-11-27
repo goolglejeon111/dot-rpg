@@ -2590,6 +2590,7 @@
       "after": "a1_slum_dawn"
     },
     "a1_slum": {
+      "place": "황도 외곽 빈민가",
       "jumps": [
         {"type":"hurdle","at":[31,4],"size":[1,3],"art":["cart"],"crossLine":"제복을 벗자, 담을 넘는 것도 도둑처럼 익숙해졌다."}
       ],
@@ -2639,6 +2640,7 @@
       "after": "a2_route"
     },
     "a2_trade_route": {
+      "place": "동쪽 교역로",
       "jumps": [
         {"type":"hurdle","at":[15,6],"size":[1,3],"art":["cart"],"crossLine":"수레바퀴 자국이 길 한가운데서 끊겨 있었다. 끌려간 쪽으로."},
         {"type":"hurdle","at":[32,6],"size":[1,3],"art":["rock"],"crossLine":"수레바퀴 자국이 길 한가운데서 끊겨 있었다. 끌려간 쪽으로."}
@@ -2670,6 +2672,7 @@
       "after": "a3_forest_end"
     },
     "a3_night": {
+      "place": "버려진 마을",
       "jumps": [
         {"type":"hurdle","at":[18,15],"size":[3,1],"art":["beam"],"crossLine":"타다 만 들보는, 아직 따뜻했다."},
         {"type":"hurdle","at":[18,22],"size":[3,1],"art":["wall"],"crossLine":"타다 만 들보는, 아직 따뜻했다."}
@@ -2738,6 +2741,7 @@
       "hint": "깨진 돌판으로"
     },
     "a4_grimhelm_night": {
+      "place": "그림헬름",
       "map": "grimhelm_hall",
       "looks": ["a4_mural"],
       "goal": "goal_forge",

@@ -43,6 +43,8 @@ export function preloadBattle(scene: Phaser.Scene) {
     const b = CHARS[faceBase(v)];
     if (b) load(`bt_${v}`, { ...b, file: b.file.replace(/[^/]+.png$/, `${v}.png`) });
   }
+  // 전투 자세 시트 (파티, 48x48 16열: tools/pixel-art/hd/tall.mjs tallStanceSheet)
+  for (const id of STANCE_IDS) load(`bt_${id}_stance`, { file: `assets/battle/chars/${id}_stance.png`, w: 48, h: 48 });
   for (const id of WALK_SPRITES) {
     if (!scene.textures.exists(id)) scene.load.spritesheet(id, `assets/sprites/${id}.png`, fieldFrame(id));
   }
@@ -52,6 +54,8 @@ export function preloadBattle(scene: Phaser.Scene) {
 }
 
 const DIRS = ['down', 'left', 'right', 'up'];
+/** 전투 자세 시트가 있는 인물 (움직임_피드백 3절) */
+export const STANCE_IDS = ['leon', 'leon_hood', 'leon_blade', 'serena', 'serena_hood', 'elysia', 'karg', 'adrian', 'galia'];
 
 /** 애니메이션 등록 (한 번만) */
 export function makeBattleAnims(scene: Phaser.Scene) {
@@ -64,6 +68,12 @@ export function makeBattleAnims(scene: Phaser.Scene) {
       frames: a.generateFrameNumbers(key, { start: 0, end: (s.frames ?? 1) - 1 }),
       frameRate: s.rate ?? 12,
       repeat: s.loop ? -1 : 0,
+    });
+  }
+  for (const id of STANCE_IDS) {
+    DIRS.forEach((dir, i) => {
+      const k = `bt_${id}_stance-${dir}`;
+      if (!a.exists(k) && scene.textures.exists(`bt_${id}_stance`)) a.create({ key: k, frames: a.generateFrameNumbers(`bt_${id}_stance`, { frames: [i * 16 + 2, i * 16 + 3, i * 16 + 4, i * 16 + 5] }), frameRate: 8, repeat: -1 });
     });
   }
   for (const id of WALK_SPRITES) {

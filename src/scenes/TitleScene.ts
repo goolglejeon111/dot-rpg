@@ -278,6 +278,10 @@ export class TitleScene extends Phaser.Scene {
     };
     const rows: [string, () => void][] = [
       ['갈래 전투 시험 장면', () => start({ story: 'dev_test' })],
+      ['5막 준비 시험 (점프·기술·막는 적)', () => start({ story: 'dev_act5' }, () => {
+        gameState.progress.party = ['leon', 'adrian'];
+        gameState.progress.stage = 'act4';
+      })],
       ['장면 1 회랑 순찰 (이동 튜토리얼)', () => start({ story: FIRST_STORY, scene: 'scene1', node: at('scene1', (n) => 'explore' in n) })],
       ['장면 3 침소 회랑 · 장면 4 침소', () => start({ story: FIRST_STORY, scene: 'scene3', node: at('scene3', (n) => 'explore' in n) })],
       ['해자 (창으로 뛰어내린 뒤)', () => start({ story: FIRST_STORY, scene: 'choice_window', node: at('choice_window', (n) => 'place' in n) })],
@@ -339,6 +343,7 @@ export class TitleScene extends Phaser.Scene {
           if ('unlock' in n) unlock(n.unlock as Unlock);
           if ('join' in n) joinParty(String(n.join));
           if ('costume' in n) p.costume[String(n.who ?? 'leon')] = String(n.costume);
+          if ('kit' in n) Object.assign((p.kit ??= {}), n.kit);
         }
         if (sc.id === scene) break;
       }
@@ -381,6 +386,7 @@ export class TitleScene extends Phaser.Scene {
       if ('join' in n) joinParty(String(n.join));
       if ('guest' in n) addGuest(String(n.guest));
       if ('costume' in n) p.costume[String(n.who ?? 'leon')] = String(n.costume);
+      if ('kit' in n) Object.assign((p.kit ??= {}), n.kit);
     };
     const where = (pred: (n: object) => boolean) => {
       for (const sc of act2.scenes) {
@@ -453,6 +459,7 @@ export class TitleScene extends Phaser.Scene {
       if ('unlock' in n) unlock(n.unlock as Unlock);
       if ('join' in n) joinParty(String(n.join));
       if ('costume' in n) p.costume[String(n.who ?? 'leon')] = String(n.costume);
+      if ('kit' in n) Object.assign((p.kit ??= {}), n.kit);
       if ('stage' in n) {
         const d = stages[String(n.stage)];
         const keys = [d?.once, d?.rune === 'break' ? 'a3:rune_break' : d?.rune === 'layer' ? 'a3:layered' : undefined];
@@ -541,6 +548,7 @@ export class TitleScene extends Phaser.Scene {
       if ('join' in n) joinParty(String(n.join));
       if ('leave' in n) leaveParty(String(n.leave));
       if ('costume' in n) p.costume[String(n.who ?? 'leon')] = String(n.costume);
+      if ('kit' in n) Object.assign((p.kit ??= {}), n.kit);
       if ('stage' in n) {
         const d = stages[String(n.stage)];
         const keys = [d?.once, d?.rune === 'break' ? 'a3:rune_break' : d?.rune === 'layer' ? 'a3:layered' : undefined];

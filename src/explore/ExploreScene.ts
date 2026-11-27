@@ -15,7 +15,7 @@ import { gameState } from '../game/GameState';
 import { save } from '../game/save';
 import type { StoryFxDef } from '../scenes/StoryFx';
 import {
-  FLAMES, MAPS, PROPS, TS, dressTiles, findObj, footOf, layerOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf, solidGrid, wadeGrid,
+  FLAMES, MAPS, PROPS, TS, dressTiles, fillOutside, findObj, footOf, layerOf, makeMapAnims, makePropSprite, makeTilemap, objectsOf, preloadMapArt, propOf, solidGrid, wadeGrid,
   type TiledMap, type TiledObj,
 } from './mapData';
 
@@ -537,6 +537,9 @@ export class ExploreScene extends Phaser.Scene {
     if (layerOf(md, 'blood')) this.blood = this.lightUp(this.world(tm.createLayer('blood', ts, 0, 0)!.setDepth(-19).setVisible(false)));
     const wallLayer = this.lightUp(this.world(tm.createLayer('walls', ts, 0, 0)!.setDepth(-15)));
     for (const o of dressTiles(this, floorLayer, wallLayer, id, (o) => this.lightUp(o))) this.world(o);
+    // 맵 바깥·빈칸은 검정 대신 테두리 벽 타일로 (점검_피드백3 1-1)
+    const fill = fillOutside(tm, ts, floorLayer, wallLayer);
+    if (fill) this.lightUp(this.world(fill));
 
     for (const o of objectsOf(md)) this.makeObject(o);
     this.makeSky(md);
@@ -2428,8 +2431,13 @@ export class ExploreScene extends Phaser.Scene {
     this.jumpObjs.forEach((o) => o.destroy());
     this.jumpObjs = [];
     // 모래 구덩이 틈: 줄마다 가로로 크게 어긋나게 (판정도 같이 옮김. 이웃 줄과 겹침이 남아 돌아 지나갈 틈은 없음, 점검_피드백2 3-1)
-    const pitShift = (j: JumpDef, ty: number) =>
-      j.type === 'gap' && j.size[0] === 1 && (j.art ?? []).every((a) => a === 'sand_pit') ? [-13, 13, -2][(ty - j.at[1] + j.at[0]) % 3] : 0;
+    // 모래 구덩이 셋은 길을 따라 앞뒤로 한 칸씩 어긋나게 (점검_피드백3 1-2). 모서리끼리 맞닿아 사이로 빠져나갈 틈은 없음.
+    // 구간마다 기우는 방향을 바꿈. 0이면 "어긋남 없음"과 구별이 안 되므로 가운데 줄은 0.01
+    const pitShift = (j: JumpDef, ty: number) => {
+      if (!(j.type === 'gap' && j.size[0] === 1 && j.size[1] === 3 && (j.art ?? []).every((a) => a === 'sand_pit'))) return 0;
+      const k = ty - j.at[1] - 1;
+      return k === 0 ? 0.01 : k * TS * (Math.floor(j.at[0] / 2) % 2 ? -1 : 1);
+    };
     this.jumps = (seg.jumps ?? []).flatMap((j, i) => {
       const rows = pitShift(j, j.at[1]) || pitShift(j, j.at[1] + 1) || pitShift(j, j.at[1] + 2) ? Array.from({ length: j.size[1] }, (_, k) => j.at[1] + k) : [null];
       return rows.map((ty) => {

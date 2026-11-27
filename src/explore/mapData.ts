@@ -236,31 +236,61 @@ export function dressTiles(scene: Phaser.Scene, floor: Phaser.Tilemaps.TilemapLa
     const sq = 0.45 + hash(i, 5, 41) * 0.4;
     for (const [k, a] of [[1, 0.01], [0.86, 0.012], [0.72, 0.012], [0.58, 0.012], [0.44, 0.012]] as const) gm.fillStyle(dark ? 0xc08a4c : 0xfff2c8, a).fillEllipse(cx, cy, r * 2 * k, r * 2 * sq * k);
   }
-  // 사막 모래 자국: 다섯 가지 모양을 칸마다 자리·방향을 흩뜨려, 절반쯤의 칸은 비움 (타일에 박힌 같은 자국 대신)
+  // 사막 모래 자국 (점검_피드백3 1-2): 바람 물결 줄·작은 조약돌·마른 풀·모래알 여러 가지를 칸마다 자리·방향을 흩뜨리고,
+  // 3분의 2쯤의 칸은 비움. 물결은 밝은 줄만 옅게(아래 그림자를 붙이면 "ㄱ" 모양으로 보여서 뺌)
   const marks = scene.add.graphics().setDepth(-19.6);
   out.push(marks);
-  const SHAPES: [number, number][][] = [
-    [[0, 0], [1, 0], [2, -1], [3, -1], [4, -1], [5, 0], [6, 0]], // 낮은 물결
-    [[0, 0], [1, -1], [2, -1], [3, -1], [4, 0]], // 짧은 물결
-    [[0, 0], [1, 0], [2, 0], [3, -1], [4, -1], [5, -1], [6, -1], [7, 0], [8, 0], [9, 1]], // 긴 바람 자국
-    [[0, 0], [1, -1], [2, -1], [3, 0], [0, 3], [1, 2], [2, 2], [3, 2], [4, 3]], // 두 줄 물결
-    [[0, 0], [2, 1], [1, 3], [4, 2]], // 흩어진 모래알
+  const px = (x: number, y: number, c: number, a: number) => marks.fillStyle(c, a).fillRect(x, y, 1, 1);
+  const KINDS: ((ox: number, oy: number, f: number, r: (k: number) => number) => void)[] = [
+    // 길게 휜 바람 물결 줄 (10~18px, 위아래 1px 휨)
+    (ox, oy, f, r) => {
+      const n = 10 + Math.floor(r(1) * 9);
+      const ph = r(2) * 6;
+      for (let i = 0; i < n; i++) px(ox + i * f, oy + Math.round(Math.sin(i / 4 + ph) * 0.9), 0xf6e4b4, 0.32 + 0.12 * Math.sin((i / n) * Math.PI));
+    },
+    // 나란한 물결 두 줄 (짧고 어긋남)
+    (ox, oy, f, r) => {
+      const n = 6 + Math.floor(r(1) * 5);
+      for (let i = 0; i < n; i++) px(ox + i * f, oy + (i > n / 2 ? 1 : 0), 0xf6e4b4, 0.35);
+      for (let i = 0; i < n - 2; i++) px(ox + (i + 3) * f, oy + 4 + (i > n / 2 ? 1 : 0), 0xf6e4b4, 0.28);
+    },
+    // 작은 조약돌 2~3개 (어두운 몸, 위 밝은 점)
+    (ox, oy, _f, r) => {
+      const n = 2 + Math.floor(r(1) * 2);
+      for (let i = 0; i < n; i++) {
+        const x = ox + Math.floor(r(3 + i) * 9);
+        const y = oy + Math.floor(r(6 + i) * 6);
+        marks.fillStyle(0x9a7448, 0.55).fillRect(x, y, r(9 + i) < 0.5 ? 2 : 1, 1);
+        px(x, y - 1, 0xfff0c8, 0.5);
+      }
+    },
+    // 마른 풀 한 포기 (짧은 줄기 3~4개, 바깥으로 벌어짐)
+    (ox, oy, _f, r) => {
+      const n = 3 + Math.floor(r(1) * 2);
+      for (let i = 0; i < n; i++) {
+        const lean = i - (n - 1) / 2;
+        const h = 3 + Math.floor(r(2 + i) * 3);
+        for (let k = 0; k < h; k++) px(ox + Math.round(lean * (0.4 + k * 0.35)), oy - k, k === h - 1 ? 0xd8b070 : 0xa88450, 0.75);
+      }
+    },
+    // 흩어진 모래알
+    (ox, oy, _f, r) => {
+      for (let i = 0; i < 4; i++) px(ox + Math.floor(r(2 + i) * 10), oy + Math.floor(r(7 + i) * 8), i % 2 ? 0xb08a58 : 0xf6e4b4, 0.45);
+    },
   ];
+  // 고르는 비율: 물결 줄이 가장 흔하고 마른 풀이 가장 드묾
+  const WEIGHT = [0.34, 0.16, 0.2, 0.1, 0.2];
   for (let y = 0; y < H; y++)
     for (let x = 0; x < W; x++) {
       if (!sandy(base[y * W + x] ?? '') || wallAt(x, y)) continue;
-      if (hash(x, y, 51) < 0.5) continue;
-      const shape = SHAPES[Math.floor(hash(x, y, 52) * SHAPES.length)];
-      const flip = hash(x, y, 53) < 0.5 ? -1 : 1;
-      const tilt = hash(x, y, 54) < 0.3 ? 1 : 0; // 가끔 한 칸 기울임
-      const ox = x * TS + 4 + Math.floor(hash(x, y, 55) * 16);
-      const oy = y * TS + 5 + Math.floor(hash(x, y, 56) * 22);
-      for (const [i, [px, py]] of shape.entries()) {
-        const mx = ox + (flip < 0 ? 10 - px : px);
-        const my = oy + py + (tilt ? Math.floor(i / 3) : 0);
-        marks.fillStyle(0xf0dca8, 0.55).fillRect(mx, my, 1, 1);
-        if (i % 2 === 0) marks.fillStyle(0xb08a58, 0.28).fillRect(mx, my + 1, 1, 1);
-      }
+      if (hash(x, y, 51) < 0.66) continue;
+      let k = hash(x, y, 52);
+      let kind = 0;
+      while (kind < WEIGHT.length - 1 && k > WEIGHT[kind]) k -= WEIGHT[kind++];
+      const f = hash(x, y, 53) < 0.5 ? -1 : 1;
+      const ox = x * TS + 6 + Math.floor(hash(x, y, 55) * 20) + (f < 0 ? 12 : 0);
+      const oy = y * TS + 6 + Math.floor(hash(x, y, 56) * 22);
+      KINDS[kind](ox, oy, f, (n) => hash(x * 7 + n, y * 13 + n, 57));
     }
 
   // 물·용암 움직임
@@ -362,3 +392,36 @@ export const FLAMES: Record<string, { radius: number; intensity: number; top: nu
   torch_stand: { radius: 100, intensity: 1.3, top: 5 },
   forge_lit: { radius: 140, intensity: 1.5, top: 34 },
 };
+
+/**
+ * 맵 바깥과 맵 안의 빈칸(바닥도 벽도 없는 칸)을 검정 대신 그 맵 바깥 테두리의 벽(없으면 바닥) 타일로 채움 (점검_피드백3 1-1).
+ * 맵 데이터는 그대로, 그림만 아래 층에 깖. 테두리에서 가장 많이 쓰인 타일을 고름
+ */
+export function fillOutside(tm: Phaser.Tilemaps.Tilemap, ts: Phaser.Tilemaps.Tileset, floor: Phaser.Tilemaps.TilemapLayer, walls: Phaser.Tilemaps.TilemapLayer, pad = 20) {
+  const W = tm.width;
+  const H = tm.height;
+  const pick = (layer: Phaser.Tilemaps.TilemapLayer) => {
+    const n = new Map<number, number>();
+    const add = (x: number, y: number) => {
+      const i = layer.getTileAt(x, y)?.index ?? -1;
+      if (i > 0) n.set(i, (n.get(i) ?? 0) + 1);
+    };
+    for (let x = 0; x < W; x++) (add(x, 0), add(x, H - 1));
+    for (let y = 1; y < H - 1; y++) (add(0, y), add(W - 1, y));
+    return [...n].sort((a, b) => b[1] - a[1])[0]?.[0] ?? -1;
+  };
+  let gid = pick(walls);
+  if (gid < 0) gid = pick(floor);
+  if (gid < 0) return null;
+  const layer = tm.createBlankLayer('fill_outside', ts, -pad * TS, -pad * TS, W + pad * 2, H + pad * 2);
+  if (!layer) return null;
+  for (let y = 0; y < H + pad * 2; y++)
+    for (let x = 0; x < W + pad * 2; x++) {
+      const mx = x - pad;
+      const my = y - pad;
+      const inside = mx >= 0 && my >= 0 && mx < W && my < H;
+      if (inside && ((floor.getTileAt(mx, my)?.index ?? -1) > 0 || (walls.getTileAt(mx, my)?.index ?? -1) > 0)) continue;
+      layer.putTileAt(gid, x, y);
+    }
+  return layer.setDepth(-21);
+}

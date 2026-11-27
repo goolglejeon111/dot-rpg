@@ -16,7 +16,7 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "leon_blade": {
     "w": 32,
@@ -76,13 +76,13 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "marcion": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "ignatius": {
     "w": 32,
@@ -166,13 +166,13 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "raid_captain": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "imperial_spear": {
     "w": 32,
@@ -226,31 +226,31 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "bandit_archer": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "astra_mage": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "astra_captain": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "astra_binder": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "mob_royal_knight_v2": {
     "w": 32,
@@ -292,13 +292,13 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "mob_gnosis_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "imperial_spear_v2": {
     "w": 32,
@@ -382,37 +382,37 @@
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "bandit_blade_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "bandit_archer_v2": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "bandit_archer_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "astra_mage_v2": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "astra_mage_v3": {
     "w": 32,
     "h": 48,
     "foot": 2,
-    "rise": 5
+    "rise": 6
   },
   "_tiles": {
     "anim": {
@@ -520,8 +520,8 @@
       "sand": "#d8b97a",
       "river": "#486bb1",
       "desert": "#d7b777",
-      "desert2": "#d8b879",
-      "dune": "#d5b576",
+      "desert2": "#d7b777",
+      "dune": "#d8b878",
       "sandstone": "#a37f52",
       "sandstone_top": "#ccac73",
       "oasis_water": "#6da3dc",

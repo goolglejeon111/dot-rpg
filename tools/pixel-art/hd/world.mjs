@@ -387,9 +387,10 @@ const make = {
   sand: (s = 21) => ground(SAND, { base: 1, seed: s, pebbles: 1, specks: 0.015, dark: 0.08 }),
   river: (s = 22) => water([R.sky[0], R.sky[1], R.sky[2], R.sky[3]], { base: 2, seed: s, glint: R.white[0] }),
   // 사막 바닥은 결만 두고, 모래 자국은 엔진이 칸마다 모양·자리·방향을 흩뜨려 그림 (칸마다 같은 자국이 되풀이돼 격자로 보이던 것, 점검_피드백2 3-1)
-  desert: (s = 23) => ground(SAND, { base: 1, seed: s, pebbles: 0, specks: 0.012, light: 0.06, dark: 0.06 }),
-  desert2: (s = 24) => ground(SAND, { base: 1, seed: s, pebbles: 0, specks: 0.012, light: 0.08, dark: 0.06 }),
-  dune: (s = 25) => ground(SAND, { base: 1, seed: s, pebbles: 0, specks: 0.012, light: 0.1, dark: 0.08 }),
+  // 사막: 칸 안 밝은 얼룩이 칸마다 같은 "ㄱ" 모양으로 되풀이돼 보여서 뺌 (점검_피드백3 1-2). 무늬는 맵 위에 흩뿌리는 자국(mapData)으로만
+  desert: (s = 23) => ground(SAND, { base: 1, seed: s, pebbles: 0, specks: 0.012, light: 0, dark: 0.03 }),
+  desert2: (s = 24) => ground(SAND, { base: 1, seed: s, pebbles: 0, specks: 0.012, light: 0, dark: 0.03 }),
+  dune: (s = 25) => ground(SAND, { base: 1, seed: s, pebbles: 0, specks: 0.012, light: 0, dark: 0.04 }),
   sandstone: (s = 26) => bricks(SAND, { base: 2, h: 8, w: 32, rough: 1, seed: s, mortar: SAND[4] }),
   sandstone_top: () => wallTop(SAND, { base: 1 }),
   oasis_water: (s = 27) => water([R.white[0], R.sky[0], R.sky[1], R.sky[2]], { base: 2, seed: s, glint: R.white[0] }),

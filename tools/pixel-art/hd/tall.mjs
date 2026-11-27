@@ -451,11 +451,22 @@ function drawHairBack(cB) {
     // 뒤통수(20칸)에서 등 뒤로
     spans(L, 14 + oy, bot, (y) => {
       const k = (y - 14 - oy) / (bot - 14 - oy);
-      return [20.5 - k * (1.5 + c.flare * 1.5) + wave(y), 29];
+      // 머리끝은 몸보다 반 박자 늦게 1~2px 흔들림: 발 닿는 칸 다음(지나가는 칸)에 가장 크게 (점검_피드백3 2-2)
+      const lag = { pa: -3, pb: 3 }[cB.step ?? c.step] ?? 0;
+      return [20.5 - k * (1.5 + c.flare * 1.5) + wave(y) + lag * k * k, 29];
     }, (x, y, t) => ((x * 2 + Math.floor((y - oy) / 5)) % 7 === 0 ? h[2] : t < 0.3 ? h[1] : t > 0.75 ? h[3] : h[2]));
   } else {
-    spans(L, (v === 'up' ? 5 : 12) + oy, bot, (y) => {
+    // 뒤 보기: 머리는 허리(56줄)까지, 어깨 아래로 좁아져 끝이 둥글게 모임 → 어깨·팔·치마·신발이 보임 (점검_피드백3 2-1)
+    const end = v === 'up' ? Math.min(bot, 56 + oy) : bot;
+    spans(L, (v === 'up' ? 5 : 12) + oy, end, (y) => {
       const r = y - oy;
+      if (v === 'up') {
+        const e = end - oy;
+        const tip = r > e - 5 ? Math.sqrt(Math.max(0, 1 - ((r - (e - 5)) / 5.5) ** 2)) : 1;
+        const hw = (r < 16 ? capHW(r) : r < 26 ? 12.4 : r < 33 ? 12.4 - (r - 26) * 0.45 : 9.25 - (r - 33) * 0.08) * tip + wave(y) * 0.5;
+        const k = clamp((r - 30) / 26, 0, 1);
+        return hw > 1 ? [CX - hw + 0.5 + sway * k, CX + hw - 0.5 + sway * k] : null;
+      }
       const k = clamp((y - 34 - oy) / (bot - 34 - oy), 0, 1);
       const hw = (r < 16 ? capHW(r) : 12.4) + k * (wavy ? 0.6 : 1.2) + wave(y);
       return [CX - hw + 0.5 + sway * k, CX + hw - 0.5 + sway * k];
@@ -472,12 +483,13 @@ function drawHairBack(cB) {
         if (r > 15 && u > 0.86) return h[3];
         if (r > 15 && u > 0.6) return h[2];
         if (r >= 11 && r <= 13 && u > 0.15 && u < 0.6) return h[0];
-        if (t > 0.9) return h[2];
-        return t < 0.08 || (u < 0.25 && r > 15 && r < bot - oy - 8) ? h[0] : h[1];
+        if (r >= 5 && r <= 14 && Math.abs(x + 0.5 - CX) < 0.6) return h[3] ?? h[2]; // 가르마 (점검_피드백3 2-1)
+        if (t > 0.9 || r > end - oy - 3) return h[2];
+        return t < 0.08 || (u < 0.25 && r > 15 && r < end - oy - 8) ? h[0] : h[1];
       }
       return t < 0.2 ? h[2] : t > 0.8 ? h[3] : h[2];
     });
-    for (let x = 20; x < 44; x += 3) L.clear(x + Math.round(sway), bot);
+    if (v !== 'up') for (let x = 20; x < 44; x += 3) L.clear(x + Math.round(sway), bot);
   }
   return out(L);
 }
@@ -495,7 +507,7 @@ function drawHairFront(c) {
   const sh2 = lockShade(h);
   if (v === 'up') {
     // 뒤통수: 덮개, 뒷목에서 목 폭으로 좁아짐
-    const nape = st.long ? 30 : st.nape;
+    const nape = st.long ? 27 : st.nape;
     spans(L, Y(4), Y(nape), (y) => {
       const r = y - oy;
       const hw = r < 16 ? capHW(r) : r < 23 ? 12.4 : 12.4 - ((r - 23) / Math.max(1, nape - 23)) * (st.long ? 0 : name === 'bob' ? 1.5 : 4.5);
@@ -791,9 +803,10 @@ function skirtL(c, top, bot, w0, w1, col, gap = null) {
   const { oy, v, sway, flare, step } = c;
   const T0 = top + oy;
   if (v === 'right') {
-    // 옆 걷기: 걸음마다 치맛단 앞뒤가 2~3px(고해상도 4~5칸) 번갈아 나오고, 걷는 칸은 단이 살짝 들려 발끝이 보임 (점검_피드백2 4-1)
-    const [fwd, bk] = { a: [5, -1], b: [1, -5], pa: [-1, 1], pb: [-1, 1] }[step] ?? [0, 0];
-    const b2 = step && bot >= FOOT_T - 4 ? bot - 2 : bot;
+    // 옆 걷기: 걸음마다 치맛단 앞뒤가 3~4px(고해상도 7칸) 번갈아 나오고, 발 닿는 칸(a, b)은 단이 들려 신발 앞코가 보이고
+    // 지나가는 칸(pa, pb)은 단이 내려와 발을 덮음 (점검_피드백3 2-2)
+    const [fwd, bk] = { a: [6, 1], b: [-1, -6], pa: [-1, 1], pb: [-1, 1] }[step] ?? [0, 0];
+    const b2 = (step === 'a' || step === 'b') && bot >= FOOT_T - 4 ? bot - 3 : bot;
     spans(L, T0, b2, (y) => {
       const k = (y - T0) / Math.max(1, b2 - T0);
       const sw = sway * k * 0.6;
@@ -929,7 +942,8 @@ function outfit(c) {
     (v === 'up' ? back : front).push(scabbard(c, 'sword', -1));
     front.push(...hang(N, glove));
     if (v !== 'right') front.push(pauldron(shoulderX(v === 'down' ? -1 : 1), 35 + oy, 4.4, 3.6, (x, y, nx, ny) => metal(v === 'down' ? nx : -nx, ny)));
-    if (s.hood) front.push(hoodFront(c, [R.wood[0], R.wood[1], R.wood[2], R.wood[3]]));
+    // 레온 두건: 머리(짙은 갈색)와 다른 먹색 천 (점검_피드백3 1-3)
+    if (s.hood) front.push(hoodFront(c, [R.ash[1], R.ash[2], R.ash[3], R.ash[4]]));
   } else if (look === 'serena') {
     const A = R.red;
     const dress = (x, y, t, r) => {
@@ -1168,62 +1182,70 @@ function hoodFront(cB, h, shade = false) {
   const c = cB.H ?? cB;
   const L = wl(c);
   const { oy, v } = c;
-  // 천으로 보이게 (점검_피드백2 4-2): 얼굴 둘레 접힌 테(밝음)와 그 안쪽 그늘 줄, 이마에 드리운 그늘,
-  // 정수리의 뾰족한 끝, 옆·어깨로 흘러내리는 주름. 머리카락처럼 한 덩어리로 보이지 않게
+  // 천으로 보이게 (점검_피드백3 1-3): 둥근 정수리(머리보다 1~2칸 위로 부푼 반원), 얼굴 둘레에 밝은 테 1줄 + 안쪽 그늘 1줄,
+  // 빛은 왼쪽 위에서 둥글게. 머리카락처럼 보이는 세로 줄은 없애고, 주름은 목 아래에서 어깨 쪽으로 비스듬히 퍼지는 짧은 줄만
   const deep = h[3] ?? h[2];
+  // 정수리: 가운데 r 16.8, 반지름 13.3 (머리 위 끝보다 1.5칸 위)
+  const crown = (r, rx) => (r < 16.8 ? rx * Math.sqrt(Math.max(0, 1 - ((r - 16.8) / 13.3) ** 2)) : r < 24 ? rx - (r - 16.8) * 0.11 : rx - 0.8 + (r - 24) * 0.22);
   if (v === 'right') {
-    spans(L, 1 + oy, 32 + oy, (y) => {
+    spans(L, 3 + oy, 32 + oy, (y) => {
       const r = y - oy;
-      const ry = (r - 16.8) / 13.2;
-      const w = ry > -1 && ry < 1 ? 13.5 * Math.sqrt(1 - ry * ry) : 0;
-      if (r < 16.8 && w < 1) return null;
+      const w = crown(r, 13.6);
+      if (r < 16.8 && w < 1.5) return null;
       const f = sideAt(r) ?? [20, 33];
-      // 뒤통수 아래는 목 쪽으로 오므라들었다가 어깨에서 다시 벌어짐 (단발처럼 곧게 떨어지지 않게)
-      const back = r < 16.8 ? SIDE_CX - w : r < 26 ? 17 + (r - 16.8) * 0.45 : 21.1 - (r - 26) * 0.7;
-      // 이마 위로 챙처럼 1~2px 튀어나온 두건 앞자락
-      const fr = r < 5 ? SIDE_CX + w : r < 12 ? Math.max(Math.min(SIDE_CX + w + 1.5, f[1] + 2.5), f[1] + 1) : 34;
-      return [back, fr];
+      // 뒤: 정수리 둥근 선 → 뒤통수 아래 목 쪽으로 조금 들어갔다가 어깨에서 벌어짐
+      const back = r < 16.8 ? SIDE_CX - w : SIDE_CX - 13.6 + 1.5 * Math.sin((Math.PI * (r - 16.8)) / 15.2);
+      // 앞: 이마 위로 1~2px 나온 챙, 그 아래는 얼굴 앞에서 멈춤
+      const fr = r < 6 ? SIDE_CX + w : r < 12 ? Math.max(Math.min(SIDE_CX + w + 1.5, f[1] + 2.5), f[1] + 1) : 34;
+      return [back, Math.max(fr, back + 2)];
     }, (x, y, t) => {
       const r = y - oy;
-      if (r >= 5 && r < 12 && t > 0.9) return h[0]; // 이마 위 챙 끝(밝음)
-      if (r >= 9 && t > 0.88) return h[0]; // 얼굴 둘레 접힌 테
-      if (r >= 9 && t > 0.8) return deep; // 테 안쪽 그늘
-      if (r > 17 && r < 29 && Math.abs(t - (0.18 + (r - 17) * 0.02)) < 0.05) return deep; // 목 뒤 접힘
-      // 곧게 비스듬히 흘러내리는 천 주름 두 줄 (물결치면 머리카락처럼 보여서 곧은 선으로)
-      if (r > 8 && Math.abs(t - (0.5 - (r - 8) * 0.008)) < 0.04) return h[2];
-      if (r > 18 && Math.abs(t - (0.32 - (r - 18) * 0.006)) < 0.04) return h[2];
-      if (t < 0.1) return deep;
-      return r < 8 && t < 0.6 ? h[0] : h[1];
+      if (t > 0.9) return h[0]; // 얼굴 둘레 밝은 테 (앞 끝)
+      if (t > 0.8) return deep; // 테 안쪽 그늘
+      const hx = x + 0.5 - (SIDE_CX - 4);
+      const hy = r - 9;
+      if (hx * hx * 0.6 + hy * hy < 22) return h[0]; // 정수리 위 둥근 밝음
+      if (r > 23 && Math.abs(t - (0.5 - (r - 23) * 0.06)) < 0.06) return h[2]; // 목 뒤에서 어깨로 흐르는 접힘
+      if (t < 0.12) return h[2];
+      return h[1];
     });
   } else {
-    spans(L, 1 + oy, 32 + oy, (y) => {
-      const r = y - oy;
-      const hw = r < 16 ? capHW(r) + 1 : 13.5;
-      return hw > 2 ? [CX - hw + 0.5, CX + hw - 0.5] : null;
+    spans(L, 3 + oy, 32 + oy, (y) => {
+      const hw = crown(y - oy, 13.6);
+      return hw > 1.5 ? [CX - hw + 0.5, CX + hw - 0.5] : null;
     }, (x, y, t) => {
       const r = y - oy;
-      const fx = Math.abs(x + 0.5 - CX);
+      const dx = x + 0.5 - CX;
+      const fx = Math.abs(dx);
       const hole = v === 'down' && r > 9 ? Math.min(10.5, faceHW(false, r) + 0.5) : -1;
       if (hole > 0 && fx < hole) {
         if (shade && r <= 17) return h[2];
-        // 이마에 드리운 두건 그늘 (위 2줄)
-        return r <= 11 ? deep : null;
+        return r <= 11 ? deep : null; // 이마에 드리운 그늘
       }
-      if (hole > 0 && fx < hole + 1.6) return h[0]; // 얼굴 둘레 접힌 테
-      if (hole > 0 && fx < hole + 2.6) return deep; // 테 바깥 그늘 줄
-      if (v === 'down' && r > 13 && Math.abs(fx - (hole + 5.5 + (r - 13) * 0.12)) < 0.7) return h[2]; // 볼 옆 주름
-      if (v === 'up' && r > 6 && Math.abs(x + 0.5 - CX) < 0.6) return h[2]; // 뒤 솔기
-      if (v === 'up' && r > 14 && Math.abs(fx - 6 - (r - 14) * 0.25) < 0.6) return h[2];
-      if (r < 7 && x + 0.5 < CX) return h[0];
-      return t < 0.1 || t > 0.9 ? h[2] : h[1];
+      if (hole > 0 && fx < hole + 1.2) return h[0]; // 얼굴 둘레 밝은 테
+      if (hole > 0 && fx < hole + 2.2) return deep; // 테 바깥 그늘 줄
+      if (v === 'down' && r === 10 && fx < 11) return h[0]; // 이마 위 테 (가로)
+      if (v === 'down' && r === 9 && fx < 10) return deep;
+      // 목 아래에서 어깨로 비스듬히 퍼지는 짧은 접힘 (양쪽 하나씩)
+      if (r > 23 && Math.abs(fx - (9 + (r - 23) * 0.8)) < 0.6) return h[2];
+      // 뒤: 목덜미에서 천이 모여 처진 둥근 접힘 한 줄
+      if (v === 'up' && Math.abs(r - (24 + (dx / 10) ** 2 * 3)) < 0.6 && fx < 10) return h[2];
+      // 둥근 빛: 왼쪽 위가 밝고 오른쪽 아래 가장자리가 어두움
+      const lx = dx + 4;
+      const ly = r - 10;
+      if (lx * lx + ly * ly * 1.2 < 26) return h[0];
+      return t > 0.88 || (t > 0.8 && r > 18) ? h[2] : h[1];
     });
   }
-  // 어깨에 걸친 자락: 가운데는 목, 주름 두 줄
-  spans(L, 30 + oy, 38 + oy, (y) => (v === 'right' ? [22 - (y - oy - 30) * 0.4, 36] : [CX - 12.5 - (y - oy - 30) * 0.3, CX + 12.5 + (y - oy - 30) * 0.3]), (x, y, t) => {
-    if (v === 'down' && Math.abs(x + 0.5 - CX) < 4 && y < 32 + oy) return null;
-    if (v !== 'right' && (Math.abs(t - 0.25) < 0.03 || Math.abs(t - 0.75) < 0.03)) return h[2];
-    if (v === 'right' && Math.abs(t - 0.45) < 0.04) return h[2];
-    return t > 0.85 ? h[2] : h[1];
+  // 어깨에 걸친 자락: 가운데는 목, 어깨 쪽으로 비스듬한 주름, 아래 끝 그늘
+  spans(L, 30 + oy, 38 + oy, (y) => (v === 'right' ? [SIDE_CX - 13.6 - (y - oy - 30) * 0.4, 36] : [CX - 13 - (y - oy - 30) * 0.3, CX + 13 + (y - oy - 30) * 0.3]), (x, y, t) => {
+    const k = y - oy - 30;
+    const fx = Math.abs(x + 0.5 - CX);
+    if (v === 'down' && fx < 4 && k < 2) return null;
+    if (v !== 'right' && Math.abs(fx - (9 + (k + 7) * 0.8)) < 0.6) return h[2];
+    if (v === 'right' && Math.abs(t - (0.3 + k * 0.03)) < 0.05) return h[2];
+    if (k >= 7) return h[2];
+    return h[1];
   });
   const o = out(L);
   if (o) o.isHood = true;

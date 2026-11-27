@@ -28,6 +28,9 @@ interface ActionIcon {
   size: number;
   x: number;
   y: number;
+  label?: Phaser.GameObjects.Text;
+  /** 휴대폰 버튼: 누르고 있는 동안 */
+  pressed?: boolean;
 }
 
 /** 전투 화면 위의 UI: 파티 초상화, 체력·기력·고유 게이지, 기술 아이콘, 경험치, 보스 체력, 알림, 게임 오버 */
@@ -53,6 +56,8 @@ export class BattleHUD extends Phaser.Scene {
   private surviveEdge?: Phaser.GameObjects.Image;
   private toastText!: Phaser.GameObjects.Text;
   private guideBox!: Phaser.GameObjects.Container;
+  /** PC 조작 안내 줄 */
+  private controlsLine?: Phaser.GameObjects.Text;
   private titleText?: Phaser.GameObjects.Text;
   private guideText!: Phaser.GameObjects.Text;
   private wheel?: Phaser.GameObjects.Container;
@@ -187,19 +192,21 @@ export class BattleHUD extends Phaser.Scene {
     b.fill.setCrop(0, 0, Math.max(0, Math.round(b.inner * Phaser.Math.Clamp(t, 0, 1))), h);
   }
 
-  private makeIcon(what: ActionIcon['what'], iconKey: string, x: number, y: number, key: string, big = false): ActionIcon {
-    const size = big ? 44 : 22;
-    const slot = big ? this.img(x - 44, y - 44, 'ui_btn') : this.img(x - 22, y - 22, 'ui_slot');
-    const icon = this.add.image(x, y, `ui_${iconKey}`).setScale(S);
+  /** sc: 휴대폰 큰 버튼의 크기 배율 (공격 1, 나머지 0.65) */
+  private makeIcon(what: ActionIcon['what'], iconKey: string, x: number, y: number, key: string, big = false, sc = 1): ActionIcon {
+    const size = (big ? 44 : 22) * sc;
+    const slot = big ? this.img(x - size, y - size, 'ui_btn').setScale(S * sc) : this.img(x - 22, y - 22, 'ui_slot');
+    const icon = this.add.image(x, y, `ui_${iconKey}`).setScale(S * sc);
     const cd = this.add.graphics();
     const lock = this.add.image(x + size - 12, y + size - 14, 'ui_icon_lock').setScale(S).setVisible(false);
+    let label: Phaser.GameObjects.Text | undefined;
     if (key) {
-      this.add
-        .text(x, y + size + (big ? -4 : 4), key, { fontFamily: FONT, fontSize: big ? '15px' : '14px', color: '#f3e7c4', fontStyle: 'bold' })
+      label = this.add
+        .text(x, y + size + (big ? 0 : 4), key, { fontFamily: FONT, fontSize: big ? '12px' : '14px', color: '#f3e7c4', fontStyle: 'bold' })
         .setOrigin(0.5, 0)
         .setShadow(0, 2, '#000', 2);
     }
-    const ic: ActionIcon = { what, slot, icon, lock, cd, size, x, y };
+    const ic: ActionIcon = { what, slot, icon, lock, cd, size, x, y, label };
     this.icons.push(ic);
     return ic;
   }
@@ -213,9 +220,8 @@ export class BattleHUD extends Phaser.Scene {
     this.makeIcon('ult', 'icon_ult', xs[2], y, 'Q');
     this.makeIcon('combo', 'icon_combo', xs[3], y, 'R');
     this.comboBar = this.bar(xs[3] - 64, y + 44, 'combo', 'gold_4');
-    this.add
-      
-      // 아이콘 줄(위 끝 H-114) 위로 한 줄 띄움 (점검_피드백2 1-4)
+    // 아이콘 줄(위 끝 H-114) 위로 한 줄 띄움 (점검_피드백2 1-4). 안내 상자가 떠 있는 동안은 숨김 (점검_피드백3 2-4)
+    this.controlsLine = this.add
       .text(W - 16, H - 132, '이동 WASD · 공격 왼쪽 클릭 · 점프 Space · 깨우기 F(누르기) · 교체 1~4', { fontFamily: FONT, fontSize: '14px', color: '#aaaaaa' })
       .setOrigin(1, 0.5)
       .setShadow(0, 2, '#000', 2);
@@ -226,20 +232,26 @@ export class BattleHUD extends Phaser.Scene {
     const base = this.add.image(120, H - 210, 'ui_stick_base').setScale(S).setAlpha(0.85);
     const knob = this.add.image(120, H - 210, 'ui_stick_knob').setScale(S);
     this.stick = { base, knob, id: -1, x: 120, y: H - 210 };
-    const btn = (what: ActionIcon['what'], icon: string, x: number, y: number, label: string, key: keyof VirtualInput, pulse = false) => {
-      const ic = this.makeIcon(what, icon, x, y, label, true);
+    // 버튼 (점검_피드백3 2-3): 공격이 가장 크게 오른쪽 아래, 나머지는 공격의 65% 크기로 공격 둘레에 부채꼴.
+    // 평소 반투명(50%), 누르는 동안 100%. 잠긴 버튼은 숨기고, 상호작용은 쓰러진 동료가 가까이 있을 때만. 글자는 버튼 아래에 작게
+    const btn = (what: ActionIcon['what'], icon: string, x: number, y: number, label: string, key: keyof VirtualInput, pulse = false, sc = 0.65) => {
+      const ic = this.makeIcon(what, icon, x, y, label, true, sc);
       ic.slot.setInteractive(new Phaser.Geom.Circle(22, 22, 22), Phaser.Geom.Circle.Contains);
+      const press = (v: boolean) => {
+        ic.pressed = v;
+        ic.slot.setFrame(v ? 1 : 0);
+      };
       const set = (v: boolean) => ((this.b.vin as unknown as Record<string, boolean>)[key] = v);
       ic.slot.on('pointerdown', (p: Phaser.Input.Pointer, _x: number, _y: number, e: Phaser.Types.Input.EventData) => {
         e.stopPropagation();
         if (key === 'combo') this.comboTouch = { id: p.id, x: p.x, y: p.y };
         set(true);
-        ic.slot.setFrame(1);
+        press(true);
         if (pulse) this.time.delayedCall(60, () => set(false));
       });
       const up = () => {
         set(false);
-        ic.slot.setFrame(0);
+        press(false);
       };
       ic.slot.on('pointerup', up);
       // 합동 버튼은 누른 채 동료 쪽으로 밀기 때문에, 버튼 밖으로 나가도 떼기 전까지 누른 것으로 본다
@@ -249,14 +261,22 @@ export class BattleHUD extends Phaser.Scene {
         });
       } else ic.slot.on('pointerout', up);
     };
-    btn('attack', 'icon_attack', W - 80, H - 190, '공격', 'attack', true);
-    btn('evade', 'icon_guard', W - 185, H - 140, '회피', 'evade');
-    btn('jump', 'icon_jump', W - 80, H - 295, '점프', 'jump', true);
-    btn('skill', 'icon_skill', W - 195, H - 248, '스킬', 'skill', true);
-    btn('ult', 'icon_ult', W - 175, H - 355, '궁극기', 'ult', true);
-    btn('combo', 'icon_combo', W - 80, H - 400, '합동', 'combo');
-    btn('interact', 'icon_interact', W - 290, H - 175, '상호작용', 'interact');
-    this.comboBar = this.bar(W - 80 - 64, H - 400 + 60, 'combo', 'gold_4');
+    const ax = W - 100;
+    const ay = H - 130;
+    btn('attack', 'icon_attack', ax, ay, '공격', 'attack', true, 1);
+    // 부채꼴: 왼쪽(180°)에서 위(285°)까지 반지름 150. 이웃 버튼 사이 약 78px라 아래 글자와 겹치지 않음
+    const fan = (deg: number) => [ax + Math.cos((deg * Math.PI) / 180) * 150, ay + Math.sin((deg * Math.PI) / 180) * 150] as const;
+    btn('evade', 'icon_guard', ...fan(180), '회피', 'evade');
+    btn('skill', 'icon_skill', ...fan(206), '스킬', 'skill', true);
+    btn('jump', 'icon_jump', ...fan(232), '점프', 'jump', true);
+    btn('ult', 'icon_ult', ...fan(258), '궁극기', 'ult', true);
+    btn('combo', 'icon_combo', ...fan(284), '합동', 'combo');
+    btn('interact', 'icon_interact', ...fan(152), '상호작용', 'interact');
+    const [cx, cy] = fan(284);
+    this.comboBar = this.bar(cx - 64, cy - 52, 'combo', 'gold_4');
+    // 오른쪽 끝을 넘으면 화면 안으로 당김
+    const over = this.comboBar.frame.x + this.comboBar.frame.displayWidth - (W - 12);
+    if (over > 0) for (const o of [this.comboBar.frame, this.comboBar.fill]) o.x -= over;
 
     // 조이스틱
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
@@ -321,8 +341,23 @@ export class BattleHUD extends Phaser.Scene {
       // 기술 아이콘: 잠금, 쿨타임
       for (const ic of this.icons) {
         const locked = ic.what === 'attack' || ic.what === 'jump' || ic.what === 'interact' ? false : !isUnlocked(f.id, ic.what);
-        ic.icon.setAlpha(locked ? 0.35 : 1);
-        ic.lock.setVisible(locked);
+        if (this.touch) {
+          // 휴대폰: 잠긴 버튼은 숨김, 깨우기는 쓰러진 동료가 가까이 있을 때만 (BattleScene 깨우기 거리 34)
+          const show = ic.what === 'interact' ? b.party.some((p) => p !== f && p.state === 'fainted' && Math.hypot(p.x - f.x, p.y - f.y) < 34) : !locked;
+          for (const o of [ic.slot, ic.icon, ic.label, ic.cd]) o?.setVisible(show);
+          if (ic.what === 'combo' && this.comboBar) for (const o of [this.comboBar.frame, this.comboBar.fill]) o.setVisible(show);
+          ic.lock.setVisible(false);
+          if (!show) {
+            ic.pressed = false;
+            continue;
+          }
+          const a = ic.pressed || (ic.what === 'evade' && f.state === 'guard') ? 1 : 0.5;
+          ic.slot.setAlpha(a);
+          ic.icon.setAlpha(a);
+        } else {
+          ic.icon.setAlpha(locked ? 0.35 : 1);
+          ic.lock.setVisible(locked);
+        }
         let cd = 0;
         if (ic.what === 'evade' && !locked) {
           const total = f.def.evade?.cooldown ?? 1000;
@@ -334,13 +369,18 @@ export class BattleHUD extends Phaser.Scene {
         if (ic.what === 'ult' && !locked) cd = f.gauge >= 100 ? 0 : 1 - f.gauge / 100;
         if (ic.what === 'combo' && !locked) cd = b.comboGauge >= 100 ? 0 : 1 - b.comboGauge / 100;
         ic.cd.clear();
-        if (cd > 0) {
+        if (cd > 0 && this.touch) {
+          // 휴대폰 둥근 버튼: 남은 대기만큼 둥근 부채꼴로 어둡게 (12시부터 시계 방향)
+          const a0 = -Math.PI / 2;
+          ic.cd.fillStyle(0x000000, 0.55).slice(ic.x, ic.y, ic.size - 3, a0, a0 + Math.PI * 2 * Math.min(1, cd), false).fillPath();
+        } else if (cd > 0) {
           const s = ic.size * S - 4;
           ic.cd.fillStyle(0x000000, 0.6).fillRect(ic.x - s / 2, ic.y - s / 2, s, s * Math.min(1, cd));
         }
       }
     }
     if (this.comboBar) this.setBar(this.comboBar, b.comboGauge / 100);
+    this.controlsLine?.setVisible(this.guideBox.alpha < 0.05);
 
     // 보스 체력
     const boss = b.enemiesBoss;

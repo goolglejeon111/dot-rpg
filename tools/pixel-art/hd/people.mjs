@@ -424,9 +424,10 @@ function drawBody(p, view, dy, sway = 0, flare = 0, step = undefined) {
     // 흰 드레스: 몸통 + 바닥까지 퍼지는 치마
     if (view === 'right') {
       L.trap(y0, 31 + dy, 13, 19, 12, 19, (x, y, t) => sh(c, t, 0.3, 0.75));
-      // 옆 걷기: 치맛단 앞뒤가 걸음마다 2px 번갈아 나오고, 걷는 칸은 단이 1줄 들려 발끝이 보임 (점검_피드백2 4-1)
-      const [fwd, bk] = { a: [2, 0], b: [0, 2], pa: [-1, 0], pb: [-1, 0] }[step] ?? [0, 0];
-      L.trap(31 + dy, FOOT - 1 - (step ? 1 : 0), 12, 19, 10 - flare - bk, 21 - Math.min(flare, 1) + fwd, (x, y, t) => sh(c, t, 0.3, 0.72));
+      // 옆 걷기: 치맛단 앞뒤가 걸음마다 3~4px 번갈아 나오고, 발 닿는 칸(a, b)은 단이 1줄 들려 신발 앞코가 보이고
+      // 지나가는 칸은 단이 발을 덮음 (점검_피드백3 2-2)
+      const [fwd, bk] = { a: [3, -1], b: [-1, 3], pa: [-1, 0], pb: [-1, 0] }[step] ?? [0, 0];
+      L.trap(31 + dy, FOOT - 1 - (step === 'a' || step === 'b' ? 1 : 0), 12, 19, 10 - flare - bk, 21 - Math.min(flare, 1) + fwd, (x, y, t) => sh(c, t, 0.3, 0.72));
     } else {
       L.trap(y0, 31 + dy, 11, 20, 11, 20, (x, y, t) => sh(c, t));
       const sw = p.skirtW ?? 3;

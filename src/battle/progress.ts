@@ -111,6 +111,8 @@ export function leaveParty(id: string, p: Progress = gameState.progress) {
   p.party = p.party.filter((m) => m !== id);
   p.bench = (p.bench ?? []).filter((m) => m !== id);
   if (p.guests) delete p.guests[id];
+  // 자리가 비면 대기 동료가 먼저 들어온 순서대로 출전 (4막 엘리시아 이탈 뒤 세레나가 대기로 남던 것)
+  while (p.bench.length && p.party.length - p.bench.length < ACTIVE_MAX) p.bench.shift();
   return true;
 }
 

@@ -476,6 +476,9 @@ export interface VirtualInput {
 }
 
 /** 전투 화면 (월드). 위에 BattleHUD 장면이 함께 뜬다 */
+/** 어두운 맵에서 싸우는 동안 빛 원 배율 (맵 화면 ExploreScene과 같은 값) */
+export const DARK_FIGHT_LIGHT = 1.8;
+
 export class BattleScene extends Phaser.Scene {
   start!: BattleStart;
   bdef!: BattleDef;
@@ -537,6 +540,8 @@ export class BattleScene extends Phaser.Scene {
   private lit = false;
   private prevVin: Partial<VirtualInput> = {};
   /** 어두운 맵에서 인물이 들고 다니는 빛 (맵 화면의 빛과 함께 움직인다) */
+  /** 어두운 맵(빛을 든 인물이 있는 맵)에서 싸우는 중 */
+  private darkMap = false;
   private carry: { id: string; light: Phaser.GameObjects.Light; base: number; pulse: boolean } | null = null;
 
   constructor() {
@@ -642,12 +647,15 @@ export class BattleScene extends Phaser.Scene {
       // 빛을 든 인물 바로 위에 센 빛을 두면 그 인물(특히 흰 옷·은발)이 하얗게 타 버림. 바닥 빛은 맵 화면이 그리므로
       // 싸우는 인물에게는 약하게만 (점검_피드백.md 2절)
       const fi = c ? Math.min(c.intensity * 0.35, 0.6) : 0;
-      if (c) this.carry = { id: c.id, light: this.lights.addLight(0, 0, c.r, c.color, fi), base: fi, pulse: c.pulse };
+      // 어두운 맵(빛을 든 인물이 있는 맵)에서 싸우는 동안은 빛 원을 1.8배로 (점검_피드백2 2절: 적이 안 보여 맞지 않게)
+      this.darkMap = !!c;
+      if (c) this.carry = { id: c.id, light: this.lights.addLight(0, 0, c.r * DARK_FIGHT_LIGHT, c.color, fi), base: fi, pulse: c.pulse };
     }
   }
 
   /** 빛을 든 인물을 따라 빛을 옮긴다 (맵 화면의 바닥 빛도 같이) */
   private updateCarry() {
+    if (this.darkMap) for (const e of this.all) if (e.light && e.team === 'enemy' && !e.enemy?.boss) e.light.setPosition(e.x, e.y - 20 - e.z);
     const c = this.carry;
     if (!c || !this.onMap) return;
     const f = this.party.find((p) => p.id === c.id && p.alive);
@@ -1062,6 +1070,8 @@ export class BattleScene extends Phaser.Scene {
       f.sprite.setPipeline('Light2D');
       // 어두운 곳의 보스는 희미한 빛을 받아 보이게 (물빛)
       if (f.enemy?.boss) f.light = this.lights.addLight(x, y - 44, 120, 0x7a9ac0, 1.1);
+      // 어두운 맵의 적은 약한 빛 테두리를 받아 어디 있는지 보이게 (몸을 따라다님)
+      else if (this.darkMap && f.team === 'enemy') f.light = this.lights.addLight(x, y - 20, 44, 0xb8c4e0, 0.9);
     }
     if (f.team === 'enemy' && !f.enemy?.boss) {
       f.hpBar = {
@@ -2518,6 +2528,8 @@ export class BattleScene extends Phaser.Scene {
       this.time.delayedCall(260, () => e.sprite.active && e.sprite.texture.key === bt && e.sprite.setFrame(r0 + 11));
       e.shadow.setVisible(false);
       this.fx('dust_land', e.x, e.y - 6, { depth: e.y - 1 });
+      // 어두운 맵 적의 빛 테두리는 쓰러지면 서서히 꺼짐
+      if (e.light && !e.enemy.boss && !e.enemy.sink) this.tweens.add({ targets: e.light, intensity: 0, delay: 300, duration: 600 });
       if (e.enemy.sink) {
         this.tweens.add({ targets: e.sprite, y: e.sprite.y + 26, alpha: 0, delay: 500, duration: 1400, onComplete: () => e.sprite.destroy() });
         if (e.light) this.tweens.add({ targets: e.light, intensity: 0, delay: 500, duration: 1400 });

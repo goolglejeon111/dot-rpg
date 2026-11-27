@@ -416,7 +416,7 @@ function drawLegs(p, view, o) {
 }
 
 /** 몸통 (제복·드레스) */
-function drawBody(p, view, dy, sway = 0, flare = 0) {
+function drawBody(p, view, dy, sway = 0, flare = 0, step = undefined) {
   const L = new Layer();
   const c = p.cloth;
   const y0 = 20 + dy;
@@ -424,7 +424,9 @@ function drawBody(p, view, dy, sway = 0, flare = 0) {
     // 흰 드레스: 몸통 + 바닥까지 퍼지는 치마
     if (view === 'right') {
       L.trap(y0, 31 + dy, 13, 19, 12, 19, (x, y, t) => sh(c, t, 0.3, 0.75));
-      L.trap(31 + dy, FOOT - 1, 12, 19, 10 - flare, 21 - Math.min(flare, 1), (x, y, t) => sh(c, t, 0.3, 0.72));
+      // 옆 걷기: 치맛단 앞뒤가 걸음마다 2px 번갈아 나오고, 걷는 칸은 단이 1줄 들려 발끝이 보임 (점검_피드백2 4-1)
+      const [fwd, bk] = { a: [2, 0], b: [0, 2], pa: [-1, 0], pb: [-1, 0] }[step] ?? [0, 0];
+      L.trap(31 + dy, FOOT - 1 - (step ? 1 : 0), 12, 19, 10 - flare - bk, 21 - Math.min(flare, 1) + fwd, (x, y, t) => sh(c, t, 0.3, 0.72));
     } else {
       L.trap(y0, 31 + dy, 11, 20, 11, 20, (x, y, t) => sh(c, t));
       const sw = p.skirtW ?? 3;
@@ -1261,7 +1263,7 @@ export function drawPerson(id, view, o = {}) {
   parts.push(drawHairBack(p, v, dy, v === 'right' ? flare : sway));
   // 옆·뒤 보기: 몸 뒤쪽 팔
   parts.push(drawLegs(p, v, { step: o.step, lift: o.lift, drop }));
-  const body = drawBody(p, v, dy, sway, flare);
+  const body = drawBody(p, v, dy, sway, flare, o.step);
   const arms = o.arms ? o.arms.map((a) => drawArm(p, [a.from[0], a.from[1] + drop], [a.to[0], a.to[1] + drop])) : standArms(p, v, dy, o.swing ?? 0);
   if (v === 'up') {
     parts.push(...arms);

@@ -120,9 +120,12 @@ export function dressTiles(scene: Phaser.Scene, floor: Phaser.Tilemaps.TilemapLa
     return i >= 0 ? i + 1 : TILE_NAMES.length + info.extra.indexOf(name) + 1;
   };
   const nameOf = (g: number) => (g <= TILE_NAMES.length ? TILE_NAMES[g - 1] : info.extra[g - TILE_NAMES.length - 1]) ?? '';
+  // 칸 위치로 정해지는 난수. 잘 섞어서 일정한 간격으로 되풀이되지 않게 (점검_피드백2 3-1: 소품이 격자로 놓이던 것)
   const hash = (x: number, y: number, s = 0) => {
-    let h = Math.imul(x * 374761393 + y * 668265263 + s * 2246822519, 1274126177);
-    h ^= h >>> 15;
+    let h = Math.imul(x | 0, 0x27d4eb2d) ^ Math.imul(y | 0, 0x165667b1) ^ Math.imul((s | 0) + 0x632be5ab, 0x9e3779b9);
+    h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
+    h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+    h ^= h >>> 16;
     return (h >>> 0) / 4294967296;
   };
   const variants = new Map(Object.entries(info.variants).map(([k, v]) => [gid(k), v.map(gid)]));
@@ -141,8 +144,7 @@ export function dressTiles(scene: Phaser.Scene, floor: Phaser.Tilemaps.TilemapLa
     const v = variants.get(t.index);
     if (v) {
       // 칸 위치로 정해지는 난수: 40%는 그대로, 나머지는 갈래
-      let h = Math.imul(t.x * 374761393 + t.y * 668265263, 1274126177);
-      h = ((h ^ (h >>> 15)) >>> 0) % 100;
+      const h = Math.floor(hash(t.x, t.y, 77) * 100);
       if (h >= 40) t.index = v[Math.floor(((h - 40) * v.length) / 60)];
     }
     const alt = alternate.get(t.index);
@@ -217,7 +219,10 @@ export function dressTiles(scene: Phaser.Scene, floor: Phaser.Tilemaps.TilemapLa
     if (rank(base[ty * W + tx])[0] <= 0) continue;
     const dark = hash(i, 3, 21) < 0.6;
     const r = 26 + hash(i, 4, 21) * 40;
-    for (const [k, a] of [[1, 0.02], [0.75, 0.02], [0.5, 0.02]] as const) gm.fillStyle(dark ? 0x1d2735 : 0xfff6e0, a).fillEllipse(cx, cy, r * 2 * k, r * 1.4 * k);
+    // 모래 위 그늘은 푸른 회색 대신 따뜻한 갈색으로, 고리를 더 많이·더 옅게 겹쳐 경계가 흐리게 (흙탕 자국처럼 보이지 않게)
+    const onSand = /desert|dune|sand/.test(base[ty * W + tx] ?? '');
+    const rings = onSand ? ([[1, 0.008], [0.85, 0.008], [0.7, 0.01], [0.55, 0.01], [0.4, 0.01]] as const) : ([[1, 0.02], [0.75, 0.02], [0.5, 0.02]] as const);
+    for (const [k, a] of rings) gm.fillStyle(dark ? (onSand ? 0xa8743c : 0x1d2735) : 0xfff6e0, a).fillEllipse(cx, cy, r * 2 * k, r * 1.4 * k);
   }
   // 사막: 칸 무늬가 되풀이돼 보이지 않게 여러 칸에 걸친 더 큰 밝음·그늘 얼룩 (점검_피드백 3절)
   const sandy = (n: string) => n.startsWith('desert') || n === 'dune';
@@ -229,8 +234,34 @@ export function dressTiles(scene: Phaser.Scene, floor: Phaser.Tilemaps.TilemapLa
     const dark = hash(i, 3, 41) < 0.5;
     const r = 60 + hash(i, 4, 41) * 80;
     const sq = 0.45 + hash(i, 5, 41) * 0.4;
-    for (const [k, a] of [[1, 0.025], [0.72, 0.02], [0.45, 0.02]] as const) gm.fillStyle(dark ? 0xb07a3e : 0xfff2c8, a).fillEllipse(cx, cy, r * 2 * k, r * 2 * sq * k);
+    for (const [k, a] of [[1, 0.01], [0.86, 0.012], [0.72, 0.012], [0.58, 0.012], [0.44, 0.012]] as const) gm.fillStyle(dark ? 0xc08a4c : 0xfff2c8, a).fillEllipse(cx, cy, r * 2 * k, r * 2 * sq * k);
   }
+  // 사막 모래 자국: 다섯 가지 모양을 칸마다 자리·방향을 흩뜨려, 절반쯤의 칸은 비움 (타일에 박힌 같은 자국 대신)
+  const marks = scene.add.graphics().setDepth(-19.6);
+  out.push(marks);
+  const SHAPES: [number, number][][] = [
+    [[0, 0], [1, 0], [2, -1], [3, -1], [4, -1], [5, 0], [6, 0]], // 낮은 물결
+    [[0, 0], [1, -1], [2, -1], [3, -1], [4, 0]], // 짧은 물결
+    [[0, 0], [1, 0], [2, 0], [3, -1], [4, -1], [5, -1], [6, -1], [7, 0], [8, 0], [9, 1]], // 긴 바람 자국
+    [[0, 0], [1, -1], [2, -1], [3, 0], [0, 3], [1, 2], [2, 2], [3, 2], [4, 3]], // 두 줄 물결
+    [[0, 0], [2, 1], [1, 3], [4, 2]], // 흩어진 모래알
+  ];
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      if (!sandy(base[y * W + x] ?? '') || wallAt(x, y)) continue;
+      if (hash(x, y, 51) < 0.5) continue;
+      const shape = SHAPES[Math.floor(hash(x, y, 52) * SHAPES.length)];
+      const flip = hash(x, y, 53) < 0.5 ? -1 : 1;
+      const tilt = hash(x, y, 54) < 0.3 ? 1 : 0; // 가끔 한 칸 기울임
+      const ox = x * TS + 4 + Math.floor(hash(x, y, 55) * 16);
+      const oy = y * TS + 5 + Math.floor(hash(x, y, 56) * 22);
+      for (const [i, [px, py]] of shape.entries()) {
+        const mx = ox + (flip < 0 ? 10 - px : px);
+        const my = oy + py + (tilt ? Math.floor(i / 3) : 0);
+        marks.fillStyle(0xf0dca8, 0.55).fillRect(mx, my, 1, 1);
+        if (i % 2 === 0) marks.fillStyle(0xb08a58, 0.28).fillRect(mx, my + 1, 1, 1);
+      }
+    }
 
   // 물·용암 움직임
   const anim = new Map(Object.entries(info.anim ?? {}).map(([k, v]) => [gid(k), v.map(gid)]));
@@ -274,9 +305,19 @@ export function dressTiles(scene: Phaser.Scene, floor: Phaser.Tilemaps.TilemapLa
       for (let x = 0; x < W; x++) {
         const nm = base[y * W + x];
         if (!nm || wallAt(x, y) || wallAt(x, y - 1) || (def.on ? !def.on.includes(nm) : /road|path|carpet|bridge|cobble|stair|quay|edge|water|river|lava/.test(nm))) continue;
-        if (hash(x, y, 41) >= def.density) continue;
-        const px = x * TS + 4 + hash(x, y, 42) * 24;
-        const py = y * TS + 8 + hash(x, y, 43) * 22;
+        // 몇 개씩 모여 있게: 5칸 단위로 정한 덩어리 세기(부드럽게 이어짐)에 따라 확률을 바꿈
+        const cell = (cx: number, cy: number) => hash(cx, cy, 46);
+        const fx = x / 5;
+        const fy = y / 5;
+        const ix = Math.floor(fx);
+        const iy = Math.floor(fy);
+        const sx = fx - ix;
+        const sy = fy - iy;
+        const lerp = (a: number, b: number, t: number) => a + (b - a) * t * t * (3 - 2 * t);
+        const field = lerp(lerp(cell(ix, iy), cell(ix + 1, iy), sx), lerp(cell(ix, iy + 1), cell(ix + 1, iy + 1), sx), sy);
+        if (hash(x, y, 41) >= def.density * (0.15 + 2.6 * field * field)) continue;
+        const px = x * TS + 2 + hash(x, y, 42) * 28;
+        const py = y * TS + 6 + hash(x, y, 43) * 26;
         if (avoid.some((a) => Math.abs(a.x - px) < 28 && Math.abs(a.y - py) < 24)) continue;
         const kind = def.kinds[Math.floor(hash(x, y, 44) * def.kinds.length)];
         const ki = kinds.indexOf(kind);

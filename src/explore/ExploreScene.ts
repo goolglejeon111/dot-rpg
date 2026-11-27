@@ -5,6 +5,7 @@ import looksData from '../data/explore/looks.json';
 import stageData from '../data/explore/stage.json';
 import battlesData from '../data/battle/battles.json';
 import { makeBattleAnims, preloadBattle } from '../battle/assets';
+import { DARK_FIGHT_LIGHT } from '../battle/BattleScene';
 import { FacePicker } from '../game/faces';
 import { fieldFrame, footOrigin, isHd, rise } from '../game/hdSprites';
 import { EXP_REWARD, activeParty, gainOnce, hpOf, isCapped, levelOf, levelProgress, maxHpOf, partyIds } from '../battle/progress';
@@ -665,7 +666,11 @@ export class ExploreScene extends Phaser.Scene {
         this.carry.push({ id: want, light: this.lights.addLight(0, 0, d.r, d.color, d.intensity), base: d.intensity, pulse: d.pulse });
       }
     }
+    // 싸우는 동안 바닥 빛 원을 넓힘 (전투 장면 DARK_FIGHT_LIGHT와 같은 배율, 부드럽게)
+    const boost = this.scene.isActive('Battle') ? DARK_FIGHT_LIGHT : 1;
     for (const c of this.carry) {
+      const r0 = carryOf(c.id).r;
+      c.light.radius += (r0 * boost - c.light.radius) * 0.12;
       const a = this.actors.get(c.id);
       const p = c.at ?? (a && a.spr.visible ? { x: a.spr.x, y: a.spr.y - 24 } : null);
       if (p) c.light.setPosition(p.x, p.y);
@@ -1674,6 +1679,9 @@ export class ExploreScene extends Phaser.Scene {
   update(_t: number, rawDelta: number) {
     const dt = Math.min(50, rawDelta);
     if (this.map && this.cameras.main.zoom !== this.boundsZoom) this.fitBounds();
+    // 싸우는 동안에는 이동 구간 글자(목표 상자·알림·살펴보기 창)를 통째로 숨기고, 끝나면 다시.
+    // 전투 HUD 아래에 이 글자들이 비쳐 겹쳐 보이던 것 (점검_피드백2 1-1·1-2)
+    if (this.uiCam) this.uiCam.setVisible(!this.scene.isActive('Battle'));
     const leon = this.actors.get('leon');
     if (this.seg && leon) {
       if (this.touchLook) {
@@ -2419,18 +2427,27 @@ export class ExploreScene extends Phaser.Scene {
   private placeJumps(segId: string, seg: SegmentDef) {
     this.jumpObjs.forEach((o) => o.destroy());
     this.jumpObjs = [];
-    this.jumps = (seg.jumps ?? []).map((j, i) => ({
-      ...j,
-      x0: j.at[0] * TS,
-      y0: j.at[1] * TS,
-      x1: (j.at[0] + j.size[0]) * TS,
-      y1: (j.at[1] + j.size[1]) * TS,
-      key: `${segId}#${i}`,
-    }));
+    // 모래 구덩이 틈: 줄마다 가로로 크게 어긋나게 (판정도 같이 옮김. 이웃 줄과 겹침이 남아 돌아 지나갈 틈은 없음, 점검_피드백2 3-1)
+    const pitShift = (j: JumpDef, ty: number) =>
+      j.type === 'gap' && j.size[0] === 1 && (j.art ?? []).every((a) => a === 'sand_pit') ? [-13, 13, -2][(ty - j.at[1] + j.at[0]) % 3] : 0;
+    this.jumps = (seg.jumps ?? []).flatMap((j, i) => {
+      const rows = pitShift(j, j.at[1]) || pitShift(j, j.at[1] + 1) || pitShift(j, j.at[1] + 2) ? Array.from({ length: j.size[1] }, (_, k) => j.at[1] + k) : [null];
+      return rows.map((ty) => {
+        const dx = ty === null ? 0 : pitShift(j, ty);
+        return {
+          ...j,
+          x0: j.at[0] * TS + dx,
+          y0: (ty ?? j.at[1]) * TS,
+          x1: (j.at[0] + j.size[0]) * TS + dx,
+          y1: ty === null ? (j.at[1] + j.size[1]) * TS : (ty + 1) * TS,
+          key: `${segId}#${i}`,
+        };
+      });
+    });
     const kinds = JUMP_INFO?.kinds ?? [];
     for (const j of this.jumps) {
       let n = 0;
-      for (let ty = j.at[1]; ty < j.at[1] + j.size[1]; ty++)
+      for (let ty = Math.round(j.y0 / TS); ty < Math.round(j.y1 / TS); ty++)
         for (let tx = j.at[0]; tx < j.at[0] + j.size[0]; tx++) {
           const art = j.art?.[n++ % (j.art?.length || 1)] ?? (j.type === 'hurdle' ? 'rock' : 'sand_pit');
           const f = kinds.indexOf(art);
@@ -2439,7 +2456,7 @@ export class ExploreScene extends Phaser.Scene {
           // 틈 그림은 칸마다 조금씩 어긋나고 크기가 달라 고르게 쌓인 것처럼 보이지 않게 (점검_피드백 3절). 판정 칸은 그대로
           const jr = (k: number) => ((Math.sin(tx * 12.9898 + ty * 78.233 + k * 37.719) * 43758.5453) % 1 + 1) % 1;
           const pit = art === 'sand_pit';
-          const jx = pit ? Math.round((jr(1) - 0.5) * 12) : 0;
+          const jx = pit ? Math.round((jr(1) - 0.5) * 6) + pitShift(j, ty) : 0;
           const jy = pit ? Math.round((jr(2) - 0.5) * 8) : 0;
           const im = this.lightUp(this.world(this.add.image(tx * TS + 16 + jx, (ty + 1) * TS + jy, 'ex_jumps', f).setOrigin(0.5, 1)));
           if (pit) im.setScale(0.8 + jr(3) * 0.4).setFlipX(jr(4) < 0.5);

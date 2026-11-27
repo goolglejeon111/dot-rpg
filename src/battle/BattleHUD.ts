@@ -8,6 +8,9 @@ import { isCapped, isGuest, isUnlocked, levelOf, levelProgress, maxLevel, type U
 const W = 960;
 const H = 720;
 const S = 2; // UI 도트 배율
+/** 지켜야 할 것·NPC 아군·보스 막대가 쌓일 때: 왼쪽 위 파티 칸(4명이면 x≈370까지)과 겹치지 않게 좁혀서 오른편에 (점검_피드백2 1) */
+const STACK_SX = 1.6;
+const STACK_X = 960 - 16 - 324 * STACK_SX;
 /** 큰 글자 알림(승리·레벨 업·해금) 하나가 보이는 시간과, 다음 알림까지 쉬는 시간 (ms) */
 const BANNER_SHOW = 1800;
 const BANNER_GAP = 400;
@@ -50,6 +53,7 @@ export class BattleHUD extends Phaser.Scene {
   private surviveEdge?: Phaser.GameObjects.Image;
   private toastText!: Phaser.GameObjects.Text;
   private guideBox!: Phaser.GameObjects.Container;
+  private titleText?: Phaser.GameObjects.Text;
   private guideText!: Phaser.GameObjects.Text;
   private wheel?: Phaser.GameObjects.Container;
   /** 휠의 동료 칸: party 번호, 각도, 칸 그림 */
@@ -90,9 +94,8 @@ export class BattleHUD extends Phaser.Scene {
     this.lastBannerAt = 0;
     this.touch = isTouch();
     this.input.addPointer(3);
-    // 암전 없이 HUD만 서서히 나타남
-    this.cameras.main.setAlpha(0);
-    this.tweens.add({ targets: this.cameras.main, alpha: 1, duration: 300 });
+    // 전투 HUD는 처음부터 또렷하게, 늘 맨 위 층 (점검_피드백2 1-2: 반투명하게 덮여 보이던 것)
+    this.scene.bringToTop();
     const cut = this.b.cutscene;
 
     // ---- 위: 파티 초상화 (숫자 = 교체 키) ----
@@ -153,13 +156,15 @@ export class BattleHUD extends Phaser.Scene {
     this.guideText = this.add
       .text(0, 0, '', { fontFamily: FONT, fontSize: '18px', color: '#f3e7c4', align: 'center', wordWrap: { width: 690, useAdvancedWrap: true } })
       .setOrigin(0.5);
-    this.guideBox = this.add.container(W / 2, H - 120, [gbg, this.guideText]).setAlpha(0).setDepth(19);
+    // 스킬 아이콘(위 끝 H-114)과 조작 안내 줄(H-132) 위에 뜨게 (점검_피드백2 1-1)
+    this.guideBox = this.add.container(W / 2, H - 176, [gbg, this.guideText]).setAlpha(0).setDepth(19);
     if (this.touch) this.guideBox.setY(250);
 
     const title = (this.b.bdef as { title?: string }).title;
     if (title && !cut) {
-      const t = this.add.text(W / 2, 220, title, { fontFamily: FONT, fontSize: '34px', color: '#e0c27a', fontStyle: 'bold' }).setOrigin(0.5).setShadow(0, 3, '#000', 6);
-      this.tweens.add({ targets: t, alpha: 0, delay: 1400, duration: 700, onComplete: () => t.destroy() });
+      // 화면 위쪽 1/4에 띄우고 1.5초 뒤 사라짐 (인물 위에 겹치지 않게, 점검_피드백2 1-3)
+      const t = (this.titleText = this.add.text(W / 2, H / 8, title, { fontFamily: FONT, fontSize: '34px', color: '#e0c27a', fontStyle: 'bold' }).setOrigin(0.5).setShadow(0, 3, '#000', 6).setDepth(18));
+      this.tweens.add({ targets: t, alpha: 0, delay: 1100, duration: 400, onComplete: () => t.destroy() });
     }
   }
 
@@ -170,9 +175,10 @@ export class BattleHUD extends Phaser.Scene {
   }
 
   /** 테두리 + 채움 (채움은 잘라서 길이를 바꿈) */
-  private bar(x: number, y: number, kind: string, fill: string): Bar {
-    const frame = this.img(x, y, `ui_bar_${kind}`);
-    const f = this.img(x + S, y + S, `ui_fill_${fill}`);
+  /** sx: 가로 배율 (위쪽에 막대가 여럿 쌓일 때 좁혀서 오른편에 둠) */
+  private bar(x: number, y: number, kind: string, fill: string, sx = S): Bar {
+    const frame = this.img(x, y, `ui_bar_${kind}`).setScale(sx, S);
+    const f = this.img(x + sx, y + S, `ui_fill_${fill}`).setScale(sx, S);
     return { frame, fill: f, inner: frame.width - 2 };
   }
 
@@ -208,7 +214,9 @@ export class BattleHUD extends Phaser.Scene {
     this.makeIcon('combo', 'icon_combo', xs[3], y, 'R');
     this.comboBar = this.bar(xs[3] - 64, y + 44, 'combo', 'gold_4');
     this.add
-      .text(W - 16, H - 150, '이동 WASD · 공격 왼쪽 클릭 · 점프 Space · 깨우기 F(누르기) · 교체 1~4', { fontFamily: FONT, fontSize: '14px', color: '#aaaaaa' })
+      
+      // 아이콘 줄(위 끝 H-114) 위로 한 줄 띄움 (점검_피드백2 1-4)
+      .text(W - 16, H - 132, '이동 WASD · 공격 왼쪽 클릭 · 점프 Space · 깨우기 F(누르기) · 교체 1~4', { fontFamily: FONT, fontSize: '14px', color: '#aaaaaa' })
       .setOrigin(1, 0.5)
       .setShadow(0, 2, '#000', 2);
   }
@@ -339,10 +347,10 @@ export class BattleHUD extends Phaser.Scene {
     if (boss && !this.boss) {
       // 위쪽 오른편 (왼쪽 위 파티 칸과 겹치지 않게). 지켜야 할 것·NPC 아군 체력바가 있으면 그 아래 가운데
       const stack = (b.protectTarget ? 1 : 0) + (b.vitalAlly ? 1 : 0);
-      const bx = stack ? W / 2 - 162 * S : W - 16 - 324 * S;
+      const bx = stack ? STACK_X : W - 16 - 324 * S;
       const by = 44 + stack * 48;
-      const bar = this.bar(bx, by, 'boss', 'red_8');
-      const name = this.add.text(bx + 162 * S, by - 6, boss.def.name, { fontFamily: FONT, fontSize: '19px', color: '#f4dede', fontStyle: 'bold' }).setOrigin(0.5, 1).setShadow(0, 2, '#000', 3);
+      const bar = this.bar(bx, by, 'boss', 'red_8', stack ? STACK_SX : S);
+      const name = this.add.text(bx + 162 * (stack ? STACK_SX : S), by - 6, boss.def.name, { fontFamily: FONT, fontSize: '19px', color: '#f4dede', fontStyle: 'bold' }).setOrigin(0.5, 1).setShadow(0, 2, '#000', 3);
       this.boss = { bar, name };
     }
     if (this.boss) this.setBar(this.boss.bar, boss ? boss.hp / boss.maxHp : 0);
@@ -350,9 +358,8 @@ export class BattleHUD extends Phaser.Scene {
     // 지켜야 하는 대상의 체력 (위쪽 가운데)
     const pr = b.protectTarget;
     if (pr && !this.guard) {
-      const gx = W / 2 - 162 * S;
-      const bar = this.bar(gx, 44, 'boss', 'green_8');
-      const name = this.add.text(W / 2, 38, '지켜야 할 것: ' + pr.def.name, { fontFamily: FONT, fontSize: '17px', color: '#dff4de', fontStyle: 'bold' }).setOrigin(0.5, 1).setShadow(0, 2, '#000', 3);
+      const bar = this.bar(STACK_X, 44, 'boss', 'green_8', STACK_SX);
+      const name = this.add.text(STACK_X + 162 * STACK_SX, 38, '지켜야 할 것: ' + pr.def.name, { fontFamily: FONT, fontSize: '17px', color: '#dff4de', fontStyle: 'bold' }).setOrigin(0.5, 1).setShadow(0, 2, '#000', 3);
       this.guard = { bar, name };
     }
     if (this.guard) this.setBar(this.guard.bar, pr ? pr.hp / pr.maxHp : 0);
@@ -360,13 +367,14 @@ export class BattleHUD extends Phaser.Scene {
     // 체력바를 따로 보이는 NPC 아군 (지켜야 할 것 아래)
     const va = b.vitalAlly;
     if (va && !this.vital) {
-      const vx = W / 2 - 162 * S;
       const vy = pr ? 92 : 44;
-      const bar = this.bar(vx, vy, 'boss', 'green_8');
-      const name = this.add.text(W / 2, vy - 6, va.def.name, { fontFamily: FONT, fontSize: '17px', color: '#dff4de', fontStyle: 'bold' }).setOrigin(0.5, 1).setShadow(0, 2, '#000', 3);
+      const bar = this.bar(STACK_X, vy, 'boss', 'green_8', STACK_SX);
+      const name = this.add.text(STACK_X + 162 * STACK_SX, vy - 6, va.def.name, { fontFamily: FONT, fontSize: '17px', color: '#dff4de', fontStyle: 'bold' }).setOrigin(0.5, 1).setShadow(0, 2, '#000', 3);
       this.vital = { bar, name };
     }
     if (this.vital) this.setBar(this.vital.bar, va ? va.hp / va.maxHp : 0);
+    // 막대가 쌓이면 전투 이름은 그 아래로 (위쪽 1/4 끝)
+    if (this.titleText?.active && (this.guard || this.vital)) this.titleText.setY(H / 4 + 6);
 
     const sv = b.bdef.survive;
     if (sv && this.surviveEdge) this.surviveEdge.setAlpha(Math.min(0.85, (b.elapsed / 1000 / sv) * 0.85));
